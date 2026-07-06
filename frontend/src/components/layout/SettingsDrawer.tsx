@@ -37,7 +37,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
         <button
           className="text-3xl hover:rotate-90 transition-transform duration-300 text-black dark:text-white"
           onClick={() => toggleSettings(true)}
-          aria-label="Fermer les paramètres"
+          aria-label={t('settings.close_drawer', 'Fermer les paramètres')}
         >
           <X className="w-6 h-6" />
         </button>
@@ -100,7 +100,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
           </p>
           <button
             onClick={() => setAdsEnabled(!adsEnabled)}
-            aria-label="Basculer les publicités"
+            aria-label={t('settings.toggle_ads', 'Basculer les publicités')}
             aria-pressed={adsEnabled}
             className="w-full flex items-center justify-between p-4 rounded-2xl text-black dark:text-white hover:bg-white/50 dark:hover:bg-black/20 transition-all text-left"
           >

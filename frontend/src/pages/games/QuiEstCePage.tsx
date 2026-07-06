@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { HelpCircle, Loader2, RotateCcw, Trophy, X, Check, ScanFace } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   quizWhoService,
   type QuizWhoCandidate,
@@ -9,6 +10,7 @@ import {
 import { useToastStore } from '../../store/toastStore';
 
 const QuiEstCePage: React.FC = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navState = location.state as { mediaType?: string; difficulty?: string } | null;
   const mediaType = navState?.mediaType;
@@ -37,11 +39,11 @@ const QuiEstCePage: React.FC = () => {
       setBoard(data.board);
       setQuestions(data.questions);
     } catch {
-      addToast('Impossible de démarrer la partie. Réessaie.', 'error');
+      addToast(t('games.qui_est_ce.toast_start_failed', 'Impossible de démarrer la partie. Réessaie.'), 'error');
     } finally {
       setLoading(false);
     }
-  }, [mediaType, difficulty, addToast]);
+  }, [mediaType, difficulty, addToast, t]);
 
   useEffect(() => {
     // Fetch the board on mount (and when the universe changes).
@@ -65,7 +67,7 @@ const QuiEstCePage: React.FC = () => {
       setAskedCount(res.asked_count);
       setQuestions((prev) => prev.filter((x) => x.attr !== q.attr));
     } catch {
-      addToast('Question impossible. Réessaie.', 'error');
+      addToast(t('games.qui_est_ce.toast_question_failed', 'Question impossible. Réessaie.'), 'error');
     } finally {
       setBusy(false);
     }
@@ -81,10 +83,10 @@ const QuiEstCePage: React.FC = () => {
         setSecretTitle(res.secret_title || candidate.title);
       } else {
         setEliminated((prev) => new Set(prev).add(candidate.id));
-        addToast(`Ce n'est pas ${candidate.title} !`, 'error');
+        addToast(t('games.qui_est_ce.toast_wrong_guess', { defaultValue: "Ce n'est pas {{title}} !", title: candidate.title }), 'error');
       }
     } catch {
-      addToast('Tentative impossible. Réessaie.', 'error');
+      addToast(t('games.qui_est_ce.toast_guess_failed', 'Tentative impossible. Réessaie.'), 'error');
     } finally {
       setBusy(false);
     }
@@ -93,7 +95,7 @@ const QuiEstCePage: React.FC = () => {
   if (loading) {
     return (
       <div className="text-center py-24 text-black dark:text-white font-black uppercase tracking-[0.3em] animate-pulse">
-        Mise en place du plateau…
+        {t('games.qui_est_ce.loading_board', 'Mise en place du plateau…')}
       </div>
     );
   }
@@ -102,31 +104,31 @@ const QuiEstCePage: React.FC = () => {
     <div className="max-w-6xl mx-auto px-6 py-12">
       <header className="text-center mb-10">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-500 text-[10px] font-black uppercase tracking-[0.3em] mb-5">
-          <ScanFace className="w-3.5 h-3.5" /> Qui est-ce ?
+          <ScanFace className="w-3.5 h-3.5" /> {t('games.qui_est_ce.badge', 'Qui est-ce ?')}
         </div>
         <h1 className="text-5xl md:text-6xl font-black italic manga-font tracking-tighter uppercase text-black dark:text-white leading-none">
-          QUI <span className="text-blue-500">EST-CE ?</span>
+          {t('games.qui_est_ce.title_part1', 'QUI')} <span className="text-blue-500">{t('games.qui_est_ce.title_part2', 'EST-CE ?')}</span>
         </h1>
         <p className="mt-3 text-sm font-medium text-gray-500 dark:text-white/50">
-          Pose des questions pour éliminer les portraits, puis clique sur le bon.
+          {t('games.qui_est_ce.subtitle', 'Pose des questions pour éliminer les portraits, puis clique sur le bon.')}
         </p>
       </header>
 
       {won ? (
         <div className="max-w-xl mx-auto text-center rounded-[2.5rem] border-2 border-green-500/40 bg-green-500/5 p-10">
           <Trophy className="w-16 h-16 text-green-500 mx-auto mb-5 animate-bounce" />
-          <h2 className="text-3xl font-black italic uppercase mb-2 text-black dark:text-white">Trouvé !</h2>
+          <h2 className="text-3xl font-black italic uppercase mb-2 text-black dark:text-white">{t('games.qui_est_ce.win_title', 'Trouvé !')}</h2>
           <p className="text-lg mb-1 text-gray-600 dark:text-white/70">
-            C'était bien <span className="font-black text-green-500">{secretTitle}</span>.
+            {t('games.qui_est_ce.win_it_was', "C'était bien")} <span className="font-black text-green-500">{secretTitle}</span>.
           </p>
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-8">
-            {askedCount} question{askedCount > 1 ? 's' : ''} posée{askedCount > 1 ? 's' : ''}
+            {t('games.qui_est_ce.questions_asked', { defaultValue: '{{count}} question{{plural}} posée{{plural}}', count: askedCount, plural: askedCount > 1 ? 's' : '' })}
           </p>
           <button
             onClick={start}
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-black italic uppercase tracking-widest px-8 py-4 rounded-2xl transition-all hover:scale-105"
           >
-            <RotateCcw className="w-5 h-5" /> Rejouer
+            <RotateCcw className="w-5 h-5" /> {t('games.qui_est_ce.replay', 'Rejouer')}
           </button>
         </div>
       ) : (
@@ -141,7 +143,7 @@ const QuiEstCePage: React.FC = () => {
                     key={c.id}
                     onClick={() => guess(c)}
                     disabled={out || busy}
-                    title={out ? c.title : `Deviner : ${c.title}`}
+                    title={out ? c.title : t('games.qui_est_ce.guess_title', { defaultValue: 'Deviner : {{title}}', title: c.title })}
                     className={`group relative aspect-[3/4] rounded-2xl overflow-hidden border-2 transition-all ${
                       out
                         ? 'border-transparent opacity-30 grayscale'
@@ -172,7 +174,7 @@ const QuiEstCePage: React.FC = () => {
           {/* Question panel */}
           <div className="lg:col-span-4 space-y-5 lg:sticky lg:top-24">
             <div className="rounded-2xl border-2 border-black/5 dark:border-white/10 bg-surface-card p-4 flex items-center justify-between">
-              <span className="text-xs font-black uppercase tracking-widest text-gray-400">Restants</span>
+              <span className="text-xs font-black uppercase tracking-widest text-gray-400">{t('games.qui_est_ce.remaining', 'Restants')}</span>
               <span className="text-2xl font-black tabular-nums text-blue-500">{remaining.length}</span>
             </div>
 
@@ -194,12 +196,12 @@ const QuiEstCePage: React.FC = () => {
 
             <div>
               <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3 flex items-center gap-2">
-                <HelpCircle className="w-4 h-4" /> Pose une question
+                <HelpCircle className="w-4 h-4" /> {t('games.qui_est_ce.ask_question', 'Pose une question')}
               </h3>
               <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1 custom-scrollbar">
                 {questions.length === 0 ? (
                   <p className="text-xs font-bold opacity-50 py-6 text-center">
-                    Plus de questions — clique sur un portrait pour deviner !
+                    {t('games.qui_est_ce.no_more_questions', 'Plus de questions — clique sur un portrait pour deviner !')}
                   </p>
                 ) : (
                   questions.map((q) => (
@@ -222,7 +224,7 @@ const QuiEstCePage: React.FC = () => {
               className="w-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest border-2 border-black/5 dark:border-white/10 text-gray-500 hover:text-black dark:hover:text-white py-3 rounded-2xl transition-all"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
-              Nouvelle partie
+              {t('games.qui_est_ce.new_game', 'Nouvelle partie')}
             </button>
           </div>
         </div>

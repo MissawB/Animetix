@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../utils/apiClient';
 import {
   Fingerprint, Plus, Globe, EyeOff, LogIn, Users, RefreshCw, ArrowRight, Radio, Crown,
@@ -20,16 +21,20 @@ const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars (0/O, 1/
 const newCode = () =>
   Array.from({ length: 5 }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join('');
 
-const STATE_LABEL: Record<string, string> = {
-  lobby: 'En attente', playing: 'En partie', mrwhite_guess: 'En partie', ended: 'Terminé',
-};
-
 const panel = 'rounded-[2rem] border-2 border-white/5 bg-[#0d0f17]/80 backdrop-blur-xl shadow-2xl';
 
 const UndercoverEntry: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [createPublic, setCreatePublic] = useState(true);
   const [joinCode, setJoinCode] = useState('');
+
+  const STATE_LABEL: Record<string, string> = {
+    lobby: t('games.undercover.entry.state_lobby', 'En attente'),
+    playing: t('games.undercover.entry.state_playing', 'En partie'),
+    mrwhite_guess: t('games.undercover.entry.state_playing', 'En partie'),
+    ended: t('games.undercover.entry.state_ended', 'Terminé'),
+  };
 
   const enter = (code: string, visibility?: 'public' | 'private') => {
     const c = code.trim().toUpperCase();
@@ -60,68 +65,68 @@ const UndercoverEntry: React.FC = () => {
         <div className="absolute -right-10 -top-10 w-48 h-48 bg-red-600/20 blur-[80px] rounded-full pointer-events-none" />
         <div className="relative">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-red-500 mb-3">
-            <Fingerprint className="w-4 h-4" /> Dossier classifié · Undercover
+            <Fingerprint className="w-4 h-4" /> {t('games.undercover.classified_badge', 'Dossier classifié · Undercover')}
           </div>
-          <h1 className="text-5xl sm:text-6xl font-black italic manga-font uppercase tracking-tighter text-white leading-none">Salle d'opérations</h1>
-          <p className="mt-3 text-sm font-bold uppercase tracking-widest text-white/40">Crée une mission ou rejoins une unité existante</p>
+          <h1 className="text-5xl sm:text-6xl font-black italic manga-font uppercase tracking-tighter text-white leading-none">{t('games.undercover.entry.title', "Salle d'opérations")}</h1>
+          <p className="mt-3 text-sm font-bold uppercase tracking-widest text-white/40">{t('games.undercover.entry.subtitle', 'Crée une mission ou rejoins une unité existante')}</p>
         </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Create */}
         <div className={`${panel} p-6 space-y-5`}>
-          <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 flex items-center gap-2"><Plus className="w-4 h-4" /> Créer un salon</h3>
+          <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 flex items-center gap-2"><Plus className="w-4 h-4" /> {t('games.undercover.entry.create_title', 'Créer un salon')}</h3>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setCreatePublic(true)}
               className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${createPublic ? 'border-green-500 bg-green-500/15 text-green-400' : 'border-white/10 text-white/40 hover:border-green-500/40'}`}
-            ><Globe className="w-3.5 h-3.5" /> Public</button>
+            ><Globe className="w-3.5 h-3.5" /> {t('games.undercover.visibility.public', 'Public')}</button>
             <button
               onClick={() => setCreatePublic(false)}
               className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${!createPublic ? 'border-red-500 bg-red-500/15 text-red-400' : 'border-white/10 text-white/40 hover:border-red-500/40'}`}
-            ><EyeOff className="w-3.5 h-3.5" /> Privé</button>
+            ><EyeOff className="w-3.5 h-3.5" /> {t('games.undercover.visibility.private', 'Privé')}</button>
           </div>
           <p className="text-[11px] text-white/35 italic">
-            {createPublic ? 'Apparaîtra dans la liste des salons publics — tout le monde peut rejoindre.' : 'Accessible uniquement via le code ou l\'URL que tu partages.'}
+            {createPublic ? t('games.undercover.entry.public_hint', 'Apparaîtra dans la liste des salons publics — tout le monde peut rejoindre.') : t('games.undercover.entry.private_hint', "Accessible uniquement via le code ou l'URL que tu partages.")}
           </p>
           <button
             onClick={() => enter(newCode(), createPublic ? 'public' : 'private')}
             className="w-full py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-black italic uppercase tracking-widest text-lg shadow-[0_10px_30px_-10px_rgba(239,68,68,0.7)] transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2"
-          ><Plus className="w-5 h-5" /> Créer la mission</button>
+          ><Plus className="w-5 h-5" /> {t('games.undercover.entry.create_button', 'Créer la mission')}</button>
         </div>
 
         {/* Join private */}
         <div className={`${panel} p-6 space-y-5`}>
-          <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 flex items-center gap-2"><LogIn className="w-4 h-4" /> Rejoindre un salon privé</h3>
-          <p className="text-[11px] text-white/35 italic">Saisis le code à 5 caractères qu'on t'a partagé.</p>
+          <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 flex items-center gap-2"><LogIn className="w-4 h-4" /> {t('games.undercover.entry.join_title', 'Rejoindre un salon privé')}</h3>
+          <p className="text-[11px] text-white/35 italic">{t('games.undercover.entry.join_hint', "Saisis le code à 5 caractères qu'on t'a partagé.")}</p>
           <input
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 8))}
             onKeyDown={(e) => { if (e.key === 'Enter') enter(joinCode); }}
-            placeholder="CODE…"
-            aria-label="Code du salon"
+            placeholder={t('games.undercover.entry.code_placeholder', 'CODE…')}
+            aria-label={t('games.undercover.entry.code_aria', 'Code du salon')}
             className="w-full p-3.5 rounded-2xl bg-white/[0.04] border-2 border-white/10 focus:border-yellow-400 outline-none font-black tracking-[0.3em] text-2xl text-center text-white placeholder:text-white/20 font-mono uppercase transition-colors"
           />
           <button
             onClick={() => enter(joinCode)}
             disabled={!joinCode.trim()}
             className="w-full py-4 rounded-2xl bg-yellow-400 enabled:hover:bg-yellow-500 text-black font-black italic uppercase tracking-widest text-lg transition-all enabled:hover:scale-[1.01] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          ><ArrowRight className="w-5 h-5" /> Rejoindre</button>
+          ><ArrowRight className="w-5 h-5" /> {t('games.undercover.entry.join_button', 'Rejoindre')}</button>
         </div>
       </div>
 
       {/* Public listing */}
       <div className={`${panel} p-6 mt-6`}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 flex items-center gap-2"><Globe className="w-4 h-4" /> Salons publics ouverts</h3>
-          <button onClick={fetchRooms} title="Rafraîchir" className="p-2 rounded-xl border border-white/10 text-white/40 hover:text-white hover:border-white/30 transition-colors">
+          <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 flex items-center gap-2"><Globe className="w-4 h-4" /> {t('games.undercover.entry.public_rooms_title', 'Salons publics ouverts')}</h3>
+          <button onClick={fetchRooms} title={t('games.undercover.entry.refresh_title', 'Rafraîchir')} className="p-2 rounded-xl border border-white/10 text-white/40 hover:text-white hover:border-white/30 transition-colors">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
         {rooms.length === 0 ? (
           <div className="text-center py-12">
             <Radio className="w-8 h-8 text-white/15 mx-auto mb-3 animate-pulse" />
-            <p className="opacity-30 italic">{loading ? 'Scan du réseau…' : 'Aucun salon public ouvert — crée le premier !'}</p>
+            <p className="opacity-30 italic">{loading ? t('games.undercover.entry.scanning', 'Scan du réseau…') : t('games.undercover.entry.no_rooms', 'Aucun salon public ouvert — crée le premier !')}</p>
           </div>
         ) : (
           <div className="space-y-2.5">
@@ -141,7 +146,7 @@ const UndercoverEntry: React.FC = () => {
                   </div>
                   <span className="text-[11px] text-white/40 flex items-center gap-2">
                     {r.host && <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-yellow-400/70" /> {r.host}</span>}
-                    {(r.num_mrwhites ?? 0) > 0 && <span className="text-purple-300/70">{r.num_mrwhites} Mr. White</span>}
+                    {(r.num_mrwhites ?? 0) > 0 && <span className="text-purple-300/70">{t('games.undercover.entry.mrwhite_count', { defaultValue: '{{count}} Mr. White', count: r.num_mrwhites })}</span>}
                   </span>
                 </div>
                 <span className="flex items-center gap-1.5 text-white/60 font-bold text-sm shrink-0"><Users className="w-4 h-4" /> {r.players}</span>

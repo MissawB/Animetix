@@ -21,127 +21,129 @@ import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { useTranslation } from 'react-i18next';
 
 const GamesHubPage: React.FC = () => {
+  const { t } = useTranslation();
   const games = [
     {
-      title: "La Forge",
-      desc: "Fusionnez deux univers d'anime et générez un Visual Novel complet avec l'IA.",
+      title: t('games.hub.list.forge.title', 'La Forge'),
+      desc: t('games.hub.list.forge.desc', "Fusionnez deux univers d'anime et générez un Visual Novel complet avec l'IA."),
       icon: Flame,
       path: "/forge/",
       color: "text-orange-500",
       bg: "bg-orange-500/10",
-      difficulty: "Créatif",
+      difficulty: t('games.hub.list.forge.difficulty', 'Créatif'),
       reward: "500 XP"
     },
     {
       title: "Versus Battle",
-      desc: "Simulez des combats mythiques arbitrés par une IA de combat SOTA.",
+      desc: t('games.hub.list.versus.desc', 'Simulez des combats mythiques arbitrés par une IA de combat SOTA.'),
       icon: Zap,
       path: "/game/vsbattle/",
       color: "text-red-500",
       bg: "bg-red-500/10",
-      difficulty: "Hardcore",
+      difficulty: t('games.hub.list.versus.difficulty', 'Hardcore'),
       reward: "300 XP"
     },
     {
       title: "Duel Arena",
-      desc: "Affrontez d'autres joueurs en 1vs1 temps réel dans des duels de culture anime.",
+      desc: t('games.hub.list.duel.desc', "Affrontez d'autres joueurs en 1vs1 temps réel dans des duels de culture anime."),
       icon: Swords,
       path: "/game/duel/lobby/",
       color: "text-blue-500",
       bg: "bg-blue-500/10",
-      difficulty: "Compétitif",
+      difficulty: t('games.hub.list.duel.difficulty', 'Compétitif'),
       reward: "600 XP"
     },
     {
         title: "Akinetix Expert",
-        desc: "L'IA tente de deviner votre personnage pendant que vous l'entraînez par RL.",
+        desc: t('games.hub.list.akinetix_expert.desc', "L'IA tente de deviner votre personnage pendant que vous l'entraînez par RL."),
         icon: Brain,
         path: "/akinetix-expert/",
         color: "text-cyan-500",
         bg: "bg-cyan-500/10",
-        difficulty: "Mental",
+        difficulty: t('games.hub.list.akinetix_expert.difficulty', 'Mental'),
         reward: "450 XP"
       },
     {
       title: "Daily Challenge",
-      desc: "Un défi unique chaque jour. Testez vos connaissances et gardez votre série active !",
+      desc: t('games.hub.list.daily.desc', 'Un défi unique chaque jour. Testez vos connaissances et gardez votre série active !'),
       icon: Calendar,
       path: "/daily-challenge/",
       color: "text-amber-500",
       bg: "bg-amber-500/10",
-      difficulty: "Variable",
+      difficulty: t('games.hub.list.daily.difficulty', 'Variable'),
       reward: "🔥 Bonus Streak"
     },
     {
       title: "Vision Quest",
-      desc: "Identifiez les animés et personnages à partir de fragments d'images générés.",
+      desc: t('games.hub.list.vision.desc', "Identifiez les animés et personnages à partir de fragments d'images générés."),
       icon: Eye,
       path: "/vision/",
       color: "text-blue-500",
       bg: "bg-blue-500/10",
-      difficulty: "Moyen",
+      difficulty: t('games.hub.list.vision.difficulty', 'Moyen'),
       reward: "200 XP"
     },
     {
       title: "Anime Blindtest",
-      desc: "Reconnaissez les OST mythiques transformées ou filtrées par l'IA.",
+      desc: t('games.hub.list.blindtest.desc', "Reconnaissez les OST mythiques transformées ou filtrées par l'IA."),
       icon: Music,
       path: "/blindtest/",
       color: "text-emerald-500",
       bg: "bg-emerald-500/10",
-      difficulty: "Expert",
+      difficulty: t('games.hub.list.blindtest.difficulty', 'Expert'),
       reward: "350 XP"
     },
     {
       title: "Emoji Master",
-      desc: "Devinez l'œuvre cachée derrière une série d'emojis cryptiques.",
+      desc: t('games.hub.list.emoji.desc', "Devinez l'œuvre cachée derrière une série d'emojis cryptiques."),
       icon: MessageCircle,
       path: "/emoji/",
       color: "text-yellow-500",
       bg: "bg-yellow-500/10",
-      difficulty: "Facile",
+      difficulty: t('games.hub.list.emoji.difficulty', 'Facile'),
       reward: "100 XP"
     },
     {
-      title: "Le Paradoxe",
-      desc: "Résolvez des énigmes temporelles où les chronologies d'anime s'entremêlent.",
+      title: t('games.hub.list.paradox.title', 'Le Paradoxe'),
+      desc: t('games.hub.list.paradox.desc', "Résolvez des énigmes temporelles où les chronologies d'anime s'entremêlent."),
       icon: Ghost,
       path: "/paradox/",
       color: "text-purple-500",
       bg: "bg-purple-500/10",
-      difficulty: "Casse-tête",
+      difficulty: t('games.hub.list.paradox.difficulty', 'Casse-tête'),
       reward: "400 XP"
     },
     {
       title: "Code Manga",
-      desc: "Deux équipes, deux espions : décryptez les cartes anime/manga de votre équipe.",
+      desc: t('games.hub.list.codemanga.desc', 'Deux équipes, deux espions : décryptez les cartes anime/manga de votre équipe.'),
       icon: Code,
       path: "/codemanga/",
       color: "text-indigo-400",
       bg: "bg-indigo-400/10",
-      difficulty: "Social",
+      difficulty: t('games.hub.list.codemanga.difficulty', 'Social'),
       reward: "300 XP"
     },
     {
       title: "Undercover",
-      desc: "Infiltrez-vous dans un groupe de fans d'anime et débusquez l'intrus.",
+      desc: t('games.hub.list.undercover.desc', "Infiltrez-vous dans un groupe de fans d'anime et débusquez l'intrus."),
       icon: ShieldCheck,
       path: "/undercover/",
       color: "text-red-400",
       bg: "bg-red-400/10",
-      difficulty: "Social",
+      difficulty: t('games.hub.list.undercover.difficulty', 'Social'),
       reward: "300 XP"
     },
     {
       title: "Akinetix",
-      desc: "Devine-l'œuvre : laisse l'IA te cuisiner, ou interroge le génie. Anime, manga ou personnage.",
+      desc: t('games.hub.list.akinetix.desc', "Devine-l'œuvre : laisse l'IA te cuisiner, ou interroge le génie. Anime, manga ou personnage."),
       icon: Search,
       path: "/akinetix/",
       color: "text-orange-400",
       bg: "bg-orange-400/10",
-      difficulty: "Standard",
+      difficulty: t('games.hub.list.akinetix.difficulty', 'Standard'),
       reward: "100 XP"
     }
   ];
@@ -158,7 +160,7 @@ const GamesHubPage: React.FC = () => {
                     GAMES <span className="text-blue-500 text-glow">NEXUS</span>
                 </h1>
                 <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                    Défiez les algorithmes et gagnez des points de rang dans le multivers d'Animetix.
+                    {t('games.hub.tagline', "Défiez les algorithmes et gagnez des points de rang dans le multivers d'Animetix.")}
                 </p>
             </div>
             
@@ -201,7 +203,7 @@ const GamesHubPage: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-500 opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all">
-                      Lancer la session <ArrowRight className="w-3 h-3" />
+                      {t('games.hub.launch_session', 'Lancer la session')} <ArrowRight className="w-3 h-3" />
                   </div>
                 </div>
               </Card>
@@ -216,14 +218,14 @@ const GamesHubPage: React.FC = () => {
                     <Trophy className="w-12 h-12 text-white" />
                 </div>
                 <div>
-                    <h4 className="text-3xl font-black italic manga-font uppercase mb-2">Classement Mondial</h4>
+                    <h4 className="text-3xl font-black italic manga-font uppercase mb-2">{t('games.hub.leaderboard_title', 'Classement Mondial')}</h4>
                     <p className="text-sm font-bold opacity-40 uppercase tracking-wide">
-                        Comparez vos scores avec les meilleurs joueurs de la communauté.
+                        {t('games.hub.leaderboard_desc', 'Comparez vos scores avec les meilleurs joueurs de la communauté.')}
                     </p>
                 </div>
             </div>
             <Button as={Link} to="/leaderboard/" variant="outline" className="px-10 py-4 border-white/10 hover:bg-white/5 rounded-2xl">
-                VOIR LE LEADERBOARD
+                {t('games.hub.view_leaderboard', 'VOIR LE LEADERBOARD')}
             </Button>
         </div>
       </div>

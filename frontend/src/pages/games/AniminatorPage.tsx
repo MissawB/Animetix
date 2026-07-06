@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, Send, Brain, Bot, User, Target } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -14,9 +15,10 @@ interface Message {
 }
 
 const AniminatorPage: React.FC = () => {
+  const { t } = useTranslation();
   const INTRO: Message = {
     role: 'ai',
-    text: "J'ai une œuvre mystère en tête (anime, manga ou personnage). Pose-moi des questions, puis tente de deviner ce que c'est !",
+    text: t('games.animinator.intro', "J'ai une œuvre mystère en tête (anime, manga ou personnage). Pose-moi des questions, puis tente de deviner ce que c'est !"),
   };
   const [messages, setMessages] = useState<Message[]>([INTRO]);
   const [won, setWon] = useState(false);
@@ -47,13 +49,13 @@ const AniminatorPage: React.FC = () => {
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsThinking(true);
-    setThoughtProcess('Analyse de la requête...');
+    setThoughtProcess(t('games.animinator.analyzing', 'Analyse de la requête...'));
 
     try {
       const data = await animinatorService.ask(userMsg, mediaType, difficulty);
       
       setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'ai', text: data.answer || "Je commence à voir plus clair..." }]);
+        setMessages(prev => [...prev, { role: 'ai', text: data.answer || t('games.animinator.default_answer', 'Je commence à voir plus clair...') }]);
         setThoughtProcess('');
         setIsThinking(false);
       }, 1500);
@@ -70,19 +72,19 @@ const AniminatorPage: React.FC = () => {
     const g = guessInput.trim();
     if (!g || isThinking || won) return;
     setGuessInput('');
-    setMessages((prev) => [...prev, { role: 'user', text: `Je pense que c'est : ${g}` }]);
+    setMessages((prev) => [...prev, { role: 'user', text: t('games.animinator.guess_message', { defaultValue: "Je pense que c'est : {{guess}}", guess: g }) }]);
     try {
       const res = await animinatorService.guess(g);
       if (res.correct) {
         setWon(true);
         setMessages((prev) => [
           ...prev,
-          { role: 'ai', text: `🎉 Exact ! C'était bien « ${res.secret} ». Bien joué !` },
+          { role: 'ai', text: t('games.animinator.correct_message', { defaultValue: "🎉 Exact ! C'était bien « {{secret}} ». Bien joué !", secret: res.secret }) },
         ]);
       } else {
         setMessages((prev) => [
           ...prev,
-          { role: 'ai', text: `Non, ce n'est pas « ${g} ». Continue à creuser !` },
+          { role: 'ai', text: t('games.animinator.wrong_message', { defaultValue: "Non, ce n'est pas « {{guess}} ». Continue à creuser !", guess: g }) },
         ]);
       }
     } catch (err) {
@@ -102,7 +104,7 @@ const AniminatorPage: React.FC = () => {
           <h1 className="text-5xl font-black italic manga-font tracking-tighter uppercase">
             THE <span className="text-yellow-400">ANIMINATOR</span>
           </h1>
-          <p className="text-xs font-black uppercase opacity-40 tracking-[0.3em] mt-2">Génie Omni-Media IA</p>
+          <p className="text-xs font-black uppercase opacity-40 tracking-[0.3em] mt-2">{t('games.animinator.subtitle', 'Génie Omni-Media IA')}</p>
         </div>
 
         {/* Chat Area */}
@@ -139,7 +141,7 @@ const AniminatorPage: React.FC = () => {
                 onClick={handleReplay}
                 className="w-full flex items-center justify-center gap-2 bg-yellow-400 text-black font-black italic uppercase tracking-widest py-5 rounded-2xl shadow-xl hover:scale-[1.01] transition-all"
               >
-                <Sparkles className="w-5 h-5" /> Rejouer une nouvelle œuvre
+                <Sparkles className="w-5 h-5" /> {t('games.animinator.replay', 'Rejouer une nouvelle œuvre')}
               </button>
             ) : (
               <>
@@ -151,7 +153,7 @@ const AniminatorPage: React.FC = () => {
                       onChange={(e) => setInput(e.target.value)}
                       disabled={isThinking}
                       className="pl-16 shadow-xl border-none bg-white dark:bg-navy-800"
-                      placeholder="Posez votre question au génie..."
+                      placeholder={t('games.animinator.ask_placeholder', 'Posez votre question au génie...')}
                     />
                   </div>
                   <Button
@@ -171,7 +173,7 @@ const AniminatorPage: React.FC = () => {
                       onChange={(e) => setGuessInput(e.target.value)}
                       disabled={isThinking}
                       className="pl-16 border-none bg-white dark:bg-navy-800"
-                      placeholder="Je pense que c'est…"
+                      placeholder={t('games.animinator.guess_placeholder', "Je pense que c'est…")}
                     />
                   </div>
                   <Button
@@ -179,7 +181,7 @@ const AniminatorPage: React.FC = () => {
                     disabled={isThinking || !guessInput.trim()}
                     className="bg-green-600 text-white px-6 rounded-2xl shadow-xl hover:scale-105 font-black uppercase tracking-widest text-sm"
                   >
-                    Deviner
+                    {t('games.animinator.guess_btn', 'Deviner')}
                   </Button>
                 </form>
               </>

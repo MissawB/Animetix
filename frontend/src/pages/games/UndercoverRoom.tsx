@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import useSocket from '../../hooks/useSocket';
 import {
   Users, Send, Crown, Play, RotateCcw, Check, Vote,
@@ -19,42 +20,49 @@ interface UPlayer {
 interface UMsg { user: string; text: string; is_system?: boolean }
 interface UResult { winner: string; reason?: string; mrwhite_winners?: string[] }
 
-const CATEGORIES: { key: string; label: string; anchor?: boolean }[] = [
-  { key: 'Anime', label: 'Anime', anchor: true },
-  { key: 'Manga', label: 'Manga', anchor: true },
-  { key: 'Character', label: 'Persos anime', anchor: true },
-  { key: 'Movie', label: 'Films' },
-  { key: 'Game', label: 'Jeux vidéo' },
-  { key: 'Actor', label: 'Acteurs' },
-  { key: 'VGChar', label: 'Persos de jeux' },
-];
-const ANCHOR_KEYS = CATEGORIES.filter((c) => c.anchor).map((c) => c.key);
 const DIFFS = ['Easy', 'Normal', 'Hard'];
-const DIFF_LABEL: Record<string, string> = { Easy: 'Facile', Normal: 'Normal', Hard: 'Difficile' };
-const DIFF_HINT: Record<string, string> = {
-  Easy: 'œuvres très populaires',
-  Normal: 'œuvres connues',
-  Hard: 'œuvres plus pointues',
-};
 const MIN_PLAYERS = 3;
 
-const STATUS: Record<string, string> = {
-  lobby: 'Briefing en cours — recrutez votre unité',
-  playing: 'Infiltration en cours — votez pour éliminer',
-  mrwhite_guess: 'Un Mr. White tente de deviner le mot…',
-  ended: 'Mission terminée — dossier déclassifié',
-};
-
-// Badge style for a revealed role.
-const roleMeta = (role?: string): { label: string; cls: string } => {
-  if (role === 'Undercover') return { label: '⚠ Intrus', cls: 'text-red-400' };
-  if (role === 'MrWhite') return { label: '◐ Mr. White', cls: 'text-purple-300' };
-  return { label: '✓ Civil', cls: 'text-green-400' };
-};
-
 const UndercoverRoom: React.FC = () => {
+  const { t } = useTranslation();
   const { roomCode } = useParams<{ roomCode: string }>();
   const [searchParams] = useSearchParams();
+
+  const CATEGORIES: { key: string; label: string; anchor?: boolean }[] = useMemo(() => [
+    { key: 'Anime', label: t('games.undercover.categories.anime', 'Anime'), anchor: true },
+    { key: 'Manga', label: t('games.undercover.categories.manga', 'Manga'), anchor: true },
+    { key: 'Character', label: t('games.undercover.categories.anime_characters', 'Persos anime'), anchor: true },
+    { key: 'Movie', label: t('games.undercover.categories.movies', 'Films') },
+    { key: 'Game', label: t('games.undercover.categories.video_games', 'Jeux vidéo') },
+    { key: 'Actor', label: t('games.undercover.categories.actors', 'Acteurs') },
+    { key: 'VGChar', label: t('games.undercover.categories.game_characters', 'Persos de jeux') },
+  ], [t]);
+  const ANCHOR_KEYS = useMemo(() => CATEGORIES.filter((c) => c.anchor).map((c) => c.key), [CATEGORIES]);
+  const DIFF_LABEL: Record<string, string> = {
+    Easy: t('games.undercover.difficulty.easy', 'Facile'),
+    Normal: t('games.undercover.difficulty.normal', 'Normal'),
+    Hard: t('games.undercover.difficulty.hard', 'Difficile'),
+  };
+  const DIFF_HINT: Record<string, string> = {
+    Easy: t('games.undercover.difficulty.hint_easy', 'œuvres très populaires'),
+    Normal: t('games.undercover.difficulty.hint_normal', 'œuvres connues'),
+    Hard: t('games.undercover.difficulty.hint_hard', 'œuvres plus pointues'),
+  };
+
+  const STATUS: Record<string, string> = {
+    lobby: t('games.undercover.status.lobby', 'Briefing en cours — recrutez votre unité'),
+    playing: t('games.undercover.status.playing', 'Infiltration en cours — votez pour éliminer'),
+    mrwhite_guess: t('games.undercover.status.mrwhite_guess', 'Un Mr. White tente de deviner le mot…'),
+    ended: t('games.undercover.status.ended', 'Mission terminée — dossier déclassifié'),
+  };
+
+  // Badge style for a revealed role.
+  const roleMeta = (role?: string): { label: string; cls: string } => {
+    if (role === 'Undercover') return { label: t('games.undercover.roles.intruder', '⚠ Intrus'), cls: 'text-red-400' };
+    if (role === 'MrWhite') return { label: t('games.undercover.roles.mrwhite', '◐ Mr. White'), cls: 'text-purple-300' };
+    return { label: t('games.undercover.roles.civil', '✓ Civil'), cls: 'text-green-400' };
+  };
+
   // Only meaningful when *creating* the room (carried from the chooser); the
   // server ignores it once the room exists.
   const createVisibility = searchParams.get('visibility') || undefined;
@@ -117,7 +125,7 @@ const UndercoverRoom: React.FC = () => {
       <div className="min-h-[60vh] grid place-items-center">
         <div className="flex flex-col items-center gap-4 text-red-400">
           <Radio className="w-12 h-12 animate-pulse" />
-          <p className="font-black uppercase tracking-[0.4em] animate-pulse">Connexion au réseau sécurisé…</p>
+          <p className="font-black uppercase tracking-[0.4em] animate-pulse">{t('games.undercover.room.connecting', 'Connexion au réseau sécurisé…')}</p>
         </div>
       </div>
     );
@@ -168,12 +176,14 @@ const UndercoverRoom: React.FC = () => {
   const winnerBanner = () => {
     const w = result?.winner;
     const whites = result?.mrwhite_winners || [];
-    if (w === 'civils') return { cls: 'bg-green-500/10 border-green-500', title: '🎯 Les Civils gagnent !', sub: 'Toutes les menaces ont été démasquées.' };
-    if (w === 'mrwhite') return { cls: 'bg-purple-500/10 border-purple-400', title: '◐ Mr. White gagne !', sub: `${whites.join(', ')} a deviné le mot des civils.` };
+    if (w === 'civils') return { cls: 'bg-green-500/10 border-green-500', title: t('games.undercover.room.winner_civils_title', '🎯 Les Civils gagnent !'), sub: t('games.undercover.room.winner_civils_sub', 'Toutes les menaces ont été démasquées.') };
+    if (w === 'mrwhite') return { cls: 'bg-purple-500/10 border-purple-400', title: t('games.undercover.room.winner_mrwhite_title', '◐ Mr. White gagne !'), sub: t('games.undercover.room.winner_mrwhite_sub', { defaultValue: '{{names}} a deviné le mot des civils.', names: whites.join(', ') }) };
     return {
       cls: 'bg-red-500/10 border-red-500',
-      title: '🕵️ Les infiltrés gagnent !',
-      sub: whites.length ? `Mr. White ${whites.join(', ')} survit jusqu'au bout.` : 'Ils ont atteint la parité.',
+      title: t('games.undercover.room.winner_intruders_title', '🕵️ Les infiltrés gagnent !'),
+      sub: whites.length
+        ? t('games.undercover.room.winner_intruders_sub_mrwhite', { defaultValue: "Mr. White {{names}} survit jusqu'au bout.", names: whites.join(', ') })
+        : t('games.undercover.room.winner_intruders_sub', 'Ils ont atteint la parité.'),
     };
   };
 
@@ -188,24 +198,26 @@ const UndercoverRoom: React.FC = () => {
         <div className="absolute -right-10 -top-10 w-48 h-48 bg-red-600/20 blur-[80px] rounded-full pointer-events-none" />
         <div className="relative">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-red-500 mb-3">
-            <Fingerprint className="w-4 h-4" /> Dossier classifié · Undercover
+            <Fingerprint className="w-4 h-4" /> {t('games.undercover.classified_badge', 'Dossier classifié · Undercover')}
             <span className="ml-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-500/15 text-red-400 normal-case tracking-wider">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" /> {players.length} agent{players.length > 1 ? 's' : ''}
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" /> {players.length > 1
+                ? t('games.undercover.room.agents_count_plural', { defaultValue: '{{count}} agents', count: players.length })
+                : t('games.undercover.room.agents_count', { defaultValue: '{{count}} agent', count: players.length })}
             </span>
             {round > 0 && state !== 'ended' && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 normal-case tracking-wider">Manche {round}</span>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 normal-case tracking-wider">{t('games.undercover.room.round_badge', { defaultValue: 'Manche {{round}}', round })}</span>
             )}
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full normal-case tracking-wider ${isPublic ? 'bg-green-500/15 text-green-400' : 'bg-white/10 text-white/60'}`}>
-              {isPublic ? <Globe className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}{isPublic ? 'Public' : 'Privé'}
+              {isPublic ? <Globe className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}{isPublic ? t('games.undercover.visibility.public', 'Public') : t('games.undercover.visibility.private', 'Privé')}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <h1 className="text-5xl sm:text-7xl font-black italic manga-font uppercase tracking-tighter text-white leading-none">
-              Mission
+              {t('games.undercover.room.title', 'Mission')}
             </h1>
             <button
               onClick={copyCode}
-              title="Copier le code de la salle"
+              title={t('games.undercover.room.copy_code_title', 'Copier le code de la salle')}
               className="group inline-flex items-center gap-3 rounded-2xl border-2 border-red-500/40 bg-red-500/10 hover:bg-red-500/20 px-5 py-2.5 transition-all"
             >
               <span className="text-3xl sm:text-4xl font-black tracking-[0.25em] text-red-400 font-mono">{code}</span>
@@ -220,10 +232,10 @@ const UndercoverRoom: React.FC = () => {
         {/* ── Roster ─────────────────────────────────────── */}
         <div className={`${panel} p-6 h-fit lg:col-span-1`}>
           <h3 className="text-[11px] font-black uppercase opacity-40 mb-5 tracking-[0.25em] flex items-center gap-2">
-            <Users className="w-4 h-4" /> Unité d'élite
+            <Users className="w-4 h-4" /> {t('games.undercover.room.roster_title', "Unité d'élite")}
           </h3>
           <div className="space-y-2.5">
-            {players.length === 0 && <p className="text-sm italic opacity-30">En attente d'agents…</p>}
+            {players.length === 0 && <p className="text-sm italic opacity-30">{t('games.undercover.room.waiting_agents', "En attente d'agents…")}</p>}
             {players.map((p, i) => {
               const isMe = p.id === myId;
               const dead = p.alive === false;
@@ -248,13 +260,13 @@ const UndercoverRoom: React.FC = () => {
                     <span className="absolute -bottom-1 -right-1 text-[8px] font-black bg-black/80 text-white/60 rounded-md px-1 leading-tight">{String(i + 1).padStart(2, '0')}</span>
                   </div>
                   <div className="min-w-0 flex-grow">
-                    <span className={`font-bold truncate block ${dead ? 'text-white/50 line-through' : 'text-white'}`}>{p.name}{isMe && <span className="text-yellow-400/70"> · toi</span>}</span>
+                    <span className={`font-bold truncate block ${dead ? 'text-white/50 line-through' : 'text-white'}`}>{p.name}{isMe && <span className="text-yellow-400/70"> · {t('games.undercover.room.you', 'toi')}</span>}</span>
                     {showRole && p.role ? (
                       <span className={`text-[11px] font-black uppercase ${meta.cls}`}>
                         {meta.label}{p.role !== 'MrWhite' && p.word ? ` · ${p.word}` : ''}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/25">{dead ? 'Éliminé' : 'Agent'}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/25">{dead ? t('games.undercover.room.eliminated', 'Éliminé') : t('games.undercover.room.agent', 'Agent')}</span>
                     )}
                   </div>
                   {p.is_host && <Crown className="w-4 h-4 text-yellow-400 shrink-0" />}
@@ -272,41 +284,41 @@ const UndercoverRoom: React.FC = () => {
             {state === 'lobby' && (
               <div className="space-y-7">
                 <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.25em] text-yellow-400/70 mb-2">Nom de code {me?.name ? `· ${me.name}` : ''}</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.25em] text-yellow-400/70 mb-2">{t('games.undercover.room.codename_label', 'Nom de code')} {me?.name ? `· ${me.name}` : ''}</p>
                   <div className="flex gap-3">
                     <input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') submitName(); }}
-                      placeholder="Choisis un pseudo d'agent…"
+                      placeholder={t('games.undercover.room.codename_placeholder', "Choisis un pseudo d'agent…")}
                       maxLength={15}
-                      aria-label="Nom de code"
+                      aria-label={t('games.undercover.room.codename_label', 'Nom de code')}
                       className="flex-grow p-3.5 rounded-2xl bg-white/[0.04] border-2 border-white/10 focus:border-yellow-400 outline-none font-bold text-white placeholder:text-white/25 transition-colors"
                     />
-                    <button onClick={submitName} className="px-6 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic uppercase tracking-wide transition-colors">Valider</button>
+                    <button onClick={submitName} className="px-6 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic uppercase tracking-wide transition-colors">{t('common.validate', 'Valider')}</button>
                   </div>
                 </div>
 
                 {isHost ? (
                   <>
                     <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Visibilité du salon</p>
+                      <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">{t('games.undercover.room.visibility_label', 'Visibilité du salon')}</p>
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => applySettings({ visibility: 'public' })}
                           className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${isPublic ? 'border-green-500 bg-green-500/15 text-green-400' : 'border-white/10 text-white/40 hover:border-green-500/40'}`}
-                        ><Globe className="w-3.5 h-3.5" /> Public</button>
+                        ><Globe className="w-3.5 h-3.5" /> {t('games.undercover.visibility.public', 'Public')}</button>
                         <button
                           onClick={() => applySettings({ visibility: 'private' })}
                           className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${!isPublic ? 'border-red-500 bg-red-500/15 text-red-400' : 'border-white/10 text-white/40 hover:border-red-500/40'}`}
-                        ><EyeOff className="w-3.5 h-3.5" /> Privé</button>
+                        ><EyeOff className="w-3.5 h-3.5" /> {t('games.undercover.visibility.private', 'Privé')}</button>
                       </div>
                       <p className="mt-2 text-[11px] text-white/35 italic">
-                        {isPublic ? 'Visible dans la liste des salons publics — tout le monde peut rejoindre.' : 'Accessible uniquement via le code ou l\'URL.'}
+                        {isPublic ? t('games.undercover.room.public_hint', 'Visible dans la liste des salons publics — tout le monde peut rejoindre.') : t('games.undercover.room.private_hint', "Accessible uniquement via le code ou l'URL.")}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Catégories à inclure</p>
+                      <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">{t('games.undercover.room.categories_label', 'Catégories à inclure')}</p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {CATEGORIES.map((c) => {
                           const on = categories.includes(c.key);
@@ -325,12 +337,12 @@ const UndercoverRoom: React.FC = () => {
                         })}
                       </div>
                       <p className={`mt-2 text-[11px] italic ${hasAnchor ? 'text-white/35' : 'text-red-400'}`}>
-                        ⚓ Au moins une catégorie ancre (anime/manga/perso) doit être cochée — chaque paire en garde un mot.
+                        {t('games.undercover.room.anchor_hint', '⚓ Au moins une catégorie ancre (anime/manga/perso) doit être cochée — chaque paire en garde un mot.')}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Difficulté · popularité</p>
+                      <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">{t('games.undercover.room.difficulty_label', 'Difficulté · popularité')}</p>
                       <div className="grid grid-cols-3 gap-2">
                         {DIFFS.map((d) => (
                           <button
@@ -340,14 +352,14 @@ const UndercoverRoom: React.FC = () => {
                           >{DIFF_LABEL[d]}</button>
                         ))}
                       </div>
-                      <p className="mt-2 text-[11px] text-white/35 italic">{DIFF_HINT[difficulty]} — plus c'est dur, plus les œuvres sont obscures.</p>
+                      <p className="mt-2 text-[11px] text-white/35 italic">{DIFF_HINT[difficulty]} {t('games.undercover.room.difficulty_hint_suffix', "— plus c'est dur, plus les œuvres sont obscures.")}</p>
                     </div>
 
                     {/* Sliders : intrus + Mr. White, bornés par la taille du lobby */}
                     <div className="space-y-6">
                       <div>
                         <div className="flex items-center justify-between mb-2.5">
-                          <p className="text-[11px] font-black uppercase tracking-[0.25em] text-red-400/80 flex items-center gap-1.5"><Vote className="w-3.5 h-3.5" /> Intrus</p>
+                          <p className="text-[11px] font-black uppercase tracking-[0.25em] text-red-400/80 flex items-center gap-1.5"><Vote className="w-3.5 h-3.5" /> {t('games.undercover.room.intruders_label', 'Intrus')}</p>
                           <span className="min-w-9 text-center px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 text-base font-black tabular-nums shadow-[0_0_14px_-4px_rgba(239,68,68,0.6)]">{under}</span>
                         </div>
                         <input
@@ -355,9 +367,9 @@ const UndercoverRoom: React.FC = () => {
                           onChange={(e) => applySettings({ num_undercovers: Number(e.target.value) })}
                           className="uc-slider"
                           style={sliderStyle(under, 1, maxUnderSlider, '#ef4444')}
-                          aria-label="Nombre d'intrus"
+                          aria-label={t('games.undercover.room.intruders_aria', "Nombre d'intrus")}
                         />
-                        <div className="flex justify-between mt-1.5 text-[10px] font-bold text-white/25 tabular-nums"><span>1</span><span>max {maxUnderSlider}</span></div>
+                        <div className="flex justify-between mt-1.5 text-[10px] font-bold text-white/25 tabular-nums"><span>1</span><span>{t('games.undercover.room.max_value', { defaultValue: 'max {{value}}', value: maxUnderSlider })}</span></div>
                       </div>
                       <div>
                         <div className="flex items-center justify-between mb-2.5">
@@ -369,10 +381,10 @@ const UndercoverRoom: React.FC = () => {
                           onChange={(e) => applySettings({ num_mrwhites: Number(e.target.value) })}
                           className="uc-slider"
                           style={sliderStyle(white, 0, maxWhiteSlider, '#c084fc')}
-                          aria-label="Nombre de Mr. White"
+                          aria-label={t('games.undercover.room.mrwhite_aria', 'Nombre de Mr. White')}
                         />
-                        <div className="flex justify-between mt-1.5 text-[10px] font-bold text-white/25 tabular-nums"><span>0</span><span>max {maxWhiteSlider}</span></div>
-                        <p className="mt-2 text-[11px] text-white/35 italic">Le Mr. White n'a pas de mot : éliminé, il doit deviner celui des civils pour gagner.</p>
+                        <div className="flex justify-between mt-1.5 text-[10px] font-bold text-white/25 tabular-nums"><span>0</span><span>{t('games.undercover.room.max_value', { defaultValue: 'max {{value}}', value: maxWhiteSlider })}</span></div>
+                        <p className="mt-2 text-[11px] text-white/35 italic">{t('games.undercover.room.mrwhite_hint', "Le Mr. White n'a pas de mot : éliminé, il doit deviner celui des civils pour gagner.")}</p>
                       </div>
                       {/* Composition bar */}
                       <div>
@@ -382,9 +394,9 @@ const UndercoverRoom: React.FC = () => {
                           {white > 0 && <div className="bg-purple-400/70" style={{ width: `${(white / Math.max(1, players.length)) * 100}%` }} />}
                         </div>
                         <div className="flex flex-wrap items-center gap-2 mt-3 text-[11px] font-black uppercase tracking-wider">
-                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 text-green-400"><span className="w-2 h-2 rounded-full bg-green-500" />{civilsCount} civils</span>
-                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400"><span className="w-2 h-2 rounded-full bg-red-500" />{under} intrus</span>
-                          {white > 0 && <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300"><span className="w-2 h-2 rounded-full bg-purple-400" />{white} Mr. White</span>}
+                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 text-green-400"><span className="w-2 h-2 rounded-full bg-green-500" />{t('games.undercover.room.civils_count', { defaultValue: '{{count}} civils', count: civilsCount })}</span>
+                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400"><span className="w-2 h-2 rounded-full bg-red-500" />{t('games.undercover.room.intruders_count', { defaultValue: '{{count}} intrus', count: under })}</span>
+                          {white > 0 && <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300"><span className="w-2 h-2 rounded-full bg-purple-400" />{t('games.undercover.room.mrwhite_count', { defaultValue: '{{count}} Mr. White', count: white })}</span>}
                         </div>
                       </div>
                     </div>
@@ -395,16 +407,16 @@ const UndercoverRoom: React.FC = () => {
                         disabled={players.length < MIN_PLAYERS || !hasAnchor}
                         className="w-full py-4 rounded-2xl bg-red-600 enabled:hover:bg-red-500 text-white font-black italic uppercase tracking-widest text-lg shadow-[0_10px_30px_-10px_rgba(239,68,68,0.7)] transition-all enabled:hover:scale-[1.01] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
-                        <Play className="w-5 h-5 fill-current" /> Lancer la mission
+                        <Play className="w-5 h-5 fill-current" /> {t('games.undercover.room.start_button', 'Lancer la mission')}
                       </button>
                       {players.length < MIN_PLAYERS && (
                         <p className="mt-3 text-center text-[11px] font-bold uppercase tracking-widest text-white/35 flex items-center justify-center gap-1.5">
-                          <Lock className="w-3.5 h-3.5" /> Min. {MIN_PLAYERS} agents — partage le code ci-dessus
+                          <Lock className="w-3.5 h-3.5" /> {t('games.undercover.room.min_players_hint', { defaultValue: 'Min. {{count}} agents — partage le code ci-dessus', count: MIN_PLAYERS })}
                         </p>
                       )}
                       {players.length >= MIN_PLAYERS && !hasAnchor && (
                         <p className="mt-3 text-center text-[11px] font-bold uppercase tracking-widest text-red-400 flex items-center justify-center gap-1.5">
-                          <Lock className="w-3.5 h-3.5" /> Coche au moins une catégorie ancre (anime/manga/perso)
+                          <Lock className="w-3.5 h-3.5" /> {t('games.undercover.room.anchor_required', 'Coche au moins une catégorie ancre (anime/manga/perso)')}
                         </p>
                       )}
                     </div>
@@ -412,7 +424,7 @@ const UndercoverRoom: React.FC = () => {
                 ) : (
                   <div className="text-center py-8">
                     <Radio className="w-8 h-8 text-white/20 mx-auto mb-3 animate-pulse" />
-                    <p className="opacity-40 italic">En attente du briefing par le chef d'unité…</p>
+                    <p className="opacity-40 italic">{t('games.undercover.room.waiting_host', "En attente du briefing par le chef d'unité…")}</p>
                   </div>
                 )}
               </div>
@@ -426,8 +438,8 @@ const UndercoverRoom: React.FC = () => {
                   <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-purple-500/15 to-transparent border-2 border-purple-400/40">
                     <div className="w-16 h-20 rounded-xl bg-purple-500/15 grid place-items-center"><Ghost className="w-7 h-7 text-purple-300" /></div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-purple-300">Tu es Mr. White</p>
-                      <p className="text-lg font-black italic text-white leading-tight">Pas de mot — bluffe, devine, survis.</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-purple-300">{t('games.undercover.room.you_are_mrwhite', 'Tu es Mr. White')}</p>
+                      <p className="text-lg font-black italic text-white leading-tight">{t('games.undercover.room.mrwhite_card_text', 'Pas de mot — bluffe, devine, survis.')}</p>
                     </div>
                   </div>
                 ) : (
@@ -436,7 +448,7 @@ const UndercoverRoom: React.FC = () => {
                       ? <img src={myRole.image} alt="" className="w-16 h-20 object-cover rounded-xl shadow-lg" />
                       : <div className="w-16 h-20 rounded-xl bg-white/10 grid place-items-center"><Lock className="w-6 h-6 text-white/30" /></div>}
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-yellow-400">Ton mot secret</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-yellow-400">{t('games.undercover.room.secret_word_label', 'Ton mot secret')}</p>
                       <p className="text-2xl font-black italic text-white">{myRole.word ?? '…'}</p>
                     </div>
                   </div>
@@ -446,32 +458,32 @@ const UndercoverRoom: React.FC = () => {
                 {state === 'mrwhite_guess' ? (
                   iAmPendingWhite ? (
                     <form onSubmit={submitGuess} className="p-4 rounded-2xl bg-purple-500/10 border-2 border-purple-400/50 space-y-3">
-                      <p className="text-sm text-white/85 flex items-start gap-2"><HelpCircle className="w-5 h-5 text-purple-300 shrink-0 mt-0.5" /> Tu es éliminé ! Devine le mot des <b className="text-green-400">civils</b> — si tu trouves, tu gagnes la partie.</p>
+                      <p className="text-sm text-white/85 flex items-start gap-2"><HelpCircle className="w-5 h-5 text-purple-300 shrink-0 mt-0.5" /> {t('games.undercover.room.guess_prompt_before', 'Tu es éliminé ! Devine le mot des')} <b className="text-green-400">{t('games.undercover.room.guess_prompt_civils', 'civils')}</b>{t('games.undercover.room.guess_prompt_after', ' — si tu trouves, tu gagnes la partie.')}</p>
                       <div className="flex gap-3">
                         <input
                           value={guess}
                           onChange={(e) => setGuess(e.target.value)}
-                          placeholder="Le mot des civils…"
-                          aria-label="Deviner le mot"
+                          placeholder={t('games.undercover.room.guess_placeholder', 'Le mot des civils…')}
+                          aria-label={t('games.undercover.room.guess_aria', 'Deviner le mot')}
                           autoFocus
                           className="flex-grow p-3.5 rounded-2xl bg-white/[0.04] border-2 border-purple-400/40 focus:border-purple-300 outline-none font-bold text-white placeholder:text-white/25"
                         />
-                        <button type="submit" className="px-6 rounded-2xl bg-purple-500 hover:bg-purple-400 text-white font-black italic uppercase tracking-wide transition-colors">Deviner</button>
+                        <button type="submit" className="px-6 rounded-2xl bg-purple-500 hover:bg-purple-400 text-white font-black italic uppercase tracking-wide transition-colors">{t('games.undercover.room.guess_button', 'Deviner')}</button>
                       </div>
                     </form>
                   ) : (
                     <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-400/20 text-sm text-white/80 flex items-center gap-3">
                       <Ghost className="w-5 h-5 text-purple-300 shrink-0 animate-pulse" />
-                      <span><b className="text-purple-300">{pendingWhiteName}</b> (Mr. White) a été éliminé et tente de deviner le mot des civils…</span>
+                      <span><b className="text-purple-300">{pendingWhiteName}</b>{t('games.undercover.room.pending_white_status', ' (Mr. White) a été éliminé et tente de deviner le mot des civils…')}</span>
                     </div>
                   )
                 ) : (
                   <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/20 text-sm text-white/80 flex items-start gap-3">
                     <Vote className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
                     {iAmAlive ? (
-                      <span>Décris ton mot sans le nommer, puis <b className="text-red-400">clique un agent vivant</b> pour voter. Quand tout le monde a voté, le plus visé est éliminé (égalité → on revote).</span>
+                      <span>{t('games.undercover.room.vote_hint_before', 'Décris ton mot sans le nommer, puis')} <b className="text-red-400">{t('games.undercover.room.vote_hint_click', 'clique un agent vivant')}</b> {t('games.undercover.room.vote_hint_after', 'pour voter. Quand tout le monde a voté, le plus visé est éliminé (égalité → on revote).')}</span>
                     ) : (
-                      <span className="italic text-white/50">Tu es éliminé — observe la partie en spectateur.</span>
+                      <span className="italic text-white/50">{t('games.undercover.room.spectator_hint', 'Tu es éliminé — observe la partie en spectateur.')}</span>
                     )}
                   </div>
                 )}
@@ -485,13 +497,13 @@ const UndercoverRoom: React.FC = () => {
                   <p className="font-black text-2xl italic manga-font text-white">{winnerBanner().title}</p>
                   <p className="mt-2 font-bold text-white/80">{winnerBanner().sub}</p>
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm">
-                    <span className="px-3 py-1.5 rounded-xl bg-green-500/10 text-green-400 font-bold">Mot civil : <span className="text-white">{civilWord}</span></span>
-                    <span className="px-3 py-1.5 rounded-xl bg-red-500/10 text-red-400 font-bold">Mot intrus : <span className="text-white">{undercoverWord}</span></span>
+                    <span className="px-3 py-1.5 rounded-xl bg-green-500/10 text-green-400 font-bold">{t('games.undercover.room.civil_word_label', 'Mot civil :')} <span className="text-white">{civilWord}</span></span>
+                    <span className="px-3 py-1.5 rounded-xl bg-red-500/10 text-red-400 font-bold">{t('games.undercover.room.undercover_word_label', 'Mot intrus :')} <span className="text-white">{undercoverWord}</span></span>
                   </div>
                 </div>
                 {isHost && (
                   <button onClick={() => sendAction('back_to_lobby')} className="w-full py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic uppercase tracking-wide flex items-center justify-center gap-2 transition-colors">
-                    <RotateCcw className="w-5 h-5" /> Nouvelle partie
+                    <RotateCcw className="w-5 h-5" /> {t('games.undercover.room.new_game', 'Nouvelle partie')}
                   </button>
                 )}
               </div>
@@ -501,10 +513,10 @@ const UndercoverRoom: React.FC = () => {
           {/* Comms / chat */}
           <div className={`${panel} p-6 flex flex-col`}>
             <h3 className="text-[11px] font-black uppercase opacity-40 mb-3 tracking-[0.25em] flex items-center gap-2">
-              <Radio className="w-4 h-4" /> Canal d'infiltration
+              <Radio className="w-4 h-4" /> {t('games.undercover.room.chat_title', "Canal d'infiltration")}
             </h3>
             <div className="flex-grow bg-black/40 rounded-2xl p-5 mb-4 overflow-y-auto max-h-72 min-h-[150px] border border-white/5 custom-scrollbar font-mono">
-              {messages.length === 0 && <p className="text-center py-12 opacity-20 italic font-sans">En attente de communications…</p>}
+              {messages.length === 0 && <p className="text-center py-12 opacity-20 italic font-sans">{t('games.undercover.room.chat_empty', 'En attente de communications…')}</p>}
               {messages.map((msg, i) => (
                 <div key={i} className={`mb-2.5 ${msg.is_system ? 'text-center' : ''}`}>
                   {msg.is_system ? (
@@ -522,8 +534,8 @@ const UndercoverRoom: React.FC = () => {
               <input
                 value={chat}
                 onChange={(e) => setChat(e.target.value)}
-                placeholder="Message d'infiltration…"
-                aria-label="Message"
+                placeholder={t('games.undercover.room.chat_placeholder', "Message d'infiltration…")}
+                aria-label={t('games.undercover.room.chat_aria', 'Message')}
                 maxLength={100}
                 className="flex-grow p-3.5 rounded-2xl bg-white/[0.04] border-2 border-white/10 focus:border-red-500 outline-none font-medium text-white placeholder:text-white/25 transition-colors"
               />

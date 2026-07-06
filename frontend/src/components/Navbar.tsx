@@ -64,7 +64,7 @@ const Navbar: React.FC = () => {
             <Link
               to="/notifications"
               className="relative grid place-items-center w-10 h-10 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-blue-500 transition-colors"
-              aria-label="Notifications"
+              aria-label={t('nav.notifications', 'Notifications')}
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
@@ -100,7 +100,7 @@ const Navbar: React.FC = () => {
                     onKeyDown={(e) => { if (e.key === 'Escape') closeMenu(); }}
                     role="button"
                     tabIndex={-1}
-                    aria-label="Fermer le menu"
+                    aria-label={t('nav.close_menu', 'Fermer le menu')}
                   />
                   <div
                     className="absolute top-full right-0 mt-3 w-64 bg-white dark:bg-[#0f0f1a] rounded-2xl shadow-2xl border border-black/5 dark:border-white/10 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
@@ -109,7 +109,7 @@ const Navbar: React.FC = () => {
                     <div className="px-3 pt-2 pb-3 mb-1 border-b border-black/5 dark:border-white/10">
                       <p className="manga-font text-sm text-black dark:text-white m-0 truncate">{user.username}</p>
                       <p className="text-[10px] font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400 m-0">
-                        {user.tier === 'premium' ? 'Boosté' : 'Standard'}
+                        {user.tier === 'premium' ? t('nav.tier_boosted', 'Boosté') : t('nav.tier_standard', 'Standard')}
                       </p>
                     </div>
 
@@ -163,13 +163,13 @@ const Navbar: React.FC = () => {
               to="/auth/login/"
               className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-all uppercase tracking-widest px-3 py-2"
             >
-              <LogIn className="w-4 h-4" /> <span className="hidden sm:inline">{t('auth.login', 'Connexion')}</span>
+              <LogIn className="w-4 h-4" /> <span className="hidden sm:inline">{t('auth.login.link', 'Connexion')}</span>
             </Link>
             <Link
               to="/auth/register/"
               className="flex items-center gap-2 no-underline text-xs font-black italic bg-yellow-400 text-black hover:bg-yellow-500 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest px-4 py-2.5 rounded-xl shadow-lg border-2 border-black/10"
             >
-              <UserPlus className="w-4 h-4" /> <span className="hidden sm:inline">{t('auth.register', "S'inscrire")}</span>
+              <UserPlus className="w-4 h-4" /> <span className="hidden sm:inline">{t('auth.register.link', "S'inscrire")}</span>
             </Link>
           </>
         )}
@@ -184,7 +184,7 @@ const Navbar: React.FC = () => {
             onKeyDown={(e) => { if (e.key === 'Escape') setShowPersonalizationPanel(false); }}
             role="button"
             tabIndex={-1}
-            aria-label="Fermer le panneau"
+            aria-label={t('nav.close_panel', 'Fermer le panneau')}
           />
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md bg-white dark:bg-[#0f0f1a] rounded-2xl shadow-2xl border border-black/5 dark:border-white/10 p-6 z-[1100] animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-6">
@@ -194,7 +194,7 @@ const Navbar: React.FC = () => {
               <button
                 onClick={() => setShowPersonalizationPanel(false)}
                 className="grid place-items-center w-8 h-8 rounded-lg text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white transition-colors"
-                aria-label="Fermer"
+                aria-label={t('nav.close', 'Fermer')}
               >
                 <X className="w-4 h-4" />
               </button>

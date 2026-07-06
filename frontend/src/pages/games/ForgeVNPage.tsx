@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Loader2, Film, Play, Edit3, ArrowLeft, Sparkles } from 'lucide-react';
 import { VNPlayer } from '../../features/games/components/VNPlayer';
 import { VNDirector } from '../../features/games/components/VNDirector';
@@ -7,6 +8,7 @@ import { VNDirector } from '../../features/games/components/VNDirector';
 import { VNScene } from '../../types';
 
 export const ForgeVNPage: React.FC = () => {
+  const { t } = useTranslation();
   const { fusionId } = useParams<{ fusionId: string }>();
   const navigate = useNavigate();
   const [mode, setMode] = useState<'player' | 'director'>('player');
@@ -43,19 +45,19 @@ export const ForgeVNPage: React.FC = () => {
         }, 1500);
 
       } catch (_err) {
-        setErrorMessage("Impossible de charger le script du Visual Novel.");
+        setErrorMessage(t('games.forge_vn.load_error', 'Impossible de charger le script du Visual Novel.'));
         setIsLoading(false);
       }
     };
 
     if (fusionId) fetchScript();
-  }, [fusionId, setErrorMessage]);
+  }, [fusionId, setErrorMessage, t]);
 
   if (isLoading) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center gap-6">
         <Loader2 className="w-16 h-16 text-anime-accent animate-spin" />
-        <p className="text-sm font-black uppercase tracking-[0.5em] opacity-40">Initialisation du Player VN...</p>
+        <p className="text-sm font-black uppercase tracking-[0.5em] opacity-40">{t('games.forge_vn.loading', 'Initialisation du Player VN...')}</p>
       </div>
     );
   }
@@ -107,7 +109,7 @@ export const ForgeVNPage: React.FC = () => {
         <div className="lg:col-span-4 space-y-8">
           <div className="bg-white dark:bg-anime-dark-card rounded-[2.5rem] p-8 shadow-xl border border-black/5 dark:border-white/5">
             <h3 className="text-xl font-black italic manga-font mb-6 flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-anime-accent" /> Infos Production
+              <Sparkles className="w-5 h-5 text-anime-accent" /> {t('games.forge_vn.production_info', 'Infos Production')}
             </h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center py-3 border-b border-black/5 dark:border-white/5">
@@ -115,20 +117,20 @@ export const ForgeVNPage: React.FC = () => {
                 <span className="text-xs font-mono font-bold">{fusionId?.slice(0, 8)}...</span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-black/5 dark:border-white/5">
-                <span className="text-[10px] font-black uppercase opacity-40">Scènes</span>
+                <span className="text-[10px] font-black uppercase opacity-40">{t('games.forge_vn.scenes_label', 'Scènes')}</span>
                 <span className="text-xs font-bold">{scenes.length}</span>
               </div>
               <div className="flex justify-between items-center py-3">
-                <span className="text-[10px] font-black uppercase opacity-40">Moteur</span>
+                <span className="text-[10px] font-black uppercase opacity-40">{t('games.forge_vn.engine_label', 'Moteur')}</span>
                 <span className="text-xs font-bold text-anime-accent">VN-FORGE v1.0</span>
               </div>
             </div>
           </div>
 
           <div className="bg-gradient-to-br from-anime-accent to-orange-400 p-8 rounded-[2.5rem] shadow-xl text-black">
-             <h4 className="font-black italic text-xl uppercase mb-2">Conseil du Réalisateur</h4>
+             <h4 className="font-black italic text-xl uppercase mb-2">{t('games.forge_vn.director_tip_title', 'Conseil du Réalisateur')}</h4>
              <p className="text-sm font-bold opacity-80 leading-relaxed">
-               Utilisez le mode Director pour ajuster les dialogues et l'ambiance de chaque scène avant d'exporter votre création.
+               {t('games.forge_vn.director_tip_text', "Utilisez le mode Director pour ajuster les dialogues et l'ambiance de chaque scène avant d'exporter votre création.")}
              </p>
           </div>
         </div>

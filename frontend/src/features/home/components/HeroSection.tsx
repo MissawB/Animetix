@@ -15,7 +15,7 @@ export const HeroSection: React.FC = () => {
           ANIMETIX
         </h1>
         <p className="text-xl md:text-2xl mb-10 text-gray-700 dark:text-gray-300 font-medium leading-relaxed max-w-lg">
-          {isEn ? 'Artificial intelligence in service of your passion.' : "L'intelligence artificielle au service de votre passion."}
+          {isEn ? 'Artificial intelligence in service of your passion.' : t('home.hero_tagline', "L'intelligence artificielle au service de votre passion.")}
         </p>
         <div className="flex flex-wrap gap-6">
           <Link 

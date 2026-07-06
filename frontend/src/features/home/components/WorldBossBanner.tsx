@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useGameModes } from '../data/useGameModes';
 import { apiClient } from '../../../utils/apiClient';
 
 export const WorldBossBanner: React.FC = () => {
+  const { t } = useTranslation();
   const { isEn } = useGameModes();
 
   // Only flag a "live event" when a World Boss is actually active (the endpoint
@@ -27,7 +29,7 @@ export const WorldBossBanner: React.FC = () => {
   return (
     <section className="mb-16 text-left">
       <h2 className="text-3xl font-black mb-6 flex items-baseline text-black dark:text-white uppercase italic manga-font">
-        {isEn ? 'Community' : 'Communautaire'}
+        {isEn ? 'Community' : t('home.community_title', 'Communautaire')}
         <span className="text-yellow-400 text-3xl leading-none ml-1">.</span>
       </h2>
       <Link to="/game/world-boss/active/" className="block no-underline group">
@@ -45,14 +47,14 @@ export const WorldBossBanner: React.FC = () => {
           <div className="relative z-10 max-w-2xl">
             {hasEvent && (
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600 text-white text-[10px] font-black uppercase tracking-widest mb-6 animate-pulse">
-                <span className="w-2 h-2 rounded-full bg-white"></span> {isEn ? 'Live Event' : 'Event en cours'}
+                <span className="w-2 h-2 rounded-full bg-white"></span> {isEn ? 'Live Event' : t('home.live_event', 'Event en cours')}
               </div>
             )}
             <h2 className="text-4xl md:text-6xl font-black italic manga-font tracking-tighter uppercase text-white mb-4 leading-none">
               WORLD <span className="text-red-600 text-glow">BOSS</span>
             </h2>
             <p className="text-sm md:text-lg font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed italic">
-              {isEn ? 'Join the global community to take down the legendary Titan.' : "Rejoignez la communauté mondiale pour terrasser le Titan légendaire."}
+              {isEn ? 'Join the global community to take down the legendary Titan.' : t('home.world_boss_desc', 'Rejoignez la communauté mondiale pour terrasser le Titan légendaire.')}
             </p>
           </div>
 

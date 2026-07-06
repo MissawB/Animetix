@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Sparkles} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from "../../store/authStore";
 import { updateAccountSettings } from '../../api';
 import { apiClient } from '../../utils/apiClient';
@@ -13,6 +14,7 @@ import { AdSlot } from '../../features/billing/components/AdSlot';
 const PRICING_AD_SLOT = import.meta.env.VITE_ADSENSE_SLOT_SIDEBAR as string | undefined;
 
 export const PricingPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user, checkAuth, refetchUser } = useAuthStore();
   const navigate = useNavigate();
   const { addToast } = useToastStore();
@@ -23,10 +25,10 @@ export const PricingPage: React.FC = () => {
     try {
       await updateAccountSettings({ tier: 'premium' });
       await checkAuth();
-      addToast("Statut Boosté activé avec succès pour 24H !", "success");
+      addToast(t('billing.pricing.boost_success', 'Statut Boosté activé avec succès pour 24H !'), "success");
     } catch (error) {
       console.error('Failed to update tier:', error);
-      addToast("Erreur lors de l'activation du boost.", "error");
+      addToast(t('billing.pricing.boost_error', "Erreur lors de l'activation du boost."), "error");
       throw error;
     }
   };
@@ -35,10 +37,10 @@ export const PricingPage: React.FC = () => {
     try {
       await apiClient('/api/v1/profiles/refill_quota/', { method: 'POST' });
       await checkAuth();
-      addToast("Votre quota quotidien a été rechargé !", "success");
+      addToast(t('billing.pricing.refill_success', 'Votre quota quotidien a été rechargé !'), "success");
     } catch (error) {
       console.error('Failed to refill quota:', error);
-      addToast("Erreur lors de la recharge de quota.", "error");
+      addToast(t('billing.pricing.refill_error', 'Erreur lors de la recharge de quota.'), "error");
       throw error;
     }
   };
@@ -60,10 +62,10 @@ export const PricingPage: React.FC = () => {
     try {
       await apiClient('/api/v1/profiles/claim_donation/', { method: 'POST' });
       await refetchUser();
-      addToast("Merci pour votre soutien ! Badge Sponsor Or et couleur de pseudo débloqués.", "success");
+      addToast(t('billing.pricing.donation_success', 'Merci pour votre soutien ! Badge Sponsor Or et couleur de pseudo débloqués.'), "success");
     } catch (error) {
       console.error('Failed to claim donation:', error);
-      addToast("Erreur lors de la validation du don.", "error");
+      addToast(t('billing.pricing.donation_error', 'Erreur lors de la validation du don.'), "error");
     } finally {
       setIsClaiming(false);
     }
@@ -74,29 +76,29 @@ export const PricingPage: React.FC = () => {
       <div className="max-w-6xl mx-auto space-y-12">
         <header className="text-center mb-16 space-y-4">
           <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter manga-font">
-            Centre de <span className="text-yellow-500 text-glow">Sponsoring & Boost</span>
+            {t('billing.pricing.title_part1', 'Centre de')} <span className="text-yellow-500 text-glow">{t('billing.pricing.title_part2', 'Sponsoring & Boost')}</span>
           </h1>
           <p className="text-gray-500 font-bold uppercase tracking-[0.2em] text-xs">
-            Financez le moteur IA par la publicité et accédez au niveau supérieur
+            {t('billing.pricing.subtitle', 'Financez le moteur IA par la publicité et accédez au niveau supérieur')}
           </p>
         </header>
 
         {user && (
           <div className="max-w-md mx-auto bg-white/5 border border-white/5 p-6 rounded-3xl text-center space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Votre Statut Actuel</h3>
+            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">{t('billing.pricing.current_status', 'Votre Statut Actuel')}</h3>
             <div className="flex justify-center items-center gap-3">
               <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider ${
                 user.tier === 'premium' 
                   ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' 
                   : 'bg-gray-500/20 text-gray-400 border border-white/5'
               }`}>
-                {user.tier === 'premium' ? 'Statut Boosté' : 'Statut Standard'}
+                {user.tier === 'premium' ? t('billing.pricing.status_boosted', 'Statut Boosté') : t('billing.pricing.status_standard', 'Statut Standard')}
               </span>
             </div>
             <p className="text-xs text-gray-500">
-              {user.tier === 'premium' 
-                ? 'Profitez d\'un accès illimité aux clubs et d\'un quota x5.' 
-                : 'Quota standard actif. Regardez un sponsor ci-dessous pour booster votre compte.'}
+              {user.tier === 'premium'
+                ? t('billing.pricing.boosted_desc', "Profitez d'un accès illimité aux clubs et d'un quota x5.")
+                : t('billing.pricing.standard_desc', 'Quota standard actif. Regardez un sponsor ci-dessous pour booster votre compte.')}
             </p>
           </div>
         )}
@@ -106,19 +108,19 @@ export const PricingPage: React.FC = () => {
           <motion.div whileHover={{ y: -5 }} className="bg-white/5 border border-white/5 p-8 rounded-3xl space-y-6 flex flex-col justify-between">
             <div className="space-y-4">
               <div>
-                <p className="text-[9px] font-black uppercase opacity-40">Option 01</p>
-                <h2 className="text-2xl font-black italic uppercase">Recharge Quota</h2>
+                <p className="text-[9px] font-black uppercase opacity-40">{t('billing.pricing.option_01', 'Option 01')}</p>
+                <h2 className="text-2xl font-black italic uppercase">{t('billing.pricing.refill_title', 'Recharge Quota')}</h2>
               </div>
-              <p className="text-3xl font-black text-white">GRATUIT</p>
+              <p className="text-3xl font-black text-white">{t('billing.pricing.free', 'GRATUIT')}</p>
               <p className="text-xs text-gray-400 leading-relaxed">
-                Réinitialisez immédiatement votre compteur de requêtes IA pour la journée. Idéal si vous êtes bloqué au milieu d'une session d'exploration intense.
+                {t('billing.pricing.refill_desc', "Réinitialisez immédiatement votre compteur de requêtes IA pour la journée. Idéal si vous êtes bloqué au milieu d'une session d'exploration intense.")}
               </p>
               <ul className="space-y-3 pt-2">
                 <li className="flex items-center gap-2.5 text-xs text-gray-300">
-                  <Check className="w-4 h-4 text-green-500" /> Remise à zéro instantanée
+                  <Check className="w-4 h-4 text-green-500" /> {t('billing.pricing.refill_feature_1', 'Remise à zéro instantanée')}
                 </li>
                 <li className="flex items-center gap-2.5 text-xs text-gray-300">
-                  <Check className="w-4 h-4 text-green-500" /> Sponsor ultra-rapide (4 secondes)
+                  <Check className="w-4 h-4 text-green-500" /> {t('billing.pricing.refill_feature_2', 'Sponsor ultra-rapide (4 secondes)')}
                 </li>
               </ul>
             </div>
@@ -128,33 +130,33 @@ export const PricingPage: React.FC = () => {
               className="py-5 font-black uppercase italic tracking-wider mt-6"
               onClick={() => handleAction('refill')}
             >
-              RECHARGER MON QUOTA
+              {t('billing.pricing.refill_cta', 'RECHARGER MON QUOTA')}
             </Button>
           </motion.div>
 
           {/* Option Boosté / Premium 24H */}
           <motion.div whileHover={{ y: -5 }} className="relative bg-yellow-950/10 border-2 border-yellow-500/40 p-8 rounded-3xl space-y-6 flex flex-col justify-between shadow-[0_0_30px_rgba(234,179,8,0.1)]">
             <div className="absolute -top-3 right-6 bg-yellow-500 text-black text-[9px] font-black uppercase px-3 py-1 rounded-full italic">
-              RECOMMANDÉ
+              {t('billing.pricing.recommended', 'RECOMMANDÉ')}
             </div>
             <div className="space-y-4">
               <div>
-                <p className="text-[9px] font-black uppercase opacity-40">Option 02</p>
-                <h2 className="text-2xl font-black italic uppercase text-yellow-500">Boost Cyber-Nexus</h2>
+                <p className="text-[9px] font-black uppercase opacity-40">{t('billing.pricing.option_02', 'Option 02')}</p>
+                <h2 className="text-2xl font-black italic uppercase text-yellow-500">{t('billing.pricing.boost_title', 'Boost Cyber-Nexus')}</h2>
               </div>
-              <p className="text-3xl font-black text-yellow-500">GRATUIT <span className="text-xs font-mono text-gray-400">/ 24H</span></p>
+              <p className="text-3xl font-black text-yellow-500">{t('billing.pricing.free', 'GRATUIT')} <span className="text-xs font-mono text-gray-400">/ 24H</span></p>
               <p className="text-xs text-gray-300 leading-relaxed">
-                Débloquez toutes les fonctionnalités premium : quota IA boosté (x5), création illimitée de clubs de fans et accès au visualiseur de graphe.
+                {t('billing.pricing.boost_desc', 'Débloquez toutes les fonctionnalités premium : quota IA boosté (x5), création illimitée de clubs de fans et accès au visualiseur de graphe.')}
               </p>
               <ul className="space-y-3 pt-2">
                 <li className="flex items-center gap-2.5 text-xs text-gray-200">
-                  <Check className="w-4 h-4 text-yellow-500" /> Quota IA augmenté (x5)
+                  <Check className="w-4 h-4 text-yellow-500" /> {t('billing.pricing.boost_feature_1', 'Quota IA augmenté (x5)')}
                 </li>
                 <li className="flex items-center gap-2.5 text-xs text-gray-200">
-                  <Check className="w-4 h-4 text-yellow-500" /> Visualiseur de Graphe complet
+                  <Check className="w-4 h-4 text-yellow-500" /> {t('billing.pricing.boost_feature_2', 'Visualiseur de Graphe complet')}
                 </li>
                 <li className="flex items-center gap-2.5 text-xs text-gray-200">
-                  <Check className="w-4 h-4 text-yellow-500" /> Suppression totale des bannières pubs
+                  <Check className="w-4 h-4 text-yellow-500" /> {t('billing.pricing.boost_feature_3', 'Suppression totale des bannières pubs')}
                 </li>
               </ul>
             </div>
@@ -165,7 +167,7 @@ export const PricingPage: React.FC = () => {
               onClick={() => handleAction('boost')}
               disabled={user?.tier === 'premium'}
             >
-              {user?.tier === 'premium' ? 'BOOST ACTIF' : 'ACTIVER LE BOOST'}
+              {user?.tier === 'premium' ? t('billing.pricing.boost_active', 'BOOST ACTIF') : t('billing.pricing.boost_cta', 'ACTIVER LE BOOST')}
             </Button>
           </motion.div>
         </div>
@@ -178,13 +180,13 @@ export const PricingPage: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
             <div className="space-y-3 max-w-xl">
               <span className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 w-fit">
-                <Sparkles className="w-3.5 h-3.5" /> Soutenir Animetix
+                <Sparkles className="w-3.5 h-3.5" /> {t('billing.pricing.support_badge', 'Soutenir Animetix')}
               </span>
               <h3 className="text-2xl font-black italic uppercase tracking-tight manga-font text-white">
-                Financement Participatif (Dons)
+                {t('billing.pricing.donation_title', 'Financement Participatif (Dons)')}
               </h3>
               <p className="text-xs text-gray-400 leading-relaxed">
-                Aidez-nous à payer les serveurs et les APIs de modèles d'IA ! En guise de remerciement, vous débloquerez un badge exclusif <span className="text-yellow-400 font-bold">"Sponsor Or"</span> sur votre profil public ainsi que la possibilité de <span className="text-yellow-400 font-bold">personnaliser la couleur de votre pseudo</span>.
+                {t('billing.pricing.donation_desc_1', "Aidez-nous à payer les serveurs et les APIs de modèles d'IA ! En guise de remerciement, vous débloquerez un badge exclusif ")}<span className="text-yellow-400 font-bold">"Sponsor Or"</span>{t('billing.pricing.donation_desc_2', ' sur votre profil public ainsi que la possibilité de ')}<span className="text-yellow-400 font-bold">{t('billing.pricing.donation_desc_highlight', 'personnaliser la couleur de votre pseudo')}</span>.
               </p>
             </div>
             <div className="flex flex-col gap-3 min-w-[240px]">
@@ -194,7 +196,7 @@ export const PricingPage: React.FC = () => {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2.5 bg-[#FF5E5B] hover:bg-[#ff4c48] text-white font-black uppercase tracking-wider text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-[#FF5E5B]/15 transition-all text-center no-underline hover:scale-[1.02]"
               >
-                ☕ Soutenir sur Ko-fi
+                {t('billing.pricing.kofi_cta', '☕ Soutenir sur Ko-fi')}
               </a>
               <a
                 href="https://patreon.com/animetix"
@@ -202,15 +204,15 @@ export const PricingPage: React.FC = () => {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2.5 bg-[#FF424D] hover:bg-[#e03a44] text-white font-black uppercase tracking-wider text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-[#FF424D]/15 transition-all text-center no-underline hover:scale-[1.02]"
               >
-                🎁 Devenir Patron (Patreon)
+                {t('billing.pricing.patreon_cta', '🎁 Devenir Patron (Patreon)')}
               </a>
             </div>
           </div>
           
           <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase text-gray-400">Déjà donateur ?</p>
-              <p className="text-xs text-gray-500">Récupérez et appliquez instantanément vos cosmétiques en simulant la validation ci-contre.</p>
+              <p className="text-[10px] font-black uppercase text-gray-400">{t('billing.pricing.already_donor', 'Déjà donateur ?')}</p>
+              <p className="text-xs text-gray-500">{t('billing.pricing.claim_desc', 'Récupérez et appliquez instantanément vos cosmétiques en simulant la validation ci-contre.')}</p>
             </div>
             <Button
               variant="outline"
@@ -218,7 +220,7 @@ export const PricingPage: React.FC = () => {
               onClick={handleClaimDonation}
               disabled={isClaiming}
             >
-              {isClaiming ? "Vérification..." : user?.unlocked_badges?.includes("Sponsor Or") ? "COSMÉTIQUES DÉBLOQUÉS !" : "Valider mon don & débloquer"}
+              {isClaiming ? t('billing.pricing.verifying', 'Vérification...') : user?.unlocked_badges?.includes("Sponsor Or") ? t('billing.pricing.cosmetics_unlocked', 'COSMÉTIQUES DÉBLOQUÉS !') : t('billing.pricing.claim_cta', 'Valider mon don & débloquer')}
             </Button>
           </div>
         </div>
@@ -226,11 +228,11 @@ export const PricingPage: React.FC = () => {
         {/* Espace Développeur */}
         <div className="max-w-4xl mx-auto border border-red-500/20 bg-red-950/5 p-6 rounded-3xl flex justify-between items-center">
           <div className="space-y-1">
-            <h3 className="text-sm font-black uppercase text-red-500">Accès API Développeur</h3>
-            <p className="text-xs text-gray-400">Pour intégrer le moteur RAG d'Animetix à vos projets. Aucun abonnement requis.</p>
+            <h3 className="text-sm font-black uppercase text-red-500">{t('billing.pricing.dev_api_title', 'Accès API Développeur')}</h3>
+            <p className="text-xs text-gray-400">{t('billing.pricing.dev_api_desc', "Pour intégrer le moteur RAG d'Animetix à vos projets. Aucun abonnement requis.")}</p>
           </div>
           <Button variant="outline" className="border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white" onClick={() => navigate('/auth/settings/')}>
-            GÉRER MA CLÉ API
+            {t('billing.pricing.dev_api_cta', 'GÉRER MA CLÉ API')}
           </Button>
         </div>
 

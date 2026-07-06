@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Swords, Trophy, Loader2, AlertCircle, Heart, History, Flame, Search, X } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { CardSkeleton } from "../../components/ui/Skeleton";
@@ -26,7 +27,8 @@ const FighterSlot: React.FC<{
   onActivate: () => void;
   onClear: () => void;
 }> = ({ slot, char, active, onActivate, onClear }) => {
-  const t = slotTheme(slot);
+  const { t } = useTranslation();
+  const theme = slotTheme(slot);
   return (
     <div
       role="button"
@@ -34,7 +36,7 @@ const FighterSlot: React.FC<{
       onClick={onActivate}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onActivate(); } }}
       className={`relative w-full text-left rounded-[2rem] border-2 overflow-hidden transition-all aspect-[3/4] cursor-pointer ${
-        active ? `${t.ring} shadow-2xl scale-[1.02]` : t.soft
+        active ? `${theme.ring} shadow-2xl scale-[1.02]` : theme.soft
       }`}
     >
       {char ? (
@@ -45,7 +47,7 @@ const FighterSlot: React.FC<{
             type="button"
             onClick={(e) => { e.stopPropagation(); onClear(); }}
             className="absolute top-3 right-3 z-10 w-8 h-8 grid place-items-center rounded-full bg-black/60 text-white hover:bg-red-600 transition-colors"
-            aria-label="Retirer le combattant"
+            aria-label={t('games.vs_battle.remove_fighter', 'Retirer le combattant')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -56,12 +58,12 @@ const FighterSlot: React.FC<{
         </>
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-4 text-center">
-          <div className={`w-14 h-14 rounded-2xl grid place-items-center ${t.soft} border-2 ${active ? t.ring : ''}`}>
-            <Swords className={`w-7 h-7 ${t.text}`} />
+          <div className={`w-14 h-14 rounded-2xl grid place-items-center ${theme.soft} border-2 ${active ? theme.ring : ''}`}>
+            <Swords className={`w-7 h-7 ${theme.text}`} />
           </div>
-          <p className={`font-black italic uppercase ${t.text}`}>Challenger {slot}</p>
+          <p className={`font-black italic uppercase ${theme.text}`}>{t('games.vs_battle.challenger', { defaultValue: 'Challenger {{slot}}', slot })}</p>
           <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
-            {active ? 'Choisis ci-dessous' : 'Touche pour sélectionner'}
+            {active ? t('games.vs_battle.choose_below', 'Choisis ci-dessous') : t('games.vs_battle.tap_to_select', 'Touche pour sélectionner')}
           </p>
         </div>
       )}
@@ -70,6 +72,7 @@ const FighterSlot: React.FC<{
 };
 
 const VsBattlePage: React.FC = () => {
+  const { t } = useTranslation();
   const [selectedA, setSelectedA] = useState<ArenaCharacter | null>(null);
   const [selectedB, setSelectedB] = useState<ArenaCharacter | null>(null);
   const [activeSlot, setActiveSlot] = useState<Slot>('A');
@@ -156,7 +159,7 @@ const VsBattlePage: React.FC = () => {
             ARENA <span className="text-red-500 text-glow">ULTIMATUM</span>
           </h1>
           <p className="text-xl font-bold opacity-40 uppercase tracking-[0.4em] relative z-10">
-            Défis Trans-Dimensionnels arbitrés par l'IA
+            {t('games.vs_battle.tagline', "Défis Trans-Dimensionnels arbitrés par l'IA")}
           </p>
         </header>
 
@@ -178,7 +181,7 @@ const VsBattlePage: React.FC = () => {
                   {isMirror && (
                     <div className="mt-4 flex justify-center">
                       <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-fuchsia-500/15 border border-fuchsia-500/40 text-fuchsia-400 text-[10px] font-black uppercase tracking-[0.25em]">
-                        <Swords className="w-3.5 h-3.5" /> Match miroir
+                        <Swords className="w-3.5 h-3.5" /> {t('games.vs_battle.mirror_match', 'Match miroir')}
                       </span>
                     </div>
                   )}
@@ -191,18 +194,18 @@ const VsBattlePage: React.FC = () => {
                     <input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Rechercher un personnage ou une franchise…"
-                      aria-label="Rechercher un personnage ou une franchise"
+                      placeholder={t('games.vs_battle.search_placeholder', 'Rechercher un personnage ou une franchise…')}
+                      aria-label={t('games.vs_battle.search_aria', 'Rechercher un personnage ou une franchise')}
                       className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-black border-2 border-white/5 focus:border-red-500 outline-none font-bold transition-all placeholder:opacity-30"
                     />
                   </div>
 
                   {isCharsLoading ? (
                     <div className="flex items-center gap-3 justify-center py-10 opacity-50 font-black uppercase tracking-widest text-sm">
-                      <Loader2 className="w-5 h-5 animate-spin" /> Chargement du roster…
+                      <Loader2 className="w-5 h-5 animate-spin" /> {t('games.vs_battle.loading_roster', 'Chargement du roster…')}
                     </div>
                   ) : filtered.length === 0 ? (
-                    <p className="text-center py-10 opacity-30 font-black italic uppercase">Aucun personnage trouvé</p>
+                    <p className="text-center py-10 opacity-30 font-black italic uppercase">{t('games.vs_battle.no_character', 'Aucun personnage trouvé')}</p>
                   ) : (
                     <div className="flex items-start gap-3 overflow-x-auto pb-3 -mx-1 px-1 snap-x [&::-webkit-scrollbar]:h-2.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-red-600/70 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-red-500 [scrollbar-width:thin] [scrollbar-color:rgb(220_38_38_/_0.7)_rgba(255,255,255,0.05)]">
                       {filtered.map((c) => {
@@ -225,7 +228,7 @@ const VsBattlePage: React.FC = () => {
                             <div className="relative aspect-[3/4] bg-navy-900">
                               <img src={c.image} alt={c.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                               {c.source === 'synthetic' && (
-                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/70 text-white/70" title="Fiche générée par l'IA (pas de page VS Battles Wiki)">IA</span>
+                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/70 text-white/70" title={t('games.vs_battle.synthetic_title', "Fiche générée par l'IA (pas de page VS Battles Wiki)")}>{t('games.vs_battle.ai_badge', 'IA')}</span>
                               )}
                               {(isA || isB) && (
                                 <div className="absolute top-1.5 right-1.5 flex gap-1">
@@ -244,7 +247,7 @@ const VsBattlePage: React.FC = () => {
                     </div>
                   )}
                   <p className="text-[10px] font-black uppercase tracking-widest opacity-30 mt-2 text-center">
-                    {query ? `${filtered.length} résultat${filtered.length > 1 ? 's' : ''}` : 'Fais défiler le roster ou filtre par nom / franchise'}
+                    {query ? t('games.vs_battle.results_count', { defaultValue: '{{count}} résultat{{plural}}', count: filtered.length, plural: filtered.length > 1 ? 's' : '' }) : t('games.vs_battle.scroll_hint', 'Fais défiler le roster ou filtre par nom / franchise')}
                   </p>
                 </div>
 
@@ -263,9 +266,9 @@ const VsBattlePage: React.FC = () => {
                     className="bg-red-600 hover:bg-red-500 text-white font-black text-2xl md:text-3xl italic uppercase px-12 md:px-16 py-8 md:py-10 rounded-[2.5rem] shadow-2xl hover:scale-105 transition-all border-none disabled:opacity-40 disabled:hover:scale-100"
                   >
                     {isLoading ? (
-                      <span className="flex items-center gap-4"><Loader2 className="w-8 h-8 animate-spin" /> SYNCHRONISATION DU LORE...</span>
+                      <span className="flex items-center gap-4"><Loader2 className="w-8 h-8 animate-spin" /> {t('games.vs_battle.syncing_lore', 'SYNCHRONISATION DU LORE...')}</span>
                     ) : (
-                      <span className="flex items-center gap-4"><Swords className="w-8 h-8" /> ENGAGER LE DUEL</span>
+                      <span className="flex items-center gap-4"><Swords className="w-8 h-8" /> {t('games.vs_battle.engage', 'ENGAGER LE DUEL')}</span>
                     )}
                   </Button>
                 </div>
@@ -295,11 +298,11 @@ const VsBattlePage: React.FC = () => {
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
-                              <span className="text-[10px] uppercase font-black opacity-30 block mb-1">Vitesse</span>
+                              <span className="text-[10px] uppercase font-black opacity-30 block mb-1">{t('games.vs_battle.speed', 'Vitesse')}</span>
                               <span className="text-xs font-bold truncate block">{char.stats.speed}</span>
                             </div>
                             <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
-                              <span className="text-[10px] uppercase font-black opacity-30 block mb-1">Endurance</span>
+                              <span className="text-[10px] uppercase font-black opacity-30 block mb-1">{t('games.vs_battle.durability', 'Endurance')}</span>
                               <span className="text-xs font-bold truncate block">{char.stats.durability}</span>
                             </div>
                           </div>
@@ -314,8 +317,8 @@ const VsBattlePage: React.FC = () => {
                     <Trophy className="w-40 h-40" />
                   </div>
                   <div className="text-center relative z-10">
-                    <h2 className="text-xs font-black uppercase tracking-[0.5em] opacity-40 mb-4">Verdict de l'Arbitre IA</h2>
-                    <div className="text-6xl font-black italic uppercase text-red-500 manga-font mb-8 text-glow">{result.winner} GAGNE</div>
+                    <h2 className="text-xs font-black uppercase tracking-[0.5em] opacity-40 mb-4">{t('games.vs_battle.referee_verdict', "Verdict de l'Arbitre IA")}</h2>
+                    <div className="text-6xl font-black italic uppercase text-red-500 manga-font mb-8 text-glow">{t('games.vs_battle.x_wins', { defaultValue: '{{name}} GAGNE', name: result.winner })}</div>
                     <p className="text-lg leading-relaxed text-white/80 font-medium italic max-w-3xl mx-auto">
                       "{result.verdict_summary}"
                     </p>
@@ -324,7 +327,7 @@ const VsBattlePage: React.FC = () => {
 
                 <div className="text-center pt-8">
                   <Button size="lg" variant="outline" onClick={() => setResult(null)} className="px-12 py-4 border-white/10 rounded-2xl uppercase font-black italic tracking-widest">
-                    NOUVEAU CHALLENGE
+                    {t('games.vs_battle.new_challenge', 'NOUVEAU CHALLENGE')}
                   </Button>
                 </div>
               </div>
@@ -335,7 +338,7 @@ const VsBattlePage: React.FC = () => {
           <section>
             <div className="flex items-center justify-center gap-3 mb-6">
               <h3 className="text-xs font-black uppercase opacity-40 tracking-widest flex items-center gap-2">
-                <History className="w-4 h-4" /> Arène Publique
+                <History className="w-4 h-4" /> {t('games.vs_battle.public_arena', 'Arène Publique')}
               </h3>
               <Badge variant="neutral" className="bg-red-500/10 text-red-500 border-red-500/20 text-[8px]">LIVE FEED</Badge>
             </div>
@@ -382,16 +385,16 @@ const VsBattlePage: React.FC = () => {
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-600/20 text-red-500 mb-4">
                 <Flame className="w-7 h-7" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-black italic manga-font uppercase text-white">Comment fonctionne l'Arène</h2>
-              <p className="text-sm font-bold opacity-50 uppercase tracking-[0.25em] mt-2">Un arbitre IA tranche n'importe quel duel</p>
+              <h2 className="text-2xl md:text-3xl font-black italic manga-font uppercase text-white">{t('games.vs_battle.how_title', "Comment fonctionne l'Arène")}</h2>
+              <p className="text-sm font-bold opacity-50 uppercase tracking-[0.25em] mt-2">{t('games.vs_battle.how_subtitle', "Un arbitre IA tranche n'importe quel duel")}</p>
             </div>
 
             <ol className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
               {[
-                { t: 'Choisis ton premier combattant', d: 'Sélectionne un personnage dans le roster : il prend la place A.' },
-                { t: 'Désigne l’adversaire', d: 'Filtre le roster par nom de personnage ou par franchise, puis remplis la place B.' },
-                { t: 'Engage le duel', d: 'L’IA confronte le lore, les pouvoirs et les hauts faits des deux camps.' },
-                { t: 'Découvre le verdict', d: 'Le vainqueur et son résumé s’affichent, puis le combat rejoint l’arène publique.' },
+                { t: t('games.vs_battle.step1_title', 'Choisis ton premier combattant'), d: t('games.vs_battle.step1_desc', 'Sélectionne un personnage dans le roster : il prend la place A.') },
+                { t: t('games.vs_battle.step2_title', 'Désigne l’adversaire'), d: t('games.vs_battle.step2_desc', 'Filtre le roster par nom de personnage ou par franchise, puis remplis la place B.') },
+                { t: t('games.vs_battle.step3_title', 'Engage le duel'), d: t('games.vs_battle.step3_desc', 'L’IA confronte le lore, les pouvoirs et les hauts faits des deux camps.') },
+                { t: t('games.vs_battle.step4_title', 'Découvre le verdict'), d: t('games.vs_battle.step4_desc', 'Le vainqueur et son résumé s’affichent, puis le combat rejoint l’arène publique.') },
               ].map((step, i) => (
                 <li key={step.t} className="flex gap-4 p-4 rounded-2xl bg-black/30 border border-white/5">
                   <span className="shrink-0 w-9 h-9 rounded-xl bg-red-600 text-white grid place-items-center font-black italic">{i + 1}</span>
@@ -404,7 +407,7 @@ const VsBattlePage: React.FC = () => {
             </ol>
 
             <p className="text-center text-[11px] font-black uppercase tracking-widest text-fuchsia-400/80 mt-8 flex items-center justify-center gap-2">
-              <Swords className="w-3.5 h-3.5" /> Astuce : tu peux opposer un personnage à lui-même — c'est un match miroir.
+              <Swords className="w-3.5 h-3.5" /> {t('games.vs_battle.tip', "Astuce : tu peux opposer un personnage à lui-même — c'est un match miroir.")}
             </p>
           </section>
         </div>

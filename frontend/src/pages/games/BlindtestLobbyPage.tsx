@@ -1,27 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Disc3, ListMusic, Music2, Play, Sparkles, EyeOff, Mic2, Hash, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
 
 type Mode = 'session' | 'single';
 type Format = 'OP' | 'ED';
 type Difficulty = 'Easy' | 'Normal' | 'Hard' | 'Impossible';
 
-const FORMATS: { key: Format; title: string; sub: string }[] = [
-  { key: 'OP', title: 'Opening', sub: 'Génériques de début' },
-  { key: 'ED', title: 'Ending', sub: 'Génériques de fin' },
-];
-
-const DIFFICULTIES: { key: Difficulty; label: string; active: string }[] = [
-  { key: 'Easy', label: 'Facile', active: 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-400' },
-  { key: 'Normal', label: 'Normal', active: 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400' },
-  { key: 'Hard', label: 'Difficile', active: 'border-orange-500 bg-orange-500/10 text-orange-600 dark:text-orange-400' },
-  { key: 'Impossible', label: 'Impossible', active: 'border-red-600 bg-red-600/10 text-red-600 dark:text-red-400' },
-];
-
 const LENGTHS = [5, 10, 30, 50, 100];
 
 const BlindtestLobbyPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [difficulty, setDifficulty] = useState<Difficulty>('Normal');
   const [mode, setMode] = useState<Mode>('session');
@@ -30,6 +20,18 @@ const BlindtestLobbyPage: React.FC = () => {
   const [hints, setHints] = useState(true);
   const [guessArtist, setGuessArtist] = useState(false);
   const [guessSequence, setGuessSequence] = useState(false);
+
+  const FORMATS: { key: Format; title: string; sub: string }[] = [
+    { key: 'OP', title: t('games.blindtest.lobby.formats.op.title', 'Opening'), sub: t('games.blindtest.lobby.formats.op.sub', 'Génériques de début') },
+    { key: 'ED', title: t('games.blindtest.lobby.formats.ed.title', 'Ending'), sub: t('games.blindtest.lobby.formats.ed.sub', 'Génériques de fin') },
+  ];
+
+  const DIFFICULTIES: { key: Difficulty; label: string; active: string }[] = [
+    { key: 'Easy', label: t('games.blindtest.lobby.difficulties.easy', 'Facile'), active: 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-400' },
+    { key: 'Normal', label: t('games.blindtest.lobby.difficulties.normal', 'Normal'), active: 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400' },
+    { key: 'Hard', label: t('games.blindtest.lobby.difficulties.hard', 'Difficile'), active: 'border-orange-500 bg-orange-500/10 text-orange-600 dark:text-orange-400' },
+    { key: 'Impossible', label: t('games.blindtest.lobby.difficulties.impossible', 'Impossible'), active: 'border-red-600 bg-red-600/10 text-red-600 dark:text-red-400' },
+  ];
 
   const launch = () =>
     navigate('/blindtest/play/', {
@@ -48,24 +50,24 @@ const BlindtestLobbyPage: React.FC = () => {
     <div className="max-w-3xl mx-auto px-6 py-16">
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-400/15 border border-yellow-400/30 text-yellow-600 dark:text-yellow-400 text-[10px] font-black uppercase tracking-[0.3em] mb-6">
-          <Music2 className="w-3.5 h-3.5" /> Blind Test
+          <Music2 className="w-3.5 h-3.5" /> {t('games.blindtest.lobby.badge', 'Blind Test')}
         </div>
         <h1 className="text-5xl md:text-6xl font-black italic manga-font tracking-tighter uppercase text-black dark:text-white leading-none">
-          DEVINE <span className="text-yellow-400">L'ANIMÉ</span>
+          {t('games.blindtest.lobby.title_part1', 'DEVINE')} <span className="text-yellow-400">{t('games.blindtest.lobby.title_part2', "L'ANIMÉ")}</span>
         </h1>
         <p className="mt-4 text-base font-medium text-gray-500 dark:text-white/50">
-          Configure ta partie, puis lance le disque.
+          {t('games.blindtest.lobby.subtitle', 'Configure ta partie, puis lance le disque.')}
         </p>
       </div>
 
       <Card padding="lg" className="space-y-10">
         {/* Mode */}
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Mode de jeu</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">{t('games.blindtest.lobby.section_mode', 'Mode de jeu')}</p>
           <div className="grid grid-cols-2 gap-4">
             {([
-              { key: 'session' as Mode, icon: ListMusic, title: 'Session', sub: 'Enchaîne plusieurs génériques' },
-              { key: 'single' as Mode, icon: Disc3, title: 'Un générique', sub: 'Une seule manche' },
+              { key: 'session' as Mode, icon: ListMusic, title: t('games.blindtest.lobby.modes.session.title', 'Session'), sub: t('games.blindtest.lobby.modes.session.sub', 'Enchaîne plusieurs génériques') },
+              { key: 'single' as Mode, icon: Disc3, title: t('games.blindtest.lobby.modes.single.title', 'Un générique'), sub: t('games.blindtest.lobby.modes.single.sub', 'Une seule manche') },
             ]).map(({ key, icon: Icon, title, sub }) => (
               <button
                 key={key}
@@ -86,7 +88,7 @@ const BlindtestLobbyPage: React.FC = () => {
         {/* Session length */}
         {mode === 'session' && (
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Durée de la session</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">{t('games.blindtest.lobby.section_length', 'Durée de la session')}</p>
             <div className="grid grid-cols-5 gap-2">
               {LENGTHS.map((n) => (
                 <button
@@ -108,7 +110,7 @@ const BlindtestLobbyPage: React.FC = () => {
 
         {/* Format */}
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Format</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">{t('games.blindtest.lobby.section_format', 'Format')}</p>
           <div className="grid grid-cols-2 gap-4">
             {FORMATS.map((f) => (
               <button
@@ -129,8 +131,8 @@ const BlindtestLobbyPage: React.FC = () => {
 
         {/* Difficulté */}
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Difficulté</p>
-          <p className="text-[11px] text-gray-400 mb-4">Détermine le nombre d'essais par manche.</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">{t('games.blindtest.lobby.section_difficulty', 'Difficulté')}</p>
+          <p className="text-[11px] text-gray-400 mb-4">{t('games.blindtest.lobby.section_difficulty_hint', "Détermine le nombre d'essais par manche.")}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {DIFFICULTIES.map((d) => (
               <button
@@ -149,11 +151,11 @@ const BlindtestLobbyPage: React.FC = () => {
 
         {/* Indices */}
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Indices visuels</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">{t('games.blindtest.lobby.section_hints', 'Indices visuels')}</p>
           <div className="grid grid-cols-2 gap-4">
             {([
-              { on: true, icon: Sparkles, title: 'Avec indices', sub: 'Le visuel apparaît, déformé' },
-              { on: false, icon: EyeOff, title: 'Sans indices', sub: 'Audio uniquement' },
+              { on: true, icon: Sparkles, title: t('games.blindtest.lobby.hints_on.title', 'Avec indices'), sub: t('games.blindtest.lobby.hints_on.sub', 'Le visuel apparaît, déformé') },
+              { on: false, icon: EyeOff, title: t('games.blindtest.lobby.hints_off.title', 'Sans indices'), sub: t('games.blindtest.lobby.hints_off.sub', 'Audio uniquement') },
             ]).map(({ on, icon: Icon, title, sub }) => (
               <button
                 key={String(on)}
@@ -175,12 +177,12 @@ const BlindtestLobbyPage: React.FC = () => {
 
         {/* Objectifs bonus */}
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Objectifs bonus</p>
-          <p className="text-[11px] text-gray-400 mb-4">Une fois l'animé trouvé, gagne des points en plus.</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">{t('games.blindtest.lobby.section_bonus', 'Objectifs bonus')}</p>
+          <p className="text-[11px] text-gray-400 mb-4">{t('games.blindtest.lobby.section_bonus_hint', "Une fois l'animé trouvé, gagne des points en plus.")}</p>
           <div className="space-y-3">
             {([
-              { on: guessArtist, set: setGuessArtist, icon: Mic2, title: 'Deviner le/les chanteur(s)', sub: "L'interprète du générique · +25 pts" },
-              { on: guessSequence, set: setGuessSequence, icon: Hash, title: "Deviner le numéro d'opening", sub: 'Le n° du générique (OP/ED) · +25 pts' },
+              { on: guessArtist, set: setGuessArtist, icon: Mic2, title: t('games.blindtest.lobby.bonus_singer.title', 'Deviner le/les chanteur(s)'), sub: t('games.blindtest.lobby.bonus_singer.sub', "L'interprète du générique · +25 pts") },
+              { on: guessSequence, set: setGuessSequence, icon: Hash, title: t('games.blindtest.lobby.bonus_number.title', "Deviner le numéro d'opening"), sub: t('games.blindtest.lobby.bonus_number.sub', 'Le n° du générique (OP/ED) · +25 pts') },
             ]).map(({ on, set, icon: Icon, title, sub }) => (
               <button
                 key={title}
@@ -213,7 +215,7 @@ const BlindtestLobbyPage: React.FC = () => {
           className="w-full flex items-center justify-center gap-3 bg-yellow-400 hover:bg-yellow-500 text-black font-black italic manga-font tracking-widest text-lg py-5 rounded-2xl border-2 border-black/10 shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
         >
           <Play className="w-6 h-6 fill-current" />
-          {mode === 'session' ? `Lancer la session (${length})` : 'Lancer le Blind Test'}
+          {mode === 'session' ? t('games.blindtest.lobby.launch_session', { defaultValue: 'Lancer la session ({{length}})', length }) : t('games.blindtest.lobby.launch_single', 'Lancer le Blind Test')}
         </button>
       </Card>
     </div>

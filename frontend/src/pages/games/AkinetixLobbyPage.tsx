@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Brain, Play, Clapperboard, BookOpen, Users, Bot, MessageCircleQuestion, Sparkles, ScanFace,
 } from 'lucide-react';
@@ -7,53 +8,6 @@ import {
 type Universe = 'Anime' | 'Manga' | 'Character';
 type Mode = 'classique' | 'animinator' | 'quiz-who';
 type Difficulty = 'Easy' | 'Normal' | 'Hard' | 'Impossible';
-
-const DIFFICULTIES: { key: Difficulty; label: string; sub: string; active: string }[] = [
-  { key: 'Easy', label: 'Facile', sub: 'Très connus', active: 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-400' },
-  { key: 'Normal', label: 'Normal', sub: 'Grand public', active: 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400' },
-  { key: 'Hard', label: 'Difficile', sub: 'Connaisseurs', active: 'border-orange-500 bg-orange-500/10 text-orange-600 dark:text-orange-400' },
-  { key: 'Impossible', label: 'Impossible', sub: 'Pépites obscures', active: 'border-red-600 bg-red-600/10 text-red-600 dark:text-red-400' },
-];
-
-const MODES: {
-  key: Mode;
-  label: string;
-  sub: string;
-  desc: string;
-  icon: React.ElementType;
-  route: string;
-}[] = [
-  {
-    key: 'classique',
-    label: 'Akinetix Classique',
-    sub: "L'IA devine",
-    desc: "L'IA te pose des questions (oui / non / probablement…) et tente de deviner à quoi tu penses.",
-    icon: Brain,
-    route: '/akinetix/play/',
-  },
-  {
-    key: 'animinator',
-    label: 'Animinator',
-    sub: 'Tu interroges le génie',
-    desc: 'Le génie a une œuvre en tête : pose-lui tes questions librement pour la démasquer.',
-    icon: Bot,
-    route: '/animinator/',
-  },
-  {
-    key: 'quiz-who',
-    label: 'Qui est-ce ?',
-    sub: 'Plateau à éliminer',
-    desc: 'Un plateau de portraits, un secret caché : pose des questions pour éliminer les têtes et démasquer la bonne.',
-    icon: ScanFace,
-    route: '/quiz-who/',
-  },
-];
-
-const UNIVERSES: { key: Universe; label: string; sub: string; icon: React.ElementType }[] = [
-  { key: 'Anime', label: 'Anime', sub: 'Séries animées', icon: Clapperboard },
-  { key: 'Manga', label: 'Manga', sub: 'Œuvres papier', icon: BookOpen },
-  { key: 'Character', label: 'Personnages', sub: 'Héros & figures', icon: Users },
-];
 
 const Section: React.FC<{ step: number; title: string; children: React.ReactNode }> = ({
   step,
@@ -74,10 +28,58 @@ const Section: React.FC<{ step: number; title: string; children: React.ReactNode
 );
 
 const AkinetixLobbyPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('classique');
   const [universe, setUniverse] = useState<Universe>('Anime');
   const [difficulty, setDifficulty] = useState<Difficulty>('Normal');
+
+  const DIFFICULTIES: { key: Difficulty; label: string; sub: string; active: string }[] = [
+    { key: 'Easy', label: t('games.akinetix.lobby.diff_easy', 'Facile'), sub: t('games.akinetix.lobby.diff_easy_sub', 'Très connus'), active: 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-400' },
+    { key: 'Normal', label: t('games.akinetix.lobby.diff_normal', 'Normal'), sub: t('games.akinetix.lobby.diff_normal_sub', 'Grand public'), active: 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400' },
+    { key: 'Hard', label: t('games.akinetix.lobby.diff_hard', 'Difficile'), sub: t('games.akinetix.lobby.diff_hard_sub', 'Connaisseurs'), active: 'border-orange-500 bg-orange-500/10 text-orange-600 dark:text-orange-400' },
+    { key: 'Impossible', label: t('games.akinetix.lobby.diff_impossible', 'Impossible'), sub: t('games.akinetix.lobby.diff_impossible_sub', 'Pépites obscures'), active: 'border-red-600 bg-red-600/10 text-red-600 dark:text-red-400' },
+  ];
+
+  const MODES: {
+    key: Mode;
+    label: string;
+    sub: string;
+    desc: string;
+    icon: React.ElementType;
+    route: string;
+  }[] = [
+    {
+      key: 'classique',
+      label: t('games.akinetix.lobby.mode_classic_label', 'Akinetix Classique'),
+      sub: t('games.akinetix.lobby.mode_classic_sub', "L'IA devine"),
+      desc: t('games.akinetix.lobby.mode_classic_desc', "L'IA te pose des questions (oui / non / probablement…) et tente de deviner à quoi tu penses."),
+      icon: Brain,
+      route: '/akinetix/play/',
+    },
+    {
+      key: 'animinator',
+      label: 'Animinator',
+      sub: t('games.akinetix.lobby.mode_animinator_sub', 'Tu interroges le génie'),
+      desc: t('games.akinetix.lobby.mode_animinator_desc', 'Le génie a une œuvre en tête : pose-lui tes questions librement pour la démasquer.'),
+      icon: Bot,
+      route: '/animinator/',
+    },
+    {
+      key: 'quiz-who',
+      label: t('games.akinetix.lobby.mode_quiz_who_label', 'Qui est-ce ?'),
+      sub: t('games.akinetix.lobby.mode_quiz_who_sub', 'Plateau à éliminer'),
+      desc: t('games.akinetix.lobby.mode_quiz_who_desc', 'Un plateau de portraits, un secret caché : pose des questions pour éliminer les têtes et démasquer la bonne.'),
+      icon: ScanFace,
+      route: '/quiz-who/',
+    },
+  ];
+
+  const UNIVERSES: { key: Universe; label: string; sub: string; icon: React.ElementType }[] = [
+    { key: 'Anime', label: 'Anime', sub: t('games.akinetix.lobby.universe_anime_sub', 'Séries animées'), icon: Clapperboard },
+    { key: 'Manga', label: 'Manga', sub: t('games.akinetix.lobby.universe_manga_sub', 'Œuvres papier'), icon: BookOpen },
+    { key: 'Character', label: t('games.akinetix.lobby.universe_characters', 'Personnages'), sub: t('games.akinetix.lobby.universe_characters_sub', 'Héros & figures'), icon: Users },
+  ];
 
   const launch = () => {
     const target = MODES.find((m) => m.key === mode);
@@ -89,19 +91,19 @@ const AkinetixLobbyPage: React.FC = () => {
       {/* Header */}
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-500 text-[10px] font-black uppercase tracking-[0.3em] mb-6">
-          <MessageCircleQuestion className="w-3.5 h-3.5" /> Lecture de pensées
+          <MessageCircleQuestion className="w-3.5 h-3.5" /> {t('games.akinetix.lobby.kicker', 'Lecture de pensées')}
         </div>
         <h1 className="text-5xl md:text-6xl font-black italic manga-font tracking-tighter uppercase text-black dark:text-white leading-none">
           AKI<span className="text-blue-500">NETIX</span>
         </h1>
         <p className="mt-4 text-base font-medium text-gray-500 dark:text-white/50">
-          Choisis ton mode et ton univers, puis laisse la magie opérer.
+          {t('games.akinetix.lobby.subtitle', 'Choisis ton mode et ton univers, puis laisse la magie opérer.')}
         </p>
       </div>
 
       <div className="rounded-[2.5rem] border-2 border-black/5 dark:border-white/10 bg-surface-card p-7 md:p-9 shadow-token-card space-y-10">
         {/* Mode */}
-        <Section step={1} title="Mode de jeu">
+        <Section step={1} title={t('games.akinetix.lobby.step_mode', 'Mode de jeu')}>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {MODES.map(({ key, label, sub, desc, icon: Icon }) => (
               <button
@@ -134,7 +136,7 @@ const AkinetixLobbyPage: React.FC = () => {
         </Section>
 
         {/* Univers */}
-        <Section step={2} title="Univers">
+        <Section step={2} title={t('games.akinetix.lobby.step_universe', 'Univers')}>
           <div className="grid grid-cols-3 gap-3 sm:gap-4">
             {UNIVERSES.map(({ key, label, sub, icon: Icon }) => (
               <button
@@ -160,7 +162,7 @@ const AkinetixLobbyPage: React.FC = () => {
         </Section>
 
         {/* Difficulté */}
-        <Section step={3} title="Difficulté">
+        <Section step={3} title={t('games.akinetix.lobby.step_difficulty', 'Difficulté')}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {DIFFICULTIES.map((d) => (
               <button
@@ -185,7 +187,7 @@ const AkinetixLobbyPage: React.FC = () => {
           onClick={launch}
           className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-500 text-white font-black italic manga-font tracking-widest text-lg py-5 rounded-2xl shadow-xl shadow-blue-600/20 hover:scale-[1.01] active:scale-95 transition-all"
         >
-          <Play className="w-6 h-6 fill-current" /> Lancer la partie
+          <Play className="w-6 h-6 fill-current" /> {t('games.akinetix.lobby.launch', 'Lancer la partie')}
         </button>
         <p className="-mt-4 text-center text-[11px] font-bold uppercase tracking-widest text-gray-400 flex items-center justify-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5 text-blue-500" />

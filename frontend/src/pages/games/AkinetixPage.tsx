@@ -55,10 +55,10 @@ const AkinetixPage: React.FC = () => {
           <Card padding="lg" className="text-center border-red-500/50 bg-red-500/5 max-w-2xl w-full relative overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-1 bg-red-500 animate-pulse" />
              <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-6 opacity-80" />
-             <h2 className="text-4xl font-black text-red-500 mb-4 tracking-tighter uppercase">Anomalie Détectée</h2>
+             <h2 className="text-4xl font-black text-red-500 mb-4 tracking-tighter uppercase">{t('games.akinetix.anomaly', 'Anomalie Détectée')}</h2>
              <p className="mb-10 text-white/60 font-bold leading-relaxed">{error}</p>
              <Button variant="danger" size="lg" onClick={() => restartGame()} className="uppercase tracking-widest font-black">
-               Réinitialiser le Noyau
+               {t('games.akinetix.reset_core', 'Réinitialiser le Noyau')}
              </Button>
           </Card>
         </div>
@@ -79,7 +79,7 @@ const AkinetixPage: React.FC = () => {
           Akinetix
         </h1>
         <p className="text-white/50 font-bold uppercase tracking-[0.2em] text-sm md:text-base">
-          L'IA peut-elle lire dans vos pensées ?
+          {t('games.akinetix.tagline', 'L\'IA peut-elle lire dans vos pensées ?')}
         </p>
       </header>
 
@@ -89,14 +89,14 @@ const AkinetixPage: React.FC = () => {
         <div className="lg:col-span-4 order-2 lg:order-1 hidden md:block">
           <Card padding="md" className="bg-[#0a0a0a] border-white/5 sticky top-24 max-h-[600px] flex flex-col">
             <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-[0.2em] flex items-center gap-2 text-white shrink-0">
-                <History className="w-4 h-4" /> Journal d'Analyse
+                <History className="w-4 h-4" /> {t('games.akinetix.journal', "Journal d'Analyse")}
             </h3>
             
             <div ref={historyScrollRef} className="overflow-y-auto pr-2 custom-scrollbar flex-1 space-y-4">
               {gameState.history.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center opacity-20 py-20">
                   <Sparkles className="w-8 h-8 mb-4" />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-center">L'analyse n'a pas encore commencé</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-center">{t('games.akinetix.not_started', "L'analyse n'a pas encore commencé")}</p>
                 </div>
               ) : (
                 gameState.history.map((item: { q: string; a: string }, i: number) => (
@@ -130,7 +130,7 @@ const AkinetixPage: React.FC = () => {
             <div className="relative z-10 flex flex-col items-center text-center">
               
               <Badge variant="primary" className="mb-6 bg-blue-500/20 text-blue-400 border-blue-500/30 backdrop-blur-md">
-                Question #{gameState.history.length + 1}
+                {t('games.akinetix.question_num', { defaultValue: 'Question #{{num}}', num: gameState.history.length + 1 })}
               </Badge>
 
               {/* Barre de progression : confiance de l'IA (à quel point elle est
@@ -138,7 +138,7 @@ const AkinetixPage: React.FC = () => {
               {!showActualTargetInput && (
                 <div className="w-full max-w-md mx-auto mb-10">
                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-2">
-                    <span className="flex items-center gap-1.5"><Target className="w-3 h-3" /> Confiance de l'IA</span>
+                    <span className="flex items-center gap-1.5"><Target className="w-3 h-3" /> {t('games.akinetix.ai_confidence', "Confiance de l'IA")}</span>
                     <span className="text-blue-400">{Math.round((gameState.confidence ?? 0) * 100)}%</span>
                   </div>
                   <div className="w-full h-2.5 rounded-full bg-white/5 overflow-hidden border border-white/5">
@@ -153,13 +153,13 @@ const AkinetixPage: React.FC = () => {
               <div className="text-3xl md:text-5xl mb-12 font-black text-white leading-tight drop-shadow-lg">
                 {gameState.gameOver && !showActualTargetInput ? (
                   <div className="animate-fade-in">
-                    <span className="block text-sm text-blue-400 uppercase tracking-widest mb-4">L'IA a tranché :</span>
+                    <span className="block text-sm text-blue-400 uppercase tracking-widest mb-4">{t('games.akinetix.ai_decided', "L'IA a tranché :")}</span>
                     <span className="text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
                       {gameState.aiGuess}
                     </span>
                   </div>
                 ) : showActualTargetInput ? (
-                  <span className="text-yellow-400">À qui pensiez-vous réellement ?</span>
+                  <span className="text-yellow-400">{t('games.akinetix.who_really', 'À qui pensiez-vous réellement ?')}</span>
                 ) : (
                   <span className="italic">{gameState.currentQuestion}</span>
                 )}
@@ -193,21 +193,21 @@ const AkinetixPage: React.FC = () => {
                         onClick={() => submitAnswer('PROBABLEMENT')}
                         className="py-4 text-sm font-black uppercase tracking-wider bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/30 transition-all"
                       >
-                        <ThumbsUp className="w-4 h-4 mr-2" /> Probablement
+                        <ThumbsUp className="w-4 h-4 mr-2" /> {t('games.akinetix.probably', 'Probablement')}
                       </Button>
                       <Button
                         variant="secondary"
                         onClick={() => submitAnswer('PROBABLEMENT PAS')}
                         className="py-4 text-sm font-black uppercase tracking-wider bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/30 transition-all"
                       >
-                        <ThumbsDown className="w-4 h-4 mr-2" /> Probablement pas
+                        <ThumbsDown className="w-4 h-4 mr-2" /> {t('games.akinetix.probably_not', 'Probablement pas')}
                       </Button>
                       <Button
                         variant="secondary"
                         onClick={() => submitAnswer('JE NE SAIS PAS')}
                         className="py-4 text-sm font-black uppercase tracking-wider bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 border border-yellow-500/30 transition-all"
                       >
-                        <HelpCircle className="w-4 h-4 mr-2" /> Je ne sais pas
+                        <HelpCircle className="w-4 h-4 mr-2" /> {t('games.akinetix.dont_know', 'Je ne sais pas')}
                       </Button>
                     </div>
                   </div>
@@ -218,8 +218,8 @@ const AkinetixPage: React.FC = () => {
                       value={actualTarget}
                       onChange={(e) => setActualTarget(e.target.value)}
                       className="w-full p-6 rounded-2xl bg-black/50 border-2 border-white/10 focus:border-yellow-400 outline-none font-bold text-xl text-center text-white placeholder-white/20 backdrop-blur-md transition-all"
-                      placeholder="Nom exact du personnage..."
-                      aria-label="Nom exact du personnage"
+                      placeholder={t('games.akinetix.target_placeholder', 'Nom exact du personnage...')}
+                      aria-label={t('games.akinetix.target_aria', 'Nom exact du personnage')}
                       autoFocus
                     />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
@@ -230,7 +230,7 @@ const AkinetixPage: React.FC = () => {
                         disabled={!actualTarget.trim()}
                         className="py-5 font-black uppercase tracking-widest"
                       >
-                        CONFIRMER LA VICTOIRE
+                        {t('games.akinetix.confirm_victory', 'CONFIRMER LA VICTOIRE')}
                       </Button>
                       <Button 
                         variant="outline" 
@@ -238,7 +238,7 @@ const AkinetixPage: React.FC = () => {
                         onClick={() => setShowActualTargetInput(false)}
                         className="py-5 font-black uppercase tracking-widest border-white/20 hover:bg-white/10 text-white"
                       >
-                        Annuler
+                        {t('common.cancel', 'Annuler')}
                       </Button>
                     </div>
                   </div>
@@ -250,7 +250,7 @@ const AkinetixPage: React.FC = () => {
                       onClick={() => submitConfirmation(true)}
                       className="py-6 bg-blue-600 hover:bg-blue-700 border-none font-black uppercase tracking-widest shadow-[0_0_30px_rgba(37,99,235,0.4)]"
                     >
-                      C'EST BIEN ÇA !
+                      {t('games.akinetix.its_right', "C'EST BIEN ÇA !")}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -258,7 +258,7 @@ const AkinetixPage: React.FC = () => {
                       onClick={() => setShowActualTargetInput(true)}
                       className="py-6 border-2 border-red-500/50 text-red-400 hover:bg-red-500/10 font-black uppercase tracking-widest"
                     >
-                      NON, L'IA S'EST TROMPÉE
+                      {t('games.akinetix.ai_wrong', "NON, L'IA S'EST TROMPÉE")}
                     </Button>
                   </div>
                 )}
@@ -273,7 +273,7 @@ const AkinetixPage: React.FC = () => {
                 onClick={() => restartGame()}
                 className="text-xs font-black uppercase tracking-widest border-white/10 text-white/50 hover:text-white hover:bg-white/5"
             >
-                Recommencer une partie
+                {t('games.akinetix.restart', 'Recommencer une partie')}
             </Button>
           </div>
 

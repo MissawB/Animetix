@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   Zap, Play, History, AlertCircle, Cpu,
@@ -22,6 +23,7 @@ interface WalletTransaction {
 }
 
 const PowerStationPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user, refetchUser } = useAuthStore();
   const { addToast } = useToastStore();
   
@@ -97,11 +99,11 @@ const PowerStationPage: React.FC = () => {
     setIsCrediting(true);
     try {
       const res = await apiClient('/api/v1/billing/wallet/watch-ad/', { method: 'POST' });
-      addToast(`Énergie injectée : +${res.earned} Bx !`, 'success');
+      addToast(t('billing.power_station.energy_injected', { defaultValue: 'Énergie injectée : +{{earned}} Bx !', earned: res.earned }), 'success');
       await refetchUser();
       fetchLedger(1, filterType, filterDirection);
     } catch (_err) {
-      addToast("Erreur lors de la recharge.", "error");
+      addToast(t('billing.power_station.recharge_error', 'Erreur lors de la recharge.'), "error");
     } finally {
       setIsWatching(false);
       setIsCrediting(false);
@@ -127,7 +129,7 @@ const PowerStationPage: React.FC = () => {
                 </h1>
               </div>
               <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-xs">
-                Gérez vos jetons Berrix (Bx) et optimisez votre attention mining.
+                {t('billing.power_station.subtitle', 'Gérez vos jetons Berrix (Bx) et optimisez votre attention mining.')}
               </p>
             </div>
           </header>
@@ -150,7 +152,7 @@ const PowerStationPage: React.FC = () => {
                 
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400/80 block">Système Berrix</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400/80 block">{t('billing.power_station.berrix_system', 'Système Berrix')}</span>
                     <span className="text-xs text-gray-500 font-bold">Node ID: {user?.id || 'GUEST-00'}</span>
                   </div>
                   <Zap className="w-8 h-8 text-cyan-400 animate-pulse fill-current" />
@@ -183,14 +185,14 @@ const PowerStationPage: React.FC = () => {
                       <h4 className="text-xl font-black italic uppercase manga-font">Active Mining</h4>
                       <span className="text-[9px] font-black uppercase text-cyan-400 tracking-wider px-2 py-0.5 bg-cyan-500/10 rounded-full border border-cyan-500/20">+250 Bx</span>
                     </div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wide">Regardez un spot de transmission sponsorisé pour recharger.</p>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wide">{t('billing.power_station.active_desc', 'Regardez un spot de transmission sponsorisé pour recharger.')}</p>
                   </div>
 
                   <div className="h-44 bg-black/60 rounded-xl border border-white/5 flex flex-col items-center justify-center relative overflow-hidden group">
                     {isWatching ? (
                       <div className="w-full h-full flex flex-col items-center justify-center p-6 space-y-4">
                         <div className="flex items-center gap-3">
-                          <span className="text-cyan-400 font-black italic text-xs animate-pulse tracking-widest">TRANSMISSION ACTIVE</span>
+                          <span className="text-cyan-400 font-black italic text-xs animate-pulse tracking-widest">{t('billing.power_station.transmission_active', 'TRANSMISSION ACTIVE')}</span>
                           <button onClick={() => setIsMuted(!isMuted)} className="text-gray-400 hover:text-cyan-400 transition-colors">
                             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                           </button>
@@ -198,7 +200,7 @@ const PowerStationPage: React.FC = () => {
                         <div className="w-full max-w-xs h-2 bg-white/10 rounded-full overflow-hidden">
                           <div className="h-full bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,1)]" style={{ width: `${watchProgress}%` }} />
                         </div>
-                        <p className="text-[8px] text-gray-500 uppercase tracking-widest">Ne fermez pas la console</p>
+                        <p className="text-[8px] text-gray-500 uppercase tracking-widest">{t('billing.power_station.dont_close_console', 'Ne fermez pas la console')}</p>
                       </div>
                     ) : (
                       <>
@@ -209,7 +211,7 @@ const PowerStationPage: React.FC = () => {
                         >
                           <Play className="w-6 h-6 fill-current ml-0.5" />
                         </Button>
-                        <span className="mt-4 text-[9px] font-black uppercase tracking-widest text-cyan-400">Lancer la recharge</span>
+                        <span className="mt-4 text-[9px] font-black uppercase tracking-widest text-cyan-400">{t('billing.power_station.start_recharge', 'Lancer la recharge')}</span>
                       </>
                     )}
                   </div>
@@ -228,7 +230,7 @@ const PowerStationPage: React.FC = () => {
                         {isEnabled ? <ToggleRight className="w-10 h-10 text-cyan-400" /> : <ToggleLeft className="w-10 h-10 text-gray-600" />}
                       </button>
                     </div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wide">Mine des Berrix en arrière-plan pendant que vous naviguez ou jouez.</p>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wide">{t('billing.power_station.passive_desc', 'Mine des Berrix en arrière-plan pendant que vous naviguez ou jouez.')}</p>
                   </div>
 
                   {/* Circular Progress & Timer */}

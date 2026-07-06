@@ -1,14 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useGameModes } from '../data/useGameModes';
 
 export const CreativeForge: React.FC = () => {
+  const { t } = useTranslation();
   const { modesCreative, isEn } = useGameModes();
 
   return (
     <section className="py-16 text-left">
       <h2 className="text-3xl font-black mb-12 flex items-baseline text-black dark:text-white uppercase italic manga-font">
-        {isEn ? 'Creative Forge' : 'Créative'}
+        {isEn ? 'Creative Forge' : t('home.creative_title', 'Créative')}
         <span className="text-yellow-400 text-4xl leading-none ml-1">.</span>
       </h2>
       

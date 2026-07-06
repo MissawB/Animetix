@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useCallback} from 'react';
+import { useTranslation } from 'react-i18next';
 import { Brain, Zap, History, Loader2, Sparkles, Check, Info, LayoutDashboard, Target, Cpu, TrendingUp } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -16,6 +17,7 @@ interface RLState {
 }
 
 const AkinetixRLPage: React.FC = () => {
+    const { t } = useTranslation();
     const [state, setState] = useState<RLState | null>(null);
     const [loading, setLoading] = useState(false);
     const [, setError] = useState<string | null>(null);
@@ -33,11 +35,11 @@ const AkinetixRLPage: React.FC = () => {
             });
             setState(data);
         } catch {
-            setError("Échec de l'initialisation du cerveau RL.");
+            setError(t('games.akinetix.rl.error_init', "Échec de l'initialisation du cerveau RL."));
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const submitAnswer = async (answer: string) => {
         setLoading(true);
@@ -48,7 +50,7 @@ const AkinetixRLPage: React.FC = () => {
             });
             setState(data);
         } catch {
-            setError("Perte de connexion avec le réseau neuronal.");
+            setError(t('games.akinetix.rl.error_connection', 'Perte de connexion avec le réseau neuronal.'));
         } finally {
             setLoading(false);
         }
@@ -80,42 +82,42 @@ const AkinetixRLPage: React.FC = () => {
                             AKINETIX <span className="text-cyan-500 text-glow">EXPERT</span>
                         </h1>
                         <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl mx-auto leading-relaxed">
-                            Vous n'allez pas seulement jouer, vous allez entraîner une intelligence artificielle.
+                            {t('games.akinetix.rl.intro', "Vous n'allez pas seulement jouer, vous allez entraîner une intelligence artificielle.")}
                         </p>
                     </header>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
                         <Card padding="lg" className="bg-navy-900/50 border-white/5 text-center">
                             <Target className="w-12 h-12 text-cyan-500 mx-auto mb-6" />
-                            <h3 className="text-xl font-black italic manga-font uppercase mb-4">Objectif</h3>
+                            <h3 className="text-xl font-black italic manga-font uppercase mb-4">{t('games.akinetix.rl.objective', 'Objectif')}</h3>
                             <p className="text-[10px] font-bold opacity-40 uppercase leading-relaxed tracking-wider">
-                                L'IA doit deviner votre personnage en un minimum de questions en explorant l'espace latent du Lore.
+                                {t('games.akinetix.rl.objective_desc', "L'IA doit deviner votre personnage en un minimum de questions en explorant l'espace latent du Lore.")}
                             </p>
                         </Card>
                         <Card padding="lg" className="bg-navy-900/50 border-white/5 text-center">
                             <Brain className="w-12 h-12 text-purple-500 mx-auto mb-6" />
-                            <h3 className="text-xl font-black italic manga-font uppercase mb-4">Entraînement</h3>
+                            <h3 className="text-xl font-black italic manga-font uppercase mb-4">{t('games.akinetix.rl.training', 'Entraînement')}</h3>
                             <p className="text-[10px] font-bold opacity-40 uppercase leading-relaxed tracking-wider">
-                                Chaque réponse que vous donnez affine les poids neuronaux de l'agent RL (Reinforcement Learning).
+                                {t('games.akinetix.rl.training_desc', "Chaque réponse que vous donnez affine les poids neuronaux de l'agent RL (Reinforcement Learning).")}
                             </p>
                         </Card>
                         <Card padding="lg" className="bg-navy-900/50 border-white/5 text-center">
                             <TrendingUp className="w-12 h-12 text-emerald-500 mx-auto mb-6" />
-                            <h3 className="text-xl font-black italic manga-font uppercase mb-4">Progression</h3>
+                            <h3 className="text-xl font-black italic manga-font uppercase mb-4">{t('games.akinetix.rl.progression', 'Progression')}</h3>
                             <p className="text-[10px] font-bold opacity-40 uppercase leading-relaxed tracking-wider">
-                                Plus vous jouez, plus l'agent devient efficace pour réduire l'entropie de recherche.
+                                {t('games.akinetix.rl.progression_desc', "Plus vous jouez, plus l'agent devient efficace pour réduire l'entropie de recherche.")}
                             </p>
                         </Card>
                     </div>
 
                     <div className="bg-black p-12 rounded-[4rem] border-4 border-cyan-500/20 shadow-[0_0_50px_rgba(6,182,212,0.1)] flex flex-col items-center">
-                        <h4 className="text-2xl font-black italic manga-font uppercase mb-8">Prêt pour l'initiation ?</h4>
+                        <h4 className="text-2xl font-black italic manga-font uppercase mb-8">{t('games.akinetix.rl.ready', "Prêt pour l'initiation ?")}</h4>
                         <Button 
                             onClick={() => startRLGame()} 
                             variant="primary" 
                             className="bg-cyan-600 hover:bg-cyan-500 border-none py-8 px-20 text-2xl rounded-3xl shadow-xl hover:scale-105 transition-all"
                         >
-                            DÉPLOYER L'AGENT
+                            {t('games.akinetix.rl.deploy', "DÉPLOYER L'AGENT")}
                         </Button>
                     </div>
                 </div>
@@ -127,7 +129,7 @@ const AkinetixRLPage: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <Loader2 className="w-16 h-16 text-cyan-500 animate-spin mb-4" />
-                <span className="font-black italic manga-font animate-pulse">SYNCHRONISATION DU CERVEAU RL...</span>
+                <span className="font-black italic manga-font animate-pulse">{t('games.akinetix.rl.syncing', 'SYNCHRONISATION DU CERVEAU RL...')}</span>
             </div>
         );
     }
@@ -156,7 +158,7 @@ const AkinetixRLPage: React.FC = () => {
                             <LayoutDashboard className="w-5 h-5" />
                         </button>
                         <div className="text-right hidden sm:block">
-                            <div className="text-[10px] font-black opacity-30 uppercase mb-1 text-right">Efficacité Sémantique</div>
+                            <div className="text-[10px] font-black opacity-30 uppercase mb-1 text-right">{t('games.akinetix.rl.semantic_efficiency', 'Efficacité Sémantique')}</div>
                             <div className="flex gap-1 justify-end">
                                 {[1, 2, 3, 4, 5].map(i => (
                                     <div key={i} className={`h-1.5 w-6 rounded-full ${i <= (5 - (state?.steps || 0) / 4) ? 'bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]' : 'bg-white/10'}`} />
@@ -179,22 +181,27 @@ const AkinetixRLPage: React.FC = () => {
                                     <>
                                         <div className="mb-12">
                                             <Badge variant="primary" className="bg-cyan-500/20 text-cyan-500 border-cyan-500/20 mb-6 font-black italic uppercase tracking-widest">
-                                                Inférence #{state?.steps || 0}
+                                                {t('games.akinetix.rl.inference_num', { defaultValue: 'Inférence #{{num}}', num: state?.steps || 0 })}
                                             </Badge>
                                             <h2 className="text-4xl font-black italic manga-font leading-tight text-white uppercase tracking-tighter">
-                                                {state?.current_q || "Calcul de la trajectoire optimale..."}
+                                                {state?.current_q || t('games.akinetix.rl.computing', 'Calcul de la trajectoire optimale...')}
                                             </h2>
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {['OUI', 'NON', 'PEUT-ÊTRE', 'PROBABLEMENT PAS'].map((ans) => (
-                                                <button 
-                                                    key={ans}
-                                                    onClick={() => submitAnswer(ans)}
+                                            {([
+                                                { value: 'OUI', label: t('common.yes', 'OUI') },
+                                                { value: 'NON', label: t('common.no', 'NON') },
+                                                { value: 'PEUT-ÊTRE', label: t('games.akinetix.rl.maybe', 'PEUT-ÊTRE') },
+                                                { value: 'PROBABLEMENT PAS', label: t('games.akinetix.rl.probably_not', 'PROBABLEMENT PAS') },
+                                            ]).map((ans) => (
+                                                <button
+                                                    key={ans.value}
+                                                    onClick={() => submitAnswer(ans.value)}
                                                     disabled={loading}
                                                     className="py-6 rounded-2xl font-black italic uppercase transition-all hover:scale-[1.02] active:scale-95 bg-black/40 text-white border-2 border-white/5 hover:border-cyan-500/50 hover:bg-cyan-500/5"
                                                 >
-                                                    {ans}
+                                                    {ans.label}
                                                 </button>
                                             ))}
                                         </div>
@@ -202,9 +209,9 @@ const AkinetixRLPage: React.FC = () => {
                                 ) : (
                                     <div className="text-center py-8 animate-fade-in">
                                         <Sparkles className="w-20 h-20 text-yellow-400 mx-auto mb-8 animate-bounce drop-shadow-[0_0_20px_rgba(234,179,8,0.5)]" />
-                                        <h2 className="text-6xl font-black italic manga-font mb-6 uppercase tracking-tighter">VERDICT IA</h2>
+                                        <h2 className="text-6xl font-black italic manga-font mb-6 uppercase tracking-tighter">{t('games.akinetix.rl.verdict', 'VERDICT IA')}</h2>
                                         <div className="bg-cyan-500/10 border-4 border-cyan-500/30 p-12 rounded-[3.5rem] mb-12 shadow-inner">
-                                            <p className="text-sm font-black opacity-40 uppercase mb-4 tracking-[0.3em]">L'agent RL prédit avec 98.4% de certitude :</p>
+                                            <p className="text-sm font-black opacity-40 uppercase mb-4 tracking-[0.3em]">{t('games.akinetix.rl.prediction', "L'agent RL prédit avec 98.4% de certitude :")}</p>
                                             <h3 className="text-5xl font-black italic manga-font text-cyan-400 uppercase tracking-tighter text-glow">{state.ai_guess}</h3>
                                         </div>
                                         <div className="flex flex-col sm:flex-row gap-6 w-full max-w-xl mx-auto">

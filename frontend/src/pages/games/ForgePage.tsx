@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, RefreshCw, Heart, Share2, Info, X, Film, ChevronLeft, ChevronRight, ImageOff } from 'lucide-react';
 import { SearchBar } from "../../components/SearchBar";
 import { CyberTerminalPanel } from '../../components/forge/CyberTerminalPanel';
@@ -13,25 +14,27 @@ import { useAuthStore } from '../../store/authStore';
 // Coût Berrix de la fusion (tâche GPU) — aligné sur FEATURE_BX_COSTS["creative_fusion"] côté backend.
 const FUSION_COST = 78;
 
-const ART_STYLES = [
-  { id: 'Cyberpunk', name: 'Cyberpunk', desc: 'Néons et technologie futuriste', image: '/static/img/forge/styles/cyberpunk.jpg' },
-  { id: 'Ukiyo-e', name: 'Ukiyo-e', desc: 'Estampe traditionnelle japonaise', image: '/static/img/forge/styles/ukiyo-e.jpg' },
-  { id: 'Noir & Blanc', name: 'Manga Noir', desc: 'Contraste élevé, trames classiques', image: '/static/img/forge/styles/manga-noir.jpg' },
-  { id: 'Vaporwave', name: 'Vaporwave', desc: 'Esthétique rétro 80s, couleurs pastel', image: '/static/img/forge/styles/vaporwave.jpg' },
-  { id: 'Steampunk', name: 'Steampunk', desc: 'Cuivre, vapeur et engrenages', image: '/static/img/forge/styles/steampunk.png' },
-  { id: 'Aquarelle', name: 'Aquarelle', desc: 'Douceur et transparences fluides', image: '/static/img/forge/styles/aquarelle.png' },
-  { id: 'Pixel Art', name: 'Pixel Art', desc: 'Rétro 8-bit, pixels et arcade', image: '/static/img/forge/styles/pixel-art.jpg' },
-  { id: 'Gothique', name: 'Gothique', desc: 'Victorien sombre et dramatique', image: '/static/img/forge/styles/gothique.png' },
-  { id: 'Mecha', name: 'Mecha', desc: 'Robots géants et science-fiction', image: '/static/img/forge/styles/mecha.jpg' },
-  { id: '', name: 'Brut', desc: 'Aucune esthétique imposée — fusion la plus fidèle', image: '' },
-];
-
 import { SearchItem } from '../../types';
 
 // ...
 
 const ForgePage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const ART_STYLES = useMemo(() => [
+    { id: 'Cyberpunk', name: t('games.forge.styles.cyberpunk_name', 'Cyberpunk'), desc: t('games.forge.styles.cyberpunk_desc', 'Néons et technologie futuriste'), image: '/static/img/forge/styles/cyberpunk.jpg' },
+    { id: 'Ukiyo-e', name: t('games.forge.styles.ukiyoe_name', 'Ukiyo-e'), desc: t('games.forge.styles.ukiyoe_desc', 'Estampe traditionnelle japonaise'), image: '/static/img/forge/styles/ukiyo-e.jpg' },
+    { id: 'Noir & Blanc', name: t('games.forge.styles.manga_noir_name', 'Manga Noir'), desc: t('games.forge.styles.manga_noir_desc', 'Contraste élevé, trames classiques'), image: '/static/img/forge/styles/manga-noir.jpg' },
+    { id: 'Vaporwave', name: t('games.forge.styles.vaporwave_name', 'Vaporwave'), desc: t('games.forge.styles.vaporwave_desc', 'Esthétique rétro 80s, couleurs pastel'), image: '/static/img/forge/styles/vaporwave.jpg' },
+    { id: 'Steampunk', name: t('games.forge.styles.steampunk_name', 'Steampunk'), desc: t('games.forge.styles.steampunk_desc', 'Cuivre, vapeur et engrenages'), image: '/static/img/forge/styles/steampunk.png' },
+    { id: 'Aquarelle', name: t('games.forge.styles.aquarelle_name', 'Aquarelle'), desc: t('games.forge.styles.aquarelle_desc', 'Douceur et transparences fluides'), image: '/static/img/forge/styles/aquarelle.png' },
+    { id: 'Pixel Art', name: t('games.forge.styles.pixel_art_name', 'Pixel Art'), desc: t('games.forge.styles.pixel_art_desc', 'Rétro 8-bit, pixels et arcade'), image: '/static/img/forge/styles/pixel-art.jpg' },
+    { id: 'Gothique', name: t('games.forge.styles.gothique_name', 'Gothique'), desc: t('games.forge.styles.gothique_desc', 'Victorien sombre et dramatique'), image: '/static/img/forge/styles/gothique.png' },
+    { id: 'Mecha', name: t('games.forge.styles.mecha_name', 'Mecha'), desc: t('games.forge.styles.mecha_desc', 'Robots géants et science-fiction'), image: '/static/img/forge/styles/mecha.jpg' },
+    { id: '', name: t('games.forge.styles.brut_name', 'Brut'), desc: t('games.forge.styles.brut_desc', 'Aucune esthétique imposée — fusion la plus fidèle'), image: '' },
+  ], [t]);
+
   const [itemA, setItemA] = useState<SearchItem | null>(null);
   const [itemB, setItemB] = useState<SearchItem | null>(null);
   const [chaosLevel, setChaosLevel] = useState<number>(50);
@@ -47,9 +50,13 @@ const ForgePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [, setShowConfetti] = useState(false);
 
+  // Error sentinels — compared by equality below to decide which action button to show.
+  const errLoginRequired = t('games.forge.errors.login_required', 'Connexion requise pour forger une réalité.');
+  const errInsufficientBx = t('games.forge.errors.insufficient_bx', { defaultValue: 'Berrix insuffisants — la fusion coûte {{cost}} Bx.', cost: FUSION_COST });
+
   const handleStartFusion = async () => {
     if (!isAuthenticated) {
-      setError("Connexion requise pour forger une réalité.");
+      setError(errLoginRequired);
       return;
     }
     setIsLoading(true);
@@ -66,11 +73,11 @@ const ForgePage: React.FC = () => {
     } catch (err) {
       const httpStatus = (err as { status?: number }).status;
       if (httpStatus === 401 || httpStatus === 403) {
-        setError("Connexion requise pour forger une réalité.");
+        setError(errLoginRequired);
       } else if (httpStatus === 402) {
-        setError(`Berrix insuffisants — la fusion coûte ${FUSION_COST} Bx.`);
+        setError(errInsufficientBx);
       } else {
-        setError("Le réacteur de fusion a surchauffé. Réessayez plus tard.");
+        setError(t('games.forge.errors.reactor_overheat', 'Le réacteur de fusion a surchauffé. Réessayez plus tard.'));
       }
       setIsLoading(false);
     }
@@ -126,7 +133,7 @@ const ForgePage: React.FC = () => {
       <div className="min-h-[80vh] flex items-center justify-center px-6">
         <div className="max-w-3xl w-full relative">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-yellow-400/20 blur-[120px] rounded-full animate-pulse" />
-          
+
           <div className="bg-white/80 dark:bg-anime-dark-card/80 backdrop-blur-2xl rounded-[4rem] p-12 shadow-2xl border border-white/20 relative z-10 text-center overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-2 bg-black/5 dark:bg-white/5">
                 <div className="h-full bg-yellow-400 animate-[loading_2s_ease-in-out_infinite]" style={{ width: '30%' }} />
@@ -138,8 +145,8 @@ const ForgePage: React.FC = () => {
                 </div>
              </div>
 
-             <h2 className="text-5xl font-black italic manga-font mb-6 tracking-tight">ALCHIMIE EN COURS</h2>
-             
+             <h2 className="text-5xl font-black italic manga-font mb-6 tracking-tight">{t('games.forge.loading_title', 'ALCHIMIE EN COURS')}</h2>
+
              <div className="flex justify-center items-center gap-12 mb-12">
                 <div className="group relative">
                     <div className="absolute -inset-2 bg-gradient-to-t from-yellow-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl blur-md" />
@@ -176,33 +183,33 @@ const ForgePage: React.FC = () => {
     return (
       <div className="max-w-7xl mx-auto px-6 py-12 animate-in fade-in zoom-in-95 duration-700">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          
+
           <div className="lg:col-span-5 relative group">
              <div className="absolute -inset-4 bg-yellow-400/20 blur-3xl rounded-[4rem] opacity-50 group-hover:opacity-100 transition-opacity" />
              <div className="relative overflow-hidden rounded-[3.5rem] shadow-2xl border-8 border-white dark:border-anime-dark-card transform -rotate-1 hover:rotate-0 transition-transform duration-500">
                 {status.image_url ? (
-                  <img src={status.image_url} className="w-full aspect-[3/4] object-cover scale-105 group-hover:scale-100 transition-transform duration-700" alt="Fusion" loading="lazy" decoding="async" />
+                  <img src={status.image_url} className="w-full aspect-[3/4] object-cover scale-105 group-hover:scale-100 transition-transform duration-700" alt={t('games.forge.result_image_alt', 'Fusion')} loading="lazy" decoding="async" />
                 ) : (
                   <div className="w-full aspect-[3/4] bg-anime-dark-bg flex flex-col items-center justify-center gap-4">
                      <ImageIcon className="w-20 h-20 text-white/10" />
-                     <p className="text-xs font-black opacity-20 uppercase tracking-widest">Image non générée</p>
+                     <p className="text-xs font-black opacity-20 uppercase tracking-widest">{t('games.forge.image_not_generated', 'Image non générée')}</p>
                   </div>
                 )}
-                
+
                 <div className="absolute top-8 left-8 flex flex-col gap-2">
                    <span className="bg-black/80 backdrop-blur-md text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter">
-                      Style: {artStyle}
+                      {t('games.forge.style_label', 'Style:')} {artStyle}
                    </span>
                    <span className="bg-yellow-400 text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter shadow-lg">
-                      Chaos: {chaosLevel}%
+                      {t('games.forge.chaos_label', 'Chaos:')} {chaosLevel}%
                    </span>
                 </div>
              </div>
-             
+
              <div className="absolute -bottom-8 -right-4 bg-white dark:bg-anime-dark-card p-6 rounded-3xl shadow-2xl border border-gray-100 dark:border-white/5 max-w-[280px] transform rotate-3">
                 <div className="flex items-center gap-3 mb-2">
                     <Sparkles className="w-5 h-5 text-yellow-400" />
-                    <span className="text-[10px] font-black opacity-40 uppercase tracking-widest">NOUVEL ARCHÉTYPE</span>
+                    <span className="text-[10px] font-black opacity-40 uppercase tracking-widest">{t('games.forge.new_archetype', 'NOUVEL ARCHÉTYPE')}</span>
                 </div>
                 <h3 className="text-xl font-black italic manga-font leading-tight">
                     {itemA?.title || itemA?.name} <span className="text-yellow-400 text-sm">×</span> {itemB?.title || itemB?.name}
@@ -213,14 +220,14 @@ const ForgePage: React.FC = () => {
           <div className="lg:col-span-7 space-y-10 pt-8 lg:pt-0">
              <div>
                 <h1 className="text-7xl font-black italic manga-font leading-[0.8] tracking-tighter uppercase mb-4">
-                   FUSION <span className="text-yellow-400">RÉUSSIE</span>
+                   {t('games.forge.result_title_part1', 'FUSION')} <span className="text-yellow-400">{t('games.forge.result_title_part2', 'RÉUSSIE')}</span>
                 </h1>
-                <p className="text-xl font-bold opacity-30 uppercase tracking-[0.2em]">Une nouvelle réalité a été forgée dans le nexus.</p>
+                <p className="text-xl font-bold opacity-30 uppercase tracking-[0.2em]">{t('games.forge.result_subtitle', 'Une nouvelle réalité a été forgée dans le nexus.')}</p>
              </div>
 
              <div className="bg-white/50 dark:bg-anime-dark-card/50 backdrop-blur-xl p-10 rounded-[3rem] shadow-xl border border-white dark:border-white/5 relative group">
                 <div className="absolute -top-4 -left-4 bg-black text-white px-6 py-2 text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg group-hover:-translate-y-1 transition-transform">
-                   SYNOPSIS GÉNÉRÉ PAR L'IA
+                   {t('games.forge.synopsis_badge', "SYNOPSIS GÉNÉRÉ PAR L'IA")}
                 </div>
                 <div className="prose dark:prose-invert max-w-none">
                     <p className="text-2xl leading-relaxed italic font-medium opacity-90 first-letter:text-5xl first-letter:font-black first-letter:text-yellow-400 first-letter:mr-3 first-letter:float-left whitespace-pre-wrap">
@@ -230,19 +237,19 @@ const ForgePage: React.FC = () => {
              </div>
 
              <div className="flex flex-wrap gap-4">
-                <button 
+                <button
                    onClick={() => navigate(`/forge/vn/${fusionData?.fusion_id}/`)}
                    className="flex-1 min-w-[200px] bg-yellow-400 text-black py-5 px-8 rounded-2xl font-black italic text-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase shadow-xl"
                 >
                    <Film className="w-6 h-6" />
-                   Transformer en Visual Novel
+                   {t('games.forge.to_visual_novel', 'Transformer en Visual Novel')}
                 </button>
-                <button 
+                <button
                    onClick={resetForge}
                    className="flex-1 min-w-[200px] bg-black text-white dark:bg-white dark:text-black py-5 px-8 rounded-2xl font-black italic text-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase shadow-xl"
                 >
                    <RefreshCw className="w-6 h-6" />
-                   Retourner à la Forge
+                   {t('games.forge.back_to_forge', 'Retourner à la Forge')}
                 </button>
                 <div className="flex gap-4">
                     <button className="w-16 h-16 bg-white dark:bg-anime-dark-card flex items-center justify-center rounded-2xl shadow-lg hover:text-red-500 hover:scale-110 transition-all border border-black/5 dark:border-white/5">
@@ -265,31 +272,31 @@ const ForgePage: React.FC = () => {
       <div className="text-center mb-20 relative">
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-yellow-400/10 blur-[100px] rounded-full" />
         <h1 className="text-8xl font-black italic manga-font mb-4 tracking-tighter leading-none">
-          <GlitchText>LA FORGE</GlitchText>
+          <GlitchText>{t('navbar.forge', 'LA FORGE')}</GlitchText>
         </h1>
         <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-black/10 dark:bg-white/10" />
-            <p className="text-xs sm:text-sm font-black opacity-50 uppercase tracking-[0.25em] text-center">Fusionnez deux univers en une œuvre inédite</p>
+            <p className="text-xs sm:text-sm font-black opacity-50 uppercase tracking-[0.25em] text-center">{t('games.forge.tagline', 'Fusionnez deux univers en une œuvre inédite')}</p>
             <div className="h-px w-12 bg-black/10 dark:bg-white/10" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
-        
+
         <div className="lg:col-span-7 space-y-8">
             <CyberTerminalPanel>
                 <h3 className="text-xl font-black italic manga-font mb-6 flex items-center gap-3">
-                   <Zap className="w-5 h-5 text-yellow-400" /> Sélecteur d'Univers
+                   <Zap className="w-5 h-5 text-yellow-400" /> {t('games.forge.universe_selector', "Sélecteur d'Univers")}
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <label htmlFor="univers-alpha" className="text-[10px] font-black uppercase tracking-widest opacity-70">Univers Alpha</label>
-                            {itemA && <button onClick={() => setItemA(null)} className="text-[10px] font-bold text-red-500 hover:underline flex items-center gap-1"><X className="w-2 h-2" /> Effacer</button>}
+                            <label htmlFor="univers-alpha" className="text-[10px] font-black uppercase tracking-widest opacity-70">{t('games.forge.universe_alpha', 'Univers Alpha')}</label>
+                            {itemA && <button onClick={() => setItemA(null)} className="text-[10px] font-bold text-red-500 hover:underline flex items-center gap-1"><X className="w-2 h-2" /> {t('games.forge.clear', 'Effacer')}</button>}
                         </div>
-                        <SearchBar id="univers-alpha" onSelect={setItemA} placeholder="Rechercher..." />
-                        
+                        <SearchBar id="univers-alpha" onSelect={setItemA} placeholder={t('games.forge.search_placeholder', 'Rechercher...')} />
+
                         <div className="h-[180px] relative overflow-hidden rounded-3xl bg-black/5 dark:bg-white/5 border border-dashed border-black/10 dark:border-white/10 flex items-center justify-center group transition-all">
                             {itemA ? (
                                 <>
@@ -304,7 +311,7 @@ const ForgePage: React.FC = () => {
                                     <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-2">
                                         <Info className="w-6 h-6" />
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Choisir l'origine</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('games.forge.choose_origin', "Choisir l'origine")}</span>
                                 </div>
                             )}
                         </div>
@@ -316,11 +323,11 @@ const ForgePage: React.FC = () => {
 
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <label htmlFor="univers-beta" className="text-[10px] font-black uppercase tracking-widest opacity-70">Univers Bêta</label>
-                            {itemB && <button onClick={() => setItemB(null)} className="text-[10px] font-bold text-red-500 hover:underline flex items-center gap-1"><X className="w-2 h-2" /> Effacer</button>}
+                            <label htmlFor="univers-beta" className="text-[10px] font-black uppercase tracking-widest opacity-70">{t('games.forge.universe_beta', 'Univers Bêta')}</label>
+                            {itemB && <button onClick={() => setItemB(null)} className="text-[10px] font-bold text-red-500 hover:underline flex items-center gap-1"><X className="w-2 h-2" /> {t('games.forge.clear', 'Effacer')}</button>}
                         </div>
-                        <SearchBar id="univers-beta" onSelect={setItemB} placeholder="Rechercher..." />
-                        
+                        <SearchBar id="univers-beta" onSelect={setItemB} placeholder={t('games.forge.search_placeholder', 'Rechercher...')} />
+
                         <div className="h-[180px] relative overflow-hidden rounded-3xl bg-black/5 dark:bg-white/5 border border-dashed border-black/10 dark:border-white/10 flex items-center justify-center group transition-all">
                             {itemB ? (
                                 <>
@@ -335,7 +342,7 @@ const ForgePage: React.FC = () => {
                                     <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-2">
                                         <Info className="w-6 h-6" />
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Choisir l'origine</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('games.forge.choose_origin', "Choisir l'origine")}</span>
                                 </div>
                             )}
                         </div>
@@ -345,7 +352,7 @@ const ForgePage: React.FC = () => {
 
             <CyberTerminalPanel>
                 <h3 className="text-xl font-black italic manga-font mb-6 flex items-center gap-3">
-                   <ImageIcon className="w-5 h-5 text-blue-400" /> Esthétique Visuelle
+                   <ImageIcon className="w-5 h-5 text-blue-400" /> {t('games.forge.visual_aesthetic', 'Esthétique Visuelle')}
                 </h3>
                 {(() => {
                     const len = ART_STYLES.length;
@@ -372,7 +379,7 @@ const ForgePage: React.FC = () => {
                             {/* Neighbour: previous (set back, blurred) */}
                             <button
                                 onClick={() => cycleStyle(-1)}
-                                aria-label={`Style précédent : ${prev.name}`}
+                                aria-label={t('games.forge.aria_prev_style_named', { defaultValue: 'Style précédent : {{name}}', name: prev.name })}
                                 style={{ transform: 'translate(-50%, -50%) translateX(-148px) scale(0.78)' }}
                                 className="absolute left-1/2 top-1/2 z-0 w-[200px] aspect-[3/4] rounded-3xl overflow-hidden opacity-45 blur-[3px] hover:opacity-70 hover:blur-[1px] transition-all duration-300"
                             >
@@ -383,7 +390,7 @@ const ForgePage: React.FC = () => {
                             {/* Neighbour: next (set back, blurred) */}
                             <button
                                 onClick={() => cycleStyle(1)}
-                                aria-label={`Style suivant : ${next.name}`}
+                                aria-label={t('games.forge.aria_next_style_named', { defaultValue: 'Style suivant : {{name}}', name: next.name })}
                                 style={{ transform: 'translate(-50%, -50%) translateX(148px) scale(0.78)' }}
                                 className="absolute left-1/2 top-1/2 z-0 w-[200px] aspect-[3/4] rounded-3xl overflow-hidden opacity-45 blur-[3px] hover:opacity-70 hover:blur-[1px] transition-all duration-300"
                             >
@@ -423,14 +430,14 @@ const ForgePage: React.FC = () => {
                             {/* Arrows on top */}
                             <button
                                 onClick={() => cycleStyle(-1)}
-                                aria-label="Style précédent"
+                                aria-label={t('games.forge.aria_prev_style', 'Style précédent')}
                                 className="absolute left-1 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/60 backdrop-blur text-white hover:bg-yellow-400 hover:text-black flex items-center justify-center transition-all active:scale-90 shadow-lg"
                             >
                                 <ChevronLeft className="w-6 h-6" />
                             </button>
                             <button
                                 onClick={() => cycleStyle(1)}
-                                aria-label="Style suivant"
+                                aria-label={t('games.forge.aria_next_style', 'Style suivant')}
                                 className="absolute right-1 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/60 backdrop-blur text-white hover:bg-yellow-400 hover:text-black flex items-center justify-center transition-all active:scale-90 shadow-lg"
                             >
                                 <ChevronRight className="w-6 h-6" />
@@ -442,7 +449,7 @@ const ForgePage: React.FC = () => {
                                 <button
                                     key={s.id || 'brut'}
                                     onClick={() => goToStyle(s.id)}
-                                    aria-label={`Choisir ${s.name}`}
+                                    aria-label={t('games.forge.aria_choose_style', { defaultValue: 'Choisir {{name}}', name: s.name })}
                                     aria-pressed={s.id === artStyle}
                                     className={`h-2 rounded-full transition-all ${s.id === artStyle ? 'w-6 bg-yellow-400' : 'w-2 bg-black/15 dark:bg-white/20 hover:bg-yellow-400/50'}`}
                                 />
@@ -457,28 +464,28 @@ const ForgePage: React.FC = () => {
         <div className="lg:col-span-5 space-y-8">
             <CyberTerminalPanel className="sticky top-24">
                 <h3 className="text-xl font-black italic manga-font mb-10 flex items-center gap-3">
-                   <Flame className="w-5 h-5 text-red-500" /> Paramètres du Réacteur
+                   <Flame className="w-5 h-5 text-red-500" /> {t('games.forge.reactor_settings', 'Paramètres du Réacteur')}
                 </h3>
 
                 <div className="space-y-12">
                     <div>
                         <div className="flex justify-between items-end mb-4">
                            <div className="space-y-1">
-                               <span className="text-xs font-black uppercase tracking-widest text-red-500">Niveau de Chaos</span>
-                               <p className="text-[10px] font-bold opacity-55 max-w-[180px]">Définit le degré d'imprévisibilité de la fusion.</p>
+                               <span className="text-xs font-black uppercase tracking-widest text-red-500">{t('games.forge.chaos_level', 'Niveau de Chaos')}</span>
+                               <p className="text-[10px] font-bold opacity-55 max-w-[180px]">{t('games.forge.chaos_desc', "Définit le degré d'imprévisibilité de la fusion.")}</p>
                            </div>
                            <span className="text-2xl font-black italic manga-font text-red-500">{chaosLevel}%</span>
                         </div>
                         <div className="relative group pt-4">
-                            <CyberSlider 
-                                min={0} max={100} value={chaosLevel} 
-                                onChange={setChaosLevel} 
+                            <CyberSlider
+                                min={0} max={100} value={chaosLevel}
+                                onChange={setChaosLevel}
                                 color="magenta"
                             />
                             <div className="flex justify-between mt-3 text-[9px] font-black uppercase opacity-45">
-                                <span>Cohérent</span>
-                                <span>Distordu</span>
-                                <span>Entropie</span>
+                                <span>{t('games.forge.chaos_scale_low', 'Cohérent')}</span>
+                                <span>{t('games.forge.chaos_scale_mid', 'Distordu')}</span>
+                                <span>{t('games.forge.chaos_scale_high', 'Entropie')}</span>
                             </div>
                         </div>
                     </div>
@@ -486,28 +493,28 @@ const ForgePage: React.FC = () => {
                     <div>
                         <div className="flex justify-between items-end mb-4">
                            <div className="space-y-1">
-                               <span className="text-xs font-black uppercase tracking-widest text-blue-500">Équilibre des ADN</span>
-                               <p className="text-[10px] font-bold opacity-55 max-w-[180px]">Quel univers doit dominer la structure globale ?</p>
+                               <span className="text-xs font-black uppercase tracking-widest text-blue-500">{t('games.forge.dna_balance', 'Équilibre des ADN')}</span>
+                               <p className="text-[10px] font-bold opacity-55 max-w-[180px]">{t('games.forge.dna_balance_desc', 'Quel univers doit dominer la structure globale ?')}</p>
                            </div>
                            <span className="text-2xl font-black italic manga-font text-blue-500">{balance}%</span>
                         </div>
                         <div className="relative group pt-4">
-                            <CyberSlider 
-                                min={0} max={100} value={balance} 
-                                onChange={setBalance} 
+                            <CyberSlider
+                                min={0} max={100} value={balance}
+                                onChange={setBalance}
                                 color="cyan"
                             />
                             <div className="flex justify-between mt-3 text-[9px] font-black uppercase opacity-45">
-                                <span>Origine A</span>
-                                <span>Hybride</span>
-                                <span>Origine B</span>
+                                <span>{t('games.forge.balance_scale_a', 'Origine A')}</span>
+                                <span>{t('games.forge.balance_scale_mid', 'Hybride')}</span>
+                                <span>{t('games.forge.balance_scale_b', 'Origine B')}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-3">
                         <div className="flex items-center justify-between px-2">
-                            <span className="text-[11px] font-black uppercase tracking-widest opacity-50">Coût de la fusion</span>
+                            <span className="text-[11px] font-black uppercase tracking-widest opacity-50">{t('games.forge.fusion_cost', 'Coût de la fusion')}</span>
                             <span className="flex items-center gap-1.5 text-sm font-black text-yellow-400">
                                 <Zap className="w-4 h-4" /> {FUSION_COST} Bx
                             </span>
@@ -518,27 +525,27 @@ const ForgePage: React.FC = () => {
                             className={`w-full py-8 rounded-[2.5rem] font-black italic text-3xl shadow-2xl transition-all duration-300 flex items-center justify-center gap-4 uppercase ${(!itemA || !itemB || isGenerating) ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             <Sparkles className="w-8 h-8" />
-                            Forger la Réalité
+                            {t('games.forge.forge_button', 'Forger la Réalité')}
                         </CyberButton>
 
                         {isAuthenticated ? (
                             <p className="text-center text-[10px] font-black uppercase tracking-widest opacity-40">
-                                Solde : <span className={walletBalance < FUSION_COST ? 'text-red-500' : 'text-yellow-400'}>{walletBalance} Bx</span>
+                                {t('games.forge.balance_label', 'Solde :')} <span className={walletBalance < FUSION_COST ? 'text-red-500' : 'text-yellow-400'}>{walletBalance} Bx</span>
                             </p>
                         ) : (
                             <p className="text-center text-[10px] font-black uppercase tracking-widest opacity-50">
-                                Connexion requise — chaque fusion consomme des Berrix.
+                                {t('games.forge.login_hint', 'Connexion requise — chaque fusion consomme des Berrix.')}
                             </p>
                         )}
 
                         {error && (
                             <div className="text-red-500 text-center text-xs font-black uppercase bg-red-500/10 p-4 rounded-2xl space-y-3">
                                 <p>{error}</p>
-                                {/connexion/i.test(error) && (
-                                    <button onClick={() => navigate('/auth/login/')} className="underline hover:text-red-400">Se connecter</button>
+                                {error === errLoginRequired && (
+                                    <button onClick={() => navigate('/auth/login/')} className="underline hover:text-red-400">{t('games.forge.login_button', 'Se connecter')}</button>
                                 )}
-                                {/insuffisants/i.test(error) && (
-                                    <button onClick={() => navigate('/power-station/')} className="underline hover:text-red-400">Recharger des Berrix</button>
+                                {error === errInsufficientBx && (
+                                    <button onClick={() => navigate('/power-station/')} className="underline hover:text-red-400">{t('games.forge.recharge_button', 'Recharger des Berrix')}</button>
                                 )}
                             </div>
                         )}
@@ -550,12 +557,10 @@ const ForgePage: React.FC = () => {
 
       {/* Footer Info */}
       <div className="text-center opacity-40 mt-12 mb-8">
-         <p className="text-[10px] font-black tracking-[0.3em] uppercase">Propulsé par le moteur génératif d'Animetix</p>
+         <p className="text-[10px] font-black tracking-[0.3em] uppercase">{t('games.forge.powered_by', "Propulsé par le moteur génératif d'Animetix")}</p>
       </div>
     </div>
   );
 };
 
 export default ForgePage;
-
-

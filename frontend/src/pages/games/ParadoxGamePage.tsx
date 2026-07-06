@@ -1,28 +1,30 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Target, Trophy, RotateCcw, AlertTriangle, Lock, Zap } from 'lucide-react';
 import { useParadoxStore } from '../../features/games/stores/paradoxStore';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 
 const ParadoxGamePage: React.FC = () => {
+  const { t } = useTranslation();
   const { gameState, isLoading, error, errorKind, loadGame, submitGuess } = useParadoxStore();
 
   useEffect(() => {
     loadGame();
   }, [loadGame]);
 
-  if (isLoading) return <div className="text-center py-20 text-white font-black animate-pulse uppercase tracking-[0.3em]">Ouverture d'une faille temporelle...</div>;
+  if (isLoading) return <div className="text-center py-20 text-white font-black animate-pulse uppercase tracking-[0.3em]">{t('games.paradox.loading', "Ouverture d'une faille temporelle...")}</div>;
 
   if (error && errorKind === 'auth') {
     return (
       <div className="flex justify-center items-center py-20">
         <Card padding="lg" className="text-center border-indigo-500/50 max-w-md">
           <Lock className="w-16 h-16 text-indigo-400 mx-auto mb-6" />
-          <h2 className="text-2xl font-black text-indigo-300 mb-4 italic">CONNEXION REQUISE</h2>
+          <h2 className="text-2xl font-black text-indigo-300 mb-4 italic">{t('games.paradox.auth_required', 'CONNEXION REQUISE')}</h2>
           <p className="mb-8 opacity-70 font-bold">{error}</p>
           <Link to="/auth/login/">
-            <Button variant="primary" className="mx-auto">Se connecter</Button>
+            <Button variant="primary" className="mx-auto">{t('games.paradox.login', 'Se connecter')}</Button>
           </Link>
         </Card>
       </div>
@@ -34,13 +36,13 @@ const ParadoxGamePage: React.FC = () => {
       <div className="flex justify-center items-center py-20">
         <Card padding="lg" className="text-center border-amber-500/50 max-w-md">
           <Zap className="w-16 h-16 text-amber-400 mx-auto mb-6" />
-          <h2 className="text-2xl font-black text-amber-300 mb-4 italic">BERRIX INSUFFISANTS</h2>
+          <h2 className="text-2xl font-black text-amber-300 mb-4 italic">{t('games.paradox.insufficient_berrix', 'BERRIX INSUFFISANTS')}</h2>
           <p className="mb-8 opacity-70 font-bold">{error}</p>
           <div className="flex gap-3 justify-center">
             <Link to="/power-station/">
-              <Button variant="primary" className="mx-auto">Recharger des Berrix</Button>
+              <Button variant="primary" className="mx-auto">{t('games.paradox.recharge_berrix', 'Recharger des Berrix')}</Button>
             </Link>
-            <Button variant="ghost" onClick={loadGame}>Réessayer</Button>
+            <Button variant="ghost" onClick={loadGame}>{t('common.retry', 'Réessayer')}</Button>
           </div>
         </Card>
       </div>
@@ -52,9 +54,9 @@ const ParadoxGamePage: React.FC = () => {
       <div className="flex justify-center items-center py-20">
         <Card padding="lg" className="text-center border-red-500/50">
            <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-6" />
-           <h2 className="text-2xl font-black text-red-500 mb-4 italic">PARADOXE INSTABLE</h2>
+           <h2 className="text-2xl font-black text-red-500 mb-4 italic">{t('games.paradox.unstable_title', 'PARADOXE INSTABLE')}</h2>
            <p className="mb-8 opacity-60 font-bold">{error}</p>
-           <Button variant="danger" onClick={loadGame}>RÉINITIALISER LE FLUX</Button>
+           <Button variant="danger" onClick={loadGame}>{t('games.paradox.reset_flux', 'RÉINITIALISER LE FLUX')}</Button>
         </Card>
       </div>
     );
@@ -67,16 +69,16 @@ const ParadoxGamePage: React.FC = () => {
       <h1 className="text-5xl font-black italic manga-font mb-4 text-center tracking-tighter">
         PARADOX <span className="text-red-500">INTRUDER</span>
       </h1>
-      <p className="text-center text-gray-500 font-bold uppercase tracking-widest mb-12">Démasquez l'anomalie sémantique</p>
+      <p className="text-center text-gray-500 font-bold uppercase tracking-widest mb-12">{t('games.paradox.subtitle', "Démasquez l'anomalie sémantique")}</p>
 
       {gameState.gameOver ? (
         <div className="max-w-2xl mx-auto text-center">
           <Card padding="lg" className="border-4 border-green-500">
             <Trophy className="w-20 h-20 text-green-500 mx-auto mb-6 animate-bounce" />
-            <h2 className="text-4xl font-black mb-4">ANOMALIE RÉSOLUE !</h2>
-            <p className="text-xl mb-8 opacity-70">Vous avez démasqué l'intrus avec une précision chirurgicale.</p>
+            <h2 className="text-4xl font-black mb-4">{t('games.paradox.solved_title', 'ANOMALIE RÉSOLUE !')}</h2>
+            <p className="text-xl mb-8 opacity-70">{t('games.paradox.solved_desc', "Vous avez démasqué l'intrus avec une précision chirurgicale.")}</p>
             <Button variant="success" size="lg" className="mx-auto" onClick={loadGame}>
-                <RotateCcw className="w-5 h-5" /> REJOUER
+                <RotateCcw className="w-5 h-5" /> {t('games.paradox.replay', 'REJOUER')}
             </Button>
           </Card>
         </div>
@@ -93,7 +95,7 @@ const ParadoxGamePage: React.FC = () => {
                 }}
                 role="button"
                 tabIndex={0}
-                aria-label={`Sélectionner ${item.title}`}
+                aria-label={t('games.paradox.select_item', { defaultValue: 'Sélectionner {{title}}', title: item.title })}
                 className="group relative bg-white dark:bg-navy-800 rounded-[2.5rem] overflow-hidden shadow-xl cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border-4 border-transparent hover:border-red-500/50"
             >
                 <img src={item.image} className="w-full h-80 object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={item.title} loading="lazy" decoding="async" />
@@ -102,7 +104,7 @@ const ParadoxGamePage: React.FC = () => {
                     <h3 className="text-white font-black italic manga-font text-xl leading-none mb-2">{item.title}</h3>
                     <div className="flex items-center justify-center gap-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Target className="w-4 h-4" />
-                        <span className="text-[10px] font-black uppercase">ÉLIMINER L'ANOMALIE</span>
+                        <span className="text-[10px] font-black uppercase">{t('games.paradox.eliminate', "ÉLIMINER L'ANOMALIE")}</span>
                     </div>
                 </div>
             </div>

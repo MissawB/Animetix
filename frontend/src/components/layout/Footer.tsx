@@ -80,7 +80,7 @@ const Footer: React.FC = () => {
               href={GITHUB_URL}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Code source sur GitHub"
+              aria-label={t('footer.github_aria', 'Code source sur GitHub')}
               className="mt-5 inline-flex items-center gap-2 rounded-xl border border-black/10 dark:border-white/10 px-3.5 py-2 text-xs font-black uppercase tracking-wide text-gray-600 dark:text-gray-300 no-underline hover:border-yellow-400 hover:text-black dark:hover:text-white transition-colors"
             >
               <GithubIcon className="w-4 h-4" /> {t('footer.github', 'Code source')}

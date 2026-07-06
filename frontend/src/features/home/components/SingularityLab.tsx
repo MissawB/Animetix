@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useGameModes } from '../data/useGameModes';
 
 export const SingularityLab: React.FC = () => {
+  const { t } = useTranslation();
   const { isEn } = useGameModes();
 
   return (
@@ -38,7 +40,7 @@ export const SingularityLab: React.FC = () => {
             <p className="text-sm md:text-lg font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed italic">
               {isEn
                 ? 'Explore the boundaries of generative AI and pure cognition.'
-                : "Explorez la frontière entre l'IA générative et la cognition pure."}
+                : t('home.singularity_desc', "Explorez la frontière entre l'IA générative et la cognition pure.")}
             </p>
           </div>
 

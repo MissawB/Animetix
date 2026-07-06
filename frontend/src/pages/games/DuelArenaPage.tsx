@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from "../../store/authStore";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Sword, User, Zap, Trophy, Timer, XCircle, Users, Radio } from 'lucide-react';
 // Shapes pushed over the duel WebSocket (snake_case, distinct from the generic
 // turn-based DuelGameState in src/types).
@@ -21,6 +22,7 @@ interface DuelLog {
 }
 
 const DuelArenaPage: React.FC = () => {
+  const { t } = useTranslation();
   const { roomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -94,7 +96,7 @@ const DuelArenaPage: React.FC = () => {
                     <Timer size={24} className="text-blue-500" />
                 </div>
                 <div>
-                    <div className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Salon Code</div>
+                    <div className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{t('games.duel.room_code', 'Salon Code')}</div>
                     <div className="text-2xl font-mono font-black tracking-widest text-blue-500">{roomCode}</div>
                 </div>
             </div>
@@ -103,7 +105,7 @@ const DuelArenaPage: React.FC = () => {
                 onClick={() => navigate('/game/duel/lobby/')}
                 className="text-gray-600 hover:text-white transition-colors flex items-center gap-2 font-bold uppercase text-xs tracking-widest"
             >
-                <XCircle size={18} /> Quitter
+                <XCircle size={18} /> {t('games.duel.quit', 'Quitter')}
             </button>
         </header>
 
@@ -133,7 +135,7 @@ const DuelArenaPage: React.FC = () => {
                             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase italic">P2</div>
                         </div>
                         <div className="font-black italic uppercase text-lg">
-                            {gameState.player2 || 'Attente...'}
+                            {gameState.player2 || t('games.duel.waiting_short', 'Attente...')}
                         </div>
                     </div>
                 </div>
@@ -147,8 +149,8 @@ const DuelArenaPage: React.FC = () => {
                         >
                             <Users size={64} />
                         </motion.div>
-                        <h3 className="text-2xl font-black italic uppercase mb-2">En attente d'un adversaire</h3>
-                        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Partagez le code <span className="text-blue-500">{roomCode}</span> pour inviter un ami</p>
+                        <h3 className="text-2xl font-black italic uppercase mb-2">{t('games.duel.waiting_opponent', "En attente d'un adversaire")}</h3>
+                        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">{t('games.duel.share_code_1', 'Partagez le code')} <span className="text-blue-500">{roomCode}</span> {t('games.duel.share_code_2', 'pour inviter un ami')}</p>
                     </div>
                 ) : (
                     <div className="space-y-8">
@@ -165,14 +167,14 @@ const DuelArenaPage: React.FC = () => {
                                     >
                                         <Trophy size={80} className="text-yellow-500 mx-auto mb-6" />
                                         <h2 className="text-5xl font-black italic uppercase mb-2">
-                                            {winner === user?.username ? 'VICTOIRE !' : 'DÉFAITE'}
+                                            {winner === user?.username ? t('games.duel.victory', 'VICTOIRE !') : t('games.duel.defeat', 'DÉFAITE')}
                                         </h2>
-                                        <p className="text-gray-400 font-bold uppercase tracking-widest">Le titre était : <span className="text-blue-500">{gameState.secret_title || 'REDACTED'}</span></p>
-                                        <button 
+                                        <p className="text-gray-400 font-bold uppercase tracking-widest">{t('games.duel.title_was', 'Le titre était :')} <span className="text-blue-500">{gameState.secret_title || 'REDACTED'}</span></p>
+                                        <button
                                             onClick={() => navigate('/game/duel/lobby/')}
                                             className="mt-8 bg-white text-black px-8 py-3 rounded-xl font-black italic uppercase tracking-widest hover:scale-105 transition-all"
                                         >
-                                            Retour au Lobby
+                                            {t('games.duel.back_to_lobby', 'Retour au Lobby')}
                                         </button>
                                     </motion.div>
                                 ) : (
@@ -182,8 +184,8 @@ const DuelArenaPage: React.FC = () => {
                                         className="relative z-10"
                                     >
                                         <Sword size={64} className="text-red-500 mx-auto mb-6 animate-bounce" />
-                                        <h3 className="text-3xl font-black italic uppercase mb-4">Duel en cours !</h3>
-                                        <p className="text-gray-500 uppercase font-bold tracking-widest text-sm">Devinez l'œuvre {gameState.media_type} avant l'adversaire</p>
+                                        <h3 className="text-3xl font-black italic uppercase mb-4">{t('games.duel.in_progress', 'Duel en cours !')}</h3>
+                                        <p className="text-gray-500 uppercase font-bold tracking-widest text-sm">{t('games.duel.guess_before', { defaultValue: "Devinez l'œuvre {{mediaType}} avant l'adversaire", mediaType: gameState.media_type })}</p>
                                     </motion.div>
                                 )}
                              </AnimatePresence>
@@ -196,15 +198,15 @@ const DuelArenaPage: React.FC = () => {
                                     type="text" 
                                     value={guess}
                                     onChange={(e) => setGuess(e.target.value)}
-                                    placeholder="VOTRE RÉPONSE..."
-                                    aria-label="Votre réponse"
+                                    placeholder={t('games.duel.answer_placeholder', 'VOTRE RÉPONSE...')}
+                                    aria-label={t('games.duel.answer_aria', 'Votre réponse')}
                                     className="w-full bg-black border-2 border-gray-800 rounded-2xl px-6 py-5 focus:border-red-600 outline-none transition-all font-bold tracking-widest uppercase placeholder:text-gray-700"
                                 />
                                 <button 
                                     type="submit"
                                     className="absolute right-4 top-1/2 -translate-y-1/2 bg-red-600 hover:bg-red-500 px-8 py-3 rounded-xl font-black italic uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
                                 >
-                                    ENVOYER <Zap size={16} fill="currentColor" />
+                                    {t('games.duel.send', 'ENVOYER')} <Zap size={16} fill="currentColor" />
                                 </button>
                             </form>
                         )}
@@ -216,7 +218,7 @@ const DuelArenaPage: React.FC = () => {
             <div className="bg-gray-900/50 backdrop-blur-xl p-8 rounded-3xl border border-white/5 h-fit">
                 <h3 className="text-xl font-black italic uppercase mb-8 flex items-center gap-3">
                     <Radio size={20} className="text-red-500" />
-                    Flux de combat
+                    {t('games.duel.combat_feed', 'Flux de combat')}
                 </h3>
                 
                 <div className="space-y-4">
@@ -229,17 +231,17 @@ const DuelArenaPage: React.FC = () => {
                         >
                             {log.type === 'win' ? (
                                 <div className="flex items-center gap-2 text-yellow-500">
-                                    <Trophy size={14} /> {log.winner} a remporté le duel !
+                                    <Trophy size={14} /> {t('games.duel.won_duel', { defaultValue: '{{name}} a remporté le duel !', name: log.winner })}
                                 </div>
                             ) : (
                                 <div className="text-gray-400">
-                                    <span className="text-blue-500">@{log.player}</span> a tenté une attaque : <span className="text-white">{log.score}%</span>
+                                    <span className="text-blue-500">@{log.player}</span> {t('games.duel.attempted_attack', 'a tenté une attaque :')} <span className="text-white">{log.score}%</span>
                                 </div>
                             )}
                         </motion.div>
                     )) : (
                         <div className="text-center py-12 text-gray-700 uppercase font-black italic tracking-widest text-xs">
-                            En attente d'actions...
+                            {t('games.duel.waiting_actions', "En attente d'actions...")}
                         </div>
                     )}
                 </div>

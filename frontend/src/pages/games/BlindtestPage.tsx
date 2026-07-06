@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Play, Pause, Check, X, Music, Trophy, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useBlindtestStore } from '../../features/games/stores/blindtestStore';
 import { blindtestService } from '../../features/games/services/blindtestService';
 import { Card } from "../../components/ui/Card";
@@ -33,22 +34,30 @@ const BonusRecap: React.FC<{
   bonusArtistOn: boolean; bonusSeqOn: boolean;
   artistCorrect: boolean; seqCorrect: boolean;
   artists?: string[]; sequence?: number | string; type: 'OP' | 'ED';
-}> = ({ bonusArtistOn, bonusSeqOn, artistCorrect, seqCorrect, artists, sequence, type }) => (
-  <div className="mt-3 space-y-1 text-sm font-black uppercase tracking-wide">
-    {bonusArtistOn && (
-      <p className={artistCorrect ? 'text-green-500' : 'text-red-400'}>
-        {artistCorrect ? 'Chanteur ✓ +25' : `Chanteur : ${(artists ?? []).join(', ')}`}
-      </p>
-    )}
-    {bonusSeqOn && (
-      <p className={seqCorrect ? 'text-green-500' : 'text-red-400'}>
-        {seqCorrect ? 'Numéro ✓ +25' : `C'était ${type} n°${sequence}`}
-      </p>
-    )}
-  </div>
-);
+}> = ({ bonusArtistOn, bonusSeqOn, artistCorrect, seqCorrect, artists, sequence, type }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="mt-3 space-y-1 text-sm font-black uppercase tracking-wide">
+      {bonusArtistOn && (
+        <p className={artistCorrect ? 'text-green-500' : 'text-red-400'}>
+          {artistCorrect
+            ? t('games.blindtest.game.bonus_singer_ok', 'Chanteur ✓ +25')
+            : t('games.blindtest.game.bonus_singer_ko', { defaultValue: 'Chanteur : {{artists}}', artists: (artists ?? []).join(', ') })}
+        </p>
+      )}
+      {bonusSeqOn && (
+        <p className={seqCorrect ? 'text-green-500' : 'text-red-400'}>
+          {seqCorrect
+            ? t('games.blindtest.game.bonus_number_ok', 'Numéro ✓ +25')
+            : t('games.blindtest.game.bonus_number_ko', { defaultValue: "C'était {{type}} n°{{sequence}}", type, sequence })}
+        </p>
+      )}
+    </div>
+  );
+};
 
 const BlindtestPage: React.FC = () => {
+  const { t } = useTranslation();
   const { gameState, isLoading, error, loadGame, restartGame, submitGuess } = useBlindtestStore();
   const location = useLocation();
   const navigate = useNavigate();
@@ -128,15 +137,15 @@ const BlindtestPage: React.FC = () => {
     else el.pause();
   };
 
-  if (isLoading) return <div className="text-center py-20 text-white font-black animate-pulse uppercase tracking-widest">Récupération de l'audio...</div>;
+  if (isLoading) return <div className="text-center py-20 text-white font-black animate-pulse uppercase tracking-widest">{t('games.blindtest.game.loading', "Récupération de l'audio...")}</div>;
 
   if (error) {
     return (
       <div className="flex justify-center items-center py-20">
         <Card padding="lg" className="text-center border-red-500/50">
-           <h2 className="text-2xl font-black text-red-500 mb-4 italic">SIGNAL PERDU</h2>
+           <h2 className="text-2xl font-black text-red-500 mb-4 italic">{t('games.blindtest.game.error_title', 'SIGNAL PERDU')}</h2>
            <p className="mb-8 opacity-60 font-bold">{error}</p>
-           <Button variant="danger" onClick={() => restartGame()}>RECONNEXION</Button>
+           <Button variant="danger" onClick={() => restartGame()}>{t('games.blindtest.game.reconnect', 'RECONNEXION')}</Button>
         </Card>
       </div>
     );
@@ -205,15 +214,15 @@ const BlindtestPage: React.FC = () => {
       <div className="max-w-2xl mx-auto px-6 py-20">
         <Card padding="lg" className="text-center">
           <Trophy className="w-14 h-14 text-yellow-400 mx-auto mb-4" />
-          <h1 className="text-4xl font-black italic manga-font uppercase text-black dark:text-white">Session terminée</h1>
+          <h1 className="text-4xl font-black italic manga-font uppercase text-black dark:text-white">{t('games.blindtest.game.session_over', 'Session terminée')}</h1>
           <p className="mt-6 text-6xl font-black manga-font text-yellow-500">{totalScore}</p>
-          <p className="text-xs font-black uppercase tracking-widest text-gray-400 mt-1">sur {maxScore} points · {wins}/{sessionLength} trouvés</p>
+          <p className="text-xs font-black uppercase tracking-widest text-gray-400 mt-1">{t('games.blindtest.game.session_summary', { defaultValue: 'sur {{max}} points · {{wins}}/{{total}} trouvés', max: maxScore, wins, total: sessionLength })}</p>
 
           <div className="mt-8 grid grid-cols-5 sm:grid-cols-10 gap-1.5">
             {results.map((r, i) => (
               <div
                 key={i}
-                title={`Manche ${i + 1}: ${r.score} pts${r.secret ? ` — ${r.secret}` : ''}`}
+                title={t('games.blindtest.game.round_tooltip', { defaultValue: 'Manche {{num}}: {{score}} pts{{secret}}', num: i + 1, score: r.score, secret: r.secret ? ` — ${r.secret}` : '' })}
                 className={`h-8 rounded-md grid place-items-center text-[10px] font-black ${
                   r.won ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/15 text-red-500'
                 }`}
@@ -224,7 +233,7 @@ const BlindtestPage: React.FC = () => {
           </div>
 
           <div className="flex gap-3 justify-center mt-10">
-            <Button variant="primary" onClick={() => navigate('/blindtest/')}>NOUVELLE SESSION</Button>
+            <Button variant="primary" onClick={() => navigate('/blindtest/')}>{t('games.blindtest.game.new_session', 'NOUVELLE SESSION')}</Button>
           </div>
         </Card>
       </div>
@@ -241,10 +250,10 @@ const BlindtestPage: React.FC = () => {
         <div className="max-w-7xl mx-auto mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
-              Manche {round} / {sessionLength}
+              {t('games.blindtest.game.round_progress', { defaultValue: 'Manche {{round}} / {{total}}', round, total: sessionLength })}
             </span>
             <span className="text-xs font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400">
-              {totalScore} pts
+              {t('games.blindtest.game.points', { defaultValue: '{{score}} pts', score: totalScore })}
             </span>
           </div>
           <div className="w-full h-2 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
@@ -257,7 +266,7 @@ const BlindtestPage: React.FC = () => {
         {/* LECTEUR */}
         <Card padding="md">
           {gameState.gameOver ? (
-            <video src={gameState.video_url} controls className="w-full rounded-3xl shadow-lg" aria-label="Lecteur vidéo de l'extrait">
+            <video src={gameState.video_url} controls className="w-full rounded-3xl shadow-lg" aria-label={t('games.blindtest.game.video_player_aria', "Lecteur vidéo de l'extrait")}>
               <track kind="captions" />
             </video>
           ) : (
@@ -265,7 +274,7 @@ const BlindtestPage: React.FC = () => {
               {/* Current format */}
               <div className="mb-8">
                 <span className="px-4 py-1.5 rounded-full bg-yellow-400/15 border border-yellow-400/30 text-yellow-600 dark:text-yellow-400 text-[11px] font-black uppercase tracking-widest">
-                  {currentMode === 'OP' ? 'Opening' : 'Ending'}
+                  {currentMode === 'OP' ? t('games.blindtest.game.format_opening', 'Opening') : t('games.blindtest.game.format_ending', 'Ending')}
                 </span>
               </div>
 
@@ -283,7 +292,7 @@ const BlindtestPage: React.FC = () => {
                     className={`w-full h-full object-cover transition-all duration-500 ${showVisual ? 'opacity-100' : 'opacity-0'}`}
                     style={{ filter: showVisual ? filterFor(hintType, hintLevel) : 'none' }}
                     preload="auto"
-                    aria-label="Indice visuel du générique"
+                    aria-label={t('games.blindtest.game.visual_hint_aria', 'Indice visuel du générique')}
                     onLoadedMetadata={(e) => {
                       const el = e.currentTarget;
                       if (el.videoWidth && el.videoHeight) setAspect(el.videoWidth / el.videoHeight);
@@ -320,7 +329,7 @@ const BlindtestPage: React.FC = () => {
 
                   <button
                     onClick={togglePlay}
-                    aria-label={isPlaying ? 'Mettre en pause' : 'Lancer la lecture'}
+                    aria-label={isPlaying ? t('games.blindtest.game.pause_aria', 'Mettre en pause') : t('games.blindtest.game.play_aria', 'Lancer la lecture')}
                     className="absolute inset-0 grid place-items-center group outline-none"
                   >
                     <span className="bg-black/60 backdrop-blur-sm text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -330,7 +339,7 @@ const BlindtestPage: React.FC = () => {
                 </div>
               ) : (
                 /* Vinyl disc — audio only (hints disabled) */
-                <button onClick={togglePlay} aria-label={isPlaying ? 'Mettre en pause' : 'Lancer la lecture'} className="group relative outline-none">
+                <button onClick={togglePlay} aria-label={isPlaying ? t('games.blindtest.game.pause_aria', 'Mettre en pause') : t('games.blindtest.game.play_aria', 'Lancer la lecture')} className="group relative outline-none">
                   <div
                     className={`relative w-60 h-60 rounded-full grid place-items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isPlaying ? 'motion-safe:animate-[spin_4s_linear_infinite]' : ''}`}
                     style={{ background: 'repeating-radial-gradient(circle at center, #0d0d12 0 3px, #1b1b24 3px 6px)' }}
@@ -351,7 +360,7 @@ const BlindtestPage: React.FC = () => {
                     src={gameState.video_url}
                     className="hidden"
                     preload="auto"
-                    aria-label="Extrait audio du blind test"
+                    aria-label={t('games.blindtest.game.audio_clip_aria', 'Extrait audio du blind test')}
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
                     onEnded={() => setIsPlaying(false)}
@@ -363,11 +372,11 @@ const BlindtestPage: React.FC = () => {
               )}
 
               <p className="mt-8 font-bold text-gray-500 uppercase tracking-widest text-xs">
-                {isPlaying ? 'Lecture en cours…' : hintsEnabled ? 'Clique pour écouter — le visuel se précise à chaque essai' : 'Cliquez sur le disque pour écouter'}
+                {isPlaying ? t('games.blindtest.game.playing', 'Lecture en cours…') : hintsEnabled ? t('games.blindtest.game.listen_hint_visual', 'Clique pour écouter — le visuel se précise à chaque essai') : t('games.blindtest.game.listen_hint_disc', 'Cliquez sur le disque pour écouter')}
               </p>
               {typeof gameState.attemptsLeft === 'number' && (
                 <p className="mt-2 text-[11px] font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400">
-                  {gameState.attemptsLeft} tentative{gameState.attemptsLeft > 1 ? 's' : ''} restante{gameState.attemptsLeft > 1 ? 's' : ''}
+                  {t('games.blindtest.game.attempts_left', { defaultValue: '{{count}} tentative{{plural}} restante{{plural}}', count: gameState.attemptsLeft, plural: gameState.attemptsLeft > 1 ? 's' : '' })}
                 </p>
               )}
             </div>
@@ -377,7 +386,7 @@ const BlindtestPage: React.FC = () => {
         {/* JEU */}
         <Card padding="lg">
           <h2 className="text-3xl font-black mb-8 flex items-center gap-3 italic">
-              <Music className="w-8 h-8 text-yellow-400" /> DÉCOUVREZ L'ANIMÉ
+              <Music className="w-8 h-8 text-yellow-400" /> {t('games.blindtest.game.title', "DÉCOUVREZ L'ANIMÉ")}
           </h2>
           {!gameState.gameOver ? (
             <div className="space-y-6">
@@ -390,8 +399,8 @@ const BlindtestPage: React.FC = () => {
                   onFocus={() => { if (suggestions.length) setShowSug(true); }}
                   onBlur={() => setTimeout(() => setShowSug(false), 150)}
                   className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
-                  placeholder="Titre de l'animé..."
-                  aria-label="Titre de l'animé"
+                  placeholder={t('games.blindtest.game.input_placeholder', "Titre de l'animé...")}
+                  aria-label={t('games.blindtest.game.input_aria', "Titre de l'animé")}
                   autoComplete="off"
                 />
                 {showSug && suggestions.length > 0 && (
@@ -411,21 +420,21 @@ const BlindtestPage: React.FC = () => {
                 )}
               </div>
               <Button variant="primary" fullWidth onClick={() => onSubmit()}>
-                VALIDER MA RÉPONSE
+                {t('games.blindtest.game.submit', 'VALIDER MA RÉPONSE')}
               </Button>
             </div>
           ) : bonusPending ? (
             <div className="p-6 rounded-2xl text-center border-2 bg-green-500/10 border-green-500">
-              <p className="font-black text-2xl text-green-500">🎉 Trouvé ! +{baseScore} pts</p>
-              <p className="text-lg font-bold mt-2">C'était : <span className="text-yellow-500">{gameState.secret_title}</span></p>
+              <p className="font-black text-2xl text-green-500">{t('games.blindtest.game.found_base_score', { defaultValue: '🎉 Trouvé ! +{{score}} pts', score: baseScore })}</p>
+              <p className="text-lg font-bold mt-2">{t('games.blindtest.game.it_was', "C'était :")} <span className="text-yellow-500">{gameState.secret_title}</span></p>
               <div className="mt-5 pt-5 border-t border-white/10 space-y-3 text-left max-w-sm mx-auto">
-                <p className="text-[11px] font-black uppercase tracking-widest text-yellow-500 text-center">Bonus (+25 pts chacun)</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-yellow-500 text-center">{t('games.blindtest.game.bonus_title', 'Bonus (+25 pts chacun)')}</p>
                 {bonusArtistOn && (
                   <input
                     value={artistGuess}
                     onChange={(e) => setArtistGuess(e.target.value)}
-                    placeholder="Chanteur / interprète…"
-                    aria-label="Chanteur"
+                    placeholder={t('games.blindtest.game.singer_placeholder', 'Chanteur / interprète…')}
+                    aria-label={t('games.blindtest.game.singer_aria', 'Chanteur')}
                     className="w-full p-3 rounded-xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
                   />
                 )}
@@ -434,42 +443,42 @@ const BlindtestPage: React.FC = () => {
                     type="number"
                     value={seqGuess}
                     onChange={(e) => setSeqGuess(e.target.value)}
-                    placeholder={`Numéro d'${currentMode === 'ED' ? 'ending' : 'opening'} (ex: 1)`}
-                    aria-label="Numéro d'opening"
+                    placeholder={t('games.blindtest.game.number_placeholder', { defaultValue: "Numéro d'{{format}} (ex: 1)", format: currentMode === 'ED' ? 'ending' : 'opening' })}
+                    aria-label={t('games.blindtest.game.number_aria', "Numéro d'opening")}
                     className="w-full p-3 rounded-xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
                   />
                 )}
-                <Button variant="primary" fullWidth onClick={validateBonus}>VALIDER LE BONUS</Button>
+                <Button variant="primary" fullWidth onClick={validateBonus}>{t('games.blindtest.game.submit_bonus', 'VALIDER LE BONUS')}</Button>
               </div>
             </div>
           ) : isSession ? (
             <div className={`p-6 rounded-2xl text-center border-2 ${gameState.won ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
               <p className={`font-black text-2xl ${gameState.won ? 'text-green-500' : 'text-red-500'}`}>
-                {gameState.won ? `🎉 +${roundScore} pts` : '😵 Manche perdue'}
+                {gameState.won ? t('games.blindtest.game.round_won_score', { defaultValue: '🎉 +{{score}} pts', score: roundScore }) : t('games.blindtest.game.round_lost', '😵 Manche perdue')}
               </p>
-              <p className="text-lg font-bold mt-2">C'était : <span className="text-yellow-500">{gameState.secret_title}</span></p>
+              <p className="text-lg font-bold mt-2">{t('games.blindtest.game.it_was', "C'était :")} <span className="text-yellow-500">{gameState.secret_title}</span></p>
               {bonusEnabled && bonusDone && <BonusRecap {...{ bonusArtistOn, bonusSeqOn, artistCorrect, seqCorrect, artists: gameState.artists, sequence: gameState.sequence, type: currentMode }} />}
               <Button variant="primary" className="mt-6" onClick={finishRound}>
-                {lastRound ? 'VOIR LE RÉSULTAT' : 'MANCHE SUIVANTE'} <ArrowRight className="w-5 h-5" />
+                {lastRound ? t('games.blindtest.game.see_result', 'VOIR LE RÉSULTAT') : t('games.blindtest.game.next_round', 'MANCHE SUIVANTE')} <ArrowRight className="w-5 h-5" />
               </Button>
             </div>
           ) : lost ? (
             <div className="bg-red-500/10 border-2 border-red-500 p-6 rounded-2xl text-center">
-                <p className="text-red-500 font-black text-2xl">😵 PERDU !</p>
-                <p className="text-xl font-bold mt-2">C'était : <span className="text-yellow-500">{gameState.secret_title}</span></p>
-                <Button variant="danger" className="mt-6" onClick={replay}>REJOUER</Button>
+                <p className="text-red-500 font-black text-2xl">{t('games.blindtest.game.lost', '😵 PERDU !')}</p>
+                <p className="text-xl font-bold mt-2">{t('games.blindtest.game.it_was', "C'était :")} <span className="text-yellow-500">{gameState.secret_title}</span></p>
+                <Button variant="danger" className="mt-6" onClick={replay}>{t('games.blindtest.game.replay', 'REJOUER')}</Button>
             </div>
           ) : (
             <div className="bg-green-500/10 border-2 border-green-500 p-6 rounded-2xl text-center">
-                <p className="text-green-500 font-black text-2xl animate-bounce">🎉 BIEN JOUÉ !{bonusScore > 0 ? ` +${bonusScore} bonus` : ''}</p>
-                <p className="text-xl font-bold mt-2">C'était : <span className="text-yellow-500">{gameState.secret_title}</span></p>
+                <p className="text-green-500 font-black text-2xl animate-bounce">{t('games.blindtest.game.well_played', '🎉 BIEN JOUÉ !')}{bonusScore > 0 ? t('games.blindtest.game.bonus_suffix', { defaultValue: ' +{{score}} bonus', score: bonusScore }) : ''}</p>
+                <p className="text-xl font-bold mt-2">{t('games.blindtest.game.it_was', "C'était :")} <span className="text-yellow-500">{gameState.secret_title}</span></p>
                 {bonusEnabled && bonusDone && <BonusRecap {...{ bonusArtistOn, bonusSeqOn, artistCorrect, seqCorrect, artists: gameState.artists, sequence: gameState.sequence, type: currentMode }} />}
-                <Button variant="success" className="mt-6" onClick={replay}>REJOUER</Button>
+                <Button variant="success" className="mt-6" onClick={replay}>{t('games.blindtest.game.replay', 'REJOUER')}</Button>
             </div>
           )}
 
           <div className="mt-10 space-y-3">
-            <h4 className="text-[10px] font-black opacity-30 uppercase tracking-widest">Tentatives précédentes</h4>
+            <h4 className="text-[10px] font-black opacity-30 uppercase tracking-widest">{t('games.blindtest.game.previous_attempts', 'Tentatives précédentes')}</h4>
             {gameState.guesses.map((g: { title: string; is_correct: boolean }, i: number) => (
               <div key={i} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-navy-900 rounded-xl border border-gray-100 dark:border-white/5">
                 <span className="font-bold opacity-80">{g.title}</span>

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Trophy, Sparkles, Search, Flag, RotateCcw, Play, Clapperboard, BookOpen, Users, Gauge } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useEmoji } from '../../features/games/hooks/useEmoji';
 import { emojiService, EmojiSuggestion } from '../../features/games/services/emojiService';
 import { Card } from "../../components/ui/Card";
@@ -10,20 +11,8 @@ import { CardSkeleton } from "../../components/ui/Skeleton";
 
 import { EmojiState } from "../../types";
 
-const MEDIA_OPTS = [
-  { key: 'Anime', label: 'Animés', icon: Clapperboard },
-  { key: 'Manga', label: 'Mangas', icon: BookOpen },
-  { key: 'Character', label: 'Personnages', icon: Users },
-] as const;
-
-const DIFF_OPTS = [
-  { key: 'Easy', label: 'Facile', hint: 'Œuvres très connues' },
-  { key: 'Normal', label: 'Normal', hint: 'Un bon mix' },
-  { key: 'Hard', label: 'Difficile', hint: 'Titres plus pointus' },
-  { key: 'Impossible', label: 'Extrême', hint: 'Pépites obscures' },
-] as const;
-
 const EmojiPage: React.FC = () => {
+  const { t } = useTranslation();
   const { gameState, starting, handleGuess, giveUp, start, reset } = useEmoji() as unknown as {
     gameState: EmojiState | undefined;
     starting: boolean;
@@ -40,6 +29,19 @@ const EmojiPage: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reqIdRef = useRef(0);
+
+  const MEDIA_OPTS = [
+    { key: 'Anime', label: t('games.emoji.media.anime', 'Animés'), icon: Clapperboard },
+    { key: 'Manga', label: t('games.emoji.media.manga', 'Mangas'), icon: BookOpen },
+    { key: 'Character', label: t('games.emoji.media.character', 'Personnages'), icon: Users },
+  ] as const;
+
+  const DIFF_OPTS = [
+    { key: 'Easy', label: t('games.emoji.difficulties.easy.label', 'Facile'), hint: t('games.emoji.difficulties.easy.hint', 'Œuvres très connues') },
+    { key: 'Normal', label: t('games.emoji.difficulties.normal.label', 'Normal'), hint: t('games.emoji.difficulties.normal.hint', 'Un bon mix') },
+    { key: 'Hard', label: t('games.emoji.difficulties.hard.label', 'Difficile'), hint: t('games.emoji.difficulties.hard.hint', 'Titres plus pointus') },
+    { key: 'Impossible', label: t('games.emoji.difficulties.impossible.label', 'Extrême'), hint: t('games.emoji.difficulties.impossible.hint', 'Pépites obscures') },
+  ] as const;
 
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
@@ -83,13 +85,13 @@ const EmojiPage: React.FC = () => {
     return (
       <div className="max-w-3xl mx-auto p-6 py-16 text-center">
         <h2 className="text-5xl font-black italic manga-font mb-3 tracking-tighter uppercase">
-          EMOJI <span className="text-orange-500">DECODE</span>
+          {t('games.emoji.title_part1', 'EMOJI')} <span className="text-orange-500">{t('games.emoji.title_part2', 'DECODE')}</span>
         </h2>
-        <p className="text-sm font-bold opacity-50 mb-12">Devine l'œuvre cachée derrière une suite d'emojis, du plus vague au plus évident.</p>
+        <p className="text-sm font-bold opacity-50 mb-12">{t('games.emoji.subtitle', "Devine l'œuvre cachée derrière une suite d'emojis, du plus vague au plus évident.")}</p>
 
         <div className="text-left mb-10">
           <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.3em] opacity-40 mb-4">
-            <Sparkles className="w-3.5 h-3.5" /> 1 · Type d'œuvre
+            <Sparkles className="w-3.5 h-3.5" /> {t('games.emoji.section_media', "1 · Type d'œuvre")}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {MEDIA_OPTS.map(({ key, label, icon: Icon }) => {
@@ -115,7 +117,7 @@ const EmojiPage: React.FC = () => {
 
         <div className="text-left mb-12">
           <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.3em] opacity-40 mb-4">
-            <Gauge className="w-3.5 h-3.5" /> 2 · Difficulté
+            <Gauge className="w-3.5 h-3.5" /> {t('games.emoji.section_difficulty', '2 · Difficulté')}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {DIFF_OPTS.map(({ key, label, hint }) => {
@@ -145,7 +147,7 @@ const EmojiPage: React.FC = () => {
           onClick={() => start(mediaType, difficulty)}
           className="bg-black text-white hover:bg-gray-900 border-none px-16"
         >
-          <Play className="w-5 h-5" /> COMMENCER
+          <Play className="w-5 h-5" /> {t('games.emoji.start', 'COMMENCER')}
         </Button>
       </div>
     );
@@ -162,7 +164,7 @@ const EmojiPage: React.FC = () => {
 
       <div className="max-w-4xl mx-auto p-6 text-center py-16">
         <h2 className="text-5xl font-black italic manga-font mb-12 tracking-tighter uppercase">
-          EMOJI <span className="text-orange-500">DECODE</span>
+          {t('games.emoji.title_part1', 'EMOJI')} <span className="text-orange-500">{t('games.emoji.title_part2', 'DECODE')}</span>
         </h2>
 
         <Card padding="lg" className="bg-gradient-to-r from-orange-500 to-red-600 mb-12 text-white border-none relative overflow-hidden group">
@@ -176,11 +178,11 @@ const EmojiPage: React.FC = () => {
               ))}
           </div>
           <p className="font-black italic text-sm uppercase tracking-widest opacity-80 flex items-center justify-center gap-2">
-              <Sparkles className="w-4 h-4" /> Du plus vague au plus évident — un nouvel indice à chaque essai raté.
+              <Sparkles className="w-4 h-4" /> {t('games.emoji.hint_progression', 'Du plus vague au plus évident — un nouvel indice à chaque essai raté.')}
           </p>
           {totalEmojis > 0 && (
             <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mt-3">
-              Indice {Math.min(revealed.length, totalEmojis)} / {totalEmojis}
+              {t('games.emoji.hint_counter', { defaultValue: 'Indice {{current}} / {{total}}', current: Math.min(revealed.length, totalEmojis), total: totalEmojis })}
             </p>
           )}
         </Card>
@@ -197,8 +199,8 @@ const EmojiPage: React.FC = () => {
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onSubmit(); } if (e.key === 'Escape') setShowSug(false); }}
                 onFocus={() => { if (suggestions.length) setShowSug(true); }}
                 onBlur={() => setTimeout(() => setShowSug(false), 150)}
-                placeholder="Cherchez un titre…"
-                aria-label="Rechercher un titre"
+                placeholder={t('games.emoji.input_placeholder', 'Cherchez un titre…')}
+                aria-label={t('games.emoji.input_aria', 'Rechercher un titre')}
                 autoComplete="off"
                 className="w-full rounded-2xl border border-black/10 dark:border-white/10 bg-surface-card py-3.5 pl-12 pr-4 text-center font-bold outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 transition-all"
               />
@@ -237,14 +239,14 @@ const EmojiPage: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Button variant="primary" size="lg" fullWidth onClick={() => onSubmit()} className="bg-black text-white hover:bg-gray-900 border-none">
-                <Send className="w-5 h-5" /> DEVINER
+                <Send className="w-5 h-5" /> {t('games.emoji.guess', 'DEVINER')}
               </Button>
               <button
                 type="button"
                 onClick={() => giveUp()}
                 className="flex items-center justify-center gap-2 rounded-2xl px-6 py-3 font-black uppercase tracking-wide text-sm text-red-500 border border-red-500/30 bg-red-500/5 hover:bg-red-500/15 hover:border-red-500/60 transition-colors whitespace-nowrap"
               >
-                <Flag className="w-4 h-4" /> Abandonner
+                <Flag className="w-4 h-4" /> {t('games.emoji.give_up', 'Abandonner')}
               </button>
             </div>
           </div>
@@ -256,10 +258,10 @@ const EmojiPage: React.FC = () => {
             <div className="relative">
               {won ? <Trophy className="w-14 h-14 mx-auto mb-3" /> : <Flag className="w-14 h-14 mx-auto mb-3" />}
               <h3 className="text-4xl md:text-5xl font-black italic manga-font mb-3 uppercase tracking-tighter">
-                {won ? 'VICTOIRE !' : 'Partie abandonnée'}
+                {won ? t('games.emoji.victory', 'VICTOIRE !') : t('games.emoji.abandoned', 'Partie abandonnée')}
               </h3>
               <p className="text-lg md:text-xl font-bold opacity-90">
-                La réponse était <span className="text-yellow-300">{gameState.secret_title}</span>
+                {t('games.emoji.answer_was', 'La réponse était')} <span className="text-yellow-300">{gameState.secret_title}</span>
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
                 <Button
@@ -267,14 +269,14 @@ const EmojiPage: React.FC = () => {
                   className="bg-white/95 text-slate-900 hover:bg-white border-none px-10 font-black"
                   onClick={replay}
                 >
-                  <RotateCcw className="w-5 h-5" /> REJOUER
+                  <RotateCcw className="w-5 h-5" /> {t('games.emoji.replay', 'REJOUER')}
                 </Button>
                 <button
                   type="button"
                   onClick={() => { reset(); setGuess(''); }}
                   className="rounded-2xl px-8 py-3 font-black uppercase tracking-wide text-sm text-white/90 border border-white/30 hover:bg-white/10 transition-colors"
                 >
-                  Changer de mode
+                  {t('games.emoji.change_mode', 'Changer de mode')}
                 </button>
               </div>
             </div>
@@ -283,7 +285,7 @@ const EmojiPage: React.FC = () => {
 
         <div className="max-w-2xl mx-auto space-y-3 mt-12">
           {gameState.guesses.length > 0 && (
-            <h4 className="text-[10px] font-black uppercase opacity-30 tracking-[0.3em] mb-6">Tes tentatives</h4>
+            <h4 className="text-[10px] font-black uppercase opacity-30 tracking-[0.3em] mb-6">{t('games.emoji.your_attempts', 'Tes tentatives')}</h4>
           )}
           {gameState.guesses.map((g: { title: string; title_en?: string; image: string; is_correct: boolean }, i: number) => (
             <div
@@ -298,7 +300,7 @@ const EmojiPage: React.FC = () => {
               <div className="flex-grow text-left min-w-0">
                 <div className="font-black text-base truncate uppercase italic manga-font leading-tight mb-1.5">{g.title_en || g.title}</div>
                 <Badge variant={g.is_correct ? 'success' : 'danger'}>
-                    {g.is_correct ? 'TROUVÉ' : 'ÉCHEC'}
+                    {g.is_correct ? t('games.emoji.result_found', 'TROUVÉ') : t('games.emoji.result_failed', 'ÉCHEC')}
                 </Badge>
               </div>
               <div className="text-2xl px-2 flex-shrink-0">{g.is_correct ? '✅' : '❌'}</div>

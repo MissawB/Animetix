@@ -130,7 +130,7 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
         <button
           className="grid place-items-center w-9 h-9 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white hover:rotate-90 transition-all duration-300"
           onClick={close}
-          aria-label="Fermer le menu"
+          aria-label={t('nav.close_menu', 'Fermer le menu')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -151,7 +151,7 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
               <div className="min-w-0">
                 <p className="manga-font text-base m-0 text-black dark:text-white truncate">{user.username}</p>
                 <p className="text-[10px] font-black text-yellow-600 dark:text-yellow-400 uppercase tracking-widest m-0">
-                  {user.tier === 'premium' ? 'Boosté' : 'Standard'} · Niv. {level}
+                  {user.tier === 'premium' ? t('nav.tier_boosted', 'Boosté') : t('nav.tier_standard', 'Standard')} · {t('nav.level_abbrev', { defaultValue: 'Niv. {{level}}', level })}
                 </p>
               </div>
             </div>
@@ -162,8 +162,8 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
               ></div>
             </div>
             <div className="flex justify-between mt-2 font-black text-[10px] text-black/40 dark:text-white/40">
-              <span>{xp} XP</span>
-              <span>{500 - (xp % 500)} XP → NIV. {level + 1}</span>
+              <span>{t('nav.xp_amount', { defaultValue: '{{xp}} XP', xp })}</span>
+              <span>{t('nav.xp_to_next', { defaultValue: '{{xp}} XP → NIV. {{level}}', xp: 500 - (xp % 500), level: level + 1 })}</span>
             </div>
           </Link>
         )}
@@ -188,8 +188,8 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
           {!isAuthenticated && (
             <>
               <SectionLabel>{t('nav.account', 'Compte')}</SectionLabel>
-              <NavItem item={{ to: '/auth/login/', icon: LogIn, label: t('auth.login', 'Connexion'), color: 'text-blue-500' }} active={pathname === '/auth/login/'} onClick={close} />
-              <NavItem item={{ to: '/auth/register/', icon: UserPlus, label: t('auth.register', "S'inscrire"), color: 'text-green-500' }} active={pathname === '/auth/register/'} onClick={close} />
+              <NavItem item={{ to: '/auth/login/', icon: LogIn, label: t('auth.login.link', 'Connexion'), color: 'text-blue-500' }} active={pathname === '/auth/login/'} onClick={close} />
+              <NavItem item={{ to: '/auth/register/', icon: UserPlus, label: t('auth.register.link', "S'inscrire"), color: 'text-green-500' }} active={pathname === '/auth/register/'} onClick={close} />
             </>
           )}
         </nav>

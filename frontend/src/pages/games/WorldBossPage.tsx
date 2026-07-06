@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,6 +7,7 @@ import { Skull, Zap, Info, Target, Trophy } from 'lucide-react';
 import { apiClient } from '../../utils/apiClient';
 
 const WorldBossPage: React.FC = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [guess, setGuess] = React.useState('');
   const [feedback, setFeedback] = React.useState<{ is_correct: boolean; damage: number } | null>(null);
@@ -185,7 +187,7 @@ const WorldBossPage: React.FC = () => {
                                 value={guess}
                                 onChange={(e) => setGuess(e.target.value)}
                                 placeholder="WHO IS THIS BOSS? ENTER THE TITLE..."
-                                aria-label="Titre du boss à deviner"
+                                aria-label={t('games.world_boss.guess_aria', 'Titre du boss à deviner')}
                                 className="w-full bg-black border-2 border-gray-800 rounded-2xl px-6 py-5 focus:border-red-600 outline-none transition-all font-bold tracking-widest uppercase placeholder:text-gray-700"
                             />
                             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">

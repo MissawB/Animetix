@@ -56,10 +56,10 @@ const RegisterPage: React.FC = () => {
               ANIME<span className="text-yellow-400">TIX</span>
             </span>
             <p className="mt-2 text-sm font-bold uppercase tracking-[0.25em] text-white/40 italic">
-              L'IA au service de ta passion
+              {t('auth.brand_tagline', "L'IA au service de ta passion")}
             </p>
             <p className="mt-8 text-white/50 text-base font-medium leading-snug">
-              Rejoins la communauté otaku. Joue, grimpe au classement et crée tes propres défis — gratuitement.
+              {t('auth.register.brand_desc', 'Rejoins la communauté otaku. Joue, grimpe au classement et crée tes propres défis — gratuitement.')}
             </p>
           </div>
         </aside>
@@ -71,14 +71,14 @@ const RegisterPage: React.FC = () => {
               to="/"
               className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-black dark:hover:text-white mb-10 no-underline transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Retour à l'accueil
+              <ArrowLeft className="w-4 h-4" /> {t('auth.back_home', "Retour à l'accueil")}
             </Link>
 
             <h1 className="text-4xl md:text-5xl font-black italic manga-font tracking-tighter uppercase text-black dark:text-white leading-none">
-              REJOINS <span className="text-yellow-400">L'AVENTURE</span>
+              {t('auth.register.title_part1', 'REJOINS')} <span className="text-yellow-400">{t('auth.register.title_part2', "L'AVENTURE")}</span>
             </h1>
             <p className="mt-4 mb-10 text-base font-medium text-gray-500 dark:text-white/50">
-              Crée ton compte en quelques secondes. C'est gratuit.
+              {t('auth.register.subtitle', "Crée ton compte en quelques secondes. C'est gratuit.")}
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -90,32 +90,32 @@ const RegisterPage: React.FC = () => {
 
               <div className="space-y-2">
                 <label htmlFor="username" className="block text-xs font-black uppercase opacity-60 tracking-widest text-black dark:text-white">
-                  Pseudo
+                  {t('auth.register.username_label', 'Pseudo')}
                 </label>
                 <div className="relative">
                   <User className={iconClass} />
                   <input
                     id="username"
-                    aria-label="Pseudo"
+                    aria-label={t('auth.register.username_label', 'Pseudo')}
                     type="text"
                     autoComplete="username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className={inputClass}
-                    placeholder="ex. kenji_92"
+                    placeholder={t('auth.register.username_placeholder', 'ex. kenji_92')}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-xs font-black uppercase opacity-60 tracking-widest text-black dark:text-white">
-                  Email
+                  {t('auth.register.email_label', 'Email')}
                 </label>
                 <div className="relative">
                   <Mail className={iconClass} />
                   <input
                     id="email"
-                    aria-label="Adresse email"
+                    aria-label={t('auth.email_address', 'Adresse email')}
                     type="email"
                     autoComplete="email"
                     value={email}
@@ -128,13 +128,13 @@ const RegisterPage: React.FC = () => {
 
               <div className="space-y-2">
                 <label htmlFor="password" className="block text-xs font-black uppercase opacity-60 tracking-widest text-black dark:text-white">
-                  Mot de passe
+                  {t('auth.password', 'Mot de passe')}
                 </label>
                 <div className="relative">
                   <Lock className={iconClass} />
                   <input
                     id="password"
-                    aria-label="Mot de passe"
+                    aria-label={t('auth.password', 'Mot de passe')}
                     type="password"
                     autoComplete="new-password"
                     value={password}
@@ -154,16 +154,16 @@ const RegisterPage: React.FC = () => {
                   t('common.loading', 'Création...')
                 ) : (
                   <>
-                    <UserPlus className="w-5 h-5" /> S'INSCRIRE
+                    <UserPlus className="w-5 h-5" /> {t('auth.register.submit', "S'INSCRIRE")}
                   </>
                 )}
               </button>
 
               <div className="text-center pt-6 border-t border-gray-100 dark:border-white/5">
                 <p className="text-sm opacity-60 font-bold text-black dark:text-white">
-                  Déjà un compte ?{' '}
+                  {t('auth.register.have_account', 'Déjà un compte ?')}{' '}
                   <Link to="/auth/login/" className="text-yellow-500 dark:text-yellow-400 hover:underline uppercase tracking-wide">
-                    Se connecter
+                    {t('auth.register.login_link', 'Se connecter')}
                   </Link>
                 </p>
               </div>

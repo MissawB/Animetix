@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import useSocket from '../../hooks/useSocket';
 import {
   Users, Send, Crown, Play, Copy, Check, Eye, KeyRound, Skull, RotateCcw, Radio, Shield,
@@ -10,25 +11,8 @@ interface CPlayer { id: string; name: string; team?: string | null; role?: strin
 interface CClue { team: string; word: string; number: number; guesses_left: number }
 interface CMsg { user: string; text: string }
 
-// Same card universes as Undercover — the host ticks any mix.
-const CATEGORIES = [
-  { key: 'Anime', label: 'Anime' },
-  { key: 'Manga', label: 'Manga' },
-  { key: 'Character', label: 'Persos anime' },
-  { key: 'Movie', label: 'Films' },
-  { key: 'Game', label: 'Jeux vidéo' },
-  { key: 'Actor', label: 'Acteurs' },
-  { key: 'VGChar', label: 'Persos de jeux' },
-];
-// Difficulty = required anime/manga knowledge (popularity depth of the cards).
-const DIFFS = [
-  { key: 'Easy', label: 'Grand public', hint: 'œuvres très connues' },
-  { key: 'Normal', label: 'Amateur', hint: 'œuvres connues' },
-  { key: 'Hard', label: 'Otaku', hint: 'œuvres pointues' },
-];
-const TEAM_LABEL: Record<string, string> = { blue: 'Bleue', red: 'Rouge' };
-
 const CodeMangaRoom: React.FC = () => {
+  const { t } = useTranslation();
   const { roomCode } = useParams<{ roomCode: string }>();
   const { gameState, connected, sendAction } = useSocket(roomCode, 'codemanga');
   const [name, setName] = useState('');
@@ -36,6 +20,27 @@ const CodeMangaRoom: React.FC = () => {
   const [clueWord, setClueWord] = useState('');
   const [clueNum, setClueNum] = useState(2);
   const [copied, setCopied] = useState(false);
+
+  // Same card universes as Undercover — the host ticks any mix.
+  const CATEGORIES = [
+    { key: 'Anime', label: t('games.codemanga.categories.anime', 'Anime') },
+    { key: 'Manga', label: t('games.codemanga.categories.manga', 'Manga') },
+    { key: 'Character', label: t('games.codemanga.categories.anime_characters', 'Persos anime') },
+    { key: 'Movie', label: t('games.codemanga.categories.movies', 'Films') },
+    { key: 'Game', label: t('games.codemanga.categories.video_games', 'Jeux vidéo') },
+    { key: 'Actor', label: t('games.codemanga.categories.actors', 'Acteurs') },
+    { key: 'VGChar', label: t('games.codemanga.categories.game_characters', 'Persos de jeux') },
+  ];
+  // Difficulty = required anime/manga knowledge (popularity depth of the cards).
+  const DIFFS = [
+    { key: 'Easy', label: t('games.codemanga.difficulty.easy', 'Grand public'), hint: t('games.codemanga.difficulty.hint_easy', 'œuvres très connues') },
+    { key: 'Normal', label: t('games.codemanga.difficulty.normal', 'Amateur'), hint: t('games.codemanga.difficulty.hint_normal', 'œuvres connues') },
+    { key: 'Hard', label: t('games.codemanga.difficulty.hard', 'Otaku'), hint: t('games.codemanga.difficulty.hint_hard', 'œuvres pointues') },
+  ];
+  const TEAM_LABEL: Record<string, string> = {
+    blue: t('games.codemanga.room.team_blue', 'Bleue'),
+    red: t('games.codemanga.room.team_red', 'Rouge'),
+  };
 
   const gs = (gameState || {}) as Record<string, unknown>;
   const state = (gs.state as string) || 'lobby';
@@ -61,7 +66,7 @@ const CodeMangaRoom: React.FC = () => {
       <div className="min-h-[60vh] grid place-items-center">
         <div className="flex flex-col items-center gap-4 text-indigo-400">
           <Radio className="w-12 h-12 animate-pulse" />
-          <p className="font-black uppercase tracking-[0.4em] animate-pulse">Connexion au réseau…</p>
+          <p className="font-black uppercase tracking-[0.4em] animate-pulse">{t('games.codemanga.room.connecting', 'Connexion au réseau…')}</p>
         </div>
       </div>
     );
@@ -117,11 +122,11 @@ const CodeMangaRoom: React.FC = () => {
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2">
-              <KeyRound className="w-4 h-4" /> Code Manga · Décryptage
+              <KeyRound className="w-4 h-4" /> {t('games.codemanga.room.badge', 'Code Manga · Décryptage')}
             </div>
             <div className="flex items-center gap-4">
               <h1 className="text-4xl sm:text-6xl font-black italic manga-font uppercase tracking-tighter text-white leading-none">Code Manga</h1>
-              <button onClick={copyCode} title="Copier le code" className="group inline-flex items-center gap-2 rounded-xl border-2 border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 px-4 py-2 transition-all">
+              <button onClick={copyCode} title={t('games.codemanga.room.copy_code_title', 'Copier le code')} className="group inline-flex items-center gap-2 rounded-xl border-2 border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 px-4 py-2 transition-all">
                 <span className="text-2xl sm:text-3xl font-black tracking-[0.25em] text-indigo-300 font-mono">{code}</span>
                 {copied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-4 h-4 text-indigo-300 opacity-60 group-hover:opacity-100" />}
               </button>
@@ -130,11 +135,11 @@ const CodeMangaRoom: React.FC = () => {
           {/* Scoreboard */}
           <div className="flex items-center gap-3">
             <div className={`px-4 py-2 rounded-2xl border-2 ${turn === 'blue' && !winner && state === 'playing' ? 'border-blue-400 bg-blue-500/20' : 'border-blue-500/20 bg-blue-500/5'}`}>
-              <p className="text-[9px] font-black uppercase tracking-widest text-blue-300/70">Bleue</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-blue-300/70">{t('games.codemanga.room.team_blue', 'Bleue')}</p>
               <p className="text-2xl font-black text-blue-300 tabular-nums leading-none">{blueScore}<span className="text-sm text-blue-300/40">/9</span></p>
             </div>
             <div className={`px-4 py-2 rounded-2xl border-2 ${turn === 'red' && !winner && state === 'playing' ? 'border-red-400 bg-red-500/20' : 'border-red-500/20 bg-red-500/5'}`}>
-              <p className="text-[9px] font-black uppercase tracking-widest text-red-300/70">Rouge</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-red-300/70">{t('games.codemanga.room.team_red', 'Rouge')}</p>
               <p className="text-2xl font-black text-red-300 tabular-nums leading-none">{redScore}<span className="text-sm text-red-300/40">/8</span></p>
             </div>
           </div>
@@ -145,23 +150,23 @@ const CodeMangaRoom: React.FC = () => {
         {/* Left: teams / players */}
         <div className={`${panel} p-5 lg:col-span-1 h-fit space-y-5`}>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-300/70 mb-2">Ton pseudo {me?.name ? `· ${me.name}` : ''}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-300/70 mb-2">{t('games.codemanga.room.nickname_label', 'Ton pseudo')} {me?.name ? `· ${me.name}` : ''}</p>
             <div className="flex gap-2">
               <input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitName(); }}
-                placeholder="Pseudo…" maxLength={20} aria-label="Pseudo"
+                placeholder={t('games.codemanga.room.nickname_placeholder', 'Pseudo…')} maxLength={20} aria-label={t('games.codemanga.room.nickname_aria', 'Pseudo')}
                 className="flex-grow min-w-0 p-2.5 rounded-xl bg-white/[0.04] border-2 border-white/10 focus:border-indigo-400 outline-none font-bold text-white placeholder:text-white/25 text-sm" />
-              <button onClick={submitName} className="px-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-black text-xs uppercase">OK</button>
+              <button onClick={submitName} className="px-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-black text-xs uppercase">{t('games.codemanga.room.ok_button', 'OK')}</button>
             </div>
           </div>
 
           {(['blue', 'red'] as const).map((team) => (
             <div key={team} className={`rounded-2xl border-2 p-3 ${team === 'blue' ? 'border-blue-500/30 bg-blue-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
-              <p className={`text-xs font-black uppercase tracking-widest mb-2.5 ${team === 'blue' ? 'text-blue-300' : 'text-red-300'}`}>Équipe {TEAM_LABEL[team]}</p>
+              <p className={`text-xs font-black uppercase tracking-widest mb-2.5 ${team === 'blue' ? 'text-blue-300' : 'text-red-300'}`}>{t('games.codemanga.room.team_title', { defaultValue: 'Équipe {{name}}', name: TEAM_LABEL[team] })}</p>
               {state === 'lobby' && (
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {([
-                    { role: 'spymaster', label: 'Espion', Icon: Eye, sub: 'voit les couleurs' },
-                    { role: 'operative', label: 'Agent', Icon: Shield, sub: 'devine' },
+                    { role: 'spymaster', label: t('games.codemanga.room.role_spymaster', 'Espion'), Icon: Eye, sub: t('games.codemanga.room.role_spymaster_sub', 'voit les couleurs') },
+                    { role: 'operative', label: t('games.codemanga.room.role_operative', 'Agent'), Icon: Shield, sub: t('games.codemanga.room.role_operative_sub', 'devine') },
                   ] as const).map(({ role, label, Icon, sub }) => {
                     const active = myTeam === team && myRole === role;
                     const activeCls = team === 'blue' ? 'bg-blue-500 border-blue-400 text-white' : 'bg-red-500 border-red-400 text-white';
@@ -180,11 +185,11 @@ const CodeMangaRoom: React.FC = () => {
                 <div key={role} className="mb-1.5 last:mb-0">
                   <p className="text-[9px] font-bold uppercase tracking-wider text-white/30 flex items-center gap-1">
                     {role === 'spymaster' ? <Eye className="w-2.5 h-2.5" /> : <Shield className="w-2.5 h-2.5" />}
-                    {role === 'spymaster' ? 'Espion' : 'Agents'}
+                    {role === 'spymaster' ? t('games.codemanga.room.role_spymaster', 'Espion') : t('games.codemanga.room.role_operatives', 'Agents')}
                   </p>
                   {byTeamRole(team, role).map((p) => (
                     <span key={p.id} className="inline-flex items-center gap-1 text-xs font-bold text-white/80 mr-2">
-                      {p.id === myId ? <span className={team === 'blue' ? 'text-blue-300' : 'text-red-300'}>{p.name} ·toi</span> : p.name}
+                      {p.id === myId ? <span className={team === 'blue' ? 'text-blue-300' : 'text-red-300'}>{p.name} ·{t('games.codemanga.room.you', 'toi')}</span> : p.name}
                       {p.is_host && <Crown className="w-3 h-3 text-yellow-400" />}
                     </span>
                   ))}
@@ -201,13 +206,13 @@ const CodeMangaRoom: React.FC = () => {
             <div className={`${panel} p-6 space-y-5`}>
               <div className="text-center py-4">
                 <KeyRound className="w-10 h-10 text-indigo-400/50 mx-auto mb-3" />
-                <p className="text-white/70 font-bold">Choisis ton équipe et ton rôle à gauche.</p>
-                <p className="text-[11px] text-white/40 mt-1">Un <b className="text-white/70">Espion</b> par équipe voit les couleurs et donne des indices ; les <b className="text-white/70">Agents</b> devinent les cartes.</p>
+                <p className="text-white/70 font-bold">{t('games.codemanga.room.lobby_prompt', 'Choisis ton équipe et ton rôle à gauche.')}</p>
+                <p className="text-[11px] text-white/40 mt-1">{t('games.codemanga.room.lobby_help_1', 'Un')} <b className="text-white/70">{t('games.codemanga.room.role_spymaster', 'Espion')}</b> {t('games.codemanga.room.lobby_help_2', 'par équipe voit les couleurs et donne des indices ; les')} <b className="text-white/70">{t('games.codemanga.room.role_operatives', 'Agents')}</b> {t('games.codemanga.room.lobby_help_3', 'devinent les cartes.')}</p>
               </div>
               {isHost ? (
                 <>
                   <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Catégories des cartes</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">{t('games.codemanga.room.categories_label', 'Catégories des cartes')}</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {CATEGORIES.map((m) => {
                         const on = categories.includes(m.key);
@@ -220,26 +225,26 @@ const CodeMangaRoom: React.FC = () => {
                         );
                       })}
                     </div>
-                    <p className="mt-2 text-[11px] text-white/35 italic">Les 25 cartes sont tirées des catégories cochées (mélange possible).</p>
+                    <p className="mt-2 text-[11px] text-white/35 italic">{t('games.codemanga.room.categories_hint', 'Les 25 cartes sont tirées des catégories cochées (mélange possible).')}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Difficulté · connaissances requises</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">{t('games.codemanga.room.difficulty_label', 'Difficulté · connaissances requises')}</p>
                     <div className="grid grid-cols-3 gap-2">
                       {DIFFS.map((d) => (
                         <button key={d.key} onClick={() => sendAction('set_difficulty', { difficulty: d.key })}
                           className={`py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${difficulty === d.key ? 'border-indigo-500 bg-indigo-500/15 text-indigo-300' : 'border-white/10 text-white/40 hover:border-indigo-500/40'}`}>{d.label}</button>
                       ))}
                     </div>
-                    <p className="mt-2 text-[11px] text-white/35 italic">{DIFFS.find((d) => d.key === difficulty)?.hint} — plus c'est dur, plus il faut s'y connaître en anime/manga.</p>
+                    <p className="mt-2 text-[11px] text-white/35 italic">{DIFFS.find((d) => d.key === difficulty)?.hint} {t('games.codemanga.room.difficulty_hint_suffix', "— plus c'est dur, plus il faut s'y connaître en anime/manga.")}</p>
                   </div>
                   <button onClick={() => sendAction('start_game')} disabled={!canStart}
                     className="w-full py-4 rounded-2xl bg-indigo-600 enabled:hover:bg-indigo-500 text-white font-black italic uppercase tracking-widest text-lg shadow-[0_10px_30px_-10px_rgba(99,102,241,0.7)] transition-all enabled:hover:scale-[1.01] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                    <Play className="w-5 h-5 fill-current" /> Lancer la partie
+                    <Play className="w-5 h-5 fill-current" /> {t('games.codemanga.room.start_button', 'Lancer la partie')}
                   </button>
-                  {!canStart && <p className="text-center text-[11px] font-bold uppercase tracking-widest text-white/35">Il faut 1 espion + 1 agent dans chaque équipe</p>}
+                  {!canStart && <p className="text-center text-[11px] font-bold uppercase tracking-widest text-white/35">{t('games.codemanga.room.start_requirement', 'Il faut 1 espion + 1 agent dans chaque équipe')}</p>}
                 </>
               ) : (
-                <p className="text-center opacity-40 italic py-4">En attente du lancement par l'hôte…</p>
+                <p className="text-center opacity-40 italic py-4">{t('games.codemanga.room.waiting_host', "En attente du lancement par l'hôte…")}</p>
               )}
             </div>
           ) : (
@@ -248,17 +253,17 @@ const CodeMangaRoom: React.FC = () => {
               <div className={`${panel} p-4`}>
                 {winner ? (
                   <div className={`text-center rounded-xl py-3 border-2 ${winner === 'blue' ? 'border-blue-400 bg-blue-500/15 text-blue-200' : 'border-red-400 bg-red-500/15 text-red-200'}`}>
-                    <p className="font-black text-xl italic manga-font">🏆 Équipe {TEAM_LABEL[winner]} gagne !</p>
+                    <p className="font-black text-xl italic manga-font">{t('games.codemanga.room.winner_banner', { defaultValue: '🏆 Équipe {{name}} gagne !', name: TEAM_LABEL[winner] })}</p>
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl font-black uppercase text-xs tracking-widest ${turn === 'blue' ? 'bg-blue-500/20 text-blue-300' : 'bg-red-500/20 text-red-300'}`}>
-                      <Radio className="w-4 h-4 animate-pulse" /> Tour · Équipe {TEAM_LABEL[turn]}
+                      <Radio className="w-4 h-4 animate-pulse" /> {t('games.codemanga.room.turn_badge', { defaultValue: 'Tour · Équipe {{name}}', name: TEAM_LABEL[turn] })}
                     </span>
                     {clue ? (
-                      <span className="text-white font-bold">Indice : <span className="text-indigo-300 font-black text-lg">{clue.word}</span> · {clue.number} <span className="text-white/40 text-xs">({clue.guesses_left} essai{clue.guesses_left > 1 ? 's' : ''})</span></span>
+                      <span className="text-white font-bold">{t('games.codemanga.room.clue_label', 'Indice :')} <span className="text-indigo-300 font-black text-lg">{clue.word}</span> · {clue.number} <span className="text-white/40 text-xs">({clue.guesses_left > 1 ? t('games.codemanga.room.guesses_left_plural', { defaultValue: '{{count}} essais', count: clue.guesses_left }) : t('games.codemanga.room.guesses_left', { defaultValue: '{{count}} essai', count: clue.guesses_left })})</span></span>
                     ) : (
-                      <span className="text-white/40 text-xs italic">En attente de l'indice de l'espion…</span>
+                      <span className="text-white/40 text-xs italic">{t('games.codemanga.room.waiting_clue', "En attente de l'indice de l'espion…")}</span>
                     )}
                   </div>
                 )}
@@ -267,16 +272,16 @@ const CodeMangaRoom: React.FC = () => {
               {/* Clue input for the current spymaster */}
               {iAmClueGiver && (
                 <form onSubmit={giveClue} className={`${panel} p-4 flex gap-2 items-center`}>
-                  <input value={clueWord} onChange={(e) => setClueWord(e.target.value)} placeholder="Mot-indice…" maxLength={24} aria-label="Mot-indice"
+                  <input value={clueWord} onChange={(e) => setClueWord(e.target.value)} placeholder={t('games.codemanga.room.clue_placeholder', 'Mot-indice…')} maxLength={24} aria-label={t('games.codemanga.room.clue_aria', 'Mot-indice')}
                     className="flex-grow min-w-0 p-3 rounded-xl bg-white/[0.04] border-2 border-indigo-500/40 focus:border-indigo-400 outline-none font-bold text-white placeholder:text-white/25" />
-                  <select value={clueNum} onChange={(e) => setClueNum(Number(e.target.value))} aria-label="Nombre" className="p-3 rounded-xl bg-white/[0.06] border-2 border-white/10 text-white font-black">
+                  <select value={clueNum} onChange={(e) => setClueNum(Number(e.target.value))} aria-label={t('games.codemanga.room.number_aria', 'Nombre')} className="p-3 rounded-xl bg-white/[0.06] border-2 border-white/10 text-white font-black">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => <option key={n} value={n} className="bg-[#0d0f17]">{n}</option>)}
                   </select>
-                  <button type="submit" className="px-5 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-black italic uppercase text-sm">Indice</button>
+                  <button type="submit" className="px-5 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-black italic uppercase text-sm">{t('games.codemanga.room.clue_button', 'Indice')}</button>
                 </form>
               )}
-              {iCanGuess && <p className="text-center text-[11px] font-bold uppercase tracking-widest text-indigo-300/70 -mt-1">À toi de deviner — clique une carte</p>}
-              {myRole === 'spymaster' && !winner && <p className="text-center text-[11px] font-bold uppercase tracking-widest text-white/30 -mt-1">Tu es espion — tu vois les couleurs (ne clique pas)</p>}
+              {iCanGuess && <p className="text-center text-[11px] font-bold uppercase tracking-widest text-indigo-300/70 -mt-1">{t('games.codemanga.room.your_turn_hint', 'À toi de deviner — clique une carte')}</p>}
+              {myRole === 'spymaster' && !winner && <p className="text-center text-[11px] font-bold uppercase tracking-widest text-white/30 -mt-1">{t('games.codemanga.room.spymaster_hint', 'Tu es espion — tu vois les couleurs (ne clique pas)')}</p>}
 
               {/* 5×5 grid */}
               <div className="grid grid-cols-5 gap-2">
@@ -299,7 +304,7 @@ const CodeMangaRoom: React.FC = () => {
 
               {winner && isHost && (
                 <button onClick={() => sendAction('back_to_lobby')} className="w-full py-3.5 rounded-2xl bg-indigo-500 hover:bg-indigo-400 text-white font-black italic uppercase tracking-wide flex items-center justify-center gap-2">
-                  <RotateCcw className="w-5 h-5" /> Rejouer
+                  <RotateCcw className="w-5 h-5" /> {t('games.codemanga.room.replay_button', 'Rejouer')}
                 </button>
               )}
             </>
@@ -308,15 +313,15 @@ const CodeMangaRoom: React.FC = () => {
 
         {/* Right: chat */}
         <div className={`${panel} p-5 lg:col-span-1 flex flex-col h-fit`}>
-          <h3 className="text-[10px] font-black uppercase opacity-40 mb-3 tracking-[0.25em] flex items-center gap-2"><Users className="w-4 h-4" /> Discussion</h3>
+          <h3 className="text-[10px] font-black uppercase opacity-40 mb-3 tracking-[0.25em] flex items-center gap-2"><Users className="w-4 h-4" /> {t('games.codemanga.room.chat_title', 'Discussion')}</h3>
           <div className="flex-grow bg-black/40 rounded-2xl p-3 mb-3 overflow-y-auto max-h-72 min-h-[160px] border border-white/5 custom-scrollbar">
-            {messages.length === 0 && <p className="text-center py-10 opacity-20 italic text-xs">Aucun message…</p>}
+            {messages.length === 0 && <p className="text-center py-10 opacity-20 italic text-xs">{t('games.codemanga.room.chat_empty', 'Aucun message…')}</p>}
             {messages.map((m, i) => (
               <p key={i} className="text-xs mb-1.5"><span className="text-indigo-300/70 font-bold">{m.user}&gt; </span><span className="text-white/85">{m.text}</span></p>
             ))}
           </div>
           <form onSubmit={sendChat} className="flex gap-2">
-            <input value={chat} onChange={(e) => setChat(e.target.value)} placeholder="Message…" maxLength={120} aria-label="Message"
+            <input value={chat} onChange={(e) => setChat(e.target.value)} placeholder={t('games.codemanga.room.chat_placeholder', 'Message…')} maxLength={120} aria-label={t('games.codemanga.room.chat_aria', 'Message')}
               className="flex-grow min-w-0 p-2.5 rounded-xl bg-white/[0.04] border-2 border-white/10 focus:border-indigo-400 outline-none text-white placeholder:text-white/25 text-sm" />
             <button type="submit" className="px-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white"><Send className="w-4 h-4" /></button>
           </form>
