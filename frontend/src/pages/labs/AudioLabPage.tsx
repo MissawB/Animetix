@@ -32,11 +32,7 @@ import { VoiceProfile } from '../../types';
 import type { AudioProcessPayload } from '../../features/labs/services/audioLabService';
 import { useToastStore } from '../../store/toastStore';
 
-const audioSchema = z.object({
-  text: z.string().min(10, "Veuillez entrer au moins 10 caractères pour la synthèse.").max(500, "Le texte est trop long."),
-});
-
-type AudioFormValues = z.infer<typeof audioSchema>;
+type AudioFormValues = { text: string };
 
 interface Recording {
   id: number;
@@ -53,6 +49,13 @@ interface VoiceCloningPayload {
 const AudioLabPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const audioSchema = React.useMemo(() => z.object({
+    text: z.string()
+      .min(10, t('labs.audio.text_validation', "Veuillez entrer au moins 10 caractères pour la synthèse."))
+      .max(500, t('labs.audio.text_too_long', "Le texte est trop long.")),
+  }), [t]);
+
   const {
     data,
     loading,
@@ -115,7 +118,7 @@ const AudioLabPage: React.FC = () => {
 
   const selectVoiceProfile = async (seiyuu: VoiceProfile) => {
     setSelectedSeiyuu(seiyuu);
-    setRecordings([{ id: Date.now(), name: `Voix de ${seiyuu.name}`, duration: 'Sample BDD' }]);
+    setRecordings([{ id: Date.now(), name: t('labs.audio.recording_voice_of', { name: seiyuu.name, defaultValue: 'Voix de {{name}}' }), duration: t('labs.audio.recording_sample_db', 'Sample BDD') }]);
 
     // Fetch the sample and convert to File to satisfy the existing backend.
     // NB: sample_url is a media asset (Django FileField .url) that may be a
@@ -131,11 +134,11 @@ const AudioLabPage: React.FC = () => {
         const file = new File([blob], `${seiyuu.name}_sample.wav`, { type: 'audio/wav' });
         setAudioFile(file);
       } else {
-        useToastStore.getState().addToast("Échec du chargement de l'échantillon vocal.", 'error');
+        useToastStore.getState().addToast(t('labs.audio.recording_error_load_sample', "Échec du chargement de l'échantillon vocal."), 'error');
       }
       setAudioLoading(null);
     } catch {
-      useToastStore.getState().addToast("Échec du chargement de l'échantillon vocal.", 'error');
+      useToastStore.getState().addToast(t('labs.audio.recording_error_load_sample', "Échec du chargement de l'échantillon vocal."), 'error');
       setAudioLoading(null);
     }
   };
@@ -215,14 +218,14 @@ const AudioLabPage: React.FC = () => {
                 onDrop={onDrop}
               >
                 <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-[0.2em] flex items-center gap-2">
-                  <Mic className="w-4 h-4" /> Source Vocale
+                  <Mic className="w-4 h-4" /> {t('labs.audio.forge_title', 'Source Vocale')}
                 </h3>
 
                 <div className="flex flex-col items-center py-6">
                   <button
                     onClick={isRecording ? stopRecording : startRecording}
                     className={`w-24 h-24 rounded-full flex items-center justify-center transition-all shadow-2xl relative ${isRecording ? 'bg-red-500 animate-pulse scale-110' : selectedSeiyuu ? 'bg-blue-600 text-white' : 'bg-black text-white hover:scale-105'}`}
-                    aria-label={isRecording ? 'Arrêter l\'enregistrement' : 'Démarrer l\'enregistrement'}
+                    aria-label={isRecording ? t('labs.audio.recording_stop_aria', 'Arrêter l\'enregistrement') : t('labs.audio.recording_start_aria', 'Démarrer l\'enregistrement')}
                   >
                     {audioLoading ? (
                       <Loader2 className="w-8 h-8 animate-spin" />
@@ -235,10 +238,10 @@ const AudioLabPage: React.FC = () => {
                     )}
                   </button>
                   <span className={`mt-6 font-black italic uppercase tracking-widest text-[9px] ${isRecording ? 'text-red-500' : selectedSeiyuu ? 'text-blue-500' : 'opacity-40'}`}>
-                    {audioLoading ? 'Chargement voix...' : isRecording ? 'Enregistrement...' : selectedSeiyuu ? `Voix: ${selectedSeiyuu.name}` : 'Prêt à enregistrer'}
+                    {audioLoading ? t('labs.audio.recording_loading_voice', 'Chargement voix...') : isRecording ? t('labs.audio.recording_recording_status', 'Enregistrement...') : selectedSeiyuu ? t('labs.audio.recording_voice_label', { name: selectedSeiyuu.name, defaultValue: 'Voix: {{name}}' }) : t('labs.audio.recording_ready_status', 'Prêt à enregistrer')}
                   </span>
                   {selectedSeiyuu && (
-                    <p className="text-[7px] font-bold uppercase opacity-30 mt-1">Glissez un autre seiyuu pour changer</p>
+                    <p className="text-[7px] font-bold uppercase opacity-30 mt-1">{t('labs.audio.recording_drag_note', 'Glissez un autre seiyuu pour changer')}</p>
                   )}
                 </div>
 
@@ -253,9 +256,9 @@ const AudioLabPage: React.FC = () => {
                   onClick={() => document.getElementById('audio-upload')?.click()}
                   className="text-[10px] py-3"
                 >
-                  Importer .wav
+                  {t('labs.audio.recording_import_wav', 'Importer .wav')}
                 </Button>
-                <input type="file" id="audio-upload" className="hidden" accept=".wav,.mp3" onChange={handleFileChange} aria-label="Importer un fichier audio" />
+                <input type="file" id="audio-upload" className="hidden" accept=".wav,.mp3" onChange={handleFileChange} aria-label={t('labs.audio.recording_import_aria', 'Importer un fichier audio')} />
 
                 <div className="mt-8 space-y-3">
                   {recordings.map((rec) => (
@@ -268,7 +271,7 @@ const AudioLabPage: React.FC = () => {
                       </div>
                       <button
                         type="button"
-                        aria-label="Supprimer l'enregistrement"
+                        aria-label={t('labs.audio.recording_delete_aria', 'Supprimer l\'enregistrement')}
                         className="p-1 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100 border-none bg-transparent cursor-pointer"
                         onClick={() => { setRecordings([]); setAudioFile(null); setSelectedSeiyuu(null); }}
                       >
@@ -287,7 +290,7 @@ const AudioLabPage: React.FC = () => {
                   <Wand2 className="w-40 h-42 text-purple-500" />
                 </div>
 
-                <h3 className="text-3xl font-black italic manga-font mb-8">FORGE <span className="text-purple-500">VOCALE</span></h3>
+                <h3 className="text-3xl font-black italic manga-font mb-8">{t('labs.audio.forge_title', 'FORGE')} <span className="text-purple-500">{t('labs.audio.forge_title_accent', 'VOCALE')}</span></h3>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
                   <div className="flex flex-col gap-2">
@@ -296,7 +299,7 @@ const AudioLabPage: React.FC = () => {
                       className={`w-full p-8 rounded-[2rem] bg-gray-50 dark:bg-gray-800 outline-none font-medium text-lg min-h-[200px] transition-all 
                                         ${errors.text ? 'ring-2 ring-red-500' : 'focus:ring-2 focus:ring-purple-500'}
                                     `}
-                      placeholder={selectedSeiyuu ? `Faites parler ${selectedSeiyuu.name}...` : "Tapez le texte que l'IA doit dire avec votre voix..."}
+                      placeholder={selectedSeiyuu ? t('labs.audio.forge_synthesize_with_name', { name: selectedSeiyuu.name, defaultValue: 'Faites parler {{name}}...' }) : t('labs.audio.recording_import_aria', "Tapez le texte que l'IA doit dire avec votre voix...")}
                     ></textarea>
                     {errors.text && <span className="text-red-500 text-xs font-black pl-4">{errors.text.message}</span>}
                   </div>
@@ -309,7 +312,7 @@ const AudioLabPage: React.FC = () => {
                     disabled={(recordings.length === 0 && !audioFile)}
                     className="bg-gradient-to-r from-purple-600 to-blue-600 border-none py-6 animate-pulse"
                   >
-                    <Save className="w-6 h-6 mr-2" /> {selectedSeiyuu ? `Synthétiser ${selectedSeiyuu.name}` : t('labs.audio.generate')}
+                    <Save className="w-6 h-6 mr-2" /> {selectedSeiyuu ? t('labs.audio.forge_synthesize_with_name', { name: selectedSeiyuu.name, defaultValue: 'Synthétiser {{name}}' }) : t('labs.audio.generate')}
                   </Button>
                 </form>
               </Card>
@@ -317,8 +320,8 @@ const AudioLabPage: React.FC = () => {
               {data?.audio_url && (
                 <div className="bg-green-500/10 border-2 border-green-500 p-8 rounded-[2.5rem] flex items-center justify-between animate-slide-up">
                   <div>
-                    <h4 className="font-black text-green-500 italic text-xl uppercase leading-none mb-1">RÉSULTAT PRÊT !</h4>
-                    <p className="font-bold opacity-60 text-sm">Votre voix a été synthétisée avec succès.</p>
+                    <h4 className="font-black text-green-500 italic text-xl uppercase leading-none mb-1">{t('labs.audio.result_ready', 'RÉSULTAT PRÊT !')}</h4>
+                    <p className="font-bold opacity-60 text-sm">{t('labs.audio.result_success', 'Votre voix a été synthétisée avec succès.')}</p>
                   </div>
                   <Button
                     variant="success"
@@ -341,14 +344,14 @@ const AudioLabPage: React.FC = () => {
                 <h2 className="text-2xl font-black italic manga-font uppercase flex items-center gap-2">
                   Voice <span className="text-blue-500">Database</span>
                 </h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Catalogue Seiyuu & VF.</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{t('labs.audio.sidebar_subtitle', 'Catalogue Seiyuu & VF.')}</p>
               </div>
               <Button
                 variant="ghost"
                 className="p-0 text-[9px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 transition-colors group mb-1"
                 onClick={() => navigate('/lab/audio/seiyuu/')}
               >
-                Plein Écran <ArrowRight className="w-3 h-3 inline group-hover:translate-x-1 transition-transform" />
+                {t('labs.audio.sidebar_fullscreen', 'Plein Écran')} <ArrowRight className="w-3 h-3 inline group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
 
@@ -359,7 +362,7 @@ const AudioLabPage: React.FC = () => {
               onClick={quickIngest.toggle}
               className="text-[9px] uppercase font-black tracking-wider flex items-center justify-center gap-1.5 py-3.5 border-dashed border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
             >
-              <Plus className="w-3 h-3" /> Ingestion YouTube Rapide
+              <Plus className="w-3 h-3" /> {t('labs.audio.sidebar_quick_ingest', 'Ingestion YouTube Rapide')}
             </Button>
 
             {/* Ingestion Panel inside Sidebar */}
@@ -373,13 +376,13 @@ const AudioLabPage: React.FC = () => {
                   className="bg-navy-950/80 border border-blue-500/20 p-5 rounded-2xl space-y-4 overflow-hidden"
                 >
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-1">
-                    <Video className="w-3.5 h-3.5 text-red-500" /> Ajouter via YouTube (30 Bx)
+                    <Video className="w-3.5 h-3.5 text-red-500" /> {t('labs.audio.ingest_title', 'Ajouter via YouTube (30 Bx)')}
                   </h4>
                   <div className="space-y-1">
                     <input
                       type="text"
-                      placeholder="Nom de l'acteur"
-                      aria-label="Nom de l'acteur"
+                      placeholder={t('labs.audio.ingest_actor_name', "Nom de l'acteur")}
+                      aria-label={t('labs.audio.ingest_actor_name', "Nom de l'acteur")}
                       value={quickIngest.name}
                       onChange={(e) => quickIngest.setName(e.target.value)}
                       className="w-full bg-black/45 border border-white/5 rounded-lg px-3 py-2 text-xs font-bold text-white"
@@ -391,15 +394,15 @@ const AudioLabPage: React.FC = () => {
                       onChange={(e) => quickIngest.setLanguage(e.target.value)}
                       className="w-full bg-black/45 border border-white/5 rounded-lg px-3 py-2 text-xs font-bold text-white"
                     >
-                      <option value="japanese">Japonais (Seiyuu)</option>
-                      <option value="french">Français (Doubleur)</option>
+                      <option value="japanese">{t('labs.audio.ingest_lang_japanese', 'Japonais (Seiyuu)')}</option>
+                      <option value="french">{t('labs.audio.ingest_lang_french', 'Français (Doubleur)')}</option>
                     </select>
                   </div>
                   <div className="space-y-1">
                     <input
                       type="text"
-                      placeholder="Lien YouTube ou recherche"
-                      aria-label="Lien YouTube ou recherche"
+                      placeholder={t('labs.audio.ingest_source_placeholder', 'Lien YouTube ou recherche')}
+                      aria-label={t('labs.audio.ingest_source_placeholder', 'Lien YouTube ou recherche')}
                       value={quickIngest.source}
                       onChange={(e) => quickIngest.setSource(e.target.value)}
                       className="w-full bg-black/45 border border-white/5 rounded-lg px-3 py-2 text-xs font-bold text-white"
@@ -409,9 +412,9 @@ const AudioLabPage: React.FC = () => {
                     <p className="text-[9px] font-bold text-red-400">⚠️ {quickIngest.error}</p>
                   )}
                   <div className="flex gap-2 justify-end">
-                    <Button type="button" size="sm" variant="ghost" onClick={quickIngest.close}>Annuler</Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={quickIngest.close}>{t('labs.audio.ingest_cancel', 'Annuler')}</Button>
                     <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-500 border-none" disabled={isIngestingVoice}>
-                      {isIngestingVoice ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Ingérer'}
+                      {isIngestingVoice ? <Loader2 className="w-3 h-3 animate-spin" /> : t('labs.audio.ingest_submit', 'Ingérer')}
                     </Button>
                   </div>
                 </motion.form>
@@ -421,9 +424,9 @@ const AudioLabPage: React.FC = () => {
             {/* Language filter tab */}
             <div className="flex gap-1.5 p-1 bg-black/30 rounded-xl border border-white/5">
               {[
-                { label: 'Tous', value: '' },
-                { label: 'Seiyuu (JP)', value: 'japanese' },
-                { label: 'VF (FR)', value: 'french' }
+                { label: t('labs.audio.filter_all', 'Tous'), value: '' },
+                { label: t('labs.audio.filter_japanese', 'Seiyuu (JP)'), value: 'japanese' },
+                { label: t('labs.audio.filter_french', 'VF (FR)'), value: 'french' }
               ].map(opt => (
                 <button
                   key={opt.value}
@@ -443,8 +446,8 @@ const AudioLabPage: React.FC = () => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Seiyuu ou personnage..."
-                aria-label="Rechercher un seiyuu ou un personnage"
+                placeholder={t('labs.audio.search_placeholder', 'Seiyuu ou personnage...')}
+                aria-label={t('labs.audio.search_aria', 'Rechercher un seiyuu ou un personnage')}
                 value={seiyuuQuery}
                 onChange={(e) => {
                   setSeiyuuQuery(e.target.value);
@@ -463,7 +466,7 @@ const AudioLabPage: React.FC = () => {
                 draggable
                 role="button"
                 tabIndex={0}
-                aria-label={`Sélectionner ou glisser le profil vocal ${s.name}`}
+                aria-label={t('labs.audio.seiyuu_roles_aria', { name: s.name, defaultValue: 'Sélectionner ou glisser le profil vocal {{name}}' })}
                 onDragStart={(e) => onDragStart(e, s)}
                 className="cursor-grab active:cursor-grabbing"
                 onClick={() => selectVoiceProfile(s)}
@@ -494,7 +497,7 @@ const AudioLabPage: React.FC = () => {
                     <button
                       onClick={(e) => playProfileSample(s.sample_url, e)}
                       className="p-1.5 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-blue-600 transition-colors"
-                      title="Écouter l'échantillon"
+                      title={t('labs.audio.seiyuu_listen_aria', "Écouter l'échantillon")}
                     >
                       <Volume2 className="w-3.5 h-3.5" />
                     </button>
@@ -504,13 +507,13 @@ const AudioLabPage: React.FC = () => {
                   <div className="space-y-3">
                     <div className="space-y-1">
                       <span className="text-[8px] font-black uppercase text-blue-500 tracking-widest flex items-center gap-1">
-                        <Star className="w-2.5 h-2.5 fill-current" /> Rôles
+                        <Star className="w-2.5 h-2.5 fill-current" /> {t('labs.audio.seiyuu_roles_title', 'Rôles')}
                       </span>
-                      <p className="text-[10px] font-medium leading-relaxed italic opacity-80 line-clamp-2">{s.roles || 'Aucun rôle répertorié'}</p>
+                      <p className="text-[10px] font-medium leading-relaxed italic opacity-80 line-clamp-2">{s.roles || t('labs.audio.seiyuu_no_roles', 'Aucun rôle répertorié')}</p>
                     </div>
 
                     <div className="pt-3 border-t border-black/5 dark:border-white/5 space-y-1">
-                      <p className="text-[9px] leading-relaxed opacity-60 line-clamp-2">{s.definition || 'Talent vocal certifié.'}</p>
+                      <p className="text-[9px] leading-relaxed opacity-60 line-clamp-2">{s.definition || t('labs.audio.seiyuu_definition_fallback', 'Talent vocal certifié.')}</p>
                     </div>
                   </div>
 
@@ -518,7 +521,7 @@ const AudioLabPage: React.FC = () => {
                     <div className="flex-1 h-1 bg-blue-500/20 rounded-full overflow-hidden">
                       <div className="h-full bg-blue-500 w-full animate-pulse" />
                     </div>
-                    <span className="text-[7px] font-black uppercase text-blue-500">Cliquer ou Glisser pour utiliser</span>
+                    <span className="text-[7px] font-black uppercase text-blue-500">{t('labs.audio.seiyuu_click_drag_note', 'Cliquer ou Glisser pour utiliser')}</span>
                   </div>
                 </Card>
               </div>
@@ -527,7 +530,7 @@ const AudioLabPage: React.FC = () => {
             {seiyuuResults.length === 0 && !isSearchingSeiyuu && (
               <div className="py-20 text-center opacity-20">
                 <Search className="w-8 h-8 mx-auto mb-4" />
-                <p className="text-[10px] font-black uppercase tracking-widest">Aucun résultat</p>
+                <p className="text-[10px] font-black uppercase tracking-widest">{t('labs.audio.search_no_results', 'Aucun résultat')}</p>
               </div>
             )}
           </div>
@@ -541,25 +544,25 @@ const AudioLabPage: React.FC = () => {
                   <Mic className="w-64 h-64 text-blue-500" />
               </div>
               <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                  <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" /> Guide de la Forge Vocale
+                  <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" /> {t('labs.audio.guide_title', 'Guide de la Forge Vocale')}
               </h4>
               <div className="space-y-4 relative z-10">
                   <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                      <span className="text-blue-600 dark:text-blue-400">La Source :</span> Choisissez une voix dans le catalogue Seiyuu/VF (clic ou glisser-déposer), ou importez votre propre fichier .wav comme référence.
+                      <span className="text-blue-600 dark:text-blue-400">{t('labs.audio.guide_source_title', 'La Source :')}</span> {t('labs.audio.guide_source_desc', 'Choisissez une voix dans le catalogue Seiyuu/VF (clic ou glisser-déposer), ou importez votre propre fichier .wav comme référence.')}
                   </p>
                   <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                      <span className="text-blue-600 dark:text-blue-400">La Synthèse :</span> Tapez un texte (10 à 500 caractères) et lancez la génération : l'IA le lit avec le timbre de la voix choisie, puis vous écoutez le résultat.
+                      <span className="text-blue-600 dark:text-blue-400">{t('labs.audio.guide_synthesis_title', 'La Synthèse :')}</span> {t('labs.audio.guide_synthesis_desc', 'Tapez un texte (10 à 500 caractères) et lancez la génération : l\'IA le lit avec le timbre de la voix choisie, puis vous écoutez le résultat.')}
                   </p>
                   <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                      <span className="text-blue-600 dark:text-blue-400">L'Ingestion :</span> Une voix manque au catalogue ? Ajoutez-la via un lien YouTube : l'extrait est téléchargé et transformé en profil vocal réutilisable.
+                      <span className="text-blue-600 dark:text-blue-400">{t('labs.audio.guide_ingestion_title', 'L\'Ingestion :')}</span> {t('labs.audio.guide_ingestion_desc', 'Une voix manque au catalogue ? Ajoutez-la via un lien YouTube : l\'extrait est téléchargé et transformé en profil vocal réutilisable.')}
                   </p>
               </div>
           </Card>
 
           <div className="p-12 rounded-[4rem] bg-gradient-to-br from-blue-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
               <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-blue-800/70 dark:text-blue-200/60">
-                  Pipeline de clonage vocal zero-shot : un court échantillon audio de référence suffit pour conditionner la synthèse vocale (TTS), sans entraînement dédié. <br />
-                  Les profils du catalogue sont ingérés depuis des extraits YouTube ou des datasets, puis stockés comme échantillons de référence côté serveur.
+                  {t('labs.audio.guide_footer_1', 'Pipeline de clonage vocal zero-shot : un court échantillon audio de référence suffit pour conditionner la synthèse vocale (TTS), sans entraînement dédié.')} <br />
+                  {t('labs.audio.guide_footer_2', 'Les profils du catalogue sont ingérés depuis des extraits YouTube ou des datasets, puis stockés comme échantillons de référence côté serveur.')}
               </p>
           </div>
       </div>

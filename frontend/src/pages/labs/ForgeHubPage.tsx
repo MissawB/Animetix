@@ -106,11 +106,26 @@ const ForgeHubPage: React.FC = () => {
         </footer>
       </div>
 
-      <LabListOverlay 
-        category={selectedCategory} 
-        labs={selectedCategory ? categoryLabs[selectedCategory] || [] : []} 
-        onClose={() => setSelectedCategory(null)} 
-      />
+      {(() => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const translatedCategoryLabs = useMemo(() => {
+          if (!selectedCategory) return [];
+          const labs = categoryLabs[selectedCategory] || [];
+          return labs.map(lab => ({
+            ...lab,
+            title: t(`forge_hub.labs.${lab.id}.title`, lab.title),
+            desc: t(`forge_hub.labs.${lab.id}.desc`, lab.desc)
+          }));
+        }, [selectedCategory]);
+
+        return (
+          <LabListOverlay 
+            category={selectedCategory} 
+            labs={translatedCategoryLabs} 
+            onClose={() => setSelectedCategory(null)} 
+          />
+        );
+      })()}
     </AnimatedPage>
   );
 };

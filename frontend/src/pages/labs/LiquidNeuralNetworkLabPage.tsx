@@ -74,7 +74,7 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
         traces.push({
             x: state_history.map((_, idx: number) => idx * dt),
             y: state_history.map((step: number[]) => step[i]),
-            name: `Neurone ${i + 1}`,
+            name: t('labs.liquid_nn.neuron_label', { num: i + 1, defaultValue: 'Neurone {{num}}' }),
             type: 'scatter',
             mode: 'lines',
             line: { width: 2, shape: 'spline' }
@@ -106,15 +106,15 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
             <div className="lg:col-span-4 space-y-8">
                 <Card padding="lg" className="bg-navy-950/50 border-white/5 shadow-2xl rounded-[3rem]">
                     <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                        <Settings className="w-4 h-4 text-blue-400" /> Paramètres du Système
+                        <Settings className="w-4 h-4 text-blue-400" /> {t('labs.liquid_nn.system_settings', 'Paramètres du Système')}
                     </h3>
                     
                     <div className="space-y-6">
                         <div>
-                            <label htmlFor="dt-slider" className="text-[10px] font-black uppercase opacity-30 mb-2 block">Pas temporel (dt)</label>
+                            <label htmlFor="dt-slider" className="text-[10px] font-black uppercase opacity-30 mb-2 block">{t('labs.liquid_nn.time_step', 'Pas temporel (dt)')}</label>
                             <input
                                 id="dt-slider"
-                                aria-label="Pas temporel (dt)"
+                                aria-label={t('labs.liquid_nn.time_step', 'Pas temporel (dt)')}
                                 type="range" min="0.01" max="0.2" step="0.01"
                                 value={dt} onChange={(e) => setDt(parseFloat(e.target.value))}
                                 className="w-full h-1.5 bg-white/5 rounded-lg appearance-none cursor-pointer accent-blue-500"
@@ -132,7 +132,7 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
                                 variant="outline"
                                 className="w-full border-white/10 text-[10px] font-black uppercase tracking-widest py-4 rounded-2xl"
                             >
-                                <Zap className="w-3 h-3 mr-2" /> Générer Signal Aléatoire
+                                <Zap className="w-3 h-3 mr-2" /> {t('labs.liquid_nn.generate_signal', 'Générer Signal Aléatoire')}
                             </Button>
                         </div>
 
@@ -142,7 +142,7 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
                             className="w-full bg-blue-600 hover:bg-blue-500 text-white py-6 rounded-2xl font-black italic uppercase shadow-xl hover:scale-105 transition-all border-none"
                         >
                             {simulateMutation.isPending ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 mr-2" />}
-                            DÉCLENCHER L'INTÉGRATION
+                            {t('labs.liquid_nn.trigger_integration', "DÉCLENCHER L'INTÉGRATION")}
                         </Button>
                     </div>
                 </Card>
@@ -163,7 +163,7 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
                     </div>
                     <div className="mt-6 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10">
                         <p className="text-[9px] font-bold leading-relaxed opacity-50 uppercase italic">
-                            Le système résout : <br/>
+                            {t('labs.liquid_nn.system_resolves', 'Le système résout :')} <br/>
                             <code className="text-blue-400 not-italic">dx/dt = -x/τ + f(Wx + Iu)(A - x)</code>
                         </p>
                     </div>
@@ -193,13 +193,13 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
                                     showlegend: true,
                                     legend: { font: { color: '#64748b', size: 10 }, orientation: 'h', y: -0.2 },
                                     xaxis: {
-                                        title: 'Temps (s)',
+                                        title: t('labs.liquid_nn.time_label', 'Temps (s)'),
                                         gridcolor: 'rgba(255,255,255,0.05)',
                                         tickfont: { color: '#475569', size: 10 },
                                         showgrid: true,
                                     },
                                     yaxis: {
-                                        title: 'Activation',
+                                        title: t('labs.liquid_nn.activation_label', 'Activation'),
                                         gridcolor: 'rgba(255,255,255,0.05)',
                                         tickfont: { color: '#475569', size: 10 },
                                         showgrid: true,
@@ -211,7 +211,7 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center opacity-10 text-center">
                                 <Layers className="w-24 h-24 mb-6 animate-pulse" />
-                                <p className="text-sm font-black uppercase tracking-[0.2em]">Synchronisation du cluster neuromorphique...</p>
+                                <p className="text-sm font-black uppercase tracking-[0.2em]">{t('labs.liquid_nn.cluster_sync', 'Synchronisation du cluster neuromorphique...')}</p>
                             </div>
                         )}
                     </div>
@@ -221,13 +221,13 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
                      <Card padding="lg" className="bg-navy-900/40 border-white/5">
                         <h4 className="text-xs font-black uppercase opacity-40 mb-4 tracking-widest">Inference Insights</h4>
                         <p className="text-xs font-bold leading-relaxed opacity-60 italic">
-                            Contrairement aux réseaux classiques, les LNN traitent les données comme un flux continu, permettant une adaptation dynamique à la variabilité temporelle des signaux multimodaux d'Animetix.
+                            {t('labs.liquid_nn.comparison_note', "Contrairement aux réseaux classiques, les LNN traitent les données comme un flux continu, permettant une adaptation dynamique à la variabilité temporelle des signaux multimodaux d'Animetix.")}
                         </p>
                      </Card>
                      <Card padding="lg" className="bg-navy-900/40 border-white/5">
                         <h4 className="text-xs font-black uppercase opacity-40 mb-4 tracking-widest">ODE Solver</h4>
                         <p className="text-xs font-bold leading-relaxed opacity-60 italic">
-                            Le solveur utilise une intégration numérique de Runge-Kutta d'ordre 4 (RK4) pour garantir la stabilité des états neuronaux même avec des pas temporels (dt) élevés.
+                            {t('labs.liquid_nn.solver_note', "Le solveur utilise une intégration numérique de Runge-Kutta d'ordre 4 (RK4) pour garantir la stabilité des états neuronaux même avec des pas temporels (dt) élevés.")}
                         </p>
                      </Card>
                 </div>
@@ -241,25 +241,25 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
               <Brain className="w-64 h-64 text-blue-500" />
             </div>
             <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" /> Guide du Réseau Liquide
+              <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" /> {t('labs.liquid_nn.guide_title', 'Guide du Réseau Liquide')}
             </h4>
             <div className="space-y-4 relative z-10">
               <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                <span className="text-blue-600 dark:text-blue-400">Le Concept :</span> Contrairement à une IA classique qui traite l'information par étapes figées, un réseau de neurones "liquide" évolue en continu dans le temps, comme de vrais neurones biologiques.
+                <span className="text-blue-600 dark:text-blue-400">{t('labs.liquid_nn.guide_concept_title', 'Le Concept :')}</span> {t('labs.liquid_nn.guide_concept_desc', 'Contrairement à une IA classique qui traite l\'information par étapes figées, un réseau de neurones "liquide" évolue en continu dans le temps, comme de vrais neurones biologiques.')}
               </p>
               <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                <span className="text-blue-600 dark:text-blue-400">Le Signal :</span> Générez un signal d'entrée aléatoire puis lancez l'intégration : chaque courbe du graphe montre comment l'activation d'un neurone réagit à ce signal au fil du temps.
+                <span className="text-blue-600 dark:text-blue-400">{t('labs.liquid_nn.guide_signal_title', 'Le Signal :')}</span> {t('labs.liquid_nn.guide_signal_desc', 'Générez un signal d\'entrée aléatoire puis lancez l\'intégration : chaque courbe du graphe montre comment l\'activation d\'un neurone réagit à ce signal au fil du temps.')}
               </p>
               <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                <span className="text-blue-600 dark:text-blue-400">Le Pas Temporel :</span> Le curseur dt règle la finesse de la simulation. Un petit pas donne des courbes plus précises, un grand pas accélère le calcul au prix de la précision.
+                <span className="text-blue-600 dark:text-blue-400">{t('labs.liquid_nn.guide_step_title', 'Le Pas Temporel :')}</span> {t('labs.liquid_nn.guide_step_desc', 'Le curseur dt règle la finesse de la simulation. Un petit pas donne des courbes plus précises, un grand pas accélère le calcul au prix de la précision.')}
               </p>
             </div>
           </Card>
 
           <div className="p-12 rounded-[4rem] bg-gradient-to-br from-blue-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
             <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-blue-800/70 dark:text-blue-200/60">
-              Simulation d'un réseau de neurones liquide : l'état des 4 neurones suit l'équation différentielle dx/dt = -x/τ + f(Wx + Iu)(A - x), résolue par intégration numérique de Runge-Kutta d'ordre 4 (RK4). <br />
-              Le graphe visualise la trajectoire d'états calculée côté serveur et renvoyée par l'endpoint liquid-nn.
+              {t('labs.liquid_nn.guide_footer_1', 'Simulation d\'un réseau de neurones liquide : l\'état des 4 neurones suit l\'équation différentielle dx/dt = -x/τ + f(Wx + Iu)(A - x), résolue par intégration numérique de Runge-Kutta d\'ordre 4 (RK4).')} <br />
+              {t('labs.liquid_nn.guide_footer_2', 'Le graphe visualise la trajectoire d\'états calculée côté serveur et renvoyée par l\'endpoint liquid-nn.')}
             </p>
           </div>
         </div>

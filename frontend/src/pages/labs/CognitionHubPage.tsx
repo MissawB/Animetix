@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Card } from "../../components/ui/Card";
@@ -51,6 +52,7 @@ const cognitiveModules = [
 ];
 
 const CognitionHubPage: React.FC = () => {
+  const { t } = useTranslation();
 
   const particleConfig = useMemo(() => [...Array(20)].map((_, i) => ({
     left: (i * 7) % 100, // Deterministic "random" left
@@ -92,7 +94,7 @@ const CognitionHubPage: React.FC = () => {
             COGNITION <span className="text-purple-600 text-glow">CORE</span>
           </h1>
           <p className="text-xl font-bold opacity-30 uppercase tracking-[0.2em] leading-relaxed max-w-2xl mx-auto">
-            Fusion de l'identité numérique, de la mémoire artificielle et de la simulation de futurs possibles.
+            {t('labs.cognition.hero_title', "Fusion de l'identité numérique, de la mémoire artificielle et de la simulation de futurs possibles.")}
           </p>
         </header>
 
@@ -113,7 +115,7 @@ const CognitionHubPage: React.FC = () => {
                         <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${module.color} mb-2`}>{module.sub}</p>
                         <h3 className="text-3xl font-black italic manga-font uppercase mb-4 tracking-tighter group-hover:text-white transition-colors">{module.title}</h3>
                         <p className="text-xs font-bold opacity-40 uppercase leading-relaxed tracking-wider mb-10 group-hover:opacity-60 transition-opacity">
-                            {module.desc}
+                            {t(`labs.cognition.${module.id}_desc`, module.desc)}
                         </p>
                     </div>
                     
@@ -136,7 +138,7 @@ const CognitionHubPage: React.FC = () => {
                 </div>
                 <div>
                     <p className="text-[10px] font-black uppercase opacity-30 mb-1">CFR Resolution</p>
-                    <p className="text-lg font-black italic uppercase manga-font">Regret Minimizer v2</p>
+                    <p className="text-lg font-black italic uppercase manga-font">{t('labs.cognition.regret_version', 'Regret Minimizer v2')}</p>
                 </div>
             </Card>
             <Card padding="lg" className="bg-black/40 border-white/5 flex items-center gap-8 shadow-xl">
@@ -145,7 +147,7 @@ const CognitionHubPage: React.FC = () => {
                 </div>
                 <div>
                     <p className="text-[10px] font-black uppercase opacity-30 mb-1">Latent Mapping</p>
-                    <p className="text-lg font-black italic uppercase manga-font">High-Dim Projection</p>
+                    <p className="text-lg font-black italic uppercase manga-font">{t('labs.cognition.high_dim_projection', 'High-Dim Projection')}</p>
                 </div>
             </Card>
             <Card padding="lg" className="bg-black/40 border-white/5 flex items-center gap-8 shadow-xl">
@@ -154,15 +156,15 @@ const CognitionHubPage: React.FC = () => {
                 </div>
                 <div>
                     <p className="text-[10px] font-black uppercase opacity-30 mb-1">Synaptic Sync</p>
-                    <p className="text-lg font-black italic uppercase manga-font">Real-time Imprint</p>
+                    <p className="text-lg font-black italic uppercase manga-font">{t('labs.cognition.real_time_imprint', 'Real-time Imprint')}</p>
                 </div>
             </Card>
         </div>
 
         <footer className="mt-24 opacity-20 text-center z-10 max-w-4xl">
           <p className="text-[9px] font-bold uppercase tracking-[0.5em] italic leading-relaxed">
-            Le Cognition Hub unifie les vecteurs d'identité et de décision. <br />
-            Les données traitées ici servent à affiner les modèles de recommandation neuro-symboliques sans compromettre l'étanchéité de la vie privée numérique.
+            {t('labs.cognition.guide_footer_1', "Le Cognition Hub unifie les vecteurs d'identité et de décision.")} <br />
+            {t('labs.cognition.guide_footer_2', "Les données traitées ici servent à affiner les modèles de recommandation neuro-symboliques sans compromettre l'étanchéité de la vie privée numérique.")}
           </p>
         </footer>
       </div>

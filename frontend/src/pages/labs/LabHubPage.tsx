@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { 
   Cpu, 
@@ -331,6 +332,31 @@ const cognitionLabs = [
 ];
 
 const LabHubPage: React.FC = () => {
+  const { t } = useTranslation();
+
+  const translatedLabs = React.useMemo(() => {
+    return labs.map(lab => ({
+      ...lab,
+      title: t(`lab_hub.labs.${lab.id}.title`, lab.title),
+      desc: t(`lab_hub.labs.${lab.id}.desc`, lab.desc)
+    }));
+  }, [t]);
+
+  const translatedCreativeLabs = React.useMemo(() => {
+    return creativeLabs.map(lab => ({
+      ...lab,
+      title: t(`lab_hub.labs.${lab.id}.title`, lab.title),
+      desc: t(`lab_hub.labs.${lab.id}.desc`, lab.desc)
+    }));
+  }, [t]);
+
+  const translatedCognitionLabs = React.useMemo(() => {
+    return cognitionLabs.map(lab => ({
+      ...lab,
+      title: t(`lab_hub.labs.${lab.id}.title`, lab.title),
+      desc: t(`lab_hub.labs.${lab.id}.desc`, lab.desc)
+    }));
+  }, [t]);
   return (
     <div className="min-h-screen w-full bg-[#0a0a12] text-white pb-20">
       <AnimatedPage>
@@ -342,19 +368,18 @@ const LabHubPage: React.FC = () => {
             
             <div className="flex flex-col md:flex-row justify-between items-end gap-12">
                 <div className="max-w-3xl">
-                    <h1 className="text-8xl font-black italic manga-font tracking-tighter uppercase mb-6 leading-[0.9]">
+                     <h1 className="text-8xl font-black italic manga-font tracking-tighter uppercase mb-6 leading-[0.9]">
                         SINGULARITY <span className="text-red-600 text-glow">LABS</span>
                     </h1>
                     <p className="text-2xl font-bold opacity-30 uppercase tracking-[0.2em] leading-relaxed">
-                        Explorez la frontière entre l'IA générative et la cognition pure.
+                        {t('lab_hub.subtitle', "Explorez la frontière entre l'IA générative et la cognition pure.")}
                     </p>
                 </div>
             </div>
         </header>
 
-        {/* Labs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
-            {labs.map((lab) => (
+            {translatedLabs.map((lab) => (
                 <Link key={lab.id} to={lab.url} className="no-underline group">
                     <Card padding="none" className="h-full bg-navy-950/40 border-white/5 hover:border-red-600/30 transition-all duration-500 overflow-hidden relative group shadow-2xl">
                         {/* Interactive BG hover effect */}
@@ -385,7 +410,7 @@ const LabHubPage: React.FC = () => {
                                             className="text-[9px] font-black uppercase text-amber-500 hover:text-white transition-colors tracking-widest z-20"
                                             onClick={(e) => e.stopPropagation()}
                                         >
-                                            Catalogue →
+                                            {t('lab_hub.catalog_link', 'Catalogue →')}
                                         </Link>
                                     )}
                                     <span className="text-[9px] font-bold opacity-20 uppercase">{lab.status}</span>
@@ -395,23 +420,21 @@ const LabHubPage: React.FC = () => {
                     </Card>
                 </Link>
             ))}
-
-
         </div>
 
         {/* Creative Forge Section */}
         <div className="mb-12 flex items-center justify-between gap-4">
             <h2 className="text-4xl font-black italic manga-font uppercase tracking-tighter">
-                FORGE <span className="text-orange-500">CRÉATIVE</span>
+                FORGE <span className="text-orange-500">{t('lab_hub.section_creative', 'CRÉATIVE')}</span>
             </h2>
             <div className="h-px flex-1 bg-gradient-to-r from-orange-500/50 to-transparent" />
             <Link to="/forge-hub/" className="text-[10px] font-black uppercase tracking-widest text-orange-500 hover:text-white transition-colors flex items-center gap-2 group whitespace-nowrap">
-                ACCÉDER AU HUB COMPLET <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                {t('lab_hub.btn_creative_hub', 'ACCÉDER AU HUB COMPLET')} <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
             </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
-            {creativeLabs.map((lab) => (
+            {translatedCreativeLabs.map((lab) => (
                 <Link key={lab.id} to={lab.url} className="no-underline group">
                     <Card padding="none" className="h-full bg-black/40 border-white/5 hover:border-orange-500/30 transition-all duration-500 overflow-hidden relative group">
                         <div className={`absolute inset-0 bg-gradient-to-br ${lab.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
@@ -435,16 +458,16 @@ const LabHubPage: React.FC = () => {
         {/* Cognition Core Section */}
         <div className="mb-12 flex items-center justify-between gap-4">
             <h2 className="text-4xl font-black italic manga-font uppercase tracking-tighter">
-                COGNITION <span className="text-purple-600">CORE</span>
+                COGNITION <span className="text-purple-600">{t('lab_hub.section_cognition', 'CORE')}</span>
             </h2>
             <div className="h-px flex-1 bg-gradient-to-r from-purple-600/50 to-transparent" />
             <Link to="/cognition-hub/" className="text-[10px] font-black uppercase tracking-widest text-purple-600 hover:text-white transition-colors flex items-center gap-2 group whitespace-nowrap">
-                ACCÉDER AU HUB COMPLET <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                {t('lab_hub.btn_cognition_hub', 'ACCÉDER AU HUB COMPLET')} <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
             </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
-            {cognitionLabs.map((lab) => (
+            {translatedCognitionLabs.map((lab) => (
                 <Link key={lab.id} to={lab.url} className="no-underline group">
                     <Card padding="none" className="h-full bg-black/40 border-white/5 hover:border-purple-600/30 transition-all duration-500 overflow-hidden relative group">
                         <div className={`absolute inset-0 bg-gradient-to-br ${lab.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
@@ -468,8 +491,8 @@ const LabHubPage: React.FC = () => {
         {/* Alpha Footer */}
         <footer className="mt-32 pt-16 border-t border-white/5 text-center">
             <p className="text-sm font-bold uppercase tracking-[0.15em] opacity-40 italic max-w-4xl mx-auto leading-relaxed">
-                Les Singularity Labs regroupent les fonctionnalités expérimentales d'Animetix : des outils d'IA générative et cognitive appliqués à l'univers anime &amp; manga. <br />
-                Génération de lore, doublage et synthèse vocale, analyse vidéo, reconstruction 3D, moteurs de raisonnement — chaque module est un prototype de recherche en évolution constante.
+                {t('lab_hub.footer_1', "Les Singularity Labs regroupent les fonctionnalités expérimentales d'Animetix : des outils d'IA générative et cognitive appliqués à l'univers anime & manga.")} <br />
+                {t('lab_hub.footer_2', "Génération de lore, doublage et synthèse vocale, analyse vidéo, reconstruction 3D, moteurs de raisonnement — chaque module est un prototype de recherche en évolution constante.")}
             </p>
         </footer>
       </div>

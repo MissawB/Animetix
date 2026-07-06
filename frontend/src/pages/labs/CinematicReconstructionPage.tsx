@@ -12,6 +12,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -30,6 +31,7 @@ interface DCSResult {
 }
 
 const CinematicReconstructionPage: React.FC = () => {
+  const { t } = useTranslation();
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [reconstructionResult, setReconstructionResult] = useState<DCSResult | null>(null);
@@ -79,10 +81,10 @@ const CinematicReconstructionPage: React.FC = () => {
                 CINEMATIC <span className="text-purple-500 text-glow">RECONSTRUCTION</span>
             </h1>
             <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                Transformez vos séquences 2D en environnements 3D volumétriques temporels.
+                {t('labs.cinematic.subtitle', 'Transformez vos séquences 2D en environnements 3D volumétriques temporels.')}
             </p>
         </header>
-
+ 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             
             {/* Configuration & Upload */}
@@ -93,60 +95,60 @@ const CinematicReconstructionPage: React.FC = () => {
                     </div>
                     
                     <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                        <Upload className="w-4 h-4 text-purple-500" /> Source Vidéo
+                        <Upload className="w-4 h-4 text-purple-500" /> {t('labs.cinematic.video_source', 'Source Vidéo')}
                     </h3>
-
+ 
                     <form onSubmit={onSubmit} className="space-y-8">
                         <div className="relative group">
                             <input 
                                 type="file"
                                 accept="video/*"
                                 onChange={onFileChange}
-                                aria-label="Importer une vidéo source"
+                                aria-label={t('labs.cinematic.video_source_aria', 'Importer une vidéo source')}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             />
                             <div className={`w-full aspect-video rounded-[2rem] border-2 border-dashed transition-all flex flex-col items-center justify-center p-6 ${
                                 videoFile ? 'border-purple-500/50 bg-purple-500/5' : 'border-white/10 bg-white/5 group-hover:border-white/20'
                             }`}>
                                 {videoPreview ? (
-                                    <video src={videoPreview} className="w-full h-full object-cover rounded-xl" muted aria-label="Aperçu de la vidéo source" />
+                                    <video src={videoPreview} className="w-full h-full object-cover rounded-xl" muted aria-label={t('labs.cinematic.video_preview_aria', 'Aperçu de la vidéo source')} />
                                 ) : (
                                     <>
                                         <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-4">
                                             <Video className="w-6 h-6 text-gray-400" />
                                         </div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Glissez ou cliquez</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">{t('labs.audio.filter_all', 'Tous')}</p>
                                     </>
                                 )}
                             </div>
                         </div>
-
+ 
                         {videoFile && (
                             <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">Fichier sélectionné</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">{t('labs.cinematic.selected_file', 'Fichier sélectionné')}</p>
                                 <p className="text-sm font-bold truncate">{videoFile.name}</p>
                                 <p className="text-[10px] font-bold opacity-40">{(videoFile.size / (1024 * 1024)).toFixed(2)} MB</p>
                             </div>
                         )}
-
+ 
                         <Button 
                             type="submit" 
                             disabled={mutation.isPending || !videoFile}
                             className="w-full bg-purple-600 hover:bg-purple-500 text-white py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
                         >
-                            {mutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "LANCER LA RECONSTRUCTION"}
+                            {mutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : t('labs.cinematic.reconstruction_title', "LANCER LA RECONSTRUCTION")}
                         </Button>
                     </form>
                 </Card>
-
+ 
                 <Card padding="lg" className="bg-white/5 border-white/5 opacity-50">
                     <h4 className="text-[10px] font-black uppercase tracking-widest mb-4">Pipeline DCS</h4>
                     <ul className="space-y-4">
                         <li className="flex gap-3 text-[10px] font-bold uppercase leading-relaxed">
-                            <Target className="w-4 h-4 text-purple-500 shrink-0" /> Échantillonnage temporel à 2 FPS.
+                            <Target className="w-4 h-4 text-purple-500 shrink-0" /> {t('labs.cinematic.temporal_sampling', 'Échantillonnage temporel à 2 FPS.')}
                         </li>
                         <li className="flex gap-3 text-[10px] font-bold uppercase leading-relaxed">
-                            <Target className="w-4 h-4 text-purple-500 shrink-0" /> Inférence de profondeur via MiDaS SOTA.
+                            <Target className="w-4 h-4 text-purple-500 shrink-0" /> {t('labs.cinematic.depth_inference', 'Inférence de profondeur via MiDaS SOTA.')}
                         </li>
                         <li className="flex gap-3 text-[10px] font-bold uppercase leading-relaxed">
                             <Target className="w-4 h-4 text-purple-500 shrink-0" /> Reconstruction par Gaussian Splatting.
@@ -173,8 +175,8 @@ const CinematicReconstructionPage: React.FC = () => {
                                 />
                                 <Box className="w-16 h-16 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
                             </div>
-                            <h3 className="text-2xl font-black italic manga-font uppercase mb-2">Reconstruction Sémantique</h3>
-                            <p className="text-xs font-bold opacity-30 uppercase tracking-[0.2em]">Génération de la volumétrie temporelle...</p>
+                            <h3 className="text-2xl font-black italic manga-font uppercase mb-2">{t('labs.cinematic.reconstruction_title', 'Reconstruction Sémantique')}</h3>
+                            <p className="text-xs font-bold opacity-30 uppercase tracking-[0.2em]">{t('labs.cinematic.reconstruction_progress', 'Génération de la volumétrie temporelle...')}</p>
                         </motion.div>
                     ) : reconstructionResult ? (
                         <motion.div 
@@ -198,8 +200,8 @@ const CinematicReconstructionPage: React.FC = () => {
                                     {/* Virtual Viewer Placeholder */}
                                     <div className="text-center p-12">
                                         <Zap className="w-20 h-20 text-purple-500 mx-auto mb-6 animate-pulse" />
-                                        <h4 className="text-3xl font-black italic manga-font uppercase mb-2">Scene Ready</h4>
-                                        <p className="text-[10px] font-bold opacity-40 uppercase tracking-[0.3em]">Utilisez le moteur DCS pour naviguer dans la scène</p>
+                                        <h4 className="text-3xl font-black italic manga-font uppercase mb-2">{t('labs.cinematic.scene_ready', 'Scene Ready')}</h4>
+                                        <p className="text-[10px] font-bold opacity-40 uppercase tracking-[0.3em]">{t('labs.cinematic.scene_ready_desc', 'Utilisez le moteur DCS pour naviguer dans la scène')}</p>
                                     </div>
 
                                     {/* Timeline Controls Overlay */}
@@ -238,8 +240,8 @@ const CinematicReconstructionPage: React.FC = () => {
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center py-32 opacity-10 text-center border-4 border-dashed border-white/5 rounded-[4rem]">
                             <Video className="w-32 h-32 mb-8" />
-                            <h3 className="text-4xl font-black italic manga-font uppercase mb-4">Moteur en attente</h3>
-                            <p className="text-sm font-bold uppercase tracking-[0.3em]">Chargez une séquence vidéo pour démarrer le DCS.</p>
+                            <h3 className="text-4xl font-black italic manga-font uppercase mb-4">{t('labs.cinematic.waiting_engine_title', 'Moteur en attente')}</h3>
+                            <p className="text-sm font-bold uppercase tracking-[0.3em]">{t('labs.cinematic.waiting_engine_desc', 'Chargez une séquence vidéo pour démarrer le DCS.')}</p>
                         </div>
                     )}
                 </AnimatePresence>
@@ -253,25 +255,25 @@ const CinematicReconstructionPage: React.FC = () => {
                     <Box className="w-64 h-64 text-purple-500" />
                 </div>
                 <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                    <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" /> Guide de la Reconstruction
+                    <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" /> {t('labs.cinematic.guide_title', 'Guide de la Reconstruction')}
                 </h4>
                 <div className="space-y-4 relative z-10">
                     <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-purple-600 dark:text-purple-400">Le Concept :</span> Importez une vidéo classique en 2D et le système en reconstruit une version 3D, image par image, que vous pouvez explorer.
+                        <span className="text-purple-600 dark:text-purple-400">{t('labs.cinematic.guide_concept_title', 'Le Concept :')}</span> {t('labs.cinematic.guide_concept_desc', 'Importez une vidéo classique en 2D et le système en reconstruit une version 3D, image par image, que vous pouvez explorer.')}
                     </p>
                     <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-purple-600 dark:text-purple-400">L'Utilisation :</span> Glissez votre fichier vidéo, cliquez sur "Lancer la reconstruction" et attendez la fin du traitement. Chaque frame reconstruite apparaît dans la grille de résultats.
+                        <span className="text-purple-600 dark:text-purple-400">{t('labs.cinematic.guide_usage_title', 'L\'Utilisation :')}</span> {t('labs.cinematic.guide_usage_desc', 'Glissez votre fichier vidéo, cliquez sur "Lancer la reconstruction" et attendez la fin du traitement. Chaque frame reconstruite apparaît dans la grille de résultats.')}
                     </p>
                     <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-purple-600 dark:text-purple-400">Les Résultats :</span> Chaque vignette indique son horodatage et son nombre de points 3D, ce qui vous permet de juger la densité de la scène reconstruite.
+                        <span className="text-purple-600 dark:text-purple-400">{t('labs.cinematic.guide_results_title', 'Les Résultats :')}</span> {t('labs.cinematic.guide_results_desc', 'Chaque vignette indique son horodatage et son nombre de points 3D, ce qui vous permet de juger la densité de la scène reconstruite.')}
                     </p>
                 </div>
             </Card>
 
             <div className="p-12 rounded-[4rem] bg-gradient-to-br from-purple-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
                 <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-purple-800/70 dark:text-purple-200/60">
-                    La vidéo est échantillonnée à 2 images par seconde, puis chaque frame passe par une estimation de profondeur monoculaire (MiDaS) pour obtenir la géométrie de la scène. <br />
-                    Les cartes de profondeur sont ensuite converties en nuages de points par Gaussian Splatting, produisant une frame volumétrique horodatée avec son nombre de points.
+                    {t('labs.cinematic.guide_footer_1', 'La vidéo est échantillonnée à 2 images par seconde, puis chaque frame passe par une estimation de profondeur monoculaire (MiDaS) pour obtenir la géométrie de la scène.')} <br />
+                    {t('labs.cinematic.guide_footer_2', 'Les cartes de profondeur sont ensuite converties en nuages de points par Gaussian Splatting, produisant une frame volumétrique horodatée avec son nombre de points.')}
                 </p>
             </div>
         </div>
@@ -281,5 +283,3 @@ const CinematicReconstructionPage: React.FC = () => {
 };
 
 export default CinematicReconstructionPage;
-
-

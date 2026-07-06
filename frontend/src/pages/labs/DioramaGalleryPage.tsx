@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Box, 
   Search, 
@@ -30,6 +31,7 @@ interface Diorama {
 }
 
 const DioramaGalleryPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   
   // Mock Data
@@ -79,14 +81,14 @@ const DioramaGalleryPage: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
             <div>
               <Link to="/lab/spatial/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors mb-4 no-underline group">
-                <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" /> Retour au Lab Spatial
+                <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" /> {t('labs.diorama.back_to_spatial', 'Retour au Lab Spatial')}
               </Link>
               <h1 className="text-5xl font-black italic manga-font uppercase tracking-tighter flex items-center gap-4">
                 <Cuboid className="w-10 h-10 text-blue-500" />
-                Galerie des <span className="text-blue-500">Dioramas</span>
+                {t('labs.diorama.gallery_title_part1', 'Galerie des')} <span className="text-blue-500">{t('labs.diorama.gallery_title_part2', 'Dioramas')}</span>
               </h1>
               <p className="text-gray-500 font-bold uppercase tracking-widest mt-2 text-xs">
-                Visualisez vos reconstructions volumétriques 3D générées par IA
+                {t('labs.diorama.subtitle', 'Visualisez vos reconstructions volumétriques 3D générées par IA')}
               </p>
             </div>
 
@@ -97,8 +99,8 @@ const DioramaGalleryPage: React.FC = () => {
                     <Search className="w-4 h-4 text-gray-500" />
                     <input 
                       type="text"
-                      placeholder="RECHERCHER..."
-                      aria-label="Rechercher une reconstruction"
+                      placeholder={t('labs.diorama.search_placeholder', 'RECHERCHER...')}
+                      aria-label={t('labs.diorama.search_aria', 'Rechercher une reconstruction')}
                       className="bg-transparent border-none outline-none text-[10px] font-black uppercase tracking-widest w-full placeholder:opacity-30"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -160,7 +162,7 @@ const DioramaGalleryPage: React.FC = () => {
 
                     <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/5">
                       <div className="flex flex-col">
-                        <span className="text-[8px] font-black uppercase opacity-20 tracking-widest">Complexité</span>
+                        <span className="text-[8px] font-black uppercase opacity-20 tracking-widest">{t('labs.diorama.complexity', 'Complexité')}</span>
                         <span className="text-[10px] font-bold text-blue-400 flex items-center gap-1">
                            <Sparkles className="w-3 h-3" />
                            {(diorama.point_count / 1000000).toFixed(1)}M Points
@@ -184,11 +186,11 @@ const DioramaGalleryPage: React.FC = () => {
               <div className="w-24 h-24 bg-navy-900/50 rounded-full flex items-center justify-center mb-8 border border-white/5">
                 <Box className="w-10 h-10 opacity-20" />
               </div>
-              <h2 className="text-3xl font-black italic uppercase opacity-20 mb-4">Aucune création trouvée</h2>
+              <h2 className="text-3xl font-black italic uppercase opacity-20 mb-4">{t('labs.diorama.no_creations_title', 'Aucune création trouvée')}</h2>
               <p className="text-gray-500 font-bold uppercase tracking-widest text-xs mb-8">
-                Vous n'avez pas encore généré de dioramas dans le Nexus.
+                {t('labs.diorama.no_creations_desc', "Vous n'avez pas encore généré de dioramas dans le Nexus.")}
               </p>
-              <Button as={Link} to="/lab/spatial/" variant="primary">CRÉER MON PREMIER DIORAMA</Button>
+              <Button as={Link} to="/lab/spatial/" variant="primary">{t('labs.diorama.btn_create_first', 'CRÉER MON PREMIER DIORAMA')}</Button>
             </div>
           )}
 
@@ -199,12 +201,12 @@ const DioramaGalleryPage: React.FC = () => {
                     <Download className="w-8 h-8" />
                  </div>
                  <div>
-                    <h4 className="text-lg font-black italic uppercase tracking-tighter">Exporter en VR</h4>
-                    <p className="text-xs text-gray-500 font-medium tracking-tight">Téléchargez vos modèles au format .PLY ou .USDZ pour visionnage externe.</p>
+                    <h4 className="text-lg font-black italic uppercase tracking-tighter">{t('labs.diorama.export_vr', 'Exporter en VR')}</h4>
+                    <p className="text-xs text-gray-500 font-medium tracking-tight">{t('labs.diorama.download_format_note', 'Téléchargez vos modèles au format .PLY ou .USDZ pour visionnage externe.')}</p>
                  </div>
               </div>
               <Button variant="outline" className="border-white/10 hover:bg-blue-500/10 hover:border-blue-500/30">
-                <ExternalLink className="w-4 h-4 mr-2" /> ACCÉDER AU SDK VR
+                <ExternalLink className="w-4 h-4 mr-2" /> {t('labs.diorama.btn_sdk_vr', 'ACCÉDER AU SDK VR')}
               </Button>
           </div>
         </div>

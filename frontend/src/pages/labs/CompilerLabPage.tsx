@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Cpu,
   Loader2,
@@ -20,6 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CompilerResult } from '../../types';
 
 const CompilerLabPage: React.FC = () => {
+  const { t } = useTranslation();
   const [fnName, setFnName] = useState('semantic_cosine_opt');
   const [cCode, setCCode] = useState('// Version optimisée générée à la volée\ndouble semantic_cosine_opt(double* a, double* b, int n) {\n    double dot = 0.0;\n    // ... calcul matriciel vectorisé C ...\n    return dot;\n}');
   const [compilerResult, setCompilerResult] = useState<CompilerResult | null>(null);
@@ -47,7 +49,7 @@ const CompilerLabPage: React.FC = () => {
                   JIT <span className="text-red-600 text-glow">OPTIMIZER</span>
               </h1>
               <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                  Optimisation temps réel du microcode sémantique via compilation JIT SOTA 2035.
+                  {t('labs.compiler.subtitle', 'Optimisation temps réel du microcode sémantique via compilation JIT SOTA 2035.')}
               </p>
           </header>
 
@@ -66,11 +68,11 @@ const CompilerLabPage: React.FC = () => {
 
                       <div className="space-y-8">
                           <div className="space-y-4">
-                              <label htmlFor="fn-name" className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] px-2">Fonction Cible</label>
+                              <label htmlFor="fn-name" className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] px-2">{t('labs.compiler.target_function', 'Fonction Cible')}</label>
                               <input 
                                   id="fn-name"
                                   type="text"
-                                  aria-label="Fonction cible"
+                                  aria-label={t('labs.compiler.target_function', 'Fonction Cible')}
                                   value={fnName}
                                   onChange={(e) => setFnName(e.target.value)} 
                                   className="w-full bg-black border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold focus:border-red-500 outline-none transition-all text-white" 
@@ -82,7 +84,7 @@ const CompilerLabPage: React.FC = () => {
                               disabled={compileMutation.isPending} 
                               className="w-full bg-red-600 hover:bg-red-500 text-white py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
                           >
-                              {compileMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "LANCER L'OPTIMISATION"}
+                              {compileMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : t('labs.compiler.submit_btn', "LANCER L'OPTIMISATION")}
                           </Button>
                       </div>
                   </Card>
@@ -90,7 +92,7 @@ const CompilerLabPage: React.FC = () => {
                   <Card padding="lg" className="bg-white/5 border-white/5 opacity-50">
                       <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 text-red-400">Pipeline JIT</h4>
                       <p className="text-[10px] font-bold uppercase leading-relaxed mb-4">
-                          L'IA analyse le graphe d'exécution et génère du code C vectorisé pour les calculs de similarité critique.
+                          {t('labs.compiler.analysis_desc', "L'IA analyse le graphe d'exécution et génère du code C vectorisé pour les calculs de similarité critique.")}
                       </p>
                       <ul className="space-y-3">
                           <li className="flex gap-2 text-[8px] font-black opacity-40 uppercase">
@@ -159,7 +161,7 @@ const CompilerLabPage: React.FC = () => {
                                   ) : (
                                       <div className="flex-1 flex flex-col items-center justify-center py-20 opacity-10">
                                           <Cpu className="w-24 h-24 mx-auto mb-8 animate-pulse" />
-                                          <span className="text-sm font-black uppercase tracking-[0.3em] block text-center">En attente de déploiement</span>
+                                          <span className="text-sm font-black uppercase tracking-[0.3em] block text-center">{t('labs.compiler.waiting_deploy', 'En attente de déploiement')}</span>
                                       </div>
                                   )}
                               </AnimatePresence>
@@ -181,25 +183,25 @@ const CompilerLabPage: React.FC = () => {
                       <Terminal className="w-64 h-64 text-red-500" />
                   </div>
                   <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                      <Sparkles className="w-5 h-5 text-red-400" /> Guide du Compilateur
+                      <Sparkles className="w-5 h-5 text-red-400" /> {t('labs.compiler.guide_title', 'Guide du Compilateur')}
                   </h4>
                   <div className="space-y-4 relative z-10">
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-400">Le Concept :</span> Les calculs de similarité entre œuvres (cosinus, distance euclidienne) sont lents en Python pur. Cette page montre comment le serveur les accélère en les compilant à la volée.
+                          <span className="text-red-400">{t('labs.compiler.guide_concept_title', 'Le Concept :')}</span> {t('labs.compiler.guide_concept_desc', 'Les calculs de similarité entre œuvres (cosinus, distance euclidienne) sont lents en Python pur. Cette page montre comment le serveur les accélère en les compilant à la volée.')}
                       </p>
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-400">La Compilation :</span> Entrez une fonction supportée (cosine_similarity, euclidean_distance, vector_norm) et lancez l'optimisation : le noyau est compilé en code machine puis testé immédiatement.
+                          <span className="text-red-400">{t('labs.compiler.guide_compile_title', 'La Compilation :')}</span> {t('labs.compiler.guide_compile_desc', 'Entrez une fonction supportée (cosine_similarity, euclidean_distance, vector_norm) et lancez l\'optimisation : le noyau est compilé en code machine puis testé immédiatement.')}
                       </p>
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-400">Le Résultat :</span> Le panneau de droite affiche le statut de compilation, la sortie du test de validation et la signature du code généré. Cette action consomme des Berrix.
+                          <span className="text-red-400">{t('labs.compiler.guide_result_title', 'Le Résultat :')}</span> {t('labs.compiler.guide_result_desc', 'Le panneau de droite affiche le statut de compilation, la sortie du test de validation et la signature du code généré. Cette action consomme des Berrix.')}
                       </p>
                   </div>
               </Card>
 
               <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
                   <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-200/60">
-                      Compilation JIT réelle via Numba (@njit, fastmath) : le kernel numérique Python est traduit en code machine côté serveur, puis validé sur un vecteur de test. <br />
-                      Le code C affiché à gauche est illustratif — le mécanisme effectif est la génération dynamique de kernels Numpy/Numba par l'API singularity-lab.
+                      {t('labs.compiler.guide_footer_1', 'Compilation JIT réelle via Numba (@njit, fastmath) : le kernel numérique Python est traduit en code machine côté serveur, puis validé sur un vecteur de test.')} <br />
+                      {t('labs.compiler.guide_footer_2', 'Le code C affiché à gauche est illustratif — le mécanisme effectif est la génération dynamique de kernels Numpy/Numba par l\'API singularity-lab.')}
                   </p>
               </div>
           </div>
