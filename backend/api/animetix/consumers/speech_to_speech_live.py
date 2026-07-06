@@ -169,7 +169,7 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
     def _charge_session(self):
         from core.domain.services.berrix_economy import FEATURE_BX_COSTS
 
-        from animetix.api.billing import deduct_berrix
+        from animetix.api.billing import PaymentRequired, deduct_berrix
 
         try:
             deduct_berrix(
@@ -178,7 +178,16 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
                 "Speech-to-Speech Live (session)",
             )
             return True
+        except PaymentRequired:
+            # Expected: not authenticated / insufficient balance → 4402.
+            return False
         except Exception:
+            # Unexpected (DB/transient) errors must not masquerade as "no balance":
+            # log them, but still fail closed (deny the paid GPU session).
+            logger.exception(
+                "S2S charge failed unexpectedly (user=%s)",
+                getattr(self.user, "id", None),
+            )
             return False
 
     async def _enforce_deadline(self):

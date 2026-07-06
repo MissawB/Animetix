@@ -112,7 +112,10 @@ class GuardrailService:
                         text, self.enabled_categories, mode="input"
                     )
 
-            return result
+            # When the LLM fallback is gated off (anonymous users), the stub/falsy
+            # branch above leaves `result` possibly falsy; callers do result.get(...),
+            # so guarantee a safe dict rather than returning None.
+            return result or {"is_safe": True, "detected_categories": []}
         except Exception as e:
             logger.warning(
                 f"⚠️ [Guardrail] Input validation failed due to error: {e}. Falling back to default safe validation."
