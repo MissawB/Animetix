@@ -1,52 +1,67 @@
-import React, { useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import useSocket from '../../hooks/useSocket';
-import {
-  Users, Send, Crown, Play, RotateCcw, Check, Vote,
-  Fingerprint, Copy, Radio, Lock, Skull, HelpCircle, Ghost, Globe, EyeOff,
-} from 'lucide-react';
+import { Fingerprint, Check, Copy, Radio, Lock, Skull, Globe, EyeOff } from 'lucide-react';
+import { useUndercoverRoom } from '../../hooks/useUndercoverRoom';
+import { UndercoverJoinForm } from '../../components/games/UndercoverJoinForm';
+import { UndercoverLobbySettings } from '../../components/games/UndercoverLobbySettings';
+import { UndercoverGameBoard } from '../../components/games/UndercoverGameBoard';
+import { UndercoverChatPanel } from '../../components/games/UndercoverChatPanel';
+import { UndercoverActionCenter } from '../../components/games/UndercoverActionCenter';
 
-interface UPlayer {
-  id: string;
-  name: string;
-  is_host?: boolean;
-  has_voted?: boolean;
-  alive?: boolean;
-  role?: string;
-  word?: string;
-  image?: string;
-}
-interface UMsg { user: string; text: string; is_system?: boolean }
-interface UResult { winner: string; reason?: string; mrwhite_winners?: string[] }
-
-const DIFFS = ['Easy', 'Normal', 'Hard'];
 const MIN_PLAYERS = 3;
 
 const UndercoverRoom: React.FC = () => {
   const { t } = useTranslation();
-  const { roomCode } = useParams<{ roomCode: string }>();
-  const [searchParams] = useSearchParams();
 
-  const CATEGORIES: { key: string; label: string; anchor?: boolean }[] = useMemo(() => [
-    { key: 'Anime', label: t('games.undercover.categories.anime', 'Anime'), anchor: true },
-    { key: 'Manga', label: t('games.undercover.categories.manga', 'Manga'), anchor: true },
-    { key: 'Character', label: t('games.undercover.categories.anime_characters', 'Persos anime'), anchor: true },
-    { key: 'Movie', label: t('games.undercover.categories.movies', 'Films') },
-    { key: 'Game', label: t('games.undercover.categories.video_games', 'Jeux vidéo') },
-    { key: 'Actor', label: t('games.undercover.categories.actors', 'Acteurs') },
-    { key: 'VGChar', label: t('games.undercover.categories.game_characters', 'Persos de jeux') },
-  ], [t]);
-  const ANCHOR_KEYS = useMemo(() => CATEGORIES.filter((c) => c.anchor).map((c) => c.key), [CATEGORIES]);
-  const DIFF_LABEL: Record<string, string> = {
-    Easy: t('games.undercover.difficulty.easy', 'Facile'),
-    Normal: t('games.undercover.difficulty.normal', 'Normal'),
-    Hard: t('games.undercover.difficulty.hard', 'Difficile'),
-  };
-  const DIFF_HINT: Record<string, string> = {
-    Easy: t('games.undercover.difficulty.hint_easy', 'œuvres très populaires'),
-    Normal: t('games.undercover.difficulty.hint_normal', 'œuvres connues'),
-    Hard: t('games.undercover.difficulty.hint_hard', 'œuvres plus pointues'),
+  const {
+    roomCode,
+    connected,
+    players,
+    myId,
+    me,
+    isHost,
+    state,
+    messages,
+    myRole,
+    categories,
+    difficulty,
+    visibility,
+    isPublic,
+    under,
+    white,
+    round,
+    pendingWhite,
+    pendingWhiteName,
+    result,
+    civilWord,
+    undercoverWord,
+    civilsCount,
+    voteTarget,
+    maxUnderSlider,
+    maxWhiteSlider,
+
+    // Local form states
+    name, setName,
+    chat, setChat,
+    guess, setGuess,
+    copied,
+
+    // Handlers
+    submitName,
+    castVote,
+    submitGuess,
+    sendChat,
+    copyCode,
+    applySettings,
+    toggleCategory,
+    sendAction,
+  } = useUndercoverRoom();
+
+  // Paint revealed roles metadata.
+  const roleMeta = (role?: string): { label: string; cls: string } => {
+    if (role === 'Undercover') return { label: t('games.undercover.roles.intruder', '⚠ Intrus'), cls: 'text-red-400' };
+    if (role === 'MrWhite') return { label: t('games.undercover.roles.mrwhite', '◐ Mr. White'), cls: 'text-purple-300' };
+    return { label: t('games.undercover.roles.civil', '✓ Civil'), cls: 'text-green-400' };
   };
 
   const STATUS: Record<string, string> = {
@@ -56,117 +71,21 @@ const UndercoverRoom: React.FC = () => {
     ended: t('games.undercover.status.ended', 'Mission terminée — dossier déclassifié'),
   };
 
-  // Badge style for a revealed role.
-  const roleMeta = (role?: string): { label: string; cls: string } => {
-    if (role === 'Undercover') return { label: t('games.undercover.roles.intruder', '⚠ Intrus'), cls: 'text-red-400' };
-    if (role === 'MrWhite') return { label: t('games.undercover.roles.mrwhite', '◐ Mr. White'), cls: 'text-purple-300' };
-    return { label: t('games.undercover.roles.civil', '✓ Civil'), cls: 'text-green-400' };
-  };
-
-  // Only meaningful when *creating* the room (carried from the chooser); the
-  // server ignores it once the room exists.
-  const createVisibility = searchParams.get('visibility') || undefined;
-  const extraQuery = useMemo(
-    () => (createVisibility ? { visibility: createVisibility } : undefined),
-    [createVisibility],
-  );
-  const { gameState, connected, sendAction } = useSocket(roomCode, 'undercover', extraQuery);
-  const [name, setName] = useState('');
-  const [chat, setChat] = useState('');
-  const [guess, setGuess] = useState('');
-  // Local vote highlight, keyed by round so it auto-clears each new round.
-  const [vote, setVote] = useState<{ round: number; target: string } | null>(null);
-  const [copied, setCopied] = useState(false);
-
-  const gs = (gameState || {}) as Record<string, unknown>;
-  const players = (gs.players as UPlayer[]) || [];
-  const myId = gs.myId as string | undefined;
-  const me = players.find((p) => p.id === myId);
-  const isHost = !!me?.is_host;
-  const state = (gs.state as string) || 'lobby';
-  const messages = (gs.messages as UMsg[]) || [];
-  const myRole = (gs.private_role as UPlayer) || {};
-  const categories = (gs.categories as string[]) || ['Anime'];
-  const difficulty = (gs.difficulty as string) || 'Normal';
-  const visibility = (gs.visibility as string) || 'private';
-  const isPublic = visibility === 'public';
-  const numUnder = (gs.num_undercovers as number) || 1;
-  const numWhite = (gs.num_mrwhites as number) || 0;
-  const round = (gs.round as number) || 0;
-  const pendingWhite = gs.pending_white as string | undefined;
-  const pendingWhiteName = gs.pending_white_name as string | undefined;
-  const result = gs.result as UResult | null;
-  const civilWord = gs.civil_word as string | undefined;
-  const undercoverWord = gs.undercover_word as string | undefined;
-
-  const hasAnchor = categories.some((c) => ANCHOR_KEYS.includes(c));
-  // Threats (intrus + Mr. White) cap so civils keep a majority at the start.
-  const maxThreats = Math.max(1, Math.floor((players.length - 1) / 2));
-  const under = Math.min(numUnder, Math.max(1, maxThreats - numWhite));
-  const white = Math.min(numWhite, Math.max(0, maxThreats - under));
-  const civilsCount = Math.max(0, players.length - under - white);
-  // Highlight only the vote cast this round (server clears votes each round).
-  const voteTarget = vote && vote.round === round ? vote.target : null;
-
-  // Paints a range slider's filled portion + themes its thumb (see .uc-slider).
-  const sliderStyle = (value: number, min: number, max: number, accent: string): React.CSSProperties => {
-    // Fill tracks the thumb position; a degenerate (min==max) slider sits at 0.
-    const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
-    return {
-      background: `linear-gradient(90deg, ${accent} 0%, ${accent} ${pct}%, rgba(255,255,255,0.08) ${pct}%, rgba(255,255,255,0.08) 100%)`,
-      ['--uc-accent' as string]: accent,
-    };
-  };
-  const maxUnderSlider = Math.max(1, maxThreats - white);
-  const maxWhiteSlider = Math.max(0, maxThreats - under);
-
   if (!connected) {
     return (
       <div className="min-h-[60vh] grid place-items-center">
         <div className="flex flex-col items-center gap-4 text-red-400">
           <Radio className="w-12 h-12 animate-pulse" />
-          <p className="font-black uppercase tracking-[0.4em] animate-pulse">{t('games.undercover.room.connecting', 'Connexion au réseau sécurisé…')}</p>
+          <p className="font-black uppercase tracking-[0.4em] animate-pulse">
+            {t('games.undercover.room.connecting', 'Connexion au réseau sécurisé…')}
+          </p>
         </div>
       </div>
     );
   }
 
-  const submitName = () => { if (name.trim()) sendAction('set_name', { name: name.trim() }); };
   const iAmAlive = me?.alive !== false;
-  const castVote = (id: string) => {
-    const target = players.find((p) => p.id === id);
-    if (state !== 'playing' || id === myId || !iAmAlive || target?.alive === false) return;
-    setVote({ round, target: id });
-    sendAction('vote', { voted_for: id });
-  };
-  const submitGuess = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (guess.trim()) { sendAction('mrwhite_guess', { guess: guess.trim() }); setGuess(''); }
-  };
-  const sendChat = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (chat.trim()) { sendAction('chat', { message: chat.trim() }); setChat(''); }
-  };
   const code = (roomCode || '').toUpperCase();
-  const copyCode = () => {
-    navigator.clipboard?.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-
-  // set_settings carries the full settings tuple — merge so changing one knob
-  // doesn't reset the others.
-  const applySettings = (patch: Record<string, unknown>) =>
-    sendAction('set_settings', {
-      categories, difficulty, num_undercovers: under, num_mrwhites: white, visibility, ...patch,
-    });
-  const toggleCategory = (key: string) => {
-    const next = categories.includes(key)
-      ? categories.filter((c) => c !== key)
-      : [...categories, key];
-    applySettings({ categories: next });
-  };
-
   const iAmPendingWhite = state === 'mrwhite_guess' && pendingWhite === myId;
   const isMrWhite = myRole.role === 'MrWhite';
 
@@ -176,13 +95,31 @@ const UndercoverRoom: React.FC = () => {
   const winnerBanner = () => {
     const w = result?.winner;
     const whites = result?.mrwhite_winners || [];
-    if (w === 'civils') return { cls: 'bg-green-500/10 border-green-500', title: t('games.undercover.room.winner_civils_title', '🎯 Les Civils gagnent !'), sub: t('games.undercover.room.winner_civils_sub', 'Toutes les menaces ont été démasquées.') };
-    if (w === 'mrwhite') return { cls: 'bg-purple-500/10 border-purple-400', title: t('games.undercover.room.winner_mrwhite_title', '◐ Mr. White gagne !'), sub: t('games.undercover.room.winner_mrwhite_sub', { defaultValue: '{{names}} a deviné le mot des civils.', names: whites.join(', ') }) };
+    if (w === 'civils') {
+      return {
+        cls: 'bg-green-500/10 border-green-500',
+        title: t('games.undercover.room.winner_civils_title', '🎯 Les Civils gagnent !'),
+        sub: t('games.undercover.room.winner_civils_sub', 'Toutes les menaces ont été démasquées.'),
+      };
+    }
+    if (w === 'mrwhite') {
+      return {
+        cls: 'bg-purple-500/10 border-purple-400',
+        title: t('games.undercover.room.winner_mrwhite_title', '◐ Mr. White gagne !'),
+        sub: t('games.undercover.room.winner_mrwhite_sub', {
+          defaultValue: '{{names}} a deviné le mot des civils.',
+          names: whites.join(', '),
+        }),
+      };
+    }
     return {
       cls: 'bg-red-500/10 border-red-500',
       title: t('games.undercover.room.winner_intruders_title', '🕵️ Les infiltrés gagnent !'),
       sub: whites.length
-        ? t('games.undercover.room.winner_intruders_sub_mrwhite', { defaultValue: "Mr. White {{names}} survit jusqu'au bout.", names: whites.join(', ') })
+        ? t('games.undercover.room.winner_intruders_sub_mrwhite', {
+            defaultValue: "Mr. White {{names}} survit jusqu'au bout.",
+            names: whites.join(', '),
+          })
         : t('games.undercover.room.winner_intruders_sub', 'Ils ont atteint la parité.'),
     };
   };
@@ -200,15 +137,26 @@ const UndercoverRoom: React.FC = () => {
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-red-500 mb-3">
             <Fingerprint className="w-4 h-4" /> {t('games.undercover.classified_badge', 'Dossier classifié · Undercover')}
             <span className="ml-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-500/15 text-red-400 normal-case tracking-wider">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" /> {players.length > 1
-                ? t('games.undercover.room.agents_count_plural', { defaultValue: '{{count}} agents', count: players.length })
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />{' '}
+              {players.length > 1
+                ? t('games.undercover.room.agents_count_plural', {
+                    defaultValue: '{{count}} agents',
+                    count: players.length,
+                  })
                 : t('games.undercover.room.agents_count', { defaultValue: '{{count}} agent', count: players.length })}
             </span>
             {round > 0 && state !== 'ended' && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 normal-case tracking-wider">{t('games.undercover.room.round_badge', { defaultValue: 'Manche {{round}}', round })}</span>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 normal-case tracking-wider">
+                {t('games.undercover.room.round_badge', { defaultValue: 'Manche {{round}}', round })}
+              </span>
             )}
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full normal-case tracking-wider ${isPublic ? 'bg-green-500/15 text-green-400' : 'bg-white/10 text-white/60'}`}>
-              {isPublic ? <Globe className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}{isPublic ? t('games.undercover.visibility.public', 'Public') : t('games.undercover.visibility.private', 'Privé')}
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full normal-case tracking-wider ${
+                isPublic ? 'bg-green-500/15 text-green-400' : 'bg-white/10 text-white/60'
+              }`}
+            >
+              {isPublic ? <Globe className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+              {isPublic ? t('games.undercover.visibility.public', 'Public') : t('games.undercover.visibility.private', 'Privé')}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
@@ -221,7 +169,11 @@ const UndercoverRoom: React.FC = () => {
               className="group inline-flex items-center gap-3 rounded-2xl border-2 border-red-500/40 bg-red-500/10 hover:bg-red-500/20 px-5 py-2.5 transition-all"
             >
               <span className="text-3xl sm:text-4xl font-black tracking-[0.25em] text-red-400 font-mono">{code}</span>
-              {copied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-red-400 opacity-60 group-hover:opacity-100" />}
+              {copied ? (
+                <Check className="w-5 h-5 text-green-400" />
+              ) : (
+                <Copy className="w-5 h-5 text-red-400 opacity-60 group-hover:opacity-100" />
+              )}
             </button>
           </div>
           <p className="mt-3 text-sm font-bold uppercase tracking-widest text-white/40">{STATUS[state]}</p>
@@ -231,50 +183,15 @@ const UndercoverRoom: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Roster ─────────────────────────────────────── */}
         <div className={`${panel} p-6 h-fit lg:col-span-1`}>
-          <h3 className="text-[11px] font-black uppercase opacity-40 mb-5 tracking-[0.25em] flex items-center gap-2">
-            <Users className="w-4 h-4" /> {t('games.undercover.room.roster_title', "Unité d'élite")}
-          </h3>
-          <div className="space-y-2.5">
-            {players.length === 0 && <p className="text-sm italic opacity-30">{t('games.undercover.room.waiting_agents', "En attente d'agents…")}</p>}
-            {players.map((p, i) => {
-              const isMe = p.id === myId;
-              const dead = p.alive === false;
-              const voted = state === 'playing' && p.id === voteTarget;
-              const clickable = state === 'playing' && !isMe && iAmAlive && !dead;
-              const meta = roleMeta(p.role);
-              const showRole = state === 'ended' || dead;
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => castVote(p.id)}
-                  disabled={!clickable}
-                  className={`w-full flex items-center gap-3 p-3 rounded-2xl border-2 text-left transition-all ${
-                    dead ? 'border-white/5 bg-white/[0.01] opacity-50'
-                    : voted ? 'border-red-500 bg-red-500/10'
-                    : clickable ? 'border-white/5 bg-white/[0.03] hover:border-red-500/50 hover:bg-red-500/5 cursor-pointer'
-                    : 'border-white/5 bg-white/[0.03] cursor-default'
-                  }`}
-                >
-                  <div className={`relative w-11 h-11 rounded-xl grid place-items-center font-black italic shadow-lg shrink-0 ${dead ? 'bg-white/10 text-white/40' : isMe ? 'bg-yellow-400 text-black' : 'bg-gradient-to-br from-navy-700 to-navy-900 text-white/80'}`}>
-                    {dead ? <Skull className="w-5 h-5" /> : (p.name || '?')[0].toUpperCase()}
-                    <span className="absolute -bottom-1 -right-1 text-[8px] font-black bg-black/80 text-white/60 rounded-md px-1 leading-tight">{String(i + 1).padStart(2, '0')}</span>
-                  </div>
-                  <div className="min-w-0 flex-grow">
-                    <span className={`font-bold truncate block ${dead ? 'text-white/50 line-through' : 'text-white'}`}>{p.name}{isMe && <span className="text-yellow-400/70"> · {t('games.undercover.room.you', 'toi')}</span>}</span>
-                    {showRole && p.role ? (
-                      <span className={`text-[11px] font-black uppercase ${meta.cls}`}>
-                        {meta.label}{p.role !== 'MrWhite' && p.word ? ` · ${p.word}` : ''}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/25">{dead ? t('games.undercover.room.eliminated', 'Éliminé') : t('games.undercover.room.agent', 'Agent')}</span>
-                    )}
-                  </div>
-                  {p.is_host && <Crown className="w-4 h-4 text-yellow-400 shrink-0" />}
-                  {state === 'playing' && !dead && p.has_voted && <Check className="w-4 h-4 text-green-400 shrink-0" />}
-                </button>
-              );
-            })}
-          </div>
+          <UndercoverGameBoard
+            players={players}
+            myId={myId}
+            voteTarget={voteTarget}
+            state={state}
+            iAmAlive={iAmAlive}
+            castVote={castVote}
+            roleMeta={roleMeta}
+          />
         </div>
 
         {/* ── Game + chat ─────────────────────────────────── */}
@@ -283,264 +200,51 @@ const UndercoverRoom: React.FC = () => {
             {/* LOBBY */}
             {state === 'lobby' && (
               <div className="space-y-7">
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.25em] text-yellow-400/70 mb-2">{t('games.undercover.room.codename_label', 'Nom de code')} {me?.name ? `· ${me.name}` : ''}</p>
-                  <div className="flex gap-3">
-                    <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') submitName(); }}
-                      placeholder={t('games.undercover.room.codename_placeholder', "Choisis un pseudo d'agent…")}
-                      maxLength={15}
-                      aria-label={t('games.undercover.room.codename_label', 'Nom de code')}
-                      className="flex-grow p-3.5 rounded-2xl bg-white/[0.04] border-2 border-white/10 focus:border-yellow-400 outline-none font-bold text-white placeholder:text-white/25 transition-colors"
-                    />
-                    <button onClick={submitName} className="px-6 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic uppercase tracking-wide transition-colors">{t('common.validate', 'Valider')}</button>
-                  </div>
-                </div>
-
-                {isHost ? (
-                  <>
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">{t('games.undercover.room.visibility_label', 'Visibilité du salon')}</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => applySettings({ visibility: 'public' })}
-                          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${isPublic ? 'border-green-500 bg-green-500/15 text-green-400' : 'border-white/10 text-white/40 hover:border-green-500/40'}`}
-                        ><Globe className="w-3.5 h-3.5" /> {t('games.undercover.visibility.public', 'Public')}</button>
-                        <button
-                          onClick={() => applySettings({ visibility: 'private' })}
-                          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${!isPublic ? 'border-red-500 bg-red-500/15 text-red-400' : 'border-white/10 text-white/40 hover:border-red-500/40'}`}
-                        ><EyeOff className="w-3.5 h-3.5" /> {t('games.undercover.visibility.private', 'Privé')}</button>
-                      </div>
-                      <p className="mt-2 text-[11px] text-white/35 italic">
-                        {isPublic ? t('games.undercover.room.public_hint', 'Visible dans la liste des salons publics — tout le monde peut rejoindre.') : t('games.undercover.room.private_hint', "Accessible uniquement via le code ou l'URL.")}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">{t('games.undercover.room.categories_label', 'Catégories à inclure')}</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {CATEGORIES.map((c) => {
-                          const on = categories.includes(c.key);
-                          return (
-                            <button
-                              key={c.key}
-                              onClick={() => toggleCategory(c.key)}
-                              className={`flex items-center gap-2 py-2.5 px-3 rounded-xl border-2 text-xs font-black uppercase transition-all ${on ? 'border-red-500 bg-red-500/15 text-red-400' : 'border-white/10 text-white/40 hover:border-red-500/40'}`}
-                            >
-                              <span className={`w-4 h-4 rounded grid place-items-center border-2 shrink-0 ${on ? 'bg-red-500 border-red-500' : 'border-white/25'}`}>
-                                {on && <Check className="w-3 h-3 text-white" />}
-                              </span>
-                              <span className="truncate">{c.label}{c.anchor && <span className="text-yellow-400/70"> ⚓</span>}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <p className={`mt-2 text-[11px] italic ${hasAnchor ? 'text-white/35' : 'text-red-400'}`}>
-                        {t('games.undercover.room.anchor_hint', '⚓ Au moins une catégorie ancre (anime/manga/perso) doit être cochée — chaque paire en garde un mot.')}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">{t('games.undercover.room.difficulty_label', 'Difficulté · popularité')}</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {DIFFS.map((d) => (
-                          <button
-                            key={d}
-                            onClick={() => applySettings({ difficulty: d })}
-                            className={`py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${difficulty === d ? 'border-red-500 bg-red-500/15 text-red-400' : 'border-white/10 text-white/40 hover:border-red-500/40'}`}
-                          >{DIFF_LABEL[d]}</button>
-                        ))}
-                      </div>
-                      <p className="mt-2 text-[11px] text-white/35 italic">{DIFF_HINT[difficulty]} {t('games.undercover.room.difficulty_hint_suffix', "— plus c'est dur, plus les œuvres sont obscures.")}</p>
-                    </div>
-
-                    {/* Sliders : intrus + Mr. White, bornés par la taille du lobby */}
-                    <div className="space-y-6">
-                      <div>
-                        <div className="flex items-center justify-between mb-2.5">
-                          <p className="text-[11px] font-black uppercase tracking-[0.25em] text-red-400/80 flex items-center gap-1.5"><Vote className="w-3.5 h-3.5" /> {t('games.undercover.room.intruders_label', 'Intrus')}</p>
-                          <span className="min-w-9 text-center px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 text-base font-black tabular-nums shadow-[0_0_14px_-4px_rgba(239,68,68,0.6)]">{under}</span>
-                        </div>
-                        <input
-                          type="range" min={1} max={maxUnderSlider} value={under}
-                          onChange={(e) => applySettings({ num_undercovers: Number(e.target.value) })}
-                          className="uc-slider"
-                          style={sliderStyle(under, 1, maxUnderSlider, '#ef4444')}
-                          aria-label={t('games.undercover.room.intruders_aria', "Nombre d'intrus")}
-                        />
-                        <div className="flex justify-between mt-1.5 text-[10px] font-bold text-white/25 tabular-nums"><span>1</span><span>{t('games.undercover.room.max_value', { defaultValue: 'max {{value}}', value: maxUnderSlider })}</span></div>
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-2.5">
-                          <p className="text-[11px] font-black uppercase tracking-[0.25em] text-purple-300/80 flex items-center gap-1.5"><Ghost className="w-3.5 h-3.5" /> Mr. White</p>
-                          <span className="min-w-9 text-center px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-300 text-base font-black tabular-nums shadow-[0_0_14px_-4px_rgba(192,132,252,0.6)]">{white}</span>
-                        </div>
-                        <input
-                          type="range" min={0} max={maxWhiteSlider} value={white}
-                          onChange={(e) => applySettings({ num_mrwhites: Number(e.target.value) })}
-                          className="uc-slider"
-                          style={sliderStyle(white, 0, maxWhiteSlider, '#c084fc')}
-                          aria-label={t('games.undercover.room.mrwhite_aria', 'Nombre de Mr. White')}
-                        />
-                        <div className="flex justify-between mt-1.5 text-[10px] font-bold text-white/25 tabular-nums"><span>0</span><span>{t('games.undercover.room.max_value', { defaultValue: 'max {{value}}', value: maxWhiteSlider })}</span></div>
-                        <p className="mt-2 text-[11px] text-white/35 italic">{t('games.undercover.room.mrwhite_hint', "Le Mr. White n'a pas de mot : éliminé, il doit deviner celui des civils pour gagner.")}</p>
-                      </div>
-                      {/* Composition bar */}
-                      <div>
-                        <div className="flex h-2.5 rounded-full overflow-hidden bg-white/5">
-                          {civilsCount > 0 && <div className="bg-green-500/70" style={{ width: `${(civilsCount / Math.max(1, players.length)) * 100}%` }} />}
-                          {under > 0 && <div className="bg-red-500/70" style={{ width: `${(under / Math.max(1, players.length)) * 100}%` }} />}
-                          {white > 0 && <div className="bg-purple-400/70" style={{ width: `${(white / Math.max(1, players.length)) * 100}%` }} />}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 mt-3 text-[11px] font-black uppercase tracking-wider">
-                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 text-green-400"><span className="w-2 h-2 rounded-full bg-green-500" />{t('games.undercover.room.civils_count', { defaultValue: '{{count}} civils', count: civilsCount })}</span>
-                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400"><span className="w-2 h-2 rounded-full bg-red-500" />{t('games.undercover.room.intruders_count', { defaultValue: '{{count}} intrus', count: under })}</span>
-                          {white > 0 && <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300"><span className="w-2 h-2 rounded-full bg-purple-400" />{t('games.undercover.room.mrwhite_count', { defaultValue: '{{count}} Mr. White', count: white })}</span>}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <button
-                        onClick={() => sendAction('start_game')}
-                        disabled={players.length < MIN_PLAYERS || !hasAnchor}
-                        className="w-full py-4 rounded-2xl bg-red-600 enabled:hover:bg-red-500 text-white font-black italic uppercase tracking-widest text-lg shadow-[0_10px_30px_-10px_rgba(239,68,68,0.7)] transition-all enabled:hover:scale-[1.01] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        <Play className="w-5 h-5 fill-current" /> {t('games.undercover.room.start_button', 'Lancer la mission')}
-                      </button>
-                      {players.length < MIN_PLAYERS && (
-                        <p className="mt-3 text-center text-[11px] font-bold uppercase tracking-widest text-white/35 flex items-center justify-center gap-1.5">
-                          <Lock className="w-3.5 h-3.5" /> {t('games.undercover.room.min_players_hint', { defaultValue: 'Min. {{count}} agents — partage le code ci-dessus', count: MIN_PLAYERS })}
-                        </p>
-                      )}
-                      {players.length >= MIN_PLAYERS && !hasAnchor && (
-                        <p className="mt-3 text-center text-[11px] font-bold uppercase tracking-widest text-red-400 flex items-center justify-center gap-1.5">
-                          <Lock className="w-3.5 h-3.5" /> {t('games.undercover.room.anchor_required', 'Coche au moins une catégorie ancre (anime/manga/perso)')}
-                        </p>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-8">
-                    <Radio className="w-8 h-8 text-white/20 mx-auto mb-3 animate-pulse" />
-                    <p className="opacity-40 italic">{t('games.undercover.room.waiting_host', "En attente du briefing par le chef d'unité…")}</p>
-                  </div>
-                )}
+                <UndercoverJoinForm name={name} setName={setName} submitName={submitName} meName={me?.name} />
+                <UndercoverLobbySettings
+                  isHost={isHost}
+                  isPublic={isPublic}
+                  categories={categories}
+                  difficulty={difficulty}
+                  under={under}
+                  white={white}
+                  players={players}
+                  civilsCount={civilsCount}
+                  maxUnderSlider={maxUnderSlider}
+                  maxWhiteSlider={maxWhiteSlider}
+                  applySettings={applySettings}
+                  toggleCategory={toggleCategory}
+                  sendAction={sendAction}
+                  MIN_PLAYERS={MIN_PLAYERS}
+                />
               </div>
             )}
 
-            {/* PLAYING / MR. WHITE GUESS */}
-            {(state === 'playing' || state === 'mrwhite_guess') && (
-              <div className="space-y-5">
-                {/* My secret word (or Mr. White card) */}
-                {isMrWhite ? (
-                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-purple-500/15 to-transparent border-2 border-purple-400/40">
-                    <div className="w-16 h-20 rounded-xl bg-purple-500/15 grid place-items-center"><Ghost className="w-7 h-7 text-purple-300" /></div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-purple-300">{t('games.undercover.room.you_are_mrwhite', 'Tu es Mr. White')}</p>
-                      <p className="text-lg font-black italic text-white leading-tight">{t('games.undercover.room.mrwhite_card_text', 'Pas de mot — bluffe, devine, survis.')}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-yellow-400/15 to-transparent border-2 border-yellow-400/40">
-                    {myRole.image
-                      ? <img src={myRole.image} alt="" className="w-16 h-20 object-cover rounded-xl shadow-lg" />
-                      : <div className="w-16 h-20 rounded-xl bg-white/10 grid place-items-center"><Lock className="w-6 h-6 text-white/30" /></div>}
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-yellow-400">{t('games.undercover.room.secret_word_label', 'Ton mot secret')}</p>
-                      <p className="text-2xl font-black italic text-white">{myRole.word ?? '…'}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Mr. White guess sub-state */}
-                {state === 'mrwhite_guess' ? (
-                  iAmPendingWhite ? (
-                    <form onSubmit={submitGuess} className="p-4 rounded-2xl bg-purple-500/10 border-2 border-purple-400/50 space-y-3">
-                      <p className="text-sm text-white/85 flex items-start gap-2"><HelpCircle className="w-5 h-5 text-purple-300 shrink-0 mt-0.5" /> {t('games.undercover.room.guess_prompt_before', 'Tu es éliminé ! Devine le mot des')} <b className="text-green-400">{t('games.undercover.room.guess_prompt_civils', 'civils')}</b>{t('games.undercover.room.guess_prompt_after', ' — si tu trouves, tu gagnes la partie.')}</p>
-                      <div className="flex gap-3">
-                        <input
-                          value={guess}
-                          onChange={(e) => setGuess(e.target.value)}
-                          placeholder={t('games.undercover.room.guess_placeholder', 'Le mot des civils…')}
-                          aria-label={t('games.undercover.room.guess_aria', 'Deviner le mot')}
-                          autoFocus
-                          className="flex-grow p-3.5 rounded-2xl bg-white/[0.04] border-2 border-purple-400/40 focus:border-purple-300 outline-none font-bold text-white placeholder:text-white/25"
-                        />
-                        <button type="submit" className="px-6 rounded-2xl bg-purple-500 hover:bg-purple-400 text-white font-black italic uppercase tracking-wide transition-colors">{t('games.undercover.room.guess_button', 'Deviner')}</button>
-                      </div>
-                    </form>
-                  ) : (
-                    <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-400/20 text-sm text-white/80 flex items-center gap-3">
-                      <Ghost className="w-5 h-5 text-purple-300 shrink-0 animate-pulse" />
-                      <span><b className="text-purple-300">{pendingWhiteName}</b>{t('games.undercover.room.pending_white_status', ' (Mr. White) a été éliminé et tente de deviner le mot des civils…')}</span>
-                    </div>
-                  )
-                ) : (
-                  <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/20 text-sm text-white/80 flex items-start gap-3">
-                    <Vote className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                    {iAmAlive ? (
-                      <span>{t('games.undercover.room.vote_hint_before', 'Décris ton mot sans le nommer, puis')} <b className="text-red-400">{t('games.undercover.room.vote_hint_click', 'clique un agent vivant')}</b> {t('games.undercover.room.vote_hint_after', 'pour voter. Quand tout le monde a voté, le plus visé est éliminé (égalité → on revote).')}</span>
-                    ) : (
-                      <span className="italic text-white/50">{t('games.undercover.room.spectator_hint', 'Tu es éliminé — observe la partie en spectateur.')}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ENDED */}
-            {state === 'ended' && (
-              <div className="space-y-5">
-                <div className={`p-6 rounded-2xl text-center border-2 ${winnerBanner().cls}`}>
-                  <p className="font-black text-2xl italic manga-font text-white">{winnerBanner().title}</p>
-                  <p className="mt-2 font-bold text-white/80">{winnerBanner().sub}</p>
-                  <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm">
-                    <span className="px-3 py-1.5 rounded-xl bg-green-500/10 text-green-400 font-bold">{t('games.undercover.room.civil_word_label', 'Mot civil :')} <span className="text-white">{civilWord}</span></span>
-                    <span className="px-3 py-1.5 rounded-xl bg-red-500/10 text-red-400 font-bold">{t('games.undercover.room.undercover_word_label', 'Mot intrus :')} <span className="text-white">{undercoverWord}</span></span>
-                  </div>
-                </div>
-                {isHost && (
-                  <button onClick={() => sendAction('back_to_lobby')} className="w-full py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic uppercase tracking-wide flex items-center justify-center gap-2 transition-colors">
-                    <RotateCcw className="w-5 h-5" /> {t('games.undercover.room.new_game', 'Nouvelle partie')}
-                  </button>
-                )}
-              </div>
+            {/* PLAYING / MR. WHITE GUESS / ENDED */}
+            {state !== 'lobby' && (
+              <UndercoverActionCenter
+                state={state}
+                isMrWhite={isMrWhite}
+                myRole={myRole}
+                iAmPendingWhite={iAmPendingWhite}
+                pendingWhiteName={pendingWhiteName}
+                iAmAlive={iAmAlive}
+                guess={guess}
+                setGuess={setGuess}
+                submitGuess={submitGuess}
+                result={result}
+                civilWord={civilWord}
+                undercoverWord={undercoverWord}
+                isHost={isHost}
+                sendAction={sendAction}
+                winnerBanner={winnerBanner}
+              />
             )}
           </div>
 
           {/* Comms / chat */}
           <div className={`${panel} p-6 flex flex-col`}>
-            <h3 className="text-[11px] font-black uppercase opacity-40 mb-3 tracking-[0.25em] flex items-center gap-2">
-              <Radio className="w-4 h-4" /> {t('games.undercover.room.chat_title', "Canal d'infiltration")}
-            </h3>
-            <div className="flex-grow bg-black/40 rounded-2xl p-5 mb-4 overflow-y-auto max-h-72 min-h-[150px] border border-white/5 custom-scrollbar font-mono">
-              {messages.length === 0 && <p className="text-center py-12 opacity-20 italic font-sans">{t('games.undercover.room.chat_empty', 'En attente de communications…')}</p>}
-              {messages.map((msg, i) => (
-                <div key={i} className={`mb-2.5 ${msg.is_system ? 'text-center' : ''}`}>
-                  {msg.is_system ? (
-                    <span className="text-[11px] font-black uppercase tracking-widest text-yellow-400/50">— {msg.text} —</span>
-                  ) : (
-                    <p className="text-sm">
-                      <span className="text-red-400/70 font-bold">{msg.user}&gt; </span>
-                      <span className="text-white/85">{msg.text}</span>
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-            <form onSubmit={sendChat} className="flex gap-3">
-              <input
-                value={chat}
-                onChange={(e) => setChat(e.target.value)}
-                placeholder={t('games.undercover.room.chat_placeholder', "Message d'infiltration…")}
-                aria-label={t('games.undercover.room.chat_aria', 'Message')}
-                maxLength={100}
-                className="flex-grow p-3.5 rounded-2xl bg-white/[0.04] border-2 border-white/10 focus:border-red-500 outline-none font-medium text-white placeholder:text-white/25 transition-colors"
-              />
-              <button type="submit" className="px-5 rounded-2xl bg-red-600 hover:bg-red-500 text-white transition-colors"><Send className="w-5 h-5" /></button>
-            </form>
+            <UndercoverChatPanel messages={messages} chat={chat} setChat={setChat} sendChat={sendChat} />
           </div>
         </div>
       </div>
