@@ -25,7 +25,7 @@ const AboutPage: React.FC = () => {
       title: t('legal.about.tech.title', 'La technologie'),
       body: t(
         'legal.about.tech.body',
-        'La plateforme combine un moteur de raisonnement par IA, une base de connaissances en graphe (Neo4j), de la recherche vectorielle sémantique et des modèles génératifs (image, voix, texte). Les jeux de logique CPU restent gratuits ; les fonctionnalités GPU/IA fonctionnent avec un système de crédits appelés Berrix.',
+        "La plateforme combine un moteur de raisonnement par IA, une base de connaissances en graphe (Neo4j), de la recherche vectorielle sémantique et des modèles génératifs (image, voix, texte). Les jeux de logique restent gratuits ; les fonctionnalités GPU/IA utilisent des crédits appelés Berrix, que l'on gagne en jouant et en regardant des publicités récompensées — aucun achat n'est nécessaire.",
       ),
     },
     {

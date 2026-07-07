@@ -2380,7 +2380,7 @@
         "title": "Our mission"
       },
       "tech": {
-        "body": "The platform combines an AI reasoning engine, a graph knowledge base (Neo4j), semantic vector search, and generative models (image, voice, text). CPU logic games remain free; GPU/AI features run on a credit system called Berrix.",
+        "body": "The platform combines an AI reasoning engine, a graph knowledge base (Neo4j), semantic vector search, and generative models (image, voice, text). Logic games stay free; GPU/AI features use credits called Berrix, earned by playing and watching rewarded ads — no purchase required.",
         "title": "The technology"
       },
       "title": "About Animetix"
@@ -2417,7 +2417,7 @@
         "title": "Your rights (GDPR)"
       },
       "s_third": {
-        "p1": "We rely on processors that handle certain data on our behalf: Google AdSense (advertising), Google/Firebase (authentication), Stripe (Berrix payments), and AI inference providers for the Labs features. Each applies its own privacy policy.",
+        "p1": "We rely on processors that handle certain data on our behalf: Google AdSense (advertising and rewarded ads), Google/Firebase (authentication), and AI inference providers for the Labs features. Each applies its own privacy policy. We do not sell your personal data.",
         "title": "Third-party services"
       },
       "title": "Privacy Policy",

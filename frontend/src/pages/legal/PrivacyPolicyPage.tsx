@@ -51,7 +51,7 @@ const PrivacyPolicyPage: React.FC = () => {
       paragraphs: [
         t(
           'legal.privacy.s_third.p1',
-          "Nous nous appuyons sur des sous-traitants qui traitent certaines données pour notre compte : Google AdSense (publicité), Google/Firebase (authentification), Stripe (paiements des Berrix), ainsi que des fournisseurs d'inférence IA pour les fonctionnalités des Labs. Chacun applique sa propre politique de confidentialité.",
+          "Nous nous appuyons sur des sous-traitants qui traitent certaines données pour notre compte : Google AdSense (publicité et publicités récompensées), Google/Firebase (authentification), ainsi que des fournisseurs d'inférence IA pour les fonctionnalités des Labs. Chacun applique sa propre politique de confidentialité. Nous ne vendons pas vos données personnelles.",
         ),
       ],
     },
