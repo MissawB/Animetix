@@ -2,13 +2,20 @@ import { useToastStore } from '../store/toastStore';
 import { usePersonalizationStore } from '../store/personalizationStore';
 import { auth } from './firebase';
 
-export const apiClient = async (url: string, options: RequestInit & { skipToast?: boolean; isFormData?: boolean } = {}) => {
-  const { skipToast, isFormData, ...fetchOptions } = options;
+export const apiClient = async (
+  url: string,
+  options: RequestInit & {
+    skipToast?: boolean;
+    isFormData?: boolean;
+    responseType?: 'json' | 'blob';
+  } = {},
+) => {
+  const { skipToast, isFormData, responseType = 'json', ...fetchOptions } = options;
   const defaultHeaders: Record<string, string> = {
     'X-Requested-With': 'XMLHttpRequest',
   };
 
-  if (!isFormData) {
+  if (!isFormData && responseType === 'json') {
     defaultHeaders['Content-Type'] = 'application/json';
   }
 
@@ -40,8 +47,12 @@ export const apiClient = async (url: string, options: RequestInit & { skipToast?
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
       // DRF surfaces errors as `detail`; our views use `error`/`message`.
-      const errorMessage = errorData?.message || errorData?.error || errorData?.detail || `Erreur ${response.status}: Impossible de récupérer les données.`;
-      
+      const errorMessage =
+        errorData?.message ||
+        errorData?.error ||
+        errorData?.detail ||
+        `Erreur ${response.status}: Impossible de récupérer les données.`;
+
       // Déclenchement global du Toast
       if (!skipToast) {
         useToastStore.getState().addToast(errorMessage, 'error');
@@ -57,6 +68,10 @@ export const apiClient = async (url: string, options: RequestInit & { skipToast?
     // Gérer les retours 204 No Content
     if (response.status === 204) return null;
 
+    if (responseType === 'blob') {
+      return response.blob();
+    }
+
     const data = await response.json();
 
     // Personalization Interceptor
@@ -71,7 +86,9 @@ export const apiClient = async (url: string, options: RequestInit & { skipToast?
     if (err.name === 'TypeError') {
       // Erreur de réseau (API injoignable, CORS, etc.)
       if (!skipToast) {
-        useToastStore.getState().addToast('Serveur injoignable. Vérifiez votre connexion.', 'error');
+        useToastStore
+          .getState()
+          .addToast('Serveur injoignable. Vérifiez votre connexion.', 'error');
       }
     }
     throw error;

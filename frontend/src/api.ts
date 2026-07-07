@@ -1,8 +1,8 @@
-import { 
-  User, 
-  AppConfig, 
-  MediaItem, 
-  Profile, 
+import {
+  User,
+  AppConfig,
+  MediaItem,
+  Profile,
   SocialDashboardData,
   AkinetixState,
   DailyChallenge,
@@ -12,11 +12,10 @@ import {
   AIFeedback,
   ClassicGameState,
   VideoSegment,
-  OpenDataset
+  OpenDataset,
 } from './types';
 import type { components } from './types/api';
 import { apiClient } from './utils/apiClient';
-import { auth } from './utils/firebase';
 
 // --- Config API ---
 export async function getAppConfig(): Promise<AppConfig> {
@@ -39,7 +38,10 @@ export async function searchMediaByImage(file: File, mediaType = 'Anime'): Promi
 }
 
 // --- Classic Game API ---
-export async function startClassicGame(mediaType = 'anime', difficulty = 'normal'): Promise<ClassicGameState> {
+export async function startClassicGame(
+  mediaType = 'anime',
+  difficulty = 'normal',
+): Promise<ClassicGameState> {
   return apiClient('/api/v1/game/classic/start/', {
     method: 'POST',
     body: JSON.stringify({ media_type: mediaType, difficulty }),
@@ -92,7 +94,10 @@ export async function getProfile(username: string): Promise<Profile> {
   return apiClient(`/api/v1/profile/${username}/`);
 }
 
-export async function updateAccountSettings(data: { tier?: string; custom_username_color?: string }): Promise<{ status: string; tier: string; custom_username_color?: string }> {
+export async function updateAccountSettings(data: {
+  tier?: string;
+  custom_username_color?: string;
+}): Promise<{ status: string; tier: string; custom_username_color?: string }> {
   return apiClient('/api/v1/profiles/update_settings/', {
     method: 'PATCH',
     body: JSON.stringify(data),
@@ -224,7 +229,11 @@ export async function logoutUser(): Promise<void> {
 }
 
 // --- Graph API ---
-export async function getGraphNeighborhood(id: string, type: string, depth: number = 1): Promise<GraphData> {
+export async function getGraphNeighborhood(
+  id: string,
+  type: string,
+  depth: number = 1,
+): Promise<GraphData> {
   return apiClient(`/api/v1/graph/neighbors/?id=${id}&type=${type}&depth=${depth}`);
 }
 
@@ -234,7 +243,12 @@ export interface CompanionResponse {
   history: { role: string; content: string }[];
 }
 
-export async function interactWithCompanion(mentorId: string, message: string, contextUrl: string = '', customPersona?: string): Promise<CompanionResponse> {
+export async function interactWithCompanion(
+  mentorId: string,
+  message: string,
+  contextUrl: string = '',
+  customPersona?: string,
+): Promise<CompanionResponse> {
   return apiClient('/api/v1/companion/interact/', {
     method: 'POST',
     body: JSON.stringify({
@@ -255,9 +269,9 @@ export interface VsBattleRequest {
 }
 
 // Types générés depuis le schéma OpenAPI backend (run_vs_battle).
-export type CombatCharacter = components["schemas"]["CombatCharacter"];
-export type DebateTurn = components["schemas"]["DebateTurn"];
-export type VsBattleResult = components["schemas"]["VsBattleResult"];
+export type CombatCharacter = components['schemas']['CombatCharacter'];
+export type DebateTurn = components['schemas']['DebateTurn'];
+export type VsBattleResult = components['schemas']['VsBattleResult'];
 
 export async function runVsBattle(params: VsBattleRequest): Promise<VsBattleResult> {
   return apiClient('/api/v1/game/vs_battle/run/', {
@@ -304,7 +318,9 @@ export async function getClubEventDetails(eventId: number): Promise<ClubEvent> {
   return apiClient(`/api/v1/club-events/${eventId}/`);
 }
 
-export async function toggleEventParticipation(eventId: number): Promise<{ status: string; participants_count: number }> {
+export async function toggleEventParticipation(
+  eventId: number,
+): Promise<{ status: string; participants_count: number }> {
   return apiClient(`/api/v1/club-events/${eventId}/join/`, {
     method: 'POST',
   });
@@ -318,7 +334,11 @@ export async function createClubEvent(data: Partial<ClubEvent>): Promise<ClubEve
 }
 
 // --- Labs API ---
-export async function cloneVoice(text: string, audioFile: File, pitch: number): Promise<{ audio_data: string }> {
+export async function cloneVoice(
+  text: string,
+  audioFile: File,
+  pitch: number,
+): Promise<{ audio_data: string }> {
   const formData = new FormData();
   formData.append('target_text', text);
   formData.append('reference_audio', audioFile);
@@ -331,7 +351,9 @@ export async function cloneVoice(text: string, audioFile: File, pitch: number): 
   });
 }
 
-export async function searchVideoSegments(query: string): Promise<{ status: string; results: VideoSegment[] }> {
+export async function searchVideoSegments(
+  query: string,
+): Promise<{ status: string; results: VideoSegment[] }> {
   return apiClient(`/api/v1/labs/video/search/?q=${encodeURIComponent(query)}`);
 }
 
@@ -340,27 +362,10 @@ export async function getOpenDatasets(): Promise<{ status: string; datasets: Ope
 }
 
 export async function downloadDataset(datasetId: string, filename: string): Promise<void> {
-  const url = `/api/v1/mlops/open-data/download/${datasetId}/`;
-  const defaultHeaders: Record<string, string> = {
-    'X-Requested-With': 'XMLHttpRequest',
-  };
+  const blob: Blob = await apiClient(`/api/v1/mlops/open-data/download/${datasetId}/`, {
+    responseType: 'blob',
+  });
 
-  const firebaseUser = auth.currentUser;
-  if (firebaseUser) {
-    try {
-      const token = await firebaseUser.getIdToken();
-      defaultHeaders['Authorization'] = `Bearer ${token}`;
-    } catch (err) {
-      console.error('Failed to get Firebase ID Token', err);
-    }
-  }
-
-  const response = await fetch(url, { headers: defaultHeaders });
-  if (!response.ok) {
-    throw new Error(`Failed to download dataset: ${response.statusText}`);
-  }
-
-  const blob = await response.blob();
   const downloadUrl = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = downloadUrl;
@@ -381,7 +386,11 @@ export async function getTrackerConnections(): Promise<TrackerConnection[]> {
   return apiClient('/api/v1/profile/trackers/');
 }
 
-export async function linkTracker(tracker: string, username: string, token: string): Promise<{ success: boolean }> {
+export async function linkTracker(
+  tracker: string,
+  username: string,
+  token: string,
+): Promise<{ success: boolean }> {
   return apiClient('/api/v1/profile/trackers/link/', {
     method: 'POST',
     body: JSON.stringify({ tracker, username, token }),
@@ -395,7 +404,10 @@ export async function unlinkTracker(tracker: string): Promise<{ success: boolean
   });
 }
 
-export async function syncMangaProgress(mediaId: string, chapterNumber: string): Promise<{ success: boolean; results: Record<string, { success: boolean; error?: string }> }> {
+export async function syncMangaProgress(
+  mediaId: string,
+  chapterNumber: string,
+): Promise<{ success: boolean; results: Record<string, { success: boolean; error?: string }> }> {
   return apiClient(`/api/v1/media/Manga/${mediaId}/chapters/${chapterNumber}/sync/`, {
     method: 'POST',
   });

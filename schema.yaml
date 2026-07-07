@@ -69,8 +69,6 @@ paths:
         NVIDIA H100 GPUs, Ollama Inference, Neo4j Knowledge Graph.
       tags:
       - api
-      security:
-      - {}
       responses:
         '200':
           description: No response body
@@ -80,8 +78,6 @@ paths:
       description: Retrieve observability status/drift metrics.
       tags:
       - api
-      security:
-      - {}
       responses:
         '200':
           description: No response body
@@ -171,8 +167,6 @@ paths:
       description: Retrieve observability status/drift metrics.
       tags:
       - api
-      security:
-      - {}
       responses:
         '200':
           description: No response body
@@ -403,15 +397,6 @@ paths:
     get:
       operationId: api_v1_billing_wallet_balance_retrieve
       description: Récupère le solde actuel et l'historique récent des transactions.
-      tags:
-      - api
-      responses:
-        '200':
-          description: No response body
-  /api/v1/billing/wallet/checkout/:
-    post:
-      operationId: api_v1_billing_wallet_checkout_create
-      description: Crée une session Stripe Checkout pour l'achat d'un pack de Bx.
       tags:
       - api
       responses:
@@ -1159,33 +1144,9 @@ paths:
   /api/v1/developer/subscribe/:
     post:
       operationId: api_v1_developer_subscribe_create
-      description: |-
-        Mock endpoint to subscribe to the Pro tier (Local / Test Mode).
-        Sets the user's tier to 'pro' and creates mock Stripe IDs.
+      description: Active le tier Pro (gratuit/manuel — plus de facturation Stripe).
       tags:
       - api
-      responses:
-        '200':
-          description: No response body
-  /api/v1/developer/subscribe-pro/:
-    post:
-      operationId: api_v1_developer_subscribe_pro_create
-      description: Crée une session Stripe Checkout pour l'abonnement Pro API.
-      tags:
-      - api
-      responses:
-        '200':
-          description: No response body
-  /api/v1/developer/webhook/stripe/:
-    post:
-      operationId: api_v1_developer_webhook_stripe_create
-      description: |-
-        Stripe Webhook endpoint to handle checkout.session.completed
-        and subscription lifecycle events.
-      tags:
-      - api
-      security:
-      - {}
       responses:
         '200':
           description: No response body
@@ -1215,9 +1176,16 @@ paths:
   /api/v1/explore/suwayomi/extensions/:
     get:
       operationId: api_v1_explore_suwayomi_extensions_retrieve
-      description: Liste des extensions installées et disponibles dans Suwayomi/Mihon.
+      description: |-
+        Liste des extensions installées et disponibles dans Suwayomi/Mihon.
+
+        Lecture seule sur une page publique (/explore/tachidesk/) : accessible en
+        anonyme comme les sources et la recherche. Les actions (installation /
+        mise à jour) et l'import restent réservés aux utilisateurs authentifiés.
       tags:
       - api
+      security:
+      - {}
       responses:
         '200':
           description: No response body
@@ -1553,6 +1521,14 @@ paths:
       operationId: api_v1_game_animinator_ask_create
       tags:
       - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/animinator/guess/:
+    post:
+      operationId: api_v1_game_animinator_guess_create
+      tags:
+      - api
       security:
       - {}
       responses:
@@ -1581,6 +1557,17 @@ paths:
   /api/v1/game/blindtest/state/:
     get:
       operationId: api_v1_game_blindtest_state_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/blindtest/titles/:
+    get:
+      operationId: api_v1_game_blindtest_titles_retrieve
+      description: Anime titles for the guess autocomplete (same catalog used to validate).
       tags:
       - api
       security:
@@ -1628,9 +1615,32 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/game/classic/titles/:
+    get:
+      operationId: api_v1_game_classic_titles_retrieve
+      description: Catalog titles for the guess autocomplete (same catalog used to
+        validate).
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
   /api/v1/game/covertest/guess/:
     post:
       operationId: api_v1_game_covertest_guess_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/covertest/reveal/:
+    post:
+      operationId: api_v1_game_covertest_reveal_create
+      description: Ends the round and reveals the answer (used on loss / give-up).
       tags:
       - api
       security:
@@ -1651,6 +1661,21 @@ paths:
   /api/v1/game/covertest/state/:
     get:
       operationId: api_v1_game_covertest_state_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/covertest/titles/:
+    get:
+      operationId: api_v1_game_covertest_titles_retrieve
+      description: |-
+        Only manga that actually have a cover — the only guessable / valid answers.
+
+        Each entry carries its English/native aliases so players can search a manga
+        by its Japanese (romaji) name OR its English name.
       tags:
       - api
       security:
@@ -1680,6 +1705,20 @@ paths:
       description: Trouve une salle disponible ou en crée une.
       tags:
       - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/emoji/giveup/:
+    post:
+      operationId: api_v1_game_emoji_giveup_create
+      description: |-
+        Abandon the current game: reveal the answer and record a loss.
+
+        CPU game → AllowAny + throttle-exempt. No win credited.
+      tags:
+      - api
+      security:
+      - {}
       responses:
         '200':
           description: No response body
@@ -1713,6 +1752,22 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/game/emoji/suggest/:
+    get:
+      operationId: api_v1_game_emoji_suggest_retrieve
+      description: |-
+        Rich autocomplete for the guess box.
+
+        Suggestions are drawn from the SAME catalog the game validates against, so
+        every suggestion is guessable. Each entry carries the native + English title
+        and the cover image. CPU only → AllowAny + throttle-exempt.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
   /api/v1/game/paradox/move/:
     post:
       operationId: api_v1_game_paradox_move_create
@@ -1734,6 +1789,53 @@ paths:
   /api/v1/game/paradox/state/:
     get:
       operationId: api_v1_game_paradox_state_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/quiz-who/ask/:
+    post:
+      operationId: api_v1_game_quiz_who_ask_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/quiz-who/guess/:
+    post:
+      operationId: api_v1_game_quiz_who_guess_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/quiz-who/start/:
+    post:
+      operationId: api_v1_game_quiz_who_start_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/undercover/public-rooms/:
+    get:
+      operationId: api_v1_game_undercover_public_rooms_retrieve
+      description: |-
+        Lists the currently-open *public* Undercover rooms so players can browse and
+        join them. Private rooms stay hidden (reachable only by code/URL).
+
+        CPU/no-login game → AllowAny and throttle-exempt (browsing must not hit the
+        anon day cap). The cache can't enumerate keys, so the consumer keeps an index
+        of room codes; we resolve each to its live room here and prune dead ones.
       tags:
       - api
       security:
@@ -1795,6 +1897,23 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/game/vs_battle/characters/:
+    get:
+      operationId: api_v1_game_vs_battle_characters_retrieve
+      description: |-
+        Personnages sélectionnables (nom, franchise, image) pour l'Arène.
+
+        Sert la galerie de sélection : le front filtre par nom ou par franchise.
+        Trié par popularité réelle (``metadata.favourites``) car la colonne
+        ``popularity`` n'est pas renseignée pour les personnages — sinon les
+        personnages emblématiques (Goku, etc.) seraient hors de la sélection.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
   /api/v1/game/vs_battle/run/:
     post:
       operationId: api_v1_game_vs_battle_run_create
@@ -1825,6 +1944,16 @@ paths:
       operationId: api_v1_game_world_boss_attack_create
       tags:
       - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/world-boss/leaderboard/:
+    get:
+      operationId: api_v1_game_world_boss_leaderboard_retrieve
+      tags:
+      - api
+      security:
+      - {}
       responses:
         '200':
           description: No response body
@@ -1930,8 +2059,6 @@ paths:
         Uses native logprobs and XAI service.
       tags:
       - api
-      security:
-      - {}
       responses:
         '200':
           description: No response body
@@ -2034,8 +2161,6 @@ paths:
       operationId: api_v1_labs_tot_create
       tags:
       - api
-      security:
-      - {}
       responses:
         '200':
           description: No response body
@@ -2071,11 +2196,12 @@ paths:
   /api/v1/labs/video/search/:
     get:
       operationId: api_v1_labs_video_search_retrieve
-      description: Endpoint pour rechercher des moments précis dans les vidéos indexées.
+      description: |-
+        Endpoint pour rechercher des moments précis dans les vidéos indexées.
+
+        GPU/RAG : requiert login + consomme des Berrix (règle « GPU = Bx »).
       tags:
       - api
-      security:
-      - {}
       responses:
         '200':
           description: No response body
@@ -2177,6 +2303,65 @@ paths:
       - api
       security:
       - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/media/Manga/{media_id}/chapters/{chapter_number}/sync/:
+    post:
+      operationId: api_v1_media_Manga_chapters_sync_create
+      description: Synchronizes manga progress to linked third-party trackers (AniList,
+        MyAnimeList).
+      parameters:
+      - in: path
+        name: chapter_number
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/media/Manga/{media_id}/favorite/:
+    get:
+      operationId: api_v1_media_Manga_favorite_retrieve
+      description: Permet de s'abonner / désabonner (favoris) à un manga.
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_media_Manga_favorite_create
+      description: Permet de s'abonner / désabonner (favoris) à un manga.
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/media/favorites/:
+    get:
+      operationId: api_v1_media_favorites_retrieve
+      description: Liste tous les mangas favoris de l'utilisateur.
+      tags:
+      - api
       responses:
         '200':
           description: No response body
@@ -2601,6 +2786,33 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/profile/trackers/:
+    get:
+      operationId: api_v1_profile_trackers_retrieve
+      description: Lists all active tracker connections of the current user.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/profile/trackers/link/:
+    post:
+      operationId: api_v1_profile_trackers_link_create
+      description: Links or updates a tracker connection.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/profile/trackers/unlink/:
+    post:
+      operationId: api_v1_profile_trackers_unlink_create
+      description: Unlinks a tracker connection.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
   /api/v1/profiles/:
     get:
       operationId: api_v1_profiles_list
@@ -2987,6 +3199,8 @@ paths:
       operationId: api_v1_social_dashboard_retrieve
       tags:
       - api
+      security:
+      - {}
       responses:
         '200':
           description: No response body
@@ -3039,61 +3253,20 @@ paths:
       responses:
         '200':
           description: No response body
-  /api/v1/stream/agentic-rag/:
-    get:
-      operationId: api_v1_stream_agentic_rag_retrieve
-      description: Streams agentic RAG planning and solving events.
-      tags:
-      - api
-      security:
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/XaiReport'
-          description: 'Flux SSE (text/event-stream). Évènements : `thought`, `eval`,
-            `token` et `xai_report`. Le schéma décrit la charge de l''évènement `xai_report`
-            (les autres portent du texte).'
-  /api/v1/stream/animinator/:
-    get:
-      operationId: api_v1_stream_animinator_retrieve
-      description: Streams the Oracle's response and updates the game state in session.
-      tags:
-      - api
-      security:
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/stream/emoji/:
-    get:
-      operationId: api_v1_stream_emoji_retrieve
-      description: Streams emoji generation events for the UI.
-      tags:
-      - api
-      security:
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/stream/paradox/:
-    get:
-      operationId: api_v1_stream_paradox_retrieve
-      description: Streams paradox logic generation events.
-      tags:
-      - api
-      security:
-      - {}
-      responses:
-        '200':
-          description: No response body
   /api/v1/transparency/:
     get:
       operationId: api_v1_transparency_retrieve
+      description: |-
+        Vue de transparence communautaire — alimentée par des données réelles.
+
+        Chaque section est calculée à partir des tables/services existants et
+        encapsulée dans un try/except : l'endpoint étant public, il ne doit jamais
+        renvoyer 500. Les champs sans source réelle sont renvoyés à ``None`` (le
+        front applique alors ses propres valeurs de repli).
       tags:
       - api
+      security:
+      - {}
       responses:
         '200':
           description: No response body
@@ -3191,6 +3364,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/AIREvalResult'
           description: ''
+  /fr/mlops/features/:
+    get:
+      operationId: fr_mlops_features_retrieve
+      description: Query and seed user preference vectors in the Vertex AI Feature
+        Store.
+      tags:
+      - fr
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: fr_mlops_features_create
+      description: Query and seed user preference vectors in the Vertex AI Feature
+        Store.
+      tags:
+      - fr
+      responses:
+        '200':
+          description: No response body
   /fr/mlops/feedback/submit/:
     get:
       operationId: fr_mlops_feedback_submit_retrieve
@@ -3420,6 +3612,27 @@ paths:
       - fr
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/XaiReport'
+          description: ''
+  /fr/mlops/pipelines/:
+    get:
+      operationId: fr_mlops_pipelines_retrieve
+      description: Manually trigger and list Vertex AI MLOps pipelines (DPO and RAG).
+      tags:
+      - fr
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: fr_mlops_pipelines_create
+      description: Manually trigger and list Vertex AI MLOps pipelines (DPO and RAG).
+      tags:
+      - fr
+      responses:
+        '200':
           description: No response body
 components:
   schemas:
@@ -3512,9 +3725,8 @@ components:
           maxLength: 50
         xp_reward:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         rarity:
           type: string
           maxLength: 20
@@ -3664,14 +3876,12 @@ components:
           maxLength: 500
         chaos_level:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         universe_balance:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         art_style:
           type: string
           maxLength: 100
@@ -4254,14 +4464,12 @@ components:
           maxLength: 500
         chaos_level:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         universe_balance:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         art_style:
           type: string
           maxLength: 100
@@ -4395,43 +4603,36 @@ components:
           readOnly: true
         xp:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         current_streak:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         max_streak:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         last_win_date:
           type: string
           format: date
           nullable: true
         total_wins:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         total_games:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         ranked_points:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         ranked_max_points:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         rank:
           type: string
           readOnly: true
@@ -4444,9 +4645,8 @@ components:
           $ref: '#/components/schemas/TierEnum'
         wallet_balance:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         personalization_settings: {}
         has_api_key:
           type: string
@@ -4463,43 +4663,36 @@ components:
           readOnly: true
         xp:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         current_streak:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         max_streak:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         last_win_date:
           type: string
           format: date
           nullable: true
         total_wins:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         total_games:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         ranked_points:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         ranked_max_points:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         rank:
           type: string
           readOnly: true
@@ -4512,9 +4705,8 @@ components:
           $ref: '#/components/schemas/TierEnum'
         wallet_balance:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         personalization_settings: {}
         has_api_key:
           type: string

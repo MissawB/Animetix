@@ -1,6 +1,7 @@
 # --- Python ---
 __pycache__/
 *.py[cod]
+*.mo
 *$py.class
 *.so
 .Python
@@ -72,6 +73,7 @@ htmlcov/
 
 # --- Secrets ---
 .env
+frontend/.env.production
 secrets.json
 
 # --- Hugging Face & Generated Images ---

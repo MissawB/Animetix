@@ -313,7 +313,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "animetix_project.wsgi.application"
+# ASGI-only application - WSGI is not used.
+# WSGI_APPLICATION = "animetix_project.wsgi.application"
 
 # Database
 DJANGO_DB_USE_IAM = env.bool("DJANGO_DB_USE_IAM", default=IS_PRODUCTION)

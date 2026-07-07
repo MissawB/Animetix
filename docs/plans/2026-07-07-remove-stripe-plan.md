@@ -29,8 +29,9 @@
 - Modify: `backend/adapters/persistence/django_usage_adapter.py:45-60` (retirer le bloc reporting Stripe)
 - Delete: `backend/api/animetix/stripe_billing.py`
 - Modify: `backend/api/animetix/urls/api.py` (retirer 3 routes, garder la route mock)
-- Delete: `tests/adapters/test_billing_webhook.py`
 - Modify: `tests/api/test_developer_coverage.py`, `tests/backend/test_developer_billing.py` (élaguer les cas Stripe)
+
+> **Correction (2026-07-07)** : `tests/adapters/test_billing_webhook.py` NE couvre PAS Stripe — c'est le webhook GCP Cloud Billing (budget alert → `shutdown_brain_service`), une feature conservée. NE PAS le supprimer.
 
 **Interfaces:**
 - Produces: `DeveloperSubscriptionMockView.post` pose `profile.tier = "pro"` sans aucun ID Stripe ; plus aucun import de `animetix.stripe_billing` ni référence à `StripeBillingService`/`PACKS` dans developer.py.
@@ -114,11 +115,9 @@ Dans `backend/api/animetix/urls/api.py`, supprimer :
 
 CONSERVER la route vers `api_views.DeveloperSubscriptionMockView` (l.814). Retirer les `path(...)` complets (ouverture à fermeture, virgule incluse).
 
-- [ ] **Step 8: Supprimer/élaguer les tests Stripe + lint**
+- [ ] **Step 8: Élaguer les tests Stripe + lint**
 
-```bash
-git rm tests/adapters/test_billing_webhook.py
-```
+(NE PAS toucher `tests/adapters/test_billing_webhook.py` — c'est le webhook GCP budget-alert, pas Stripe.)
 
 Dans `tests/api/test_developer_coverage.py` et `tests/backend/test_developer_billing.py`, retirer les tests qui exercent `CreateBxCheckoutView`, `CreateProSubscriptionCheckoutView`, `StripeWebhookView`, `StripeBillingService.report_usage`, ou qui asservissent le mock à des IDs Stripe (ex. `assert ... stripe_customer_id`). Adapter le test du mock à la nouvelle réponse `{"status": "subscribed", "tier": "pro"}` (sans `stripe_customer_id`). Lire chaque fichier, retirer les fonctions concernées entièrement (pas de demi-assertion).
 

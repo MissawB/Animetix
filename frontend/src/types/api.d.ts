@@ -457,23 +457,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/billing/wallet/checkout/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Crée une session Stripe Checkout pour l'achat d'un pack de Bx. */
-        post: operations["api_v1_billing_wallet_checkout_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/billing/wallet/mine/": {
         parameters: {
             query?: never;
@@ -964,48 +947,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * @description Mock endpoint to subscribe to the Pro tier (Local / Test Mode).
-         *     Sets the user's tier to 'pro' and creates mock Stripe IDs.
-         */
+        /** @description Active le tier Pro (gratuit/manuel — plus de facturation Stripe). */
         post: operations["api_v1_developer_subscribe_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/developer/subscribe-pro/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Crée une session Stripe Checkout pour l'abonnement Pro API. */
-        post: operations["api_v1_developer_subscribe_pro_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/developer/webhook/stripe/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * @description Stripe Webhook endpoint to handle checkout.session.completed
-         *     and subscription lifecycle events.
-         */
-        post: operations["api_v1_developer_webhook_stripe_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1053,7 +996,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Liste des extensions installées et disponibles dans Suwayomi/Mihon. */
+        /**
+         * @description Liste des extensions installées et disponibles dans Suwayomi/Mihon.
+         *
+         *     Lecture seule sur une page publique (/explore/tachidesk/) : accessible en
+         *     anonyme comme les sources et la recherche. Les actions (installation /
+         *     mise à jour) et l'import restent réservés aux utilisateurs authentifiés.
+         */
         get: operations["api_v1_explore_suwayomi_extensions_retrieve"];
         put?: never;
         post?: never;
@@ -1331,6 +1280,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/game/animinator/guess/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["api_v1_game_animinator_guess_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/game/blindtest/guess/": {
         parameters: {
             query?: never;
@@ -1371,6 +1336,23 @@ export interface paths {
             cookie?: never;
         };
         get: operations["api_v1_game_blindtest_state_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/game/blindtest/titles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Anime titles for the guess autocomplete (same catalog used to validate). */
+        get: operations["api_v1_game_blindtest_titles_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1443,6 +1425,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/game/classic/titles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Catalog titles for the guess autocomplete (same catalog used to validate). */
+        get: operations["api_v1_game_classic_titles_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/game/covertest/guess/": {
         parameters: {
             query?: never;
@@ -1453,6 +1452,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["api_v1_game_covertest_guess_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/game/covertest/reveal/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Ends the round and reveals the answer (used on loss / give-up). */
+        post: operations["api_v1_game_covertest_reveal_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1483,6 +1499,28 @@ export interface paths {
             cookie?: never;
         };
         get: operations["api_v1_game_covertest_state_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/game/covertest/titles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Only manga that actually have a cover — the only guessable / valid answers.
+         *
+         *     Each entry carries its English/native aliases so players can search a manga
+         *     by its Japanese (romaji) name OR its English name.
+         */
+        get: operations["api_v1_game_covertest_titles_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1540,6 +1578,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/game/emoji/giveup/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Abandon the current game: reveal the answer and record a loss.
+         *
+         *     CPU game → AllowAny + throttle-exempt. No win credited.
+         */
+        post: operations["api_v1_game_emoji_giveup_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/game/emoji/guess/": {
         parameters: {
             query?: never;
@@ -1588,6 +1647,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/game/emoji/suggest/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Rich autocomplete for the guess box.
+         *
+         *     Suggestions are drawn from the SAME catalog the game validates against, so
+         *     every suggestion is guessable. Each entry carries the native + English title
+         *     and the cover image. CPU only → AllowAny + throttle-exempt.
+         */
+        get: operations["api_v1_game_emoji_suggest_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/game/paradox/move/": {
         parameters: {
             query?: never;
@@ -1628,6 +1710,78 @@ export interface paths {
             cookie?: never;
         };
         get: operations["api_v1_game_paradox_state_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/game/quiz-who/ask/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["api_v1_game_quiz_who_ask_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/game/quiz-who/guess/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["api_v1_game_quiz_who_guess_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/game/quiz-who/start/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["api_v1_game_quiz_who_start_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/game/undercover/public-rooms/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Lists the currently-open *public* Undercover rooms so players can browse and
+         *     join them. Private rooms stay hidden (reachable only by code/URL).
+         *
+         *     CPU/no-login game → AllowAny and throttle-exempt (browsing must not hit the
+         *     anon day cap). The cache can't enumerate keys, so the consumer keeps an index
+         *     of room codes; we resolve each to its live room here and prune dead ones.
+         */
+        get: operations["api_v1_game_undercover_public_rooms_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1718,6 +1872,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/game/vs_battle/characters/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Personnages sélectionnables (nom, franchise, image) pour l'Arène.
+         *
+         *     Sert la galerie de sélection : le front filtre par nom ou par franchise.
+         *     Trié par popularité réelle (``metadata.favourites``) car la colonne
+         *     ``popularity`` n'est pas renseignée pour les personnages — sinon les
+         *     personnages emblématiques (Goku, etc.) seraient hors de la sélection.
+         */
+        get: operations["api_v1_game_vs_battle_characters_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/game/vs_battle/run/": {
         parameters: {
             query?: never;
@@ -1764,6 +1942,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["api_v1_game_world_boss_attack_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/game/world-boss/leaderboard/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["api_v1_game_world_boss_leaderboard_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2183,7 +2377,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Endpoint pour rechercher des moments précis dans les vidéos indexées. */
+        /**
+         * @description Endpoint pour rechercher des moments précis dans les vidéos indexées.
+         *
+         *     GPU/RAG : requiert login + consomme des Berrix (règle « GPU = Bx »).
+         */
         get: operations["api_v1_labs_video_search_retrieve"];
         put?: never;
         post?: never;
@@ -2302,6 +2500,58 @@ export interface paths {
         };
         /** @description Détails d'un chapitre (incluant les pages). */
         get: operations["api_v1_media_Manga_chapters_retrieve_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/Manga/{media_id}/chapters/{chapter_number}/sync/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Synchronizes manga progress to linked third-party trackers (AniList, MyAnimeList). */
+        post: operations["api_v1_media_Manga_chapters_sync_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/Manga/{media_id}/favorite/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Permet de s'abonner / désabonner (favoris) à un manga. */
+        get: operations["api_v1_media_Manga_favorite_retrieve"];
+        put?: never;
+        /** @description Permet de s'abonner / désabonner (favoris) à un manga. */
+        post: operations["api_v1_media_Manga_favorite_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/favorites/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Liste tous les mangas favoris de l'utilisateur. */
+        get: operations["api_v1_media_favorites_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2652,6 +2902,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/profile/trackers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lists all active tracker connections of the current user. */
+        get: operations["api_v1_profile_trackers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profile/trackers/link/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Links or updates a tracker connection. */
+        post: operations["api_v1_profile_trackers_link_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profile/trackers/unlink/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Unlinks a tracker connection. */
+        post: operations["api_v1_profile_trackers_unlink_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profiles/": {
         parameters: {
             query?: never;
@@ -2986,74 +3287,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/stream/agentic-rag/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Streams agentic RAG planning and solving events. */
-        get: operations["api_v1_stream_agentic_rag_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/stream/animinator/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Streams the Oracle's response and updates the game state in session. */
-        get: operations["api_v1_stream_animinator_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/stream/emoji/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Streams emoji generation events for the UI. */
-        get: operations["api_v1_stream_emoji_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/stream/paradox/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Streams paradox logic generation events. */
-        get: operations["api_v1_stream_paradox_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/transparency/": {
         parameters: {
             query?: never;
@@ -3061,6 +3294,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Vue de transparence communautaire — alimentée par des données réelles.
+         *
+         *     Chaque section est calculée à partir des tables/services existants et
+         *     encapsulée dans un try/except : l'endpoint étant public, il ne doit jamais
+         *     renvoyer 500. Les champs sans source réelle sont renvoyés à ``None`` (le
+         *     front applique alors ses propres valeurs de repli).
+         */
         get: operations["api_v1_transparency_retrieve"];
         put?: never;
         post?: never;
@@ -3166,6 +3407,24 @@ export interface paths {
         get: operations["fr_mlops_evaluations_stats_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fr/mlops/features/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Query and seed user preference vectors in the Vertex AI Feature Store. */
+        get: operations["fr_mlops_features_retrieve"];
+        put?: never;
+        /** @description Query and seed user preference vectors in the Vertex AI Feature Store. */
+        post: operations["fr_mlops_features_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3279,6 +3538,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/fr/mlops/pipelines/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Manually trigger and list Vertex AI MLOps pipelines (DPO and RAG). */
+        get: operations["fr_mlops_pipelines_retrieve"];
+        put?: never;
+        /** @description Manually trigger and list Vertex AI MLOps pipelines (DPO and RAG). */
+        post: operations["fr_mlops_pipelines_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3321,7 +3598,6 @@ export interface components {
             name: string;
             description: string;
             icon: string;
-            /** Format: int64 */
             xp_reward?: number;
             rarity?: string;
         };
@@ -3381,9 +3657,7 @@ export interface components {
             scenario_text: string;
             /** Format: uri */
             image_url?: string | null;
-            /** Format: int64 */
             chaos_level?: number;
-            /** Format: int64 */
             universe_balance?: number;
             art_style?: string;
             vn_script?: unknown;
@@ -3681,9 +3955,7 @@ export interface components {
             scenario_text?: string;
             /** Format: uri */
             image_url?: string | null;
-            /** Format: int64 */
             chaos_level?: number;
-            /** Format: int64 */
             universe_balance?: number;
             art_style?: string;
             vn_script?: unknown;
@@ -3746,27 +4018,19 @@ export interface components {
         PatchedProfile: {
             readonly id?: number;
             readonly user?: components["schemas"]["User"];
-            /** Format: int64 */
             xp?: number;
-            /** Format: int64 */
             current_streak?: number;
-            /** Format: int64 */
             max_streak?: number;
             /** Format: date */
             last_win_date?: string | null;
-            /** Format: int64 */
             total_wins?: number;
-            /** Format: int64 */
             total_games?: number;
-            /** Format: int64 */
             ranked_points?: number;
-            /** Format: int64 */
             ranked_max_points?: number;
             readonly rank?: string;
             unlocked_badges?: unknown;
             custom_username_color?: string | null;
             tier?: components["schemas"]["TierEnum"];
-            /** Format: int64 */
             wallet_balance?: number;
             personalization_settings?: unknown;
             readonly has_api_key?: string;
@@ -3774,27 +4038,19 @@ export interface components {
         Profile: {
             readonly id: number;
             readonly user: components["schemas"]["User"];
-            /** Format: int64 */
             xp?: number;
-            /** Format: int64 */
             current_streak?: number;
-            /** Format: int64 */
             max_streak?: number;
             /** Format: date */
             last_win_date?: string | null;
-            /** Format: int64 */
             total_wins?: number;
-            /** Format: int64 */
             total_games?: number;
-            /** Format: int64 */
             ranked_points?: number;
-            /** Format: int64 */
             ranked_max_points?: number;
             readonly rank: string;
             unlocked_badges?: unknown;
             custom_username_color?: string | null;
             tier?: components["schemas"]["TierEnum"];
-            /** Format: int64 */
             wallet_balance?: number;
             personalization_settings?: unknown;
             readonly has_api_key: string;
@@ -4464,24 +4720,6 @@ export interface operations {
         };
     };
     api_v1_billing_wallet_balance_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    api_v1_billing_wallet_checkout_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -5380,42 +5618,6 @@ export interface operations {
             };
         };
     };
-    api_v1_developer_subscribe_pro_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    api_v1_developer_webhook_stripe_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     api_v1_explore_retrieve: {
         parameters: {
             query?: never;
@@ -5888,6 +6090,24 @@ export interface operations {
             };
         };
     };
+    api_v1_game_animinator_guess_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_game_blindtest_guess_create: {
         parameters: {
             query?: never;
@@ -5925,6 +6145,24 @@ export interface operations {
         };
     };
     api_v1_game_blindtest_state_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_game_blindtest_titles_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6014,7 +6252,43 @@ export interface operations {
             };
         };
     };
+    api_v1_game_classic_titles_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_game_covertest_guess_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_game_covertest_reveal_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6051,6 +6325,24 @@ export interface operations {
         };
     };
     api_v1_game_covertest_state_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_game_covertest_titles_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6122,6 +6414,24 @@ export interface operations {
             };
         };
     };
+    api_v1_game_emoji_giveup_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_game_emoji_guess_create: {
         parameters: {
             query?: never;
@@ -6176,6 +6486,24 @@ export interface operations {
             };
         };
     };
+    api_v1_game_emoji_suggest_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_game_paradox_move_create: {
         parameters: {
             query?: never;
@@ -6213,6 +6541,78 @@ export interface operations {
         };
     };
     api_v1_game_paradox_state_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_game_quiz_who_ask_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_game_quiz_who_guess_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_game_quiz_who_start_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_game_undercover_public_rooms_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6322,6 +6722,24 @@ export interface operations {
             };
         };
     };
+    api_v1_game_vs_battle_characters_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_game_vs_battle_run_create: {
         parameters: {
             query?: never;
@@ -6360,6 +6778,24 @@ export interface operations {
         };
     };
     api_v1_game_world_boss_attack_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_game_world_boss_leaderboard_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -6961,6 +7397,85 @@ export interface operations {
             };
         };
     };
+    api_v1_media_Manga_chapters_sync_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_number: string;
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_media_Manga_favorite_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_media_Manga_favorite_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_media_favorites_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_mlops_adapters_retrieve: {
         parameters: {
             query?: never;
@@ -7477,6 +7992,60 @@ export interface operations {
             path: {
                 username: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_profile_trackers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_profile_trackers_link_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_profile_trackers_unlink_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -8037,80 +8606,6 @@ export interface operations {
             };
         };
     };
-    api_v1_stream_agentic_rag_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Flux SSE (text/event-stream). Évènements : `thought`, `eval`, `token` et `xai_report`. Le schéma décrit la charge de l'évènement `xai_report` (les autres portent du texte). */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["XaiReport"];
-                };
-            };
-        };
-    };
-    api_v1_stream_animinator_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    api_v1_stream_emoji_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    api_v1_stream_paradox_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     api_v1_transparency_retrieve: {
         parameters: {
             query?: never;
@@ -8262,6 +8757,42 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AIREvalResult"];
                 };
+            };
+        };
+    };
+    fr_mlops_features_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    fr_mlops_features_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -8501,6 +9032,43 @@ export interface operations {
         };
     };
     fr_mlops_latent_space_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["XaiReport"];
+                };
+            };
+        };
+    };
+    fr_mlops_pipelines_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    fr_mlops_pipelines_create: {
         parameters: {
             query?: never;
             header?: never;
