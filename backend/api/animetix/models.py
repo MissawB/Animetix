@@ -149,13 +149,6 @@ class Profile(models.Model):
     tier = models.CharField(max_length=20, choices=TIERS, default="free")
     wallet_balance = models.IntegerField(default=1000)
     api_key_hash = models.CharField(max_length=255, unique=True, null=True, blank=True)
-    stripe_customer_id = models.CharField(
-        max_length=255, null=True, blank=True, db_index=True
-    )
-    stripe_subscription_id = models.CharField(max_length=255, null=True, blank=True)
-    stripe_subscription_item_id = models.CharField(
-        max_length=255, null=True, blank=True
-    )
     personalization_settings = models.JSONField(default=dict, blank=True)
 
     def set_api_key(self, raw_key: str):
