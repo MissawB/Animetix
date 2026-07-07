@@ -68,6 +68,7 @@ lightning_logs/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+/src/
 
 # --- Secrets ---
 .env
