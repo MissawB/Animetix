@@ -98,8 +98,8 @@
 
 ## 🟢 Faibles
 
-- [ ] **Git — `dev/null/` versionné (hooks Git-LFS committés)** _(audit dette 2026-07-05)_
-  - 4 hooks LFS (`post-checkout`, `post-commit`, `post-merge`, `pre-push`) committés sous le chemin littéral `dev/null/` (accident de redirection Windows, commit `3df26086`). `git rm -r dev/null/`.
+- [x] **Git — `dev/null/` versionné (hooks Git-LFS committés)** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-07)_
+  - ✅ Supprimé définitivement le chemin littéral `dev/null/` et les 4 hooks LFS (`post-checkout`, `post-commit`, `post-merge`, `pre-push`) qui y avaient été committés par accident lors d'une redirection de commande Windows (commit `3df26086`).
 - [ ] **Git — ~30 Mo de PNG en blobs bruts (64 fichiers, hors LFS)** _(audit dette 2026-07-05)_
   - Jusqu'à 2,6 Mo pièce (`frontend/public/img/background.png`…) alors que JSON/npy sont déjà en LFS. Ajouter `*.png filter=lfs` ou déplacer le gros art vers bucket/CDN.
 - [ ] **Docs — deux TODO contradictoires + docs périmées** _(audit dette 2026-07-05)_
