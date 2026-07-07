@@ -79,8 +79,9 @@
   - ✅ Ajouté des hooks frontend unifiés (`lint-staged` au commit, `vitest` au push).
   - ✅ Corrigé le type checker `mypy` (0 erreurs sur 515 fichiers).
   - ✅ Corrigé le job `frontend-security` pour lancer un vrai `npm audit --audit-level=high` et résolu 12 vulnérabilités de sécurité via `npm audit fix`.
-- [ ] **Infra — `animetix.xyz` absent des défauts `ALLOWED_HOSTS`/CORS** _(audit dette 2026-07-05)_
-  - [settings.py:89](backend/api/animetix_project/settings.py#L89) (défaut = hf.space seulement) et [settings.py:277-282](backend/api/animetix_project/settings.py#L277-L282) : le domaine custom ne marche que si la var d'env est bien positionnée — couplage caché avec le Worker Cloudflare (`X-Forwarded-Host`). Ajouter le domaine aux défauts ou fail-fast.
+- [x] **Infra — `animetix.xyz` absent des défauts `ALLOWED_HOSTS`/CORS** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-07)_
+  - ✅ Ajouté le domaine custom `animetix.xyz` et ses sous-domaines (`.animetix.xyz`) aux valeurs par défaut d' `ALLOWED_HOSTS` en production.
+  - ✅ Ajouté `https://animetix.xyz` et `https://www.animetix.xyz` aux valeurs par défaut de `CSRF_TRUSTED_ORIGINS` (en production) et configuré `CORS_ALLOWED_ORIGINS` de manière dynamique à partir des variables d'environnement avec ces domaines par défaut.
 - [ ] **Infra — logique de déploiement dupliquée, pas d'IaC** _(audit dette 2026-07-05)_
   - 3 fichiers Cloud Build + `gcloud` impératif dans [ci.yml:345-361](.github/workflows/ci.yml#L345-L361) + ~7 scripts Python `subprocess` ([deploy_brain.py](scripts/deploy/gcp/deploy_brain.py), `deploy_cdn.py`, `deploy_jobs.py`…) ; 3 cibles de déploiement (GCP, Cloudflare, HF Space). Converger vers une source déclarative.
   - Contexte de build divergent : la CI valide un build local « gras » (pas de `.dockerignore`) quand la prod passe par `.gcloudignore` — un seul contexte canonique.
