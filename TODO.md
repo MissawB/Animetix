@@ -103,9 +103,11 @@
 - [x] **Git — ~30 Mo de PNG en blobs bruts (64 fichiers, hors LFS)** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-07)_
   - ✅ Configuré le suivi automatique des fichiers `*.png` par Git LFS dans [.gitattributes](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/.gitattributes).
   - ✅ Converti et renormalisé en place les 64 images PNG existantes (dont les gros arrière-plans et mock-ups comme `background.png`) en pointeurs Git LFS via la commande sécurisée `git add --renormalize .` sans altérer l'historique des commits.
-- [ ] **Docs — deux TODO contradictoires + docs périmées** _(audit dette 2026-07-05)_
-  - [docs/TODO.md](docs/TODO.md) (anglais) diverge de ce fichier → une seule source de vérité.
-  - [README.md:235](README.md#L235) pointe `scripts/setup_e2e.py` (réel : `scripts/verify/setup_e2e.py`) ; [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) mentionne encore Celery (remplacé par Cloud Run Jobs) ; `FULL_GUIDE.md`/`ROADMAP.md` antérieurs au burst drift/transparency/ads de juillet.
+- [x] **Docs — deux TODO contradictoires + docs périmées** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-07)_
+  - ✅ Supprimé le fichier de suivi en double et obsolète [docs/TODO.md](docs/TODO.md) pour conserver le fichier `TODO.md` à la racine comme seule et unique source de vérité.
+  - ✅ Corrigé le chemin d'accès vers `setup_e2e.py` dans [README.md](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/README.md) en le faisant pointer vers `scripts/verify/setup_e2e.py`.
+  - ✅ Nettoyé [docs/ARCHITECTURE.md](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/docs/ARCHITECTURE.md) en remplaçant la référence à Celery par les Cloud Run Jobs actifs.
+  - ✅ Mis à jour [docs/FULL_GUIDE.md](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/docs/FULL_GUIDE.md) et [docs/ROADMAP.md](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/docs/ROADMAP.md) pour documenter et marquer comme terminés les développements clés de juillet 2026 (la détection de drift d'embeddings/d'archétypes, les diagnostics de transparence XAI et la sécurité des budgets de facturation).
 - [ ] **Nettoyage — résidus de working tree et de refactor** _(audit dette 2026-07-05)_
   - Dossier `src/` **vide** (résidu du refactor hexagonal, non gitignoré → pollue `git status`), `error_latent.html` (210 Ko), `brainstorming_status.txt`. Supprimer (+ ignorer `src/` si recréé par un outil).
 - [ ] **Divers cosmétique/hygiène** _(audit dette 2026-07-05)_
