@@ -1,26 +1,36 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, RefreshCw, Heart, Share2, Info, X, Film, ChevronLeft, ChevronRight, ImageOff } from 'lucide-react';
-import { SearchBar } from "../../components/SearchBar";
+import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, ChevronLeft, ChevronRight, ImageOff } from 'lucide-react';
 import { CyberTerminalPanel } from '../../components/forge/CyberTerminalPanel';
 import { GlitchText } from '../../components/forge/GlitchText';
-import { CyberSlider } from '../../components/forge/CyberSlider';
-import { CyberButton } from '../../components/forge/CyberButton';
-import { startFusion, getFusionStatus, FusionResponse, FusionStatus } from '../../api';
-import { useAuthStore } from '../../store/authStore';
-
-// Coût Berrix de la fusion (tâche GPU) — aligné sur FEATURE_BX_COSTS["creative_fusion"] côté backend.
-const FUSION_COST = 78;
-
-import { SearchItem } from '../../types';
-
-// ...
+import { useForge, FUSION_COST } from '../../hooks/useForge';
+import { ForgeItemSelector } from '../../components/forge/ForgeItemSelector';
+import { ForgeReactorPanel } from '../../components/forge/ForgeReactorPanel';
+import { ForgeResultDisplay } from '../../components/forge/ForgeResultDisplay';
 
 const ForgePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const {
+    itemA, setItemA,
+    itemB, setItemB,
+    chaosLevel, setChaosLevel,
+    balance, setBalance,
+    artStyle, setArtStyle,
+    styleDir, setStyleDir,
+    isGenerating,
+    fusionData,
+    status,
+    error,
+    showConfetti,
+    walletBalance,
+    isAuthenticated,
+    handleStartFusion,
+    resetForge
+  } = useForge();
 
   const ART_STYLES = useMemo(() => [
     { id: 'Cyberpunk', name: t('games.forge.styles.cyberpunk_name', 'Cyberpunk'), desc: t('games.forge.styles.cyberpunk_desc', 'Néons et technologie futuriste'), image: '/static/img/forge/styles/cyberpunk.jpg' },
@@ -34,83 +44,6 @@ const ForgePage: React.FC = () => {
     { id: 'Mecha', name: t('games.forge.styles.mecha_name', 'Mecha'), desc: t('games.forge.styles.mecha_desc', 'Robots géants et science-fiction'), image: '/static/img/forge/styles/mecha.jpg' },
     { id: '', name: t('games.forge.styles.brut_name', 'Brut'), desc: t('games.forge.styles.brut_desc', 'Aucune esthétique imposée — fusion la plus fidèle'), image: '' },
   ], [t]);
-
-  const [itemA, setItemA] = useState<SearchItem | null>(null);
-  const [itemB, setItemB] = useState<SearchItem | null>(null);
-  const [chaosLevel, setChaosLevel] = useState<number>(50);
-  const [balance, setBalance] = useState<number>(50);
-  const [artStyle, setArtStyle] = useState<string>('Cyberpunk');
-  const [styleDir, setStyleDir] = useState<number>(0);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const walletBalance = useAuthStore((s) => s.user?.wallet_balance ?? 0);
-
-  const [isGenerating, setIsLoading] = useState<boolean>(false);
-  const [fusionData, setFusionData] = useState<FusionResponse | null>(null);
-  const [status, setStatus] = useState<FusionStatus | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [, setShowConfetti] = useState(false);
-
-  // Error sentinels — compared by equality below to decide which action button to show.
-  const errLoginRequired = t('games.forge.errors.login_required', 'Connexion requise pour forger une réalité.');
-  const errInsufficientBx = t('games.forge.errors.insufficient_bx', { defaultValue: 'Berrix insuffisants — la fusion coûte {{cost}} Bx.', cost: FUSION_COST });
-
-  const handleStartFusion = async () => {
-    if (!isAuthenticated) {
-      setError(errLoginRequired);
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await startFusion({
-        title_A: itemA?.title || itemA?.name,
-        title_B: itemB?.title || itemB?.name,
-        chaos_level: chaosLevel,
-        universe_balance: balance,
-        art_style: artStyle
-      });
-      setFusionData(res);
-    } catch (err) {
-      const httpStatus = (err as { status?: number }).status;
-      if (httpStatus === 401 || httpStatus === 403) {
-        setError(errLoginRequired);
-      } else if (httpStatus === 402) {
-        setError(errInsufficientBx);
-      } else {
-        setError(t('games.forge.errors.reactor_overheat', 'Le réacteur de fusion a surchauffé. Réessayez plus tard.'));
-      }
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (fusionData && !status?.completed) {
-      interval = setInterval(async () => {
-        try {
-          const res = await getFusionStatus(fusionData.task_id, fusionData.fusion_id);
-          setStatus(res);
-          if (res.completed) {
-            setIsLoading(false);
-            setShowConfetti(true);
-            clearInterval(interval);
-          }
-        } catch (err) {
-          console.error("Polling error:", err);
-        }
-      }, 3000);
-    }
-    return () => clearInterval(interval);
-  }, [fusionData, status, setShowConfetti]);
-
-  const resetForge = () => {
-    setFusionData(null);
-    setStatus(null);
-    setItemA(null);
-    setItemB(null);
-    setIsLoading(false);
-    setShowConfetti(false);
-  };
 
   const cycleStyle = (dir: number) => {
     setStyleDir(dir);
@@ -150,7 +83,13 @@ const ForgePage: React.FC = () => {
              <div className="flex justify-center items-center gap-12 mb-12">
                 <div className="group relative">
                     <div className="absolute -inset-2 bg-gradient-to-t from-yellow-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl blur-md" />
-                    <img src={itemA?.image_url} className="w-28 h-40 object-cover rounded-2xl shadow-xl relative z-10 grayscale brightness-50" alt="" loading="lazy" decoding="async" />
+                    {itemA?.image_url ? (
+                      <img src={itemA.image_url} className="w-28 h-40 object-cover rounded-2xl shadow-xl relative z-10 grayscale brightness-50" alt="" loading="lazy" decoding="async" />
+                    ) : (
+                      <div className="w-28 h-40 bg-black/20 rounded-2xl shadow-xl relative z-10 flex items-center justify-center">
+                        <ImageIcon className="w-8 h-8 text-white/20" />
+                      </div>
+                    )}
                     <p className="mt-3 text-[10px] font-black uppercase opacity-40 max-w-[112px] truncate">{itemA?.title || itemA?.name}</p>
                 </div>
                 <div className="flex flex-col items-center">
@@ -159,7 +98,13 @@ const ForgePage: React.FC = () => {
                 </div>
                 <div className="group relative">
                     <div className="absolute -inset-2 bg-gradient-to-t from-blue-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl blur-md" />
-                    <img src={itemB?.image_url} className="w-28 h-40 object-cover rounded-2xl shadow-xl relative z-10 grayscale brightness-50" alt="" loading="lazy" decoding="async" />
+                    {itemB?.image_url ? (
+                      <img src={itemB.image_url} className="w-28 h-40 object-cover rounded-2xl shadow-xl relative z-10 grayscale brightness-50" alt="" loading="lazy" decoding="async" />
+                    ) : (
+                      <div className="w-28 h-40 bg-black/20 rounded-2xl shadow-xl relative z-10 flex items-center justify-center">
+                        <ImageIcon className="w-8 h-8 text-white/20" />
+                      </div>
+                    )}
                     <p className="mt-3 text-[10px] font-black uppercase opacity-40 max-w-[112px] truncate">{itemB?.title || itemB?.name}</p>
                 </div>
              </div>
@@ -181,88 +126,15 @@ const ForgePage: React.FC = () => {
   // --- RENDERING RESULT ---
   if (status?.completed) {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-12 animate-in fade-in zoom-in-95 duration-700">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-
-          <div className="lg:col-span-5 relative group">
-             <div className="absolute -inset-4 bg-yellow-400/20 blur-3xl rounded-[4rem] opacity-50 group-hover:opacity-100 transition-opacity" />
-             <div className="relative overflow-hidden rounded-[3.5rem] shadow-2xl border-8 border-white dark:border-anime-dark-card transform -rotate-1 hover:rotate-0 transition-transform duration-500">
-                {status.image_url ? (
-                  <img src={status.image_url} className="w-full aspect-[3/4] object-cover scale-105 group-hover:scale-100 transition-transform duration-700" alt={t('games.forge.result_image_alt', 'Fusion')} loading="lazy" decoding="async" />
-                ) : (
-                  <div className="w-full aspect-[3/4] bg-anime-dark-bg flex flex-col items-center justify-center gap-4">
-                     <ImageIcon className="w-20 h-20 text-white/10" />
-                     <p className="text-xs font-black opacity-20 uppercase tracking-widest">{t('games.forge.image_not_generated', 'Image non générée')}</p>
-                  </div>
-                )}
-
-                <div className="absolute top-8 left-8 flex flex-col gap-2">
-                   <span className="bg-black/80 backdrop-blur-md text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter">
-                      {t('games.forge.style_label', 'Style:')} {artStyle}
-                   </span>
-                   <span className="bg-yellow-400 text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter shadow-lg">
-                      {t('games.forge.chaos_label', 'Chaos:')} {chaosLevel}%
-                   </span>
-                </div>
-             </div>
-
-             <div className="absolute -bottom-8 -right-4 bg-white dark:bg-anime-dark-card p-6 rounded-3xl shadow-2xl border border-gray-100 dark:border-white/5 max-w-[280px] transform rotate-3">
-                <div className="flex items-center gap-3 mb-2">
-                    <Sparkles className="w-5 h-5 text-yellow-400" />
-                    <span className="text-[10px] font-black opacity-40 uppercase tracking-widest">{t('games.forge.new_archetype', 'NOUVEL ARCHÉTYPE')}</span>
-                </div>
-                <h3 className="text-xl font-black italic manga-font leading-tight">
-                    {itemA?.title || itemA?.name} <span className="text-yellow-400 text-sm">×</span> {itemB?.title || itemB?.name}
-                </h3>
-             </div>
-          </div>
-
-          <div className="lg:col-span-7 space-y-10 pt-8 lg:pt-0">
-             <div>
-                <h1 className="text-7xl font-black italic manga-font leading-[0.8] tracking-tighter uppercase mb-4">
-                   {t('games.forge.result_title_part1', 'FUSION')} <span className="text-yellow-400">{t('games.forge.result_title_part2', 'RÉUSSIE')}</span>
-                </h1>
-                <p className="text-xl font-bold opacity-30 uppercase tracking-[0.2em]">{t('games.forge.result_subtitle', 'Une nouvelle réalité a été forgée dans le nexus.')}</p>
-             </div>
-
-             <div className="bg-white/50 dark:bg-anime-dark-card/50 backdrop-blur-xl p-10 rounded-[3rem] shadow-xl border border-white dark:border-white/5 relative group">
-                <div className="absolute -top-4 -left-4 bg-black text-white px-6 py-2 text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg group-hover:-translate-y-1 transition-transform">
-                   {t('games.forge.synopsis_badge', "SYNOPSIS GÉNÉRÉ PAR L'IA")}
-                </div>
-                <div className="prose dark:prose-invert max-w-none">
-                    <p className="text-2xl leading-relaxed italic font-medium opacity-90 first-letter:text-5xl first-letter:font-black first-letter:text-yellow-400 first-letter:mr-3 first-letter:float-left whitespace-pre-wrap">
-                        {status.scenario}
-                    </p>
-                </div>
-             </div>
-
-             <div className="flex flex-wrap gap-4">
-                <button
-                   onClick={() => navigate(`/forge/vn/${fusionData?.fusion_id}/`)}
-                   className="flex-1 min-w-[200px] bg-yellow-400 text-black py-5 px-8 rounded-2xl font-black italic text-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase shadow-xl"
-                >
-                   <Film className="w-6 h-6" />
-                   {t('games.forge.to_visual_novel', 'Transformer en Visual Novel')}
-                </button>
-                <button
-                   onClick={resetForge}
-                   className="flex-1 min-w-[200px] bg-black text-white dark:bg-white dark:text-black py-5 px-8 rounded-2xl font-black italic text-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase shadow-xl"
-                >
-                   <RefreshCw className="w-6 h-6" />
-                   {t('games.forge.back_to_forge', 'Retourner à la Forge')}
-                </button>
-                <div className="flex gap-4">
-                    <button className="w-16 h-16 bg-white dark:bg-anime-dark-card flex items-center justify-center rounded-2xl shadow-lg hover:text-red-500 hover:scale-110 transition-all border border-black/5 dark:border-white/5">
-                        <Heart className="w-8 h-8" />
-                    </button>
-                    <button className="w-16 h-16 bg-white dark:bg-anime-dark-card flex items-center justify-center rounded-2xl shadow-lg hover:text-blue-500 hover:scale-110 transition-all border border-black/5 dark:border-white/5">
-                        <Share2 className="w-8 h-8" />
-                    </button>
-                </div>
-             </div>
-          </div>
-        </div>
-      </div>
+      <ForgeResultDisplay
+        status={status}
+        fusionData={fusionData}
+        itemA={itemA}
+        itemB={itemB}
+        artStyle={artStyle}
+        chaosLevel={chaosLevel}
+        resetForge={resetForge}
+      />
     );
   }
 
@@ -282,72 +154,17 @@ const ForgePage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
-
         <div className="lg:col-span-7 space-y-8">
             <CyberTerminalPanel>
                 <h3 className="text-xl font-black italic manga-font mb-6 flex items-center gap-3">
                    <Zap className="w-5 h-5 text-yellow-400" /> {t('games.forge.universe_selector', "Sélecteur d'Univers")}
                 </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <label htmlFor="univers-alpha" className="text-[10px] font-black uppercase tracking-widest opacity-70">{t('games.forge.universe_alpha', 'Univers Alpha')}</label>
-                            {itemA && <button onClick={() => setItemA(null)} className="text-[10px] font-bold text-red-500 hover:underline flex items-center gap-1"><X className="w-2 h-2" /> {t('games.forge.clear', 'Effacer')}</button>}
-                        </div>
-                        <SearchBar id="univers-alpha" onSelect={setItemA} placeholder={t('games.forge.search_placeholder', 'Rechercher...')} />
-
-                        <div className="h-[180px] relative overflow-hidden rounded-3xl bg-black/5 dark:bg-white/5 border border-dashed border-black/10 dark:border-white/10 flex items-center justify-center group transition-all">
-                            {itemA ? (
-                                <>
-                                    <img src={itemA.image_url} className="absolute inset-0 w-full h-full object-cover brightness-50 group-hover:scale-110 transition-transform duration-500" alt="" loading="lazy" decoding="async" />
-                                    <div className="relative z-10 text-center p-4">
-                                        <div className="font-black italic text-white uppercase drop-shadow-md leading-tight mb-1">{itemA.title || itemA.name}</div>
-                                        <div className="text-[9px] bg-white/20 backdrop-blur-md text-white font-bold px-2 py-0.5 rounded-full inline-block uppercase">{itemA.type}</div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center opacity-40 group-hover:opacity-70 transition-opacity">
-                                    <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-2">
-                                        <Info className="w-6 h-6" />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('games.forge.choose_origin', "Choisir l'origine")}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="hidden md:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-yellow-400 text-black rounded-2xl items-center justify-center z-20 shadow-lg shadow-yellow-400/40 ring-4 ring-cyberpunk-bg rotate-12">
-                        <Sparkles className="w-6 h-6" strokeWidth={2.5} />
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <label htmlFor="univers-beta" className="text-[10px] font-black uppercase tracking-widest opacity-70">{t('games.forge.universe_beta', 'Univers Bêta')}</label>
-                            {itemB && <button onClick={() => setItemB(null)} className="text-[10px] font-bold text-red-500 hover:underline flex items-center gap-1"><X className="w-2 h-2" /> {t('games.forge.clear', 'Effacer')}</button>}
-                        </div>
-                        <SearchBar id="univers-beta" onSelect={setItemB} placeholder={t('games.forge.search_placeholder', 'Rechercher...')} />
-
-                        <div className="h-[180px] relative overflow-hidden rounded-3xl bg-black/5 dark:bg-white/5 border border-dashed border-black/10 dark:border-white/10 flex items-center justify-center group transition-all">
-                            {itemB ? (
-                                <>
-                                    <img src={itemB.image_url} className="absolute inset-0 w-full h-full object-cover brightness-50 group-hover:scale-110 transition-transform duration-500" alt="" loading="lazy" decoding="async" />
-                                    <div className="relative z-10 text-center p-4">
-                                        <div className="font-black italic text-white uppercase drop-shadow-md leading-tight mb-1">{itemB.title || itemB.name}</div>
-                                        <div className="text-[9px] bg-white/20 backdrop-blur-md text-white font-bold px-2 py-0.5 rounded-full inline-block uppercase">{itemB.type}</div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center opacity-40 group-hover:opacity-70 transition-opacity">
-                                    <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-2">
-                                        <Info className="w-6 h-6" />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('games.forge.choose_origin', "Choisir l'origine")}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <ForgeItemSelector
+                  itemA={itemA}
+                  setItemA={setItemA}
+                  itemB={itemB}
+                  setItemB={setItemB}
+                />
             </CyberTerminalPanel>
 
             <CyberTerminalPanel>
@@ -466,91 +283,20 @@ const ForgePage: React.FC = () => {
                 <h3 className="text-xl font-black italic manga-font mb-10 flex items-center gap-3">
                    <Flame className="w-5 h-5 text-red-500" /> {t('games.forge.reactor_settings', 'Paramètres du Réacteur')}
                 </h3>
-
-                <div className="space-y-12">
-                    <div>
-                        <div className="flex justify-between items-end mb-4">
-                           <div className="space-y-1">
-                               <span className="text-xs font-black uppercase tracking-widest text-red-500">{t('games.forge.chaos_level', 'Niveau de Chaos')}</span>
-                               <p className="text-[10px] font-bold opacity-55 max-w-[180px]">{t('games.forge.chaos_desc', "Définit le degré d'imprévisibilité de la fusion.")}</p>
-                           </div>
-                           <span className="text-2xl font-black italic manga-font text-red-500">{chaosLevel}%</span>
-                        </div>
-                        <div className="relative group pt-4">
-                            <CyberSlider
-                                min={0} max={100} value={chaosLevel}
-                                onChange={setChaosLevel}
-                                color="magenta"
-                            />
-                            <div className="flex justify-between mt-3 text-[9px] font-black uppercase opacity-45">
-                                <span>{t('games.forge.chaos_scale_low', 'Cohérent')}</span>
-                                <span>{t('games.forge.chaos_scale_mid', 'Distordu')}</span>
-                                <span>{t('games.forge.chaos_scale_high', 'Entropie')}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div className="flex justify-between items-end mb-4">
-                           <div className="space-y-1">
-                               <span className="text-xs font-black uppercase tracking-widest text-blue-500">{t('games.forge.dna_balance', 'Équilibre des ADN')}</span>
-                               <p className="text-[10px] font-bold opacity-55 max-w-[180px]">{t('games.forge.dna_balance_desc', 'Quel univers doit dominer la structure globale ?')}</p>
-                           </div>
-                           <span className="text-2xl font-black italic manga-font text-blue-500">{balance}%</span>
-                        </div>
-                        <div className="relative group pt-4">
-                            <CyberSlider
-                                min={0} max={100} value={balance}
-                                onChange={setBalance}
-                                color="cyan"
-                            />
-                            <div className="flex justify-between mt-3 text-[9px] font-black uppercase opacity-45">
-                                <span>{t('games.forge.balance_scale_a', 'Origine A')}</span>
-                                <span>{t('games.forge.balance_scale_mid', 'Hybride')}</span>
-                                <span>{t('games.forge.balance_scale_b', 'Origine B')}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between px-2">
-                            <span className="text-[11px] font-black uppercase tracking-widest opacity-50">{t('games.forge.fusion_cost', 'Coût de la fusion')}</span>
-                            <span className="flex items-center gap-1.5 text-sm font-black text-yellow-400">
-                                <Zap className="w-4 h-4" /> {FUSION_COST} Bx
-                            </span>
-                        </div>
-
-                        <CyberButton
-                            onClick={() => !(!itemA || !itemB || isGenerating) && handleStartFusion()}
-                            className={`w-full py-8 rounded-[2.5rem] font-black italic text-3xl shadow-2xl transition-all duration-300 flex items-center justify-center gap-4 uppercase ${(!itemA || !itemB || isGenerating) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            <Sparkles className="w-8 h-8" />
-                            {t('games.forge.forge_button', 'Forger la Réalité')}
-                        </CyberButton>
-
-                        {isAuthenticated ? (
-                            <p className="text-center text-[10px] font-black uppercase tracking-widest opacity-40">
-                                {t('games.forge.balance_label', 'Solde :')} <span className={walletBalance < FUSION_COST ? 'text-red-500' : 'text-yellow-400'}>{walletBalance} Bx</span>
-                            </p>
-                        ) : (
-                            <p className="text-center text-[10px] font-black uppercase tracking-widest opacity-50">
-                                {t('games.forge.login_hint', 'Connexion requise — chaque fusion consomme des Berrix.')}
-                            </p>
-                        )}
-
-                        {error && (
-                            <div className="text-red-500 text-center text-xs font-black uppercase bg-red-500/10 p-4 rounded-2xl space-y-3">
-                                <p>{error}</p>
-                                {error === errLoginRequired && (
-                                    <button onClick={() => navigate('/auth/login/')} className="underline hover:text-red-400">{t('games.forge.login_button', 'Se connecter')}</button>
-                                )}
-                                {error === errInsufficientBx && (
-                                    <button onClick={() => navigate('/power-station/')} className="underline hover:text-red-400">{t('games.forge.recharge_button', 'Recharger des Berrix')}</button>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <ForgeReactorPanel
+                  itemA={itemA}
+                  itemB={itemB}
+                  chaosLevel={chaosLevel}
+                  setChaosLevel={setChaosLevel}
+                  balance={balance}
+                  setBalance={setBalance}
+                  isGenerating={isGenerating}
+                  walletBalance={walletBalance}
+                  isAuthenticated={isAuthenticated}
+                  error={error}
+                  handleStartFusion={handleStartFusion}
+                  fusionCost={FUSION_COST}
+                />
             </CyberTerminalPanel>
         </div>
       </div>
