@@ -229,7 +229,11 @@ def run_synchronization(dry_run: bool = False) -> Dict[str, Any]:
 
                 # 3. Synchronize regression_benchmark.py expected_facts if mapped
                 for b_entry in updated_benchmark_set:
-                    if b_entry["query"].lower().strip() == query.lower().strip():
+                    b_query = b_entry.get("query")
+                    if (
+                        isinstance(b_query, str)
+                        and b_query.lower().strip() == query.lower().strip()
+                    ):
                         facts_prompt = f"""
                         Génère la liste des faits attendus (expected_facts) sous forme de synonymes pour valider cette réponse.
                         Question : '{query}'

@@ -62,6 +62,10 @@ jobs:
       working-directory: ./frontend
       run: npm ci --legacy-peer-deps
 
+    - name: Run Frontend Vulnerability Scan
+      working-directory: ./frontend
+      run: npm audit --audit-level=high
+
   container-security:
     name: Container Image Audit
     runs-on: ubuntu-latest

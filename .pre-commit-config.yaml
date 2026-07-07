@@ -1,23 +1,23 @@
 # Hooks Git locaux, alignés sur les jobs CI.
 #
-#   - pre-commit (rapide, à chaque commit) : ruff + black sur les fichiers stagés.
-#   - pre-push  (plus lourd, avant push)   : mypy (type-debt baseline) + pytest
-#     (tests unitaires, hors `integration`) — pour attraper avant la CI.
+#   - pre-commit (rapide, à chaque commit) :
+#     - ruff + black sur les fichiers Python stagés.
+#     - lint-staged (eslint + prettier + check-types) sur les fichiers frontend stagés.
+#   - pre-push  (plus lourd, avant push)   :
+#     - mypy (type-debt baseline)
+#     - pytest (tests unitaires, avec barrière de couverture backend >= 75%)
+#     - vitest (tests unitaires frontend)
 #
 # Setup unique :
 #   pip install pre-commit
-#   pre-commit install            # installe pre-commit ET pre-push (cf. default_install_hook_types)
+#   pre-commit install            # installe pre-commit ET pre-push
 #
 # Lancer à la demande :
 #   pre-commit run --all-files                     # hooks pre-commit
 #   pre-commit run --hook-stage pre-push --all-files
 #
-# Pour sauter ponctuellement un hook lent : SKIP=pytest git push  (ou SKIP=mypy)
+# Pour sauter ponctuellement un hook lent : SKIP=pytest git push
 #
-# NOTE mypy : nécessite un mypy fonctionnel. Le venv local du projet inclut dbt,
-# qui épingle `pathspec<0.13` incompatible avec le mypy courant ; la CI installe
-# mypy seul (sans dbt) et fonctionne. En cas d'échec local du hook mypy, utiliser
-# SKIP=mypy ou un venv propre type-CI.
 default_install_hook_types: [pre-commit, pre-push]
 
 repos:
@@ -34,17 +34,29 @@ repos:
         stages: [pre-commit]
   - repo: local
     hooks:
+      - id: frontend-lint-staged
+        name: frontend lint-staged (eslint + prettier + check-types)
+        entry: python scripts/run_cmd.py --cwd frontend npx lint-staged
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
       - id: mypy
         name: mypy (backend, type-debt baseline — miroir CI)
-        entry: bash -c 'cd backend && mypy . --config-file ../pyproject.toml'
+        entry: python scripts/run_in_venv.py --cwd backend -m mypy . --config-file ../pyproject.toml --no-site-packages
         language: system
         types: [python]
         pass_filenames: false
         stages: [pre-push]
       - id: pytest
-        name: pytest (tests unitaires, hors integration — miroir CI)
-        entry: python -m pytest -m "not integration" -q
+        name: pytest (tests unitaires, barrière couverture 75% — miroir CI)
+        entry: python scripts/run_in_venv.py -m pytest -m "not integration" --cov=backend --cov-fail-under=75 --cov-report=term-missing --cov-report=xml
         language: system
         types: [python]
+        pass_filenames: false
+        stages: [pre-push]
+      - id: frontend-vitest
+        name: vitest (tests unitaires frontend — miroir CI)
+        entry: python scripts/run_cmd.py --cwd frontend npm run test:coverage
+        language: system
         pass_filenames: false
         stages: [pre-push]
