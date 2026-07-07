@@ -1,0 +1,161 @@
+global:
+  project_id: "animetix"
+  service_account: "836616987676-compute@developer.gserviceaccount.com"
+  regions:
+    web: "europe-west9"
+    infra: "europe-west1"
+
+gcp_services:
+  brain:
+    name: "animetix-brain"
+    region: "europe-west1"
+    image_base: "europe-west9-docker.pkg.dev/animetix/animetix-repo/brain"
+    service_account: "836616987676-compute@developer.gserviceaccount.com"
+    vpc_network: "default"
+    vpc_subnet: "default"
+    models_bucket: "animetix-models"
+    gpu: 1
+    gpu_type: "nvidia-l4"
+    cpu: 4
+    memory: "16Gi"
+    min_instances: 0
+    max_instances: 3
+    port: 7861
+    secrets:
+      - "BRAIN_API_KEY=BRAIN_API_KEY:latest"
+      - "HF_TOKEN=HF_TOKEN:latest"
+    env_vars:
+      DJANGO_ENV: "production"
+      LLM_API_BASE: "http://localhost:11434/v1"
+      LLM_MODEL_NAME: "qwen3.5:9b"
+      GCP_MODELS_MOUNT_PATH: "/mnt/models"
+
+  jobs:
+    region: "europe-west9"
+    scheduler_region: "europe-west1"
+    service_account: "836616987676-compute@developer.gserviceaccount.com"
+    image_base: "europe-west9-docker.pkg.dev/animetix/animetix-repo/web"
+    vpc_connector: "animetix-vpc-conn"
+    items:
+      - name: "animetix-sync-catalog"
+        args: "backend/api/manage.py,sync_catalog"
+        schedule: "0 2 * * *"
+        memory: "2Gi"
+        cpu: "1"
+      - name: "animetix-dpo-optimization"
+        args: "backend/api/manage.py,run_scheduled_task,dpo-optimization-daily"
+        schedule: "0 3 * * *"
+        memory: "2Gi"
+        cpu: "1"
+      - name: "animetix-data-ingestion"
+        args: "backend/api/manage.py,run_scheduled_task,daily-data-ingestion"
+        schedule: "0 3 * * *"
+        memory: "4Gi"
+        cpu: "2"
+      - name: "animetix-maintenance-mlops"
+        args: "backend/api/manage.py,run_scheduled_task,daily-maintenance-mlops"
+        schedule: "0 5 * * *"
+        memory: "4Gi"
+        cpu: "2"
+      - name: "animetix-health-monitoring"
+        args: "backend/api/manage.py,run_scheduled_task,hourly-health-monitoring"
+        schedule: "0 * * * *"
+        memory: "2Gi"
+        cpu: "1"
+      - name: "animetix-lora-sensor"
+        args: "backend/api/manage.py,run_scheduled_task,gold-dataset-lora-sensor"
+        schedule: "*/10 * * * *"
+        memory: "2Gi"
+        cpu: "1"
+      - name: "animetix-dpo-sensor"
+        args: "backend/api/manage.py,run_scheduled_task,gold-dataset-dpo-sensor"
+        schedule: "*/10 * * * *"
+        memory: "2Gi"
+        cpu: "1"
+      - name: "animetix-manga-updates"
+        args: "backend/api/manage.py,run_scheduled_task,manga-updates-check"
+        schedule: "0 */6 * * *"
+        memory: "2Gi"
+        cpu: "1"
+      - name: "animetix-drift-baseline"
+        args: "backend/api/manage.py,run_scheduled_task,drift-baseline-update"
+        schedule: "" # On-demand only
+        memory: "4Gi"
+        cpu: "2"
+
+  budget:
+    topic_name: "animetix-budget-alerts"
+    subscription_name: "animetix-budget-alerts-push"
+    invoker_service_account: "animetix-budget-invoker"
+    region: "europe-west9"
+    brain_region: "europe-west1"
+
+  cdn:
+    bucket_name: "animetix-media-bucket"
+    backend_name: "animetix-cdn-backend"
+    url_map_name: "animetix-cdn-url-map"
+    ssl_cert_name: "animetix-cdn-cert"
+    https_proxy_name: "animetix-cdn-https-proxy"
+    https_rule_name: "animetix-cdn-https-rule"
+    http_proxy_name: "animetix-cdn-http-proxy"
+    http_rule_name: "animetix-cdn-http-rule"
+    ip_name: "animetix-cdn-ip"
+
+  security:
+    policy_name: "animetix-edge-security-policy"
+    rules:
+      - priority: 1000
+        description: "Rate limiting per IP to mitigate Token DoS and flooding"
+        args:
+          - "--action=throttle"
+          - "--src-ip-ranges=*"
+          - "--rate-limit-threshold-count=100"
+          - "--rate-limit-threshold-interval-sec=60"
+          - "--conform-action=allow"
+          - "--exceed-action=deny-429"
+          - "--enforce-on-key=ip"
+      - priority: 2000
+        description: "OWASP CRS SQL Injection protection"
+        args:
+          - "--action=deny-403"
+          - "--expression=evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 1})"
+      - priority: 2100
+        description: "OWASP CRS Cross-Site Scripting (XSS) protection"
+        args:
+          - "--action=deny-403"
+          - "--expression=evaluatePreconfiguredWaf('xss-v33-stable', {'sensitivity': 1})"
+      - priority: 2200
+        description: "OWASP CRS Local File Inclusion protection"
+        args:
+          - "--action=deny-403"
+          - "--expression=evaluatePreconfiguredWaf('lfi-v33-stable', {'sensitivity': 1})"
+      - priority: 2300
+        description: "OWASP CRS Remote File Inclusion protection"
+        args:
+          - "--action=deny-403"
+          - "--expression=evaluatePreconfiguredWaf('rfi-v33-stable', {'sensitivity': 1})"
+      - priority: 2400
+        description: "OWASP CRS Method Enforcement (restricting unsafe HTTP methods)"
+        args:
+          - "--action=deny-403"
+          - "--expression=evaluatePreconfiguredWaf('methodenforcement-v33-stable', {'sensitivity': 1})"
+      - priority: 3000
+        description: "Deny all traffic not conforming to rules (default fallback - allowed since Default is allow)"
+        args:
+          - "--action=allow"
+          - "--src-ip-ranges=*"
+
+cloudflare:
+  worker_name: "animetix-proxy"
+  wrangler_config: "scripts/deploy/cloudflare/animetix-proxy/wrangler.toml"
+
+huggingface:
+  spaces:
+    - name: "animetix-web"
+      title: "Animetix Web"
+      emoji: "🧩"
+      color_from: "purple"
+      color_to: "indigo"
+      sdk: "docker"
+      pinned: false
+      dockerfile: "deploy/Dockerfile"

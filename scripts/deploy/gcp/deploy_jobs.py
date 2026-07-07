@@ -8,7 +8,6 @@ import yaml
 
 
 def run_command(cmd_args, check=True):
-    # Resolve command path (especially important for gcloud cmd/bat on Windows)
     resolved_cmd = shutil.which(cmd_args[0])
     if resolved_cmd:
         cmd_args[0] = resolved_cmd
@@ -29,84 +28,31 @@ def run_command(cmd_args, check=True):
     return result
 
 
-def main():
-    project_id = "animetix"
-    region = "europe-west9"
-    scheduler_region = "europe-west1"  # Cloud Scheduler is not available in europe-west9, using europe-west1
-    service_account = "836616987676-compute@developer.gserviceaccount.com"
-    image = f"{region}-docker.pkg.dev/{project_id}/animetix-repo/web:latest"
-    vpc_connector = os.getenv("GCP_VPC_CONNECTOR", "animetix-vpc-conn")
+def find_project_root():
+    current = os.path.abspath(__file__)
+    for _ in range(4):
+        current = os.path.dirname(current)
+    return current
 
-    # Configuration for all 8 serverless periodic jobs
-    jobs_config = [
-        {
-            "name": "animetix-sync-catalog",
-            "args": "backend/api/manage.py,sync_catalog",
-            "schedule": "0 2 * * *",
-            "memory": "2Gi",
-            "cpu": "1",
-        },
-        {
-            "name": "animetix-dpo-optimization",
-            "args": "backend/api/manage.py,run_scheduled_task,dpo-optimization-daily",
-            "schedule": "0 3 * * *",
-            "memory": "2Gi",
-            "cpu": "1",
-        },
-        {
-            "name": "animetix-data-ingestion",
-            "args": "backend/api/manage.py,run_scheduled_task,daily-data-ingestion",
-            "schedule": "0 3 * * *",
-            "memory": "4Gi",
-            "cpu": "2",
-        },
-        {
-            "name": "animetix-maintenance-mlops",
-            "args": "backend/api/manage.py,run_scheduled_task,daily-maintenance-mlops",
-            "schedule": "0 5 * * *",
-            "memory": "4Gi",
-            "cpu": "2",
-        },
-        {
-            "name": "animetix-health-monitoring",
-            "args": "backend/api/manage.py,run_scheduled_task,hourly-health-monitoring",
-            "schedule": "0 * * * *",
-            "memory": "2Gi",
-            "cpu": "1",
-        },
-        {
-            "name": "animetix-lora-sensor",
-            "args": "backend/api/manage.py,run_scheduled_task,gold-dataset-lora-sensor",
-            "schedule": "*/10 * * * *",
-            "memory": "2Gi",
-            "cpu": "1",
-        },
-        {
-            "name": "animetix-dpo-sensor",
-            "args": "backend/api/manage.py,run_scheduled_task,gold-dataset-dpo-sensor",
-            "schedule": "*/10 * * * *",
-            "memory": "2Gi",
-            "cpu": "1",
-        },
-        {
-            "name": "animetix-manga-updates",
-            "args": "backend/api/manage.py,run_scheduled_task,manga-updates-check",
-            "schedule": "0 */6 * * *",  # toutes les 6 h
-            "memory": "2Gi",
-            "cpu": "1",
-        },
-        {
-            # À la demande uniquement (pas de "schedule") : la baseline de dérive
-            # est figée délibérément après un cycle d'entraînement validé. La
-            # planifier annulerait la détection (baseline toujours == état courant).
-            # Déclencher via : gcloud run jobs execute animetix-generate-drift-baselines --region=europe-west9
-            "name": "animetix-generate-drift-baselines",
-            "args": "backend/api/manage.py,generate_drift_baselines",
-            "schedule": None,
-            "memory": "2Gi",
-            "cpu": "1",
-        },
-    ]
+
+def load_config():
+    root = find_project_root()
+    config_path = os.path.join(root, "deploy", "deployments.yaml")
+    with open(config_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+def main():
+    config = load_config()
+    project_id = config["global"]["project_id"]
+    jobs_root = config["gcp_services"]["jobs"]
+
+    region = jobs_root["region"]
+    scheduler_region = jobs_root["scheduler_region"]
+    service_account = jobs_root["service_account"]
+    image = f"{jobs_root['image_base']}:latest"
+    vpc_connector = os.getenv("GCP_VPC_CONNECTOR", jobs_root["vpc_connector"])
+    jobs_config = jobs_root["items"]
 
     # 1. Enable Cloud Scheduler API
     print("Step 1: Enabling Cloud Scheduler API...")
@@ -122,8 +68,6 @@ def main():
 
     # BRAIN_API_URL is REQUIRED at import time (containers/inference.py runs
     # validate_inference_config on django.setup()), so the jobs crash without it.
-    # The web service gets it from deploy_brain.py; read it back off the live
-    # service so the jobs always match. Overridable via env for a manual value.
     brain_api_url = os.getenv("BRAIN_API_URL", "").strip()
     if not brain_api_url:
         res = run_command(
@@ -132,8 +76,8 @@ def main():
                 "run",
                 "services",
                 "describe",
-                "animetix-web",
-                f"--region={region}",
+                config["gcp_services"].get("web", {}).get("name", "animetix-web"),
+                f"--region={config['global']['regions']['web']}",
                 f"--project={project_id}",
                 "--format=json",
             ],
@@ -158,15 +102,10 @@ def main():
         sys.exit(1)
 
     # Write env vars to a YAML file to avoid Windows shell escaping/comma issues
-    # Variables d'environnement NON sensibles uniquement. Les secrets (tokens, clés)
-    # passent par Secret Manager via `--set-secrets` ci-dessous — JAMAIS en dur ici.
     env_vars_data = {
         "ALLOWED_HOSTS": "*.run.app,missawb-animetix-web.hf.space,localhost,127.0.0.1",
         "DJANGO_ENV": "production",
         "BRAIN_API_URL": brain_api_url,
-        # animetix-db uses the built-in `postgres` user (password in DATABASE_URL),
-        # NOT Cloud SQL IAM. Without this, prod defaults DJANGO_DB_USE_IAM=True and
-        # tries to auth as a non-existent IAM service-account DB user → FATAL.
         "DJANGO_DB_USE_IAM": "false",
         "SENTRY_DSN": "https://16adfd8a3ea5046c55ba1c7a4a919619@o4511298977202176.ingest.de.sentry.io/4511298998894672",
     }
@@ -188,12 +127,6 @@ def main():
             "HF_SPACES=HF_SPACES:latest,"
             "IGDB_CLIENT_SECRET=IGDB_CLIENT_SECRET:latest,"
             "WANDB_API_KEY=WANDB_API_KEY:latest,"
-            # Neo4j (knowledge graph). Mounted from Secret Manager so the URI /
-            # password are rotatable WITHOUT rebuilding the image. Previously these
-            # only reached the jobs via a `.env` baked into the image, so a dead or
-            # rotated Aura instance could not be fixed by updating the secret alone.
-            # load_dotenv(override=False) in neo4j_client lets these env vars win
-            # over any baked .env fallback.
             "NEO4J_URI=NEO4J_URI:latest,"
             "NEO4J_USER=NEO4J_USER:latest,"
             "NEO4J_PASSWORD=NEO4J_PASSWORD:latest"
@@ -233,17 +166,10 @@ def main():
                 f"--args={job['args']}",
                 f"--region={region}",
                 f"--service-account={service_account}",
-                # Use the same VPC *connector* as the animetix-web service (Neon /
-                # private egress). Direct-VPC (--network/--subnet) conflicts with an
-                # existing connector: "VPC connector and direct VPC can not be used
-                # together". Overridable via GCP_VPC_CONNECTOR.
                 f"--vpc-connector={vpc_connector}",
                 "--vpc-egress=private-ranges-only",
                 f"--memory={job['memory']}",
                 f"--cpu={job['cpu']}",
-                # Default 10m is far too short for bulk work (sync_catalog upserts
-                # thousands of MediaItems, data-ingestion vectorizes). Give 1h;
-                # a job may override via its "timeout" key.
                 f"--task-timeout={job.get('timeout', '3600s')}",
                 f"--env-vars-file={temp_yaml_path}",
                 f"--set-secrets={secrets}",
@@ -252,8 +178,6 @@ def main():
 
             run_command(deploy_cmd)
 
-            # On-demand jobs (no schedule) are created but NOT attached to Cloud
-            # Scheduler — they are triggered manually via `gcloud run jobs execute`.
             if not job.get("schedule"):
                 print(
                     f"Job '{job_name}' has no schedule — on-demand only, "

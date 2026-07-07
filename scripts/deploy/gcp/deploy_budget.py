@@ -1,6 +1,9 @@
+import os
 import shutil
 import subprocess
 import sys
+
+import yaml
 
 
 def run_command(cmd_args, check=True):
@@ -24,12 +27,31 @@ def run_command(cmd_args, check=True):
     return result
 
 
+def find_project_root():
+    current = os.path.abspath(__file__)
+    for _ in range(4):
+        current = os.path.dirname(current)
+    return current
+
+
+def load_config():
+    root = find_project_root()
+    config_path = os.path.join(root, "deploy", "deployments.yaml")
+    with open(config_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
 def main():
-    project_id = "animetix"
-    region = "europe-west9"  # Region principal de Django
-    brain_region = "europe-west1"  # Inférence GPU L4
-    topic_name = "animetix-budget-alerts"
-    sub_name = "animetix-budget-alerts-push"
+    config = load_config()
+    project_id = config["global"]["project_id"]
+    budget_config = config["gcp_services"]["budget"]
+
+    region = budget_config["region"]
+    brain_region = budget_config["brain_region"]
+    topic_name = budget_config["topic_name"]
+    sub_name = budget_config["subscription_name"]
+    invoker_sa = budget_config["invoker_service_account"]
+    web_service_name = config["gcp_services"].get("web", {}).get("name", "animetix-web")
 
     # 1. Récupération dynamique du nom complet du compte de facturation (Billing Account)
     print("\n--- Step 1: Retrieving Billing Account ---")
@@ -48,7 +70,6 @@ def main():
         print("Error: Could not retrieve Billing Account associated with the project.")
         sys.exit(1)
 
-    # billing_account_name est sous la forme 'billingAccounts/XXXXXX-YYYYYY-ZZZZZZ'
     billing_account_id = billing_account_name.replace("billingAccounts/", "")
     print(f"Associated Billing Account ID is: {billing_account_id}")
 
@@ -67,7 +88,7 @@ def main():
             "run",
             "services",
             "describe",
-            "animetix-web",
+            web_service_name,
             f"--region={region}",
             "--format=value(status.url)",
             f"--project={project_id}",
@@ -83,7 +104,6 @@ def main():
 
     # 4. Provisionnement du compte de service pour la souscription Pub/Sub push
     print("\n--- Step 4: Creating Subscription Invoker Service Account ---")
-    invoker_sa = "animetix-budget-invoker"
     invoker_sa_email = f"{invoker_sa}@{project_id}.iam.gserviceaccount.com"
     run_command(
         [
@@ -105,7 +125,7 @@ def main():
             "run",
             "services",
             "add-iam-policy-binding",
-            "animetix-web",
+            web_service_name,
             f"--member=serviceAccount:{invoker_sa_email}",
             "--role=roles/run.invoker",
             f"--region={region}",
@@ -115,7 +135,6 @@ def main():
 
     # 5. Création de la souscription Pub/Sub Push sécurisée par OIDC
     print("\n--- Step 5: Creating Push Subscription ---")
-    # Supprimer la souscription existante pour s'assurer que l'audience et l'URL sont correctes
     run_command(
         [
             "gcloud",
@@ -147,14 +166,17 @@ def main():
     print(
         "\n--- Step 6: Assigning IAM Permissions for django-web to manage animetix-brain ---"
     )
-    web_sa = "836616987676-compute@developer.gserviceaccount.com"
+    web_sa = config["global"]["service_account"]
+    brain_service_name = (
+        config["gcp_services"].get("brain", {}).get("name", "animetix-brain")
+    )
     run_command(
         [
             "gcloud",
             "run",
             "services",
             "add-iam-policy-binding",
-            "animetix-brain",
+            brain_service_name,
             f"--member=serviceAccount:{web_sa}",
             "--role=roles/run.developer",
             f"--region={brain_region}",
@@ -166,7 +188,6 @@ def main():
     print("\n--- Step 7: Configuring GCP Billing Budget ---")
     budget_name = "animetix-monthly-budget"
 
-    # Supprimer le budget existant s'il existe pour éviter le doublon
     run_command(
         [
             "gcloud",
@@ -181,7 +202,6 @@ def main():
         check=False,
     )
 
-    # Création du budget à $100 relié au topic Pub/Sub
     run_command(
         [
             "gcloud",

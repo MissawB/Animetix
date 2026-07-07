@@ -1,40 +1,83 @@
-# Build + push the prod container image to Artifact Registry.
-# _TAG defaults to "latest" (backward compatible). The CI deploy-to-prod job
-# passes _TAG=<commit sha> so the image is also tagged immutably and the deploy
-# can pin that exact artifact instead of the mutable :latest tag.
+# Unified Cloud Build config file supporting multi-target selective builds.
+# Set _BUILD_TARGET to 'web', 'brain', 'dataflow', or 'all' (default).
 substitutions:
   _TAG: latest
+  _BUILD_TARGET: all
 
-# Send build logs to Cloud Logging only (not the default GCS logs bucket).
-# When `gcloud builds submit` runs as a service account (CI / Workload Identity
-# Federation) rather than a human Viewer/Owner, it cannot stream logs from the
-# default GCS bucket and exits non-zero EVEN IF THE BUILD SUCCEEDS. CLOUD_LOGGING_ONLY
-# removes the GCS bucket from the picture so the command returns the build's real
-# status. (Also the required logging mode for builds run as a user-specified SA.)
 options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-- name: 'gcr.io/cloud-builders/docker'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    docker pull europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest || true
-- name: 'gcr.io/cloud-builders/docker'
-  args: [
-    'build',
-    # `--pull` force la récupération de l'image de base la plus récente
-    # (python:3.12-slim-bookworm) à CHAQUE build : sans ça, `--cache-from`
-    # réutilise l'ancienne couche de base et les correctifs de sécurité Debian
-    # (zlib, openssl, sqlite3, krb5…) ne sont jamais appliqués.
-    '--pull',
-    '--cache-from', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest',
-    '-t', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest',
-    '-t', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:${_TAG}',
-    '-f', 'deploy/Dockerfile',
-    '.'
-  ]
-images:
-- 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest'
-- 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:${_TAG}'
+  # --- Web Image Build & Push ---
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-web'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ "${_BUILD_TARGET}" = "all" ] || [ "${_BUILD_TARGET}" = "web" ]; then
+          docker pull europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest || true
+          docker build --pull \
+            --cache-from europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest \
+            -t europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest \
+            -t europe-west9-docker.pkg.dev/animetix/animetix-repo/web:${_TAG} \
+            -f deploy/Dockerfile .
+          docker push europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest
+          docker push europe-west9-docker.pkg.dev/animetix/animetix-repo/web:${_TAG}
+        else
+          echo "Skipping web build"
+        fi
+
+  # --- Brain Image Build & Push ---
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-brain'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ "${_BUILD_TARGET}" = "all" ] || [ "${_BUILD_TARGET}" = "brain" ]; then
+          docker build --pull \
+            -t europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:latest \
+            -t europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:${_TAG} \
+            -f deploy/Dockerfile.brain .
+          docker push europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:latest
+          docker push europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:${_TAG}
+        else
+          echo "Skipping brain build"
+        fi
+
+  # --- Dataflow Image Build & Push ---
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-dataflow'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ "${_BUILD_TARGET}" = "all" ] || [ "${_BUILD_TARGET}" = "dataflow" ]; then
+          docker build --pull \
+            -t europe-west9-docker.pkg.dev/animetix/animetix-repo/lore-ingestion-beam:latest \
+            -t europe-west9-docker.pkg.dev/animetix/animetix-repo/lore-ingestion-beam:${_TAG} \
+            -f deploy/Dockerfile.dataflow .
+          docker push europe-west9-docker.pkg.dev/animetix/animetix-repo/lore-ingestion-beam:latest
+          docker push europe-west9-docker.pkg.dev/animetix/animetix-repo/lore-ingestion-beam:${_TAG}
+        else
+          echo "Skipping dataflow build"
+        fi
+
+  # --- Dataflow Flex Template Build & Upload ---
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'build-flex-template'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ "${_BUILD_TARGET}" = "all" ] || [ "${_BUILD_TARGET}" = "dataflow" ]; then
+          gcloud dataflow flex-template build \
+            gs://animetix-dataflow/templates/lore-ingestion-beam.json \
+            --image europe-west9-docker.pkg.dev/animetix/animetix-repo/lore-ingestion-beam:${_TAG} \
+            --sdk-language PYTHON \
+            --metadata-file deploy/lore_ingestion_metadata.json
+        else
+          echo "Skipping flex template build"
+        fi
+    waitFor: ['build-dataflow']

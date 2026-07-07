@@ -3,6 +3,8 @@ import shutil
 import subprocess
 import sys
 
+import yaml
+
 
 def run_command(cmd_args, check=True):
     resolved_cmd = shutil.which(cmd_args[0])
@@ -25,13 +27,40 @@ def run_command(cmd_args, check=True):
     return result
 
 
-def main():
-    project_id = "animetix"
-    brain_region = "europe-west1"  # GPU L4 disponible en Belgique
-    web_region = "europe-west9"  # Django principal à Paris
+def find_project_root():
+    current = os.path.abspath(__file__)
+    for _ in range(4):
+        current = os.path.dirname(current)
+    return current
 
-    image_tag = f"europe-west9-docker.pkg.dev/{project_id}/animetix-repo/brain:latest"
-    service_account = "836616987676-compute@developer.gserviceaccount.com"
+
+def load_config():
+    root = find_project_root()
+    config_path = os.path.join(root, "deploy", "deployments.yaml")
+    with open(config_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+def get_git_tag():
+    try:
+        res = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True
+        )
+        if res.returncode == 0:
+            return res.stdout.strip()
+    except Exception:
+        pass
+    return "latest"
+
+
+def main():
+    config = load_config()
+    project_id = config["global"]["project_id"]
+    brain_config = config["gcp_services"]["brain"]
+    web_region = config["global"]["regions"]["web"]
+
+    git_tag = get_git_tag()
+    image_tag = f"{brain_config['image_base']}:{git_tag}"
 
     # Step 1: Build de l'image via Cloud Build
     print("\n--- Step 1: Building Brain API image with Google Cloud Build ---")
@@ -39,50 +68,57 @@ def main():
         "gcloud",
         "builds",
         "submit",
-        "--config=deploy/cloudbuild.brain.yaml",
+        "--config=cloudbuild.yaml",
         f"--project={project_id}",
+        f"--substitutions=_BUILD_TARGET=brain,_TAG={git_tag}",
         ".",
     ]
     run_command(build_cmd)
 
     # Step 2: Déploiement du service Brain API sur Cloud Run GPU
     print("\n--- Step 2: Deploying Brain API with Nvidia L4 GPU on Cloud Run ---")
-    secrets = "BRAIN_API_KEY=BRAIN_API_KEY:latest,HF_TOKEN=HF_TOKEN:latest"
-
-    # Configuration du réseau pour Direct VPC Egress
-    vpc_network = os.getenv("GCP_VPC_NETWORK", "default")
-    vpc_subnet = os.getenv("GCP_VPC_SUBNET", "default")
-    models_bucket = f"{project_id}-models"
+    secrets_str = ",".join(brain_config["secrets"])
+    env_vars_str = ",".join([f"{k}={v}" for k, v in brain_config["env_vars"].items()])
 
     deploy_cmd = [
         "gcloud",
         "beta",
         "run",
         "deploy",
-        "animetix-brain",
+        brain_config["name"],
         f"--image={image_tag}",
-        f"--region={brain_region}",
-        f"--service-account={service_account}",
-        f"--network={vpc_network}",
-        f"--subnet={vpc_subnet}",
+        f"--region={brain_config['region']}",
+        f"--service-account={brain_config['service_account']}",
+        f"--network={brain_config['vpc_network']}",
+        f"--subnet={brain_config['vpc_subnet']}",
         "--vpc-egress=private-ranges-only",
-        # GCS FUSE Volume mount configuration:
-        f"--add-volume=name=models-vol,type=cloud-storage,bucket={models_bucket}",
-        "--add-volume-mount=volume=models-vol,mount-path=/mnt/models",
-        # Configurations GPU requises :
-        "--gpu=1",
-        "--gpu-type=nvidia-l4",
-        "--cpu=4",
-        "--memory=16Gi",
-        "--no-cpu-throttling",  # Requis pour garder le CPU alloué avec GPU
-        "--min-instances=0",  # scale-to-zero explicite : pas de GPU facturé à l'idle (auditable)
-        "--max-instances=3",  # plafond coût ; aligné sur le défaut de restore_brain_service
-        f"--set-secrets={secrets}",
-        "--set-env-vars=DJANGO_ENV=production,LLM_API_BASE=http://localhost:11434/v1,LLM_MODEL_NAME=qwen3.5:9b,GCP_MODELS_MOUNT_PATH=/mnt/models",
-        "--port=7861",
-        "--allow-unauthenticated",  # L'authentification est gérée par X-API-Key au niveau applicatif
-        f"--project={project_id}",
     ]
+
+    for vol in brain_config.get("volumes", []):
+        deploy_cmd.append(
+            f"--add-volume=name={vol['name']},type={vol['type']},bucket={vol['bucket']}"
+        )
+        deploy_cmd.append(
+            f"--add-volume-mount=volume={vol['name']},mount-path={vol['mount_path']}"
+        )
+
+    deploy_cmd.extend(
+        [
+            f"--gpu={brain_config['gpu']}",
+            f"--gpu-type={brain_config['gpu_type']}",
+            f"--cpu={brain_config['cpu']}",
+            f"--memory={brain_config['memory']}",
+            "--no-cpu-throttling",
+            f"--min-instances={brain_config['min_instances']}",
+            f"--max-instances={brain_config['max_instances']}",
+            f"--set-secrets={secrets_str}",
+            f"--set-env-vars={env_vars_str}",
+            f"--port={brain_config['port']}",
+            "--allow-unauthenticated",
+            f"--project={project_id}",
+        ]
+    )
+
     run_command(deploy_cmd)
 
     # Step 3: Récupération de l'URL du service Brain API
@@ -92,8 +128,8 @@ def main():
         "run",
         "services",
         "describe",
-        "animetix-brain",
-        f"--region={brain_region}",
+        brain_config["name"],
+        f"--region={brain_config['region']}",
         "--format=value(status.url)",
         f"--project={project_id}",
     ]
@@ -111,7 +147,7 @@ def main():
         "run",
         "services",
         "update",
-        "animetix-web",
+        config["gcp_services"].get("web", {}).get("name", "animetix-web"),
         f"--region={web_region}",
         f"--update-env-vars=BRAIN_API_URL={brain_url}",
         f"--project={project_id}",

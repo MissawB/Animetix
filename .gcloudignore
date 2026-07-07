@@ -1,29 +1,4 @@
+.gcloudignore
 .git
 .gitignore
-.gcloudignore
-# Secrets locaux : ne doivent JAMAIS partir dans le contexte Cloud Build
-# (les builds locaux `gcloud builds submit` uploadaient le .env avant cette ligne).
-.env
-.venv/
-venv/
-node_modules/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.idea/
-.pytest_cache/
-wandb/
-checkpoints/
-# Dossiers de données - we unignore data but ignore heavy subdirs
-!data/
-data/raw/
-data/models/
-data/mlops/
-data/audio/
-.tmp_dagster_home_*
-frontend/dist/
-frontend/node_modules/
-.coverage
-.superpowers/
-assets/
+#!include:.dockerignore

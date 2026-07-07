@@ -1,6 +1,9 @@
+import os
 import shutil
 import subprocess
 import sys
+
+import yaml
 
 
 def run_command(cmd_args, check=True):
@@ -24,9 +27,26 @@ def run_command(cmd_args, check=True):
     return result
 
 
+def find_project_root():
+    current = os.path.abspath(__file__)
+    for _ in range(4):
+        current = os.path.dirname(current)
+    return current
+
+
+def load_config():
+    root = find_project_root()
+    config_path = os.path.join(root, "deploy", "deployments.yaml")
+    with open(config_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
 def main():
-    project_id = "animetix"
-    policy_name = "animetix-edge-security-policy"
+    config = load_config()
+    project_id = config["global"]["project_id"]
+    security_config = config["gcp_services"]["security"]
+    policy_name = security_config["policy_name"]
+    rules_config = security_config["rules"]
 
     # Step 1: Activation des APIs nécessaires
     print("Step 1: Enabling Compute Engine API (required for Cloud Armor)...")
@@ -70,64 +90,10 @@ def main():
     else:
         print(f"Security policy '{policy_name}' already exists.")
 
-    # Définition de la liste des règles à configurer de manière idempotente
-    rules_config = [
-        # 1. Rate Limiting pour prévenir le Token DoS
-        {
-            "priority": "1000",
-            "description": "Rate limiting per IP to mitigate Token DoS and flooding",
-            "args": [
-                "--action=throttle",
-                "--src-ip-ranges=*",
-                "--rate-limit-threshold-count=100",
-                "--rate-limit-threshold-interval-sec=60",
-                "--conform-action=allow",
-                "--exceed-action=deny-429",
-                "--enforce-on-key=ip",
-            ],
-        },
-        # 2. WAF - SQL Injection
-        {
-            "priority": "2000",
-            "description": "OWASP CRS SQL Injection protection",
-            "args": [
-                "--action=deny-403",
-                "--expression=evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 1})",
-            ],
-        },
-        # 3. WAF - Cross-Site Scripting (XSS)
-        {
-            "priority": "2100",
-            "description": "OWASP CRS XSS protection",
-            "args": [
-                "--action=deny-403",
-                "--expression=evaluatePreconfiguredWaf('xss-v33-stable', {'sensitivity': 1})",
-            ],
-        },
-        # 4. WAF - Remote Command Execution (RCE)
-        {
-            "priority": "2200",
-            "description": "OWASP CRS RCE protection",
-            "args": [
-                "--action=deny-403",
-                "--expression=evaluatePreconfiguredWaf('rce-v33-stable', {'sensitivity': 1})",
-            ],
-        },
-        # 5. Règle Custom CEL pour prompt injection
-        {
-            "priority": "3000",
-            "description": "Custom LLM Prompt Injection filter",
-            "args": [
-                "--action=deny-403",
-                "--expression=request.body.matches('(?i)(ignore.*previous.*instruction|system.*prompt.*override|bypass.*filter|jailbreak)')",
-            ],
-        },
-    ]
-
     # Step 3: Configuration des règles
     print("\nStep 3: Configuring security rules...")
     for rule in rules_config:
-        prio = rule["priority"]
+        prio = str(rule["priority"])
         print(f"\nChecking rule at priority {prio} ({rule['description']})...")
 
         check_rule = run_command(

@@ -3,6 +3,8 @@ import shutil
 import subprocess
 import sys
 
+import yaml
+
 
 def run_command(cmd_args, check=True):
     resolved_cmd = shutil.which(cmd_args[0])
@@ -25,10 +27,36 @@ def run_command(cmd_args, check=True):
     return result
 
 
+def find_project_root():
+    current = os.path.abspath(__file__)
+    for _ in range(4):
+        current = os.path.dirname(current)
+    return current
+
+
+def load_config():
+    root = find_project_root()
+    config_path = os.path.join(root, "deploy", "deployments.yaml")
+    with open(config_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
 def main():
-    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "animetix")
-    bucket_name = os.getenv("GS_BUCKET_NAME", "animetix-media-bucket")
+    config = load_config()
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", config["global"]["project_id"])
+    cdn_config = config["gcp_services"]["cdn"]
+
+    bucket_name = os.getenv("GS_BUCKET_NAME", cdn_config["bucket_name"])
     domain_name = os.getenv("ANIMETIX_CDN_DOMAIN", None)
+
+    backend_name = cdn_config["backend_name"]
+    url_map_name = cdn_config["url_map_name"]
+    ssl_cert_name = cdn_config["ssl_cert_name"]
+    https_proxy_name = cdn_config["https_proxy_name"]
+    https_rule_name = cdn_config["https_rule_name"]
+    http_proxy_name = cdn_config["http_proxy_name"]
+    http_rule_name = cdn_config["http_rule_name"]
+    ip_name = cdn_config["ip_name"]
 
     # Step 1: Enable Compute Engine API
     print("Step 1: Enabling Compute Engine API...")
@@ -43,14 +71,14 @@ def main():
     )
 
     # Step 2: Ensure static IP
-    print("\nStep 2: Checking global static IP 'animetix-cdn-ip'...")
+    print(f"\nStep 2: Checking global static IP '{ip_name}'...")
     check_ip = run_command(
         [
             "gcloud",
             "compute",
             "addresses",
             "describe",
-            "animetix-cdn-ip",
+            ip_name,
             "--global",
             f"--project={project_id}",
         ],
@@ -58,20 +86,20 @@ def main():
     )
 
     if check_ip.returncode != 0:
-        print("Creating global static IP 'animetix-cdn-ip'...")
+        print(f"Creating global static IP '{ip_name}'...")
         run_command(
             [
                 "gcloud",
                 "compute",
                 "addresses",
                 "create",
-                "animetix-cdn-ip",
+                ip_name,
                 "--global",
                 f"--project={project_id}",
             ]
         )
     else:
-        print("Global static IP 'animetix-cdn-ip' already exists.")
+        print(f"Global static IP '{ip_name}' already exists.")
 
     # Step 3: Ensure Backend Bucket with CDN enabled
     print(f"\nStep 3: Configuring Backend Bucket for '{bucket_name}'...")
@@ -81,37 +109,35 @@ def main():
             "compute",
             "backend-buckets",
             "describe",
-            "animetix-cdn-backend",
+            backend_name,
             f"--project={project_id}",
         ],
         check=False,
     )
 
     if check_backend.returncode != 0:
-        print("Creating backend-bucket 'animetix-cdn-backend' with Cloud CDN...")
+        print(f"Creating backend-bucket '{backend_name}' with Cloud CDN...")
         run_command(
             [
                 "gcloud",
                 "compute",
                 "backend-buckets",
                 "create",
-                "animetix-cdn-backend",
+                backend_name,
                 f"--gcs-bucket-name={bucket_name}",
                 "--enable-cdn",
                 f"--project={project_id}",
             ]
         )
     else:
-        print(
-            "Updating backend-bucket 'animetix-cdn-backend' to ensure CDN is active..."
-        )
+        print(f"Updating backend-bucket '{backend_name}' to ensure CDN is active...")
         run_command(
             [
                 "gcloud",
                 "compute",
                 "backend-buckets",
                 "update",
-                "animetix-cdn-backend",
+                backend_name,
                 "--enable-cdn",
                 f"--project={project_id}",
             ]
@@ -125,40 +151,39 @@ def main():
             "compute",
             "url-maps",
             "describe",
-            "animetix-cdn-url-map",
+            url_map_name,
             f"--project={project_id}",
         ],
         check=False,
     )
 
     if check_url_map.returncode != 0:
-        print("Creating URL Map 'animetix-cdn-url-map'...")
+        print(f"Creating URL Map '{url_map_name}'...")
         run_command(
             [
                 "gcloud",
                 "compute",
                 "url-maps",
                 "create",
-                "animetix-cdn-url-map",
-                "--default-backend-bucket=animetix-cdn-backend",
+                url_map_name,
+                f"--default-backend-bucket={backend_name}",
                 f"--project={project_id}",
             ]
         )
     else:
-        print("URL Map 'animetix-cdn-url-map' already exists.")
+        print(f"URL Map '{url_map_name}' already exists.")
 
-    # Step 5: Configure Proxy & Forwarding Rules (HTTPS if domain provided, HTTP fallback otherwise)
+    # Step 5: Configure Proxy & Forwarding Rules
     if domain_name:
         print(f"\nStep 5: Configuring HTTPS for domain '{domain_name}'...")
 
-        # 5.1 SSL Certificate
         check_cert = run_command(
             [
                 "gcloud",
                 "compute",
                 "ssl-certificates",
                 "describe",
-                "animetix-cdn-cert",
+                ssl_cert_name,
                 f"--project={project_id}",
             ],
             check=False,
@@ -171,20 +196,19 @@ def main():
                     "compute",
                     "ssl-certificates",
                     "create",
-                    "animetix-cdn-cert",
+                    ssl_cert_name,
                     f"--domains={domain_name}",
                     f"--project={project_id}",
                 ]
             )
 
-        # 5.2 HTTPS Target Proxy
         check_proxy = run_command(
             [
                 "gcloud",
                 "compute",
                 "target-https-proxies",
                 "describe",
-                "animetix-cdn-https-proxy",
+                https_proxy_name,
                 f"--project={project_id}",
             ],
             check=False,
@@ -197,21 +221,20 @@ def main():
                     "compute",
                     "target-https-proxies",
                     "create",
-                    "animetix-cdn-https-proxy",
-                    "--url-map=animetix-cdn-url-map",
-                    "--ssl-certificates=animetix-cdn-cert",
+                    https_proxy_name,
+                    f"--url-map={url_map_name}",
+                    f"--ssl-certificates={ssl_cert_name}",
                     f"--project={project_id}",
                 ]
             )
 
-        # 5.3 HTTPS Forwarding Rule
         check_rule = run_command(
             [
                 "gcloud",
                 "compute",
                 "forwarding-rules",
                 "describe",
-                "animetix-cdn-https-rule",
+                https_rule_name,
                 "--global",
                 f"--project={project_id}",
             ],
@@ -225,10 +248,10 @@ def main():
                     "compute",
                     "forwarding-rules",
                     "create",
-                    "animetix-cdn-https-rule",
-                    "--address=animetix-cdn-ip",
+                    https_rule_name,
+                    f"--address={ip_name}",
                     "--global",
-                    "--target-https-proxy=animetix-cdn-https-proxy",
+                    f"--target-https-proxy={https_proxy_name}",
                     "--ports=443",
                     f"--project={project_id}",
                 ]
@@ -236,14 +259,13 @@ def main():
     else:
         print("\nStep 5: Configuring HTTP (fallback proxy)...")
 
-        # 5.1 HTTP Target Proxy
         check_proxy = run_command(
             [
                 "gcloud",
                 "compute",
                 "target-http-proxies",
                 "describe",
-                "animetix-cdn-http-proxy",
+                http_proxy_name,
                 f"--project={project_id}",
             ],
             check=False,
@@ -256,20 +278,19 @@ def main():
                     "compute",
                     "target-http-proxies",
                     "create",
-                    "animetix-cdn-http-proxy",
-                    "--url-map=animetix-cdn-url-map",
+                    http_proxy_name,
+                    f"--url-map={url_map_name}",
                     f"--project={project_id}",
                 ]
             )
 
-        # 5.2 HTTP Forwarding Rule
         check_rule = run_command(
             [
                 "gcloud",
                 "compute",
                 "forwarding-rules",
                 "describe",
-                "animetix-cdn-http-rule",
+                http_rule_name,
                 "--global",
                 f"--project={project_id}",
             ],
@@ -283,10 +304,10 @@ def main():
                     "compute",
                     "forwarding-rules",
                     "create",
-                    "animetix-cdn-http-rule",
-                    "--address=animetix-cdn-ip",
+                    http_rule_name,
+                    f"--address={ip_name}",
                     "--global",
-                    "--target-http-proxy=animetix-cdn-http-proxy",
+                    f"--target-http-proxy={http_proxy_name}",
                     "--ports=80",
                     f"--project={project_id}",
                 ]
