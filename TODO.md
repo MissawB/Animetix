@@ -87,8 +87,11 @@
   - ✅ Fusionné les 3 fichiers de build dans le fichier [cloudbuild.yaml](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/cloudbuild.yaml) à la racine de manière à supporter le build sélectif ou global via des substitutions (`_BUILD_TARGET`).
   - ✅ Refactorisé les scripts de déploiement Python (`deploy_brain.py`, `deploy_jobs.py`, `deploy_budget.py`, `deploy_cdn.py`, `deploy_security.py`) pour éliminer les paramètres codés en dur et lire directement depuis `deployments.yaml`.
   - ✅ Aligné `.gcloudignore` sur `.dockerignore` via la directive `#!include:.dockerignore` pour garantir un contexte de build unique et canonique.
-- [ ] **Scripts — sprawl (~55 scripts, one-offs exploratoires)** _(audit dette 2026-07-05)_
-  - `scripts/test/ddg_test.py`, `test_xai_real.py`… hors pytest ; les utilitaires DB (`scripts/db/check_*.py`) devraient être des management commands. Trier : promouvoir, migrer ou supprimer.
+- [x] **Scripts — sprawl (~55 scripts, one-offs exploratoires)** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-07)_
+  - ✅ Éliminé la prolifération de scripts exploratoires orphelins (supprimé le répertoire `scripts/test/` contenant 7 scripts hors pytest).
+  - ✅ Promu et migré tous les scripts utilitaires de base de données (Qdrant vector counts, migration checks, SQLite catalog checking et Neo4j reconciliation) vers des Django management commands standards sous `backend/api/animetix/management/commands/` (`check_db_status`, `reconcile_db` et `generate_offline_db`).
+  - ✅ Optimisé la commande `reconcile_db` en effectuant un chargement en bloc (`values_list` avec `item_id__in`) pour éviter les boucles de requêtes N+1 et en validant la connectivité Neo4j une seule fois pour éviter d'inonder les logs.
+  - ✅ Éliminé les emojis et caractères non-ASCII des commandes de base de données pour empêcher les erreurs d'encodage de console (`UnicodeEncodeError`) sous Windows.
 - [ ] **Backend — noms de modèles hardcodés + mismatch de version** _(revue archi 2026-06-22 ; en partie fait)_
   - ✅ Phase 1 : registre sécu [model_registry.py](backend/core/utils/model_registry.py) (SHA + trust). ✅ Phase 2a : unification Gemini en 3 rôles canoniques via [gemini_models.py](backend/core/utils/gemini_models.py) (`gemini-3.5-flash`/`live-2.5-native-audio`/`embedding-2`) + garde-fou anti-littéral. ✅ Révisions d'embeddings résolues depuis le registre central (`EMBEDDING_VERSIONS`, manifest abandonné).
   - ⏳ **Reste (Phase 2b)** : registre d'**IDs logiques locaux** (`llama3`, `Qwen2.5-1.5B` vs `Qwen3.5-4B`, `DRAFT_MODEL_ID`, `VibeThinker-3B`, `FLUX`) + fusion résiduelle [pipeline/models_registry.py](backend/pipeline/models_registry.py).
