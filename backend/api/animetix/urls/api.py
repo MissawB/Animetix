@@ -797,7 +797,7 @@ urlpatterns = [
         api_views.UserManagementViewSet.as_view({"post": "toggle_active"}),
         name="api_admin_toggle_active",
     ),
-    # --- B2B DEVELOPER PAID API & STRIPE BILLING ---
+    # --- B2B DEVELOPER API (Pro tier, free/manual) ---
     path("developer/rag/", api_views.DeveloperRAGView.as_view(), name="developer_rag"),
     path(
         "developer/subscribe/",

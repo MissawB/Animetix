@@ -54,7 +54,7 @@ class DeveloperRAGView(APIView):
                         final_answer = event.get("content", "")
                         break
 
-            # 1. Log usage (Automatic Stripe reporting for Pro tier is handled inside log_usage)
+            # 1. Log usage (Pro tier is free/manual — no external billing report)
             usage_adapter = DjangoUsageAdapter()
             usage_adapter.log_usage(
                 engine="agentic_rag", units=1, user_id=request.user.id
