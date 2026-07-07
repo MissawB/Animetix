@@ -597,3 +597,40 @@ export interface FavoriteManga {
   updated_at: string;
 }
 
+export interface PlasticityConfig {
+  tau_plus: number;
+  tau_minus: number;
+  num_concepts: number;
+}
+
+export interface PersonalizationFeatures {
+  aura: boolean;
+  font: boolean;
+  accent: boolean;
+}
+
+export interface PersonalizationSettings {
+  mode: 'auto' | 'manual';
+  intensity_multiplier: number;
+  manual_archetype?: string;
+  features?: PersonalizationFeatures;
+}
+
+export interface CurrentArchetype {
+  id: string;
+  accent: string;
+  aura_type: string;
+  intensity: number;
+  font_vibe: string;
+}
+
+export interface UnifiedPlasticityState {
+  status: string;
+  weights: number[][];
+  concepts: string[];
+  plasticity_config: PlasticityConfig;
+  personalization_settings: PersonalizationSettings;
+  current_archetype: CurrentArchetype;
+}
+
+
