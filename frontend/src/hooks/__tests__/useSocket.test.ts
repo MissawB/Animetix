@@ -207,5 +207,10 @@ describe('useSocket', () => {
 
     expect(result.current.connected).toBe(true);
     expect(result.current.reconnecting).toBe(false);
+    expect(mockAddToast).toHaveBeenCalledWith(
+      'Connexion rétablie !',
+      'success'
+    );
   });
 });
+

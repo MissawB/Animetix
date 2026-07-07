@@ -10,7 +10,7 @@ class FakeWebSocket {
   url: string;
   onopen: (() => void) | null = null;
   onmessage: ((e: { data: string }) => void) | null = null;
-  onclose: (() => void) | null = null;
+  onclose: ((e?: any) => void) | null = null;
   onerror: ((e: unknown) => void) | null = null;
   close = vi.fn();
 
@@ -152,20 +152,97 @@ describe('useNotificationStore', () => {
     expect(useNotificationStore.getState().socket).toBeNull();
   });
 
-  it('onclose: resets state then schedules a reconnect after 5s', () => {
+  it('onclose: schedules reconnect with exponential backoff and limits to 5 attempts', () => {
+    useNotificationStore.getState().connect();
+    const ws1 = FakeWebSocket.instances[0];
+    ws1.onopen?.();
+
+    // 1st close (unexpected, code 1006)
+    ws1.onclose?.({ code: 1006 } as any);
+    expect(useNotificationStore.getState().isConnected).toBe(false);
+    expect(useNotificationStore.getState().isReconnecting).toBe(true);
+
+    // Delay should be 1000 * 2^0 = 1000ms
+    vi.advanceTimersByTime(999);
+    expect(FakeWebSocket.instances).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(FakeWebSocket.instances).toHaveLength(2);
+
+    const ws2 = FakeWebSocket.instances[1];
+    expect(useNotificationStore.getState().reconnectAttempts).toBe(1);
+
+    // 2nd close
+    ws2.onclose?.({ code: 1006 } as any);
+    // Delay should be 1000 * 2^1 = 2000ms
+    vi.advanceTimersByTime(1999);
+    expect(FakeWebSocket.instances).toHaveLength(2);
+    vi.advanceTimersByTime(1);
+    expect(FakeWebSocket.instances).toHaveLength(3);
+
+    const ws3 = FakeWebSocket.instances[2];
+    expect(useNotificationStore.getState().reconnectAttempts).toBe(2);
+
+    // Reconnect success!
+    ws3.onopen?.();
+    expect(useNotificationStore.getState().isConnected).toBe(true);
+    expect(useNotificationStore.getState().isReconnecting).toBe(false);
+    expect(useNotificationStore.getState().reconnectAttempts).toBe(0);
+
+    const toasts = useToastStore.getState().toasts;
+    expect(toasts.some(t => t.message.includes('rétablie'))).toBe(true);
+  });
+
+  it('onclose: does not reconnect on voluntary close (code 1000)', () => {
     useNotificationStore.getState().connect();
     const ws = FakeWebSocket.instances[0];
     ws.onopen?.();
 
-    ws.onclose?.();
-
-    // Immediately after close: state reset, no new socket yet.
+    ws.onclose?.({ code: 1000 } as any);
     expect(useNotificationStore.getState().isConnected).toBe(false);
-    expect(useNotificationStore.getState().socket).toBeNull();
-    expect(FakeWebSocket.instances).toHaveLength(1);
+    expect(useNotificationStore.getState().isReconnecting).toBe(false);
 
-    // After the 5s retry timer a fresh socket is created.
+    vi.advanceTimersByTime(10000);
+    expect(FakeWebSocket.instances).toHaveLength(1);
+  });
+
+  it('onclose: stops trying and shows error toast after 5 failed attempts', () => {
+    useNotificationStore.getState().connect();
+    
+    // Simulate 5 failures (socket close without ever opening)
+    for (let i = 0; i < 5; i++) {
+      expect(FakeWebSocket.instances).toHaveLength(i + 1);
+      const ws = FakeWebSocket.instances[i];
+      ws.onclose?.({ code: 1006 } as any);
+      
+      const delay = 1000 * Math.pow(2, i);
+      vi.advanceTimersByTime(delay);
+    }
+
+    expect(FakeWebSocket.instances).toHaveLength(6);
+    const lastWs = FakeWebSocket.instances[5];
+    lastWs.onclose?.({ code: 1006 } as any);
+
+    // Now reconnectAttempts is 5, it should not schedule reconnect
+    expect(useNotificationStore.getState().isReconnecting).toBe(false);
+    const toasts = useToastStore.getState().toasts;
+    expect(toasts.some(t => t.message.includes('Impossible de se connecter'))).toBe(true);
+  });
+
+
+  it('disconnect: cancels pending reconnection timers', () => {
+    useNotificationStore.getState().connect();
+    const ws = FakeWebSocket.instances[0];
+    ws.onopen?.();
+    ws.onclose?.({ code: 1006 } as any);
+
+    expect(useNotificationStore.getState().isReconnecting).toBe(true);
+
+    useNotificationStore.getState().disconnect();
+    expect(useNotificationStore.getState().isReconnecting).toBe(false);
+
     vi.advanceTimersByTime(5000);
-    expect(FakeWebSocket.instances).toHaveLength(2);
+    // No new connection attempt
+    expect(FakeWebSocket.instances).toHaveLength(1);
   });
 });
+

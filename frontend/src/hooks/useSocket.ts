@@ -68,11 +68,12 @@ const useSocket = (
       logger.log(`Connecté à la room ${type}: ${roomCode}`);
       setConnected(true);
       setReconnecting(false);
-      reconnectAttemptsRef.current = 0;
       
       if (reconnectAttemptsRef.current > 0) {
         addToast('Connexion rétablie !', 'success');
       }
+      reconnectAttemptsRef.current = 0;
+
 
       while (messageQueueRef.current.length > 0 && socket.readyState === WebSocket.OPEN) {
         const msg = messageQueueRef.current.shift();

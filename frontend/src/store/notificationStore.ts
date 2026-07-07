@@ -2,10 +2,17 @@ import { create } from 'zustand';
 import { useToastStore } from './toastStore';
 import { logger } from '../utils/logger';
 
+const MAX_RECONNECT_ATTEMPTS = 5;
+const INITIAL_RECONNECT_DELAY = 1000;
+
+let reconnectTimeoutId: any = null;
+
 interface NotificationStore {
   unreadCount: number;
   socket: WebSocket | null;
   isConnected: boolean;
+  isReconnecting: boolean;
+  reconnectAttempts: number;
   connect: () => void;
   disconnect: () => void;
   setUnreadCount: (count: number) => void;
@@ -17,6 +24,8 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
   unreadCount: 0,
   socket: null,
   isConnected: false,
+  isReconnecting: false,
+  reconnectAttempts: 0,
 
   setUnreadCount: (count) => set({ unreadCount: count }),
   incrementUnread: () => set((state) => ({ unreadCount: state.unreadCount + 1 })),
@@ -33,10 +42,20 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
 
     logger.log(`Connecting to notification socket: ${wsUrl}`);
     const socket = new WebSocket(wsUrl);
+    set({ socket });
 
     socket.onopen = () => {
       logger.log('Notification socket connected');
-      set({ isConnected: true, socket });
+      const { reconnectAttempts } = get();
+      if (reconnectAttempts > 0) {
+        useToastStore.getState().addToast('Connexion notifications rétablie !', 'success');
+      }
+      set({ 
+        isConnected: true, 
+        isReconnecting: false, 
+        reconnectAttempts: 0, 
+        socket 
+      });
     };
 
     socket.onmessage = (event) => {
@@ -58,14 +77,40 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
       }
     };
 
-    socket.onclose = () => {
-      logger.log('Notification socket closed');
+    socket.onclose = (event) => {
+      const code = event?.code ?? 1006;
+      logger.log(`Notification socket closed with code ${code}`);
       set({ isConnected: false, socket: null });
-      // Retry connection after 5s
-      setTimeout(() => {
-        get().connect();
-      }, 5000);
+
+      // Guard against reconnection on voluntary closes (code === 1000)
+      if (code !== 1000) {
+        const { reconnectAttempts } = get();
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          set({ isReconnecting: true });
+          const delay = INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttempts);
+
+          if (reconnectAttempts === 0) {
+            useToastStore.getState().addToast(
+              'Connexion notifications perdue. Tentative de reconnexion...',
+              'info'
+            );
+          }
+
+          if (reconnectTimeoutId) clearTimeout(reconnectTimeoutId);
+          reconnectTimeoutId = setTimeout(() => {
+            set((state) => ({ reconnectAttempts: state.reconnectAttempts + 1 }));
+            get().connect();
+          }, delay);
+        } else {
+          set({ isReconnecting: false });
+          useToastStore.getState().addToast(
+            'Impossible de se connecter aux notifications. Vérifiez votre réseau.',
+            'error'
+          );
+        }
+      }
     };
+
 
     socket.onerror = (err) => {
       console.error('Notification socket error', err);
@@ -76,7 +121,11 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     const socket = get().socket;
     if (socket) {
       socket.close(1000, "User logged out");
-      set({ socket: null, isConnected: false });
     }
+    if (reconnectTimeoutId) {
+      clearTimeout(reconnectTimeoutId);
+      reconnectTimeoutId = null;
+    }
+    set({ socket: null, isConnected: false, isReconnecting: false, reconnectAttempts: 0 });
   }
 }));
