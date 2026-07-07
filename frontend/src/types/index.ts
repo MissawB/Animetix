@@ -633,4 +633,28 @@ export interface UnifiedPlasticityState {
   current_archetype: CurrentArchetype;
 }
 
+export interface UPlayer {
+  id: string;
+  name: string;
+  is_host?: boolean;
+  has_voted?: boolean;
+  alive?: boolean;
+  role?: string;
+  word?: string;
+  image?: string;
+}
+
+export interface UMsg {
+  user: string;
+  text: string;
+  is_system?: boolean;
+}
+
+export interface UResult {
+  winner: string;
+  reason?: string;
+  mrwhite_winners?: string[];
+}
+
+
 
