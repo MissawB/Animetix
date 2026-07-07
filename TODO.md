@@ -82,9 +82,11 @@
 - [x] **Infra — `animetix.xyz` absent des défauts `ALLOWED_HOSTS`/CORS** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-07)_
   - ✅ Ajouté le domaine custom `animetix.xyz` et ses sous-domaines (`.animetix.xyz`) aux valeurs par défaut d' `ALLOWED_HOSTS` en production.
   - ✅ Ajouté `https://animetix.xyz` et `https://www.animetix.xyz` aux valeurs par défaut de `CSRF_TRUSTED_ORIGINS` (en production) et configuré `CORS_ALLOWED_ORIGINS` de manière dynamique à partir des variables d'environnement avec ces domaines par défaut.
-- [ ] **Infra — logique de déploiement dupliquée, pas d'IaC** _(audit dette 2026-07-05)_
-  - 3 fichiers Cloud Build + `gcloud` impératif dans [ci.yml:345-361](.github/workflows/ci.yml#L345-L361) + ~7 scripts Python `subprocess` ([deploy_brain.py](scripts/deploy/gcp/deploy_brain.py), `deploy_cdn.py`, `deploy_jobs.py`…) ; 3 cibles de déploiement (GCP, Cloudflare, HF Space). Converger vers une source déclarative.
-  - Contexte de build divergent : la CI valide un build local « gras » (pas de `.dockerignore`) quand la prod passe par `.gcloudignore` — un seul contexte canonique.
+- [x] **Infra — logique de déploiement dupliquée, pas d'IaC** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-07)_
+  - ✅ Créé une source déclarative unique [deployments.yaml](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/deploy/deployments.yaml) qui centralise tous les paramètres de déploiement (GCP Services, Cloud Run GPU, 8 Jobs planifiés, Load Balancer / CDN, Cloud Armor, Cloudflare Worker et Hugging Face Space).
+  - ✅ Fusionné les 3 fichiers de build dans le fichier [cloudbuild.yaml](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/cloudbuild.yaml) à la racine de manière à supporter le build sélectif ou global via des substitutions (`_BUILD_TARGET`).
+  - ✅ Refactorisé les scripts de déploiement Python (`deploy_brain.py`, `deploy_jobs.py`, `deploy_budget.py`, `deploy_cdn.py`, `deploy_security.py`) pour éliminer les paramètres codés en dur et lire directement depuis `deployments.yaml`.
+  - ✅ Aligné `.gcloudignore` sur `.dockerignore` via la directive `#!include:.dockerignore` pour garantir un contexte de build unique et canonique.
 - [ ] **Scripts — sprawl (~55 scripts, one-offs exploratoires)** _(audit dette 2026-07-05)_
   - `scripts/test/ddg_test.py`, `test_xai_real.py`… hors pytest ; les utilitaires DB (`scripts/db/check_*.py`) devraient être des management commands. Trier : promouvoir, migrer ou supprimer.
 - [ ] **Backend — noms de modèles hardcodés + mismatch de version** _(revue archi 2026-06-22 ; en partie fait)_
