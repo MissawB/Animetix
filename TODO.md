@@ -73,9 +73,12 @@
   - ✅ Remplacé les assignations `os.environ` au niveau module dans les fichiers de test de `brain_api` par `setdefault` pour éviter le couplage temporel.
   - ✅ Remplacé les vrais `asyncio.sleep` (50ms) par un simple `yield` (`asyncio.sleep(0)`) dans `test_cove_parallel.py`.
   - ✅ Supprimé le partage d'objets mocks globaux dans `test_s2s_inference.py` (instanciés à chaque test).
-- [ ] **CI — dérive pre-commit ↔ CI + audit sécu frontend factice** _(audit dette 2026-07-05)_
-  - Pre-commit : pas de gate coverage local, hook mypy documenté cassé (`SKIP=mypy`), **aucun hook frontend** alors que la CI impose tsc/eslint/vitest (et `lint-staged.config.cjs` existe en parallèle, non unifié).
-  - Le job `frontend-security` de [security_audit.yml:49-63](.github/workflows/security_audit.yml#L49-L63) fait juste `npm ci` — **aucun `npm audit`**.
+- [x] **CI — dérive pre-commit ↔ CI + audit sécu frontend factice** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-07)_
+  - ✅ Configuré `.pre-commit-config.yaml` pour exécuter `mypy` (avec `--no-site-packages` pour correspondre à la CI et éviter les conflits locaux) et `pytest` avec une barrière de couverture de 75%.
+  - ✅ Créé des scripts de contrôle `run_in_venv.py` et `run_cmd.py` pour exécuter les hooks dans le venv et les sous-répertoires correspondants de manière multiplateforme.
+  - ✅ Ajouté des hooks frontend unifiés (`lint-staged` au commit, `vitest` au push).
+  - ✅ Corrigé le type checker `mypy` (0 erreurs sur 515 fichiers).
+  - ✅ Corrigé le job `frontend-security` pour lancer un vrai `npm audit --audit-level=high` et résolu 12 vulnérabilités de sécurité via `npm audit fix`.
 - [ ] **Infra — `animetix.xyz` absent des défauts `ALLOWED_HOSTS`/CORS** _(audit dette 2026-07-05)_
   - [settings.py:89](backend/api/animetix_project/settings.py#L89) (défaut = hf.space seulement) et [settings.py:277-282](backend/api/animetix_project/settings.py#L277-L282) : le domaine custom ne marche que si la var d'env est bien positionnée — couplage caché avec le Worker Cloudflare (`X-Forwarded-Host`). Ajouter le domaine aux défauts ou fail-fast.
 - [ ] **Infra — logique de déploiement dupliquée, pas d'IaC** _(audit dette 2026-07-05)_
