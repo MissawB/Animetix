@@ -4,7 +4,7 @@ This document formalizes the strategic planning and technical architecture of se
 
 ---
 
-## 📅 Integration Timeline (Last update: June 15, 2026)
+## 📅 Integration Timeline (Last update: July 7, 2026)
 
 The entire cognitive and multimodal architecture is now operational. The project is entering the hardening and operations optimization phase.
 
@@ -23,14 +23,13 @@ gantt
     Phase M: Economy & Monetization (Stripe) :done, m1, 2026-06-13, 2026-06-14
     Cloud Integration (GCIP, Vertex, AlloyDB):done, c2, 2026-06-10, 2026-06-15
     
-    section Robustness & Security (CURRENT)
-    Security Hardening (VPC, SQL Guard)      :active, s1, 2026-06-14, 2026-06-18
-    MLOps Monitoring & Alerting              :active, s2, 2026-06-15, 2026-06-17
-    Accessibility Audit (WCAG)               :s3, 2026-06-17, 2026-06-20
+    section Robustness & Security
+    Phase S: Hardening & MLOps (XAI/Drift/Budgets):done, s1, 2026-06-14, 2026-07-07
+    Accessibility Audit (WCAG)               :active, s2, 2026-07-07, 2026-07-15
     
     section Future & Expansion
-    Ghost Labs Stabilization                 :f1, 2026-06-20, 2026-07-01
-    Multi-Region Deployment                  :f2, 2026-07-01, 2026-07-15
+    Ghost Labs Stabilization                 :f1, 2026-07-15, 2026-08-01
+    Multi-Region Deployment                  :f2, 2026-08-01, 2026-08-15
 ```
 
 ---
@@ -54,19 +53,21 @@ gantt
 *   **Expert API:** Consumption-based billing via Stripe Metered Billing for third-party developers.
 *   **SOTA Google Cloud:** Migration to GCIP (Auth), Vertex AI Vector Search 2.0, and AlloyDB AI (Text-to-SQL).
 
-#### Phase S: Robustness, Security & Observability (IN PROGRESS)
-*   **Network Security:** Direct VPC Egress and Cloud Armor WAF configured.
-*   **MLOps Alerting:** Prometheus/Grafana monitoring for archetype drift and model collapse.
+#### Phase S: Robustness, Security, MLOps & Billing (COMPLETED)
+*   **Network Security:** Direct VPC Egress and Cloud Armor WAF rules configured.
+*   **Embedding & Archetype Drift:** Wasserstein distance query embedding drift checking and alerting (`generate_drift_baselines`).
+*   **Explainable AI (XAI):** `XaiDiagnosticService` logprob confidence profiling, attention heatmaps, and logit lens projections.
+*   **Cost Containment & Webhook**: Automatic billing webhook executing graceful shutdowns of GPU inference services once budget caps are reached.
 
 ---
 
-## 📝 Revision Notes
+## 📜 Revision Notes
 
 **Global Status:**
-- The AI architecture is **100% stabilized** and complies with the 2026 specifications.
-- Future dates from the previous roadmap were compressed due to a major acceleration in cloud integration.
+- The AI architecture is **100% stabilized** and complies with the July 2026 specifications.
+- Hardening of security and MLOps constraints was finalized with the deployment of declarative deployment manifests, automated drift checks, and secure billing push subscriptions.
 
 **Immediate Priorities:**
-1. Finalize the accessibility audit (WCAG) via Playwright.
-2. Stabilize experimental interfaces (Neural Diagnostics, Plasticity Lab) to remove "Ghost/Experimental" tags.
-3. Automate weekly security compliance reports.
+- Finalize the accessibility audit (WCAG) via Playwright.
+- Clean up obsolete exploratory scripts and legacy configuration files.
+- Automate weekly security compliance reports.

@@ -230,7 +230,7 @@ pytest
 To execute frontend tests:
 
 ```bash
-python scripts/setup_e2e.py
+python scripts/verify/setup_e2e.py
 pytest tests/e2e
 ```
 

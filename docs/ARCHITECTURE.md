@@ -41,7 +41,7 @@ The backend code is organized under `backend/`:
 
 - **`core/ports/`**: Abstractions (Abstract Base Classes) defining the business contracts.
   - `InferencePort`: Text/Image generation, voice cloning, reranking, and advanced computer vision.
-  - `MlopsPort`: Handles telemetry, DPO logging, and AI feedback loops via Celery/GCP Tasks.
+  - `MlopsPort`: Handles telemetry, DPO logging, and AI feedback loops via Cloud Run Jobs / GCP Tasks.
   - `PersistencePort`: Unified data access definition (`UnifiedRepositoryAdapter`).
 - **`core/domain/services/`**: Pure business logic services, completely independent of infrastructure or frameworks.
 - **`adapters/`**: Concrete infrastructure implementations.

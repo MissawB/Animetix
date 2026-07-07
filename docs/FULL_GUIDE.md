@@ -93,21 +93,33 @@ Animetix employs an **LLM-as-a-Judge** evaluation loop:
 - **Feedback Loop:** Malformed generations are formatted into `(Prompt, Chosen, Rejected)` JSONL datasets.
 - **Alignment:** Datasets are used for continuous LoRA training.
 
+### C. Explainable AI (XAI) & Latent Space Projection
+- **Token logprobs & Uncertainty**: Inspects token-level logprobabilities and cumulative entropy directly during streaming generation to measure confidence and flag hallucination risks.
+- **Attention Heatmaps & Logit Lens**: Collects attention matrices and projects intermediate representation vectors onto the vocabulary space (logit lens) to visualize which layers formulate specific reasoning concepts.
+- **Neural Diagnostics**: Exposes an interactive visualizer mapping the user's current query alongside catalog embeddings inside a projected 3D semantic space.
+
+### D. Embeddings & Archetype Drift Detection
+- **Baselines & Distributions**: Scheduled batch jobs calculate Wasserstein distance / semantic drift of recent user query embeddings against baseline distributions (`generate_drift_baselines`).
+- **Alerting**: Automatically triggers alerts and recalibrates user semantic weights if an archetype collapse (e.g., preference saturation or drift) is detected.
+
 ---
 
-## 🛡️ 6. Safety & Compliance
+## 🛡️ 6. Safety, Compliance & Billing Automation
 
-- **Prompt Sanitization:** Ingested context is audited to block indirect prompt injections.
-- **Rate Limiting:** Protects models from Token DoS attacks.
-- **OpenTelemetry Tracing:** Spans are enriched with semantic agentic attributes and exported directly to Cloud Trace.
+- **Prompt Sanitization**: Ingested context is audited to block indirect prompt injections.
+- **Token DoS Protection**: Rate limiting and payload size gates protect endpoints.
+- **OpenTelemetry Tracing**: Spans are enriched with semantic agentic attributes and exported directly to Cloud Trace.
+- **Secure Billing Budget Caps**: Relies on a secure Pub/Sub Push Subscription OIDC webhook (`/api/billing/webhook/`) that listens to GCP billing budget alerts.
+- **Graceful Degradation**: When a budget cap is reached (e.g., $100 monthly budget exceeded), the webhook automatically updates the active service state, executing a graceful shutdown of heavy GPU ML inference services (the Brain API) and falling back to light SLMs/local CPUs to guarantee 0% cost overrun.
 
 ---
 
 ## 🚀 7. Deployment Lifecycle
 
-1.  **Staging:** Deploy using Docker Stack (Postgres, Redis, Neo4j, Ollama).
-2.  **Pre-Flight:** Execute `scripts/pre_flight_check.py` to validate environment bindings.
-3.  **Production:** Enable Daphne ASGI server for SSE streaming and WebSockets.
+1.  **Declarative Manifest**: Define environment variables, scaling thresholds, WAF rules, and Secrets references in [deployments.yaml](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/deploy/deployments.yaml).
+2.  **Staging**: Deploy using Docker Stack (Postgres, Redis, Neo4j, Ollama).
+3.  **Pre-Flight**: Execute `python backend/api/manage.py check_db_status` and `python scripts/verify/pre_flight_check.py` to validate environment bindings.
+4.  **Production**: Enable Daphne ASGI server for SSE streaming and WebSockets.
 
 ---
-*End of Technical Document - Animetix - June 2026*
+*End of Technical Document - Animetix - July 2026*
