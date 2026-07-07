@@ -86,7 +86,10 @@ if IS_PRODUCTION:
         )
     DEBUG = env.bool("DJANGO_DEBUG", default=False)
     # Support dynamic ALLOWED_HOSTS via env var in production (e.g. for GCP Cloud Run)
-    ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["missawb-animetix-web.hf.space"])
+    ALLOWED_HOSTS = env.list(
+        "ALLOWED_HOSTS",
+        default=["missawb-animetix-web.hf.space", "animetix.xyz", ".animetix.xyz"],
+    )
 
     # --- SECURITY HARDENING (PROD) ---
     SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=True)
@@ -136,7 +139,11 @@ else:
     # En production stricte, on ne devrait utiliser que des URLs explicites
     # On garde une fallback sécurisée si aucune n'est fournie via ENV
     if not CSRF_TRUSTED_ORIGINS:
-        CSRF_TRUSTED_ORIGINS = ["https://missawb-animetix-web.hf.space"]
+        CSRF_TRUSTED_ORIGINS = [
+            "https://missawb-animetix-web.hf.space",
+            "https://animetix.xyz",
+            "https://www.animetix.xyz",
+        ]
 
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
@@ -275,12 +282,16 @@ SPECTACULAR_SETTINGS = {
     "COMPONENT_SPLIT_PATCH": True,
 }
 
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "https://missawb-animetix-web.hf.space",
-]
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://missawb-animetix-web.hf.space",
+        "https://animetix.xyz",
+        "https://www.animetix.xyz",
+    ],
+)
 ROOT_URLCONF = "animetix_project.urls"
 
 TEMPLATES = [
