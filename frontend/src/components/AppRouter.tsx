@@ -17,11 +17,16 @@ import { BillingRoutes } from '../features/billing/routes/BillingRoutes';
 import { ExploreRoutes } from '../features/explore/routes/ExploreRoutes';
 import { SupportRoutes } from '../features/support/routes/SupportRoutes';
 import { ResearchRoutes } from '../features/research/routes/ResearchRoutes';
+import { LegalRoutes } from '../features/legal/routes/LegalRoutes';
 import App from '../App';
 
 const NotFoundPage = lazy(() => import('../pages/utils/NotFoundPage'));
 
-const Loading: React.FC = () => <div className="p-20 text-center text-white font-black animate-pulse uppercase tracking-[0.3em]">Initialisation du système...</div>;
+const Loading: React.FC = () => (
+  <div className="p-20 text-center text-white font-black animate-pulse uppercase tracking-[0.3em]">
+    Initialisation du système...
+  </div>
+);
 
 /**
  * Determine the app basename based on URL structure.
@@ -29,7 +34,7 @@ const Loading: React.FC = () => <div className="p-20 text-center text-white font
  */
 const getBasename = () => {
   const path = window.location.pathname;
-  
+
   // Dev mode with Vite often uses /static/ as base
   if (path.startsWith('/static')) {
     const parts = path.split('/');
@@ -39,7 +44,7 @@ const getBasename = () => {
     }
     return '/static';
   }
-  
+
   // Production or direct root access
   const match = path.match(/^\/(fr|en)(\/|$)/);
   return match ? match[0].replace(/\/$/, '') : '';
@@ -80,6 +85,7 @@ const AnimatedRoutes: React.FC = () => {
             {ExploreRoutes()}
             {SupportRoutes()}
             {ResearchRoutes()}
+            {LegalRoutes()}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

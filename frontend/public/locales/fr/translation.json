@@ -2368,6 +2368,62 @@
     }
   },
   "labs.offline_manga.system_init": "Initialisation du système...",
+  "legal": {
+    "about": {
+      "author": {
+        "body": "Animetix est un projet indépendant conçu et développé par un passionné d'anime et d'ingénierie IA. Il est en évolution continue, avec de nouveaux modes de jeu et de nouveaux Labs ajoutés régulièrement.",
+        "title": "L'auteur"
+      },
+      "intro": "Animetix (Anime Archetype Engine) est une plateforme interactive où l'IA rencontre la culture anime : jeux, laboratoires créatifs et exploration de connaissances.",
+      "mission": {
+        "body": "Animetix explore l'univers de l'animation et du manga à travers l'intelligence artificielle : deviner un personnage en 20 questions, résoudre des énigmes narratives, générer des créations visuelles et sonores. L'objectif est de rendre la découverte de la culture anime à la fois ludique et intelligente.",
+        "title": "Notre mission"
+      },
+      "tech": {
+        "body": "La plateforme combine un moteur de raisonnement par IA, une base de connaissances en graphe (Neo4j), de la recherche vectorielle sémantique et des modèles génératifs (image, voix, texte). Les jeux de logique CPU restent gratuits ; les fonctionnalités GPU/IA fonctionnent avec un système de crédits appelés Berrix.",
+        "title": "La technologie"
+      },
+      "title": "À propos d’Animetix"
+    },
+    "contact": {
+      "badge": "Contact",
+      "cta": "Envoyer un e-mail",
+      "email_label": "Adresse e-mail",
+      "intro": "Une question, un bug, une demande relative à vos données personnelles ou un partenariat ? Écrivez-nous, nous répondons à chaque message.",
+      "privacy_note": "Vos échanges sont traités conformément à notre",
+      "response": "Délai de réponse habituel : sous 48 heures.",
+      "title": "Contactez-nous"
+    },
+    "privacy": {
+      "badge": "Confidentialité",
+      "intro": "Cette politique explique quelles données personnelles Animetix collecte, pourquoi, et comment nous les protégeons — y compris l'usage des cookies publicitaires.",
+      "s_ads": {
+        "p1": "Ce site affiche des annonces fournies par Google AdSense. Google et ses partenaires utilisent des cookies pour diffuser des annonces en fonction de vos visites sur ce site et sur d'autres sites Internet.",
+        "p2": "Les cookies publicitaires (notamment le cookie DoubleClick) permettent à Google et à ses partenaires de personnaliser les annonces. Vous pouvez désactiver la publicité personnalisée en visitant les Paramètres des annonces Google (adssettings.google.com), ou refuser les cookies tiers via www.aboutads.info/choices.",
+        "p3": "Dans l'Espace économique européen, un bandeau de consentement recueille votre choix avant tout dépôt de cookie publicitaire non essentiel. Vous pouvez modifier ou retirer ce consentement à tout moment depuis les paramètres du site.",
+        "title": "Cookies et publicité (Google AdSense)"
+      },
+      "s_contact": {
+        "title": "Nous contacter"
+      },
+      "s_data": {
+        "p1": "Lorsque vous créez un compte, nous traitons votre adresse e-mail et un identifiant d'authentification (via Google Identity / Firebase). Pendant votre navigation, nous conservons vos préférences de jeu, votre historique de parties, votre solde de Berrix et les contenus que vous générez dans les Labs.",
+        "p2": "Des données techniques (adresse IP, type d'appareil, pages consultées) sont enregistrées pour la sécurité, la limitation de débit et la mesure d'audience.",
+        "title": "Données que nous collectons"
+      },
+      "s_rights": {
+        "p1": "Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, de portabilité et d'opposition sur vos données personnelles. Vous pouvez exercer ces droits, ou retirer votre consentement, en nous contactant à l'adresse ci-dessous.",
+        "p2": "Nous conservons vos données aussi longtemps que votre compte est actif, puis pendant la durée légale applicable. Vous pouvez demander la suppression de votre compte à tout moment.",
+        "title": "Vos droits (RGPD)"
+      },
+      "s_third": {
+        "p1": "Nous nous appuyons sur des sous-traitants qui traitent certaines données pour notre compte : Google AdSense (publicité), Google/Firebase (authentification), Stripe (paiements des Berrix), ainsi que des fournisseurs d'inférence IA pour les fonctionnalités des Labs. Chacun applique sa propre politique de confidentialité.",
+        "title": "Services tiers"
+      },
+      "title": "Politique de confidentialité",
+      "updated": "Dernière mise à jour : juillet 2026"
+    }
+  },
   "library": {
     "btn_continue": "Continuer",
     "btn_explore": "Découvrir des mangas",
@@ -2446,6 +2502,7 @@
   "media.staff.origin": "Origine",
   "media.staff.role_credit": "Crédit",
   "nav": {
+    "about": "À propos",
     "account": "Compte",
     "account_menu": "Menu du compte",
     "admin": "ADMINISTRATION",
@@ -2458,6 +2515,7 @@
     "close_panel": "Fermer le panneau",
     "community": "Communauté",
     "community_section": "Communauté",
+    "contact": "Contact",
     "daily": "Défi Quotidien",
     "exploration": "Exploration",
     "explore": "Explorer",
@@ -2482,6 +2540,7 @@
     "offline_sync": "Sync Hors-ligne",
     "open_data": "Portail Open Data",
     "perso_settings": "Personnalisation avancée",
+    "privacy": "Politique de confidentialité",
     "research": "Labo de Recherche",
     "search": "Recherche",
     "settings": "Paramètres",

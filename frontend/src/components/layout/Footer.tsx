@@ -11,8 +11,14 @@ const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-interface FooterLink { to: string; label: string }
-interface FooterColumn { title: string; links: FooterLink[] }
+interface FooterLink {
+  to: string;
+  label: string;
+}
+interface FooterColumn {
+  title: string;
+  links: FooterLink[];
+}
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
@@ -74,7 +80,10 @@ const Footer: React.FC = () => {
               </span>
             </Link>
             <p className="mt-4 text-sm font-medium leading-relaxed text-gray-500 dark:text-gray-400 max-w-xs">
-              {t('footer.tagline', "Le terrain de jeu ultime pour fans d'anime & manga — quiz, déduction et création propulsés par l'IA.")}
+              {t(
+                'footer.tagline',
+                "Le terrain de jeu ultime pour fans d'anime & manga — quiz, déduction et création propulsés par l'IA.",
+              )}
             </p>
             <a
               href={GITHUB_URL}
@@ -112,10 +121,30 @@ const Footer: React.FC = () => {
 
         {/* Bottom bar */}
         <div className="mt-14 pt-6 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs font-bold text-gray-500 dark:text-gray-400 order-2 sm:order-1">
+          <p className="text-xs font-bold text-gray-500 dark:text-gray-400 order-3 sm:order-1">
             &copy; {year} Animetix Team. {t('footer.rights', 'Tous droits réservés.')}
           </p>
-          <div className="flex items-center gap-2 order-1 sm:order-2">
+          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 order-2 sm:order-2">
+            <Link
+              to="/about/"
+              className="text-xs font-bold text-gray-500 dark:text-gray-400 no-underline hover:text-black dark:hover:text-white transition-colors"
+            >
+              {t('nav.about', 'À propos')}
+            </Link>
+            <Link
+              to="/privacy/"
+              className="text-xs font-bold text-gray-500 dark:text-gray-400 no-underline hover:text-black dark:hover:text-white transition-colors"
+            >
+              {t('nav.privacy', 'Politique de confidentialité')}
+            </Link>
+            <Link
+              to="/contact/"
+              className="text-xs font-bold text-gray-500 dark:text-gray-400 no-underline hover:text-black dark:hover:text-white transition-colors"
+            >
+              {t('nav.contact', 'Contact')}
+            </Link>
+          </nav>
+          <div className="flex items-center gap-2 order-1 sm:order-3">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-60 animate-ping" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />

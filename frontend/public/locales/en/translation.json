@@ -2368,6 +2368,62 @@
     }
   },
   "labs.offline_manga.system_init": "Initializing system...",
+  "legal": {
+    "about": {
+      "author": {
+        "body": "Animetix is an independent project designed and developed by an anime and AI-engineering enthusiast. It evolves continuously, with new game modes and new Labs added regularly.",
+        "title": "The author"
+      },
+      "intro": "Animetix (Anime Archetype Engine) is an interactive platform where AI meets anime culture: games, creative labs, and knowledge exploration.",
+      "mission": {
+        "body": "Animetix explores the world of anime and manga through artificial intelligence: guessing a character in 20 questions, solving narrative riddles, generating visual and audio creations. The goal is to make discovering anime culture both playful and intelligent.",
+        "title": "Our mission"
+      },
+      "tech": {
+        "body": "The platform combines an AI reasoning engine, a graph knowledge base (Neo4j), semantic vector search, and generative models (image, voice, text). CPU logic games remain free; GPU/AI features run on a credit system called Berrix.",
+        "title": "The technology"
+      },
+      "title": "About Animetix"
+    },
+    "contact": {
+      "badge": "Contact",
+      "cta": "Send an email",
+      "email_label": "Email address",
+      "intro": "A question, a bug, a request about your personal data, or a partnership? Write to us — we answer every message.",
+      "privacy_note": "Your messages are handled in accordance with our",
+      "response": "Typical response time: within 48 hours.",
+      "title": "Contact us"
+    },
+    "privacy": {
+      "badge": "Privacy",
+      "intro": "This policy explains what personal data Animetix collects, why, and how we protect it — including our use of advertising cookies.",
+      "s_ads": {
+        "p1": "This site displays ads served by Google AdSense. Google and its partners use cookies to serve ads based on your visits to this site and other websites.",
+        "p2": "Advertising cookies (notably the DoubleClick cookie) let Google and its partners personalize ads. You can opt out of personalized advertising via Google Ads Settings (adssettings.google.com), or decline third-party cookies at www.aboutads.info/choices.",
+        "p3": "In the European Economic Area, a consent banner records your choice before any non-essential advertising cookie is set. You can change or withdraw this consent at any time from the site settings.",
+        "title": "Cookies and advertising (Google AdSense)"
+      },
+      "s_contact": {
+        "title": "Contact us"
+      },
+      "s_data": {
+        "p1": "When you create an account, we process your email address and an authentication identifier (via Google Identity / Firebase). As you browse, we store your game preferences, match history, Berrix balance, and the content you generate in the Labs.",
+        "p2": "Technical data (IP address, device type, pages visited) is recorded for security, rate limiting, and audience measurement.",
+        "title": "Data we collect"
+      },
+      "s_rights": {
+        "p1": "Under the GDPR, you have the right to access, rectify, erase, restrict, port, and object to the processing of your personal data. You can exercise these rights, or withdraw your consent, by contacting us at the address below.",
+        "p2": "We keep your data for as long as your account is active, then for the applicable legal retention period. You can request account deletion at any time.",
+        "title": "Your rights (GDPR)"
+      },
+      "s_third": {
+        "p1": "We rely on processors that handle certain data on our behalf: Google AdSense (advertising), Google/Firebase (authentication), Stripe (Berrix payments), and AI inference providers for the Labs features. Each applies its own privacy policy.",
+        "title": "Third-party services"
+      },
+      "title": "Privacy Policy",
+      "updated": "Last updated: July 2026"
+    }
+  },
   "library": {
     "btn_continue": "Continue",
     "btn_explore": "Discover manga",
@@ -2446,6 +2502,7 @@
   "media.staff.origin": "Origin",
   "media.staff.role_credit": "Credit",
   "nav": {
+    "about": "About",
     "account": "Account",
     "account_menu": "Account menu",
     "admin": "ADMINISTRATION",
@@ -2458,6 +2515,7 @@
     "close_panel": "Close panel",
     "community": "Community",
     "community_section": "Community",
+    "contact": "Contact",
     "daily": "Daily Challenge",
     "exploration": "Exploration",
     "explore": "Explore",
@@ -2482,6 +2540,7 @@
     "offline_sync": "Offline Sync",
     "open_data": "Open Data Portal",
     "perso_settings": "Advanced personalization",
+    "privacy": "Privacy Policy",
     "research": "Research Lab",
     "search": "Search",
     "settings": "Settings",
