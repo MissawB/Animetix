@@ -3,19 +3,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-# Define mocks
-mock_moshi = MagicMock()
-mock_moshi_models = MagicMock()
-mock_pydub = MagicMock()
-mock_pydub_segment = MagicMock()
 
-# Setup the mock structure
-mock_pydub.AudioSegment = mock_pydub_segment
-# Moshi class should be accessible via moshi.models.Moshi
-mock_moshi_models.Moshi = MagicMock()
-
-
-# Inject mocks into sys.modules to handle local imports in TransformersAdapter
 @pytest.fixture(autouse=True)
 def mock_cuda_available():
     with patch("torch.cuda.is_available", return_value=True):
@@ -24,9 +12,29 @@ def mock_cuda_available():
 
 @pytest.fixture(autouse=True)
 def mock_dependencies():
+    """Inject fresh mocks into sys.modules for moshi/pydub on every test.
+
+    Creating new MagicMock objects per test avoids cross-test state leakage
+    (e.g. side_effect set in one test persisting into the next).
+    """
+    _moshi = MagicMock()
+    _moshi_models = MagicMock()
+    _pydub = MagicMock()
+    _pydub_segment = MagicMock()
+
+    _pydub.AudioSegment = _pydub_segment
+    _moshi_models.Moshi = MagicMock()
+
+    # Expose on module globals so tests can reference them
+    global mock_moshi, mock_moshi_models, mock_pydub, mock_pydub_segment
+    mock_moshi = _moshi
+    mock_moshi_models = _moshi_models
+    mock_pydub = _pydub
+    mock_pydub_segment = _pydub_segment
+
     with patch.dict(
         "sys.modules",
-        {"moshi": mock_moshi, "moshi.models": mock_moshi_models, "pydub": mock_pydub},
+        {"moshi": _moshi, "moshi.models": _moshi_models, "pydub": _pydub},
     ):
         yield
 
@@ -99,9 +107,6 @@ class TestS2SInference:
 
         with pytest.raises(InferenceError, match="Native S2S failed"):
             adapter.speech_to_speech(b"some audio")
-
-        # Reset side effect
-        mock_pydub_segment.from_file.side_effect = None
 
     @patch("torch.cuda.is_available", return_value=True)
     @patch("torch.from_numpy")

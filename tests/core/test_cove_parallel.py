@@ -70,7 +70,7 @@ class _ConcurrencyEngine:
             self.active += 1
             self.max_concurrent = max(self.max_concurrent, self.active)
             try:
-                await asyncio.sleep(0.05)  # hold the slot so overlap is observable
+                await asyncio.sleep(0)  # single yield; enough for gather to interleave
             finally:
                 self.active -= 1
             return InferenceResponse(text="EntityA")

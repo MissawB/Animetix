@@ -21,8 +21,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 # The module exits at import if BRAIN_API_KEY is missing or the insecure dev key.
-# Set a secure, non-dev key BEFORE importing the module under test.
-os.environ["BRAIN_API_KEY"] = "secure-test-key-brain-api"
+# setdefault avoids clobbering a real key from the environment / CI secrets.
+os.environ.setdefault("BRAIN_API_KEY", "secure-test-key-brain-api")
 
 from adapters.inference.brain_api import (  # noqa: E402
     EXPECTED_API_KEY,
@@ -31,7 +31,7 @@ from adapters.inference.brain_api import (  # noqa: E402
     verify_api_key,
 )
 
-VALID_KEY = "secure-test-key-brain-api"
+VALID_KEY = os.environ["BRAIN_API_KEY"]
 
 
 @pytest.fixture

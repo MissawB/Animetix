@@ -2,7 +2,9 @@ import os
 
 from fastapi.testclient import TestClient
 
-os.environ["BRAIN_API_KEY"] = "test-env-key-12345"
+# brain_api.py calls sys.exit(1) at import if BRAIN_API_KEY is missing.
+# setdefault avoids clobbering a real key from the environment / CI secrets.
+os.environ.setdefault("BRAIN_API_KEY", "test-env-key-12345")
 
 from adapters.inference.brain_api import app, brain_engine, verify_api_key  # noqa: E402
 

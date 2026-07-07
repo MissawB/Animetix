@@ -91,19 +91,21 @@ def enable_tracemalloc():
 def _cleanup_module_pollution():
     """Garde-fou anti-pollution entre tests (défense en profondeur).
 
-    Certains tests injectent des mocks dans ``sys.modules`` (ex. mocker une dépendance
-    lourde non installée) ; s'ils ne sont pas restaurés, ils cassent les tests suivants
-    qui importent la vraie dépendance. Après chaque test, on retire les modules de type
-    ``Mock`` ajoutés pendant le test et on vide le cache de ``lazy_import`` afin
-    qu'aucun mock ne persiste.
+    Snapshot/restore complet de ``sys.modules`` : tout module ajouté, remplacé
+    ou supprimé pendant le test est restauré à l'identique. Cela couvre les
+    ``MagicMock``, les ``types.ModuleType`` fakes, les sentinelles ``None``, et
+    les remplacements de vrais modules — là où l'ancien garde ne détectait que
+    les instances de ``Mock``.
     """
-    from unittest.mock import Mock
-
-    before = set(sys.modules)
+    snapshot = dict(sys.modules)
     yield
-    for name in set(sys.modules) - before:
-        if isinstance(sys.modules.get(name), Mock):
-            del sys.modules[name]
+    # Remove any module added during the test
+    for name in set(sys.modules) - set(snapshot):
+        del sys.modules[name]
+    # Restore any module that was replaced or deleted during the test
+    for name, mod in snapshot.items():
+        if sys.modules.get(name) is not mod:
+            sys.modules[name] = mod
     try:
         from core.utils.lazy_import import _loaded_modules
 
