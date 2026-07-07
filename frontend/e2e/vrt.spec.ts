@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Visual Regression Testing - Design System', () => {
+test.describe('Visual Regression Testing - Design System @vrt', () => {
   
   // On teste les composants de base sur une page neutre ou via Storybook si disponible
   // Pour rester simple et efficace sans lancer Storybook en arrière-plan, 
@@ -16,7 +16,7 @@ test.describe('Visual Regression Testing - Design System', () => {
       }});
     });
 
-    await page.goto('/akinetix/');
+    await page.goto('/static/akinetix/');
     
     // Attendre que les polices et images soient chargées
     await page.waitForLoadState('networkidle');
@@ -39,7 +39,7 @@ test.describe('Visual Regression Testing - Design System', () => {
       }});
     });
 
-    await page.goto('/vision/');
+    await page.goto('/static/vision/');
     await page.waitForLoadState('networkidle');
 
     await expect(page).toHaveScreenshot('vision-quest-page.png', {

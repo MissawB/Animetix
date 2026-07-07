@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-test.describe('Audit d\'Accessibilité (a11y)', () => {
+test.describe('Audit d\'Accessibilité (a11y) @e2e', () => {
   // Liste des pages critiques à auditer
   const pagesToTest = [
     '/static/',

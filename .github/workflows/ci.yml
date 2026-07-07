@@ -142,15 +142,9 @@ jobs:
         fail_ci_if_error: false
 
   integration-test:
-    name: Backend Integration (optional, non-blocking)
-    # Signal optionnel : lance la suite @pytest.mark.integration contre les services
-    # docker-compose. NON-BLOQUANT (continue-on-error) et ignoré sur les PR pour les
-    # garder rapides — tourne sur push main + run manuel. ollama n'est PAS démarré ici,
-    # donc les tests dépendant d'un LLM live se skippent gracieusement (cf. conftest) ;
-    # les autres exercent neo4j/redis.
+    name: Backend Integration (blocking)
     needs: [lint]
-    if: github.event_name != 'pull_request'
-    continue-on-error: true
+    continue-on-error: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -166,6 +160,24 @@ jobs:
         large-packages: true
         docker-images: true
         swap-storage: true
+    - name: Install Ollama
+      run: |
+        curl -fsSL https://ollama.com/install.sh | sh
+    - name: Start Ollama
+      run: |
+        ollama serve &
+    - name: Wait for Ollama
+      run: |
+        for i in {1..30}; do
+          if curl -s http://localhost:11434/api/tags > /dev/null; then
+            echo "Ollama is ready!"
+            break
+          fi
+          sleep 1
+        done
+    - name: Pull Ollama Model
+      run: |
+        ollama pull qwen2.5:0.5b
     - name: Start Services
       run: docker compose -f deploy/docker-compose.test.yml up -d
     - name: Set up Python
@@ -189,9 +201,8 @@ jobs:
         NEO4J_USER: neo4j
         NEO4J_PASSWORD: password
         GEMINI_API_KEY: ci-dummy-key
-        # LLM_API_BASE laissé au défaut (localhost:11434) → injoignable ici → les
-        # tests LLM se skippent via le hook conftest. Définir cette var (ollama
-        # démarré) pour réellement exécuter les tests d'intégration LLM.
+        LLM_API_BASE: 'http://localhost:11434'
+        LLM_MODEL_NAME: 'qwen2.5:0.5b'
       run: python -m pytest -m integration --durations=25
 
   perf-test:
@@ -285,8 +296,12 @@ jobs:
       run: cd frontend && npm ci --legacy-peer-deps
     - name: Install Playwright Browsers
       run: cd frontend && npx playwright install --with-deps chromium
-    - name: Run A11y Tests
-      run: cd frontend && npx playwright test e2e/a11y.spec.ts
+    - name: Run E2E Tests
+      run: cd frontend && npm run test:e2e
+      env:
+        CI: true
+    - name: Run Storybook Tests
+      run: cd frontend && npm run test:storybook
       env:
         CI: true
     - name: Upload Playwright artifacts
@@ -304,7 +319,7 @@ jobs:
 
   deploy-to-prod:
     name: Deploy to Production
-    needs: [lint, docker-build, test, perf-test, frontend-checks, frontend-test]
+    needs: [lint, docker-build, test, integration-test, perf-test, frontend-checks, frontend-test]
     # Manual trigger only ("Run workflow"), only from the protected main branch,
     # and only when the deploy box is explicitly ticked. Never runs on push/PR.
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy_to_prod && success()

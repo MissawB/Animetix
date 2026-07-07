@@ -69,6 +69,7 @@ def create_mapping_v2(source_coll_name, target_coll_name, output_path):
         logger.error(f"⚠️ Error mapping {source_coll_name}: {e}")
 
 
-# Exécution
-create_mapping_v2("anime_thematic", "movie_thematic", MAP_ANIME_MOVIE)
-create_mapping_v2("manga_thematic", "movie_thematic", MAP_MANGA_MOVIE)
+if __name__ == "__main__":
+    # Exécution
+    create_mapping_v2("anime_thematic", "movie_thematic", MAP_ANIME_MOVIE)
+    create_mapping_v2("manga_thematic", "movie_thematic", MAP_MANGA_MOVIE)

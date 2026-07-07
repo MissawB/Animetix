@@ -26,10 +26,6 @@ TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 BASE_URL = "https://api.themoviedb.org/3"
 OUTPUT_FILE = os.path.join(BASE_DIR, "data", "raw", "raw_tmdb_db.json")
 
-if not TMDB_API_KEY:
-    logger.error("❌ TMDB_API_KEY not found in .env file.")
-    exit()
-
 
 def fetch_tmdb_page(endpoint, page=1, params={}):
     url = f"{BASE_URL}/{endpoint}"
@@ -50,6 +46,9 @@ def fetch_tmdb_page(endpoint, page=1, params={}):
 
 
 def ingest_movies():
+    if not TMDB_API_KEY:
+        logger.error("❌ TMDB_API_KEY not found in .env file.")
+        return
     existing_data = []
     existing_ids = set()
 
