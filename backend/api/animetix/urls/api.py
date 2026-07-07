@@ -20,11 +20,6 @@ urlpatterns = [
         name="api_wallet_balance",
     ),
     path(
-        "billing/wallet/checkout/",
-        api_views.CreateBxCheckoutView.as_view(),
-        name="api_wallet_checkout",
-    ),
-    path(
         "fusions/",
         api_views.CreativeFusionViewSet.as_view({"get": "list", "post": "create"}),
         name="api-fusions",
@@ -805,11 +800,6 @@ urlpatterns = [
     # --- B2B DEVELOPER PAID API & STRIPE BILLING ---
     path("developer/rag/", api_views.DeveloperRAGView.as_view(), name="developer_rag"),
     path(
-        "developer/subscribe-pro/",
-        api_views.CreateProSubscriptionCheckoutView.as_view(),
-        name="developer_subscribe_pro",
-    ),
-    path(
         "developer/subscribe/",
         api_views.DeveloperSubscriptionMockView.as_view(),
         name="developer_subscribe_mock",
@@ -818,10 +808,5 @@ urlpatterns = [
         "developer/api-key/",
         api_views.DeveloperApiKeyView.as_view(),
         name="developer_api_key",
-    ),
-    path(
-        "developer/webhook/stripe/",
-        api_views.StripeWebhookView.as_view(),
-        name="developer_webhook_stripe",
     ),
 ]
