@@ -100,8 +100,9 @@
 
 - [x] **Git — `dev/null/` versionné (hooks Git-LFS committés)** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-07)_
   - ✅ Supprimé définitivement le chemin littéral `dev/null/` et les 4 hooks LFS (`post-checkout`, `post-commit`, `post-merge`, `pre-push`) qui y avaient été committés par accident lors d'une redirection de commande Windows (commit `3df26086`).
-- [ ] **Git — ~30 Mo de PNG en blobs bruts (64 fichiers, hors LFS)** _(audit dette 2026-07-05)_
-  - Jusqu'à 2,6 Mo pièce (`frontend/public/img/background.png`…) alors que JSON/npy sont déjà en LFS. Ajouter `*.png filter=lfs` ou déplacer le gros art vers bucket/CDN.
+- [x] **Git — ~30 Mo de PNG en blobs bruts (64 fichiers, hors LFS)** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-07)_
+  - ✅ Configuré le suivi automatique des fichiers `*.png` par Git LFS dans [.gitattributes](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/.gitattributes).
+  - ✅ Converti et renormalisé en place les 64 images PNG existantes (dont les gros arrière-plans et mock-ups comme `background.png`) en pointeurs Git LFS via la commande sécurisée `git add --renormalize .` sans altérer l'historique des commits.
 - [ ] **Docs — deux TODO contradictoires + docs périmées** _(audit dette 2026-07-05)_
   - [docs/TODO.md](docs/TODO.md) (anglais) diverge de ce fichier → une seule source de vérité.
   - [README.md:235](README.md#L235) pointe `scripts/setup_e2e.py` (réel : `scripts/verify/setup_e2e.py`) ; [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) mentionne encore Celery (remplacé par Cloud Run Jobs) ; `FULL_GUIDE.md`/`ROADMAP.md` antérieurs au burst drift/transparency/ads de juillet.
