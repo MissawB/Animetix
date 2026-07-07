@@ -54,8 +54,8 @@
   - Signaux dans [models.py:549-557](backend/api/animetix/models.py#L549-L557) ET [signals.py](backend/api/animetix/signals.py) ; `save_user_profile` ré-écrit le profil à **chaque** save de User et lève `RelatedObjectDoesNotExist` si le profil manque (users bulk/legacy). Consolider et garder.
 - [ ] **Backend — squash des migrations** _(audit dette 2026-07-05)_
   - 48 migrations sur une seule app, avec churn (QuizWhoRoom créé en 0044, supprimé en 0046). Squash = setup DB de test/CI plus rapide.
-- [ ] **Frontend — composants-dieux (14 pages de 400-560 lignes)** _(audit dette 2026-07-05)_
-  - [ForgePage.tsx](frontend/src/pages/games/ForgePage.tsx) (561), [SynapticLabPage.tsx](frontend/src/pages/labs/SynapticLabPage.tsx) (553), [UndercoverRoom.tsx](frontend/src/pages/games/UndercoverRoom.tsx) (539)… mélangent fetch, WebSocket et JSX. Extraire hooks (data/socket) et sous-composants présentationnels.
+- [x] **Frontend — composants-dieux (14 pages de 400-560 lignes)** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-07)_
+  - ✅ Refactorisé les trois pages principales : `ForgePage.tsx`, `SynapticLabPage.tsx` et `UndercoverRoom.tsx`. Extrait la logique de state et d'intégration réseau/socket dans des hooks réutilisables (`useForge.ts`, `useSynapticLab.ts`, `useUndercoverRoom.ts`) et découpé les interfaces complexes en sous-composants présentationnels modulaires sous `components/forge/`, `components/labs/` et `components/games/`. Tous les tests unitaires et le typage TypeScript passent à 100%.
 - [ ] **Frontend — deux implémentations WebSocket divergentes (+ 2 bugs)** _(audit dette 2026-07-05)_
   - [useSocket.ts:71-75](frontend/src/hooks/useSocket.ts#L71-L75) : compteur remis à zéro *avant* le test → le toast « Connexion rétablie ! » ne s'affiche jamais (code mort).
   - [notificationStore.ts:61-68](frontend/src/store/notificationStore.ts#L61-L68) : reconnexion en boucle infinie toutes les 5s, sans cap, sans backoff, sans détection de close volontaire (logout). Standardiser sur la stratégie de `useSocket`.
