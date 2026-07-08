@@ -1,30 +1,65 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { RelicItem } from '../../features/labs/components/RelicItem';
 import { LabListOverlay } from '../../features/labs/components/LabListOverlay';
 import { Book, Frame, Headphones, FlaskConical as Flask } from 'lucide-react';
 
-const categoryLabs: Record<string, { id: string, title: string, url: string, desc: string }[]> = {
+const categoryLabs: Record<string, { id: string; title: string; url: string; desc: string }[]> = {
   narrative: [
-    { id: 'forge', title: 'Forge de Réalité', url: '/forge/', desc: 'Fusionnez univers et scénarios.' },
-    { id: 'vsbattle', title: 'Arena Ultimatum', url: '/game/vsbattle/', desc: 'Duels trans-dimensionnels arbitrés par l\'IA.' },
+    {
+      id: 'forge',
+      title: 'Forge de Réalité',
+      url: '/forge/',
+      desc: 'Fusionnez univers et scénarios.',
+    },
+    {
+      id: 'vsbattle',
+      title: 'Arena Ultimatum',
+      url: '/game/vsbattle/',
+      desc: "Duels trans-dimensionnels arbitrés par l'IA.",
+    },
   ],
   visual: [
     { id: 'manga', title: 'Manga Lab', url: '/lab/manga/', desc: 'Rendu Manga par IA.' },
     { id: 'video', title: 'Video Lab', url: '/lab/video/', desc: 'Analyse et indexation vidéo.' },
-    { id: 'nexus', title: 'Visual Nexus', url: '/lab/visual-nexus/', desc: 'Exploration d\'embeddings visuels.' },
-    { id: 'reconstruction', title: 'Cinematic Reconstruction', url: '/lab/cinematic/', desc: '3D de scènes animées.' },
+    {
+      id: 'nexus',
+      title: 'Visual Nexus',
+      url: '/lab/visual-nexus/',
+      desc: "Exploration d'embeddings visuels.",
+    },
+    {
+      id: 'reconstruction',
+      title: 'Cinematic Reconstruction',
+      url: '/lab/cinematic/',
+      desc: '3D de scènes animées.',
+    },
   ],
   audio: [
     { id: 'audio', title: 'Audio Lab', url: '/lab/audio/', desc: 'Clonage vocal et synthèse.' },
-    { id: 'soundscape', title: 'Soundscape Lab', url: '/lab/soundscape/', desc: 'Génération d\'ambiances sonores.' },
-    { id: 'speech', title: 'Speech-to-Speech', url: '/lab/speech-to-speech/', desc: 'Transformation vocale temps-réel.' },
+    {
+      id: 'soundscape',
+      title: 'Soundscape Lab',
+      url: '/lab/soundscape/',
+      desc: "Génération d'ambiances sonores.",
+    },
+    {
+      id: 'speech',
+      title: 'Speech-to-Speech',
+      url: '/lab/speech-to-speech/',
+      desc: 'Transformation vocale temps-réel.',
+    },
   ],
   experimental: [
-    { id: 'singularity', title: 'Singularity Hub', url: '/lab/', desc: 'Accès aux modules de recherche Omega.' },
-  ]
+    {
+      id: 'singularity',
+      title: 'Singularity Hub',
+      url: '/lab/',
+      desc: 'Accès aux modules de recherche Omega.',
+    },
+  ],
 };
 
 const ForgeHubPage: React.FC = () => {
@@ -35,15 +70,19 @@ const ForgeHubPage: React.FC = () => {
     { id: 'narrative', icon: Book, color: 'text-amber-500', glow: 'bg-amber-500' },
     { id: 'visual', icon: Frame, color: 'text-blue-500', glow: 'bg-blue-500' },
     { id: 'audio', icon: Headphones, color: 'text-emerald-500', glow: 'bg-emerald-500' },
-    { id: 'experimental', icon: Flask, color: 'text-red-600', glow: 'bg-red-600' }
+    { id: 'experimental', icon: Flask, color: 'text-red-600', glow: 'bg-red-600' },
   ];
 
-  const particleConfig = useMemo(() => [...Array(20)].map((_, i) => ({
-    left: (i * 7) % 100,
-    top: (i * 13) % 100,
-    duration: 10 + (i % 10),
-    delay: i * 0.5
-  })), []);
+  const particleConfig = useMemo(
+    () =>
+      [...Array(20)].map((_, i) => ({
+        left: (i * 7) % 100,
+        top: (i * 13) % 100,
+        duration: 10 + (i % 10),
+        delay: i * 0.5,
+      })),
+    [],
+  );
 
   return (
     <AnimatedPage>
@@ -71,7 +110,8 @@ const ForgeHubPage: React.FC = () => {
 
         <header className="text-center mb-24 z-10">
           <h1 className="text-7xl font-black italic manga-font uppercase tracking-tighter text-white">
-            {t('forge_hub.title').split(' ')[0]} <span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">
+            {t('forge_hub.title').split(' ')[0]}{' '}
+            <span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">
               {t('forge_hub.title').split(' ').slice(1).join(' ')}
             </span>
           </h1>
@@ -82,7 +122,7 @@ const ForgeHubPage: React.FC = () => {
             <motion.div
               key={cat.id}
               animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+              transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
             >
               <RelicItem
                 id={cat.id}
@@ -111,18 +151,18 @@ const ForgeHubPage: React.FC = () => {
         const translatedCategoryLabs = useMemo(() => {
           if (!selectedCategory) return [];
           const labs = categoryLabs[selectedCategory] || [];
-          return labs.map(lab => ({
+          return labs.map((lab) => ({
             ...lab,
             title: t(`forge_hub.labs.${lab.id}.title`, lab.title),
-            desc: t(`forge_hub.labs.${lab.id}.desc`, lab.desc)
+            desc: t(`forge_hub.labs.${lab.id}.desc`, lab.desc),
           }));
-        }, [selectedCategory]);
+        }, []);
 
         return (
-          <LabListOverlay 
-            category={selectedCategory} 
-            labs={translatedCategoryLabs} 
-            onClose={() => setSelectedCategory(null)} 
+          <LabListOverlay
+            category={selectedCategory}
+            labs={translatedCategoryLabs}
+            onClose={() => setSelectedCategory(null)}
           />
         );
       })()}
@@ -131,5 +171,3 @@ const ForgeHubPage: React.FC = () => {
 };
 
 export default ForgeHubPage;
-
-
