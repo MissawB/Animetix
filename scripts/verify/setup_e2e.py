@@ -15,7 +15,7 @@ def setup_e2e():
         print(f"❌ Playwright installation failed: {e}")
     except FileNotFoundError:
         print(
-            "❌ Playwright module not found. Please run 'pip install -r requirements.txt' first."
+            "❌ Playwright module not found. Please run 'pip install -r requirements.txt -r requirements-dev.txt' first."
         )
 
 
