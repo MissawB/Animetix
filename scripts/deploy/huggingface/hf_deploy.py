@@ -31,9 +31,17 @@ api = HfApi()
 
 def deploy_space(repo_id, docker_content, readme_content, ignore):
     print(f"Syncing {repo_id}...")
-    create_repo(
-        repo_id, token=token, repo_type="space", space_sdk="docker", exist_ok=True
-    )
+    # Only create the Space when it is genuinely missing. Calling create_repo on
+    # every sync hits /api/repos/create, which can return 402 Payment Required on
+    # accounts with billing/quota gating even when the repo already exists (the
+    # billing check runs before the "already exists" short-circuit). We only need
+    # to push updates to the existing Spaces, so skip creation when they exist.
+    if api.repo_exists(repo_id, repo_type="space", token=token):
+        print(f"  {repo_id} already exists — skipping create_repo.")
+    else:
+        create_repo(
+            repo_id, token=token, repo_type="space", space_sdk="docker", exist_ok=True
+        )
 
     docker_final = textwrap.dedent(docker_content).strip()
     readme_final = textwrap.dedent(readme_content).strip()
