@@ -82,7 +82,7 @@ gcp_services:
         schedule: "0 */6 * * *"
         memory: "2Gi"
         cpu: "1"
-      - name: "animetix-drift-baseline"
+      - name: "animetix-generate-drift-baselines"
         args: "backend/api/manage.py,run_scheduled_task,drift-baseline-update"
         schedule: "" # On-demand only
         memory: "4Gi"
