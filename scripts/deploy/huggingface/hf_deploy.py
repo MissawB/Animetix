@@ -66,20 +66,14 @@ def deploy_space(repo_id, docker_content, readme_content, ignore):
 
 
 # --- CONFIG WEB ---
-web_docker = """
-FROM python:3.11-slim
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH='/app/backend:${PYTHONPATH}'
-WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends curl build-essential libpq-dev gcc && rm -rf /var/lib/apt/lists/*
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt gunicorn supervisor
-COPY . .
-RUN mkdir -p data/artifacts data/processed
-EXPOSE 7860
-CMD ["supervisord", "-c", "infra/supervisord.conf"]
-"""
+# The web Space is a faithful mirror of the Cloud Run deployment, so it reuses
+# the exact same recipe: deploy/Dockerfile (multi-stage node frontend build +
+# python 3.12 + collectstatic + deploy/supervisord.conf on port 7860). Keeping a
+# second inlined Dockerfile here caused drift (it went stale: python 3.11, no
+# frontend build, wrong supervisord path) so the Space never booted. Read the
+# real file at runtime instead — single source of truth.
+with open(os.path.join(project_root, "deploy", "Dockerfile"), encoding="utf-8") as _f:
+    web_docker = _f.read()
 
 web_readme = """
 ---
