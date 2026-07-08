@@ -14,6 +14,11 @@ gcp_services:
     vpc_network: "default"
     vpc_subnet: "default"
     models_bucket: "animetix-models"
+    volumes:
+      - name: "models-vol"
+        type: "cloud-storage"
+        bucket: "animetix-models"
+        mount_path: "/mnt/models"
     gpu: 1
     gpu_type: "nvidia-l4"
     cpu: 4
@@ -139,6 +144,16 @@ gcp_services:
         args:
           - "--action=deny-403"
           - "--expression=evaluatePreconfiguredWaf('methodenforcement-v33-stable', {'sensitivity': 1})"
+      - priority: 2500
+        description: "OWASP CRS Remote Code Execution protection"
+        args:
+          - "--action=deny-403"
+          - "--expression=evaluatePreconfiguredWaf('rce-v33-stable', {'sensitivity': 1})"
+      - priority: 2600
+        description: "Custom LLM Prompt Injection filter"
+        args:
+          - "--action=deny-403"
+          - "--expression=request.body.matches('(?i)(ignore.*previous.*instruction|system.*prompt.*override|bypass.*filter|jailbreak)')"
       - priority: 3000
         description: "Deny all traffic not conforming to rules (default fallback - allowed since Default is allow)"
         args:
