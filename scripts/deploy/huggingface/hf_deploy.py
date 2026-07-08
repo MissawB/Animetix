@@ -3,9 +3,10 @@ import textwrap
 
 from huggingface_hub import HfApi, create_repo
 
-# Load .env file securely
+# Repo root. This file lives at scripts/deploy/huggingface/hf_deploy.py, i.e.
+# THREE dirs below the root, so we strip four path components (file + 3 dirs).
 project_root = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 env_path = os.path.join(project_root, ".env")
 custom_env = os.environ.copy()
