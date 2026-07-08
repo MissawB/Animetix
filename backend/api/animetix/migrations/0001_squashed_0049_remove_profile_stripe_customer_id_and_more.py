@@ -1172,7 +1172,7 @@ class Migration(migrations.Migration):
                 "indexes": [
                     models.Index(
                         fields=["collection_name", "item_id"],
-                        name="animetix_ve_collect_20560a_idx",
+                        name="animetix_ve_collect_7406aa_idx",
                     )
                 ],
                 "unique_together": {("collection_name", "item_id")},
@@ -1201,11 +1201,6 @@ class Migration(migrations.Migration):
             options={
                 "ordering": ["rank"],
             },
-        ),
-        migrations.RenameIndex(
-            model_name="vectorrecord",
-            new_name="animetix_ve_collect_7406aa_idx",
-            old_name="animetix_ve_collect_20560a_idx",
         ),
         migrations.AddField(
             model_name="clubevent",
