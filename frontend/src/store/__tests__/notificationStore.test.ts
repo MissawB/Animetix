@@ -10,7 +10,7 @@ class FakeWebSocket {
   url: string;
   onopen: (() => void) | null = null;
   onmessage: ((e: { data: string }) => void) | null = null;
-  onclose: ((e?: any) => void) | null = null;
+  onclose: ((e?: { code?: number }) => void) | null = null;
   onerror: ((e: unknown) => void) | null = null;
   close = vi.fn();
 
@@ -107,7 +107,9 @@ describe('useNotificationStore', () => {
     // Custom event dispatched for react-query invalidation.
     const events = dispatchSpy.mock.calls
       .map((c) => c[0])
-      .filter((e): e is CustomEvent => e instanceof CustomEvent && e.type === 'animetix:new_notification');
+      .filter(
+        (e): e is CustomEvent => e instanceof CustomEvent && e.type === 'animetix:new_notification',
+      );
     expect(events).toHaveLength(2);
     expect(events[0].detail).toEqual({ title: 'You were challenged' });
   });
@@ -158,7 +160,7 @@ describe('useNotificationStore', () => {
     ws1.onopen?.();
 
     // 1st close (unexpected, code 1006)
-    ws1.onclose?.({ code: 1006 } as any);
+    ws1.onclose?.({ code: 1006 });
     expect(useNotificationStore.getState().isConnected).toBe(false);
     expect(useNotificationStore.getState().isReconnecting).toBe(true);
 
@@ -172,7 +174,7 @@ describe('useNotificationStore', () => {
     expect(useNotificationStore.getState().reconnectAttempts).toBe(1);
 
     // 2nd close
-    ws2.onclose?.({ code: 1006 } as any);
+    ws2.onclose?.({ code: 1006 });
     // Delay should be 1000 * 2^1 = 2000ms
     vi.advanceTimersByTime(1999);
     expect(FakeWebSocket.instances).toHaveLength(2);
@@ -189,7 +191,7 @@ describe('useNotificationStore', () => {
     expect(useNotificationStore.getState().reconnectAttempts).toBe(0);
 
     const toasts = useToastStore.getState().toasts;
-    expect(toasts.some(t => t.message.includes('rétablie'))).toBe(true);
+    expect(toasts.some((t) => t.message.includes('rétablie'))).toBe(true);
   });
 
   it('onclose: does not reconnect on voluntary close (code 1000)', () => {
@@ -197,7 +199,7 @@ describe('useNotificationStore', () => {
     const ws = FakeWebSocket.instances[0];
     ws.onopen?.();
 
-    ws.onclose?.({ code: 1000 } as any);
+    ws.onclose?.({ code: 1000 });
     expect(useNotificationStore.getState().isConnected).toBe(false);
     expect(useNotificationStore.getState().isReconnecting).toBe(false);
 
@@ -207,33 +209,32 @@ describe('useNotificationStore', () => {
 
   it('onclose: stops trying and shows error toast after 5 failed attempts', () => {
     useNotificationStore.getState().connect();
-    
+
     // Simulate 5 failures (socket close without ever opening)
     for (let i = 0; i < 5; i++) {
       expect(FakeWebSocket.instances).toHaveLength(i + 1);
       const ws = FakeWebSocket.instances[i];
-      ws.onclose?.({ code: 1006 } as any);
-      
+      ws.onclose?.({ code: 1006 });
+
       const delay = 1000 * Math.pow(2, i);
       vi.advanceTimersByTime(delay);
     }
 
     expect(FakeWebSocket.instances).toHaveLength(6);
     const lastWs = FakeWebSocket.instances[5];
-    lastWs.onclose?.({ code: 1006 } as any);
+    lastWs.onclose?.({ code: 1006 });
 
     // Now reconnectAttempts is 5, it should not schedule reconnect
     expect(useNotificationStore.getState().isReconnecting).toBe(false);
     const toasts = useToastStore.getState().toasts;
-    expect(toasts.some(t => t.message.includes('Impossible de se connecter'))).toBe(true);
+    expect(toasts.some((t) => t.message.includes('Impossible de se connecter'))).toBe(true);
   });
-
 
   it('disconnect: cancels pending reconnection timers', () => {
     useNotificationStore.getState().connect();
     const ws = FakeWebSocket.instances[0];
     ws.onopen?.();
-    ws.onclose?.({ code: 1006 } as any);
+    ws.onclose?.({ code: 1006 });
 
     expect(useNotificationStore.getState().isReconnecting).toBe(true);
 
@@ -245,4 +246,3 @@ describe('useNotificationStore', () => {
     expect(FakeWebSocket.instances).toHaveLength(1);
   });
 });
-

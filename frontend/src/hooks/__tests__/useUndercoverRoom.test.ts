@@ -14,7 +14,8 @@ vi.mock('react-router-dom', () => ({
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, defaultValue?: any) => typeof defaultValue === 'string' ? defaultValue : key,
+    t: (key: string, defaultValue?: string) =>
+      typeof defaultValue === 'string' ? defaultValue : key,
   }),
 }));
 
@@ -39,11 +40,11 @@ describe('useUndercoverRoom hook', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useSocket as any).mockReturnValue({
+    vi.mocked(useSocket).mockReturnValue({
       gameState: mockGameState,
       connected: true,
       sendAction: mockSendAction,
-    });
+    } as unknown as ReturnType<typeof useSocket>);
   });
 
   it('should initialize with values from useSocket', () => {

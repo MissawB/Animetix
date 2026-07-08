@@ -11,7 +11,8 @@ vi.mock('../../utils/apiClient', () => ({
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, defaultValue?: any) => typeof defaultValue === 'string' ? defaultValue : key,
+    t: (key: string, defaultValue?: string) =>
+      typeof defaultValue === 'string' ? defaultValue : key,
   }),
 }));
 
@@ -24,7 +25,10 @@ const makeWrapper = () => {
 
 const mockLabState = {
   status: 'active',
-  weights: [[0.1, 0.2], [0.3, 0.4]],
+  weights: [
+    [0.1, 0.2],
+    [0.3, 0.4],
+  ],
   concepts: ['ConceptA', 'ConceptB'],
   plasticity_config: { tau_plus: 20.0, tau_minus: 20.0, num_concepts: 2 },
   personalization_settings: {
@@ -32,7 +36,13 @@ const mockLabState = {
     intensity_multiplier: 1.0,
     features: { aura: true, font: true, accent: true },
   },
-  current_archetype: { id: 'shonen', accent: '#ff0000', aura_type: 'fire', intensity: 0.8, font_vibe: 'bold' },
+  current_archetype: {
+    id: 'shonen',
+    accent: '#ff0000',
+    aura_type: 'fire',
+    intensity: 0.8,
+    font_vibe: 'bold',
+  },
 };
 
 describe('useSynapticLab hook', () => {
@@ -41,7 +51,7 @@ describe('useSynapticLab hook', () => {
   });
 
   it('should load unified state successfully', async () => {
-    (apiClient as any).mockResolvedValue(mockLabState);
+    vi.mocked(apiClient).mockResolvedValue(mockLabState);
 
     const { result } = renderHook(() => useSynapticLab(), { wrapper: makeWrapper() });
 
@@ -57,7 +67,7 @@ describe('useSynapticLab hook', () => {
   });
 
   it('should handle local state updates', async () => {
-    (apiClient as any).mockResolvedValue(mockLabState);
+    vi.mocked(apiClient).mockResolvedValue(mockLabState);
 
     const { result } = renderHook(() => useSynapticLab(), { wrapper: makeWrapper() });
 
@@ -77,7 +87,7 @@ describe('useSynapticLab hook', () => {
   });
 
   it('should mutate config when handleApplyConfig is called', async () => {
-    (apiClient as any).mockResolvedValue(mockLabState);
+    vi.mocked(apiClient).mockResolvedValue(mockLabState);
 
     const { result } = renderHook(() => useSynapticLab(), { wrapper: makeWrapper() });
 
@@ -90,9 +100,12 @@ describe('useSynapticLab hook', () => {
     });
 
     await waitFor(() => {
-      expect(apiClient).toHaveBeenCalledWith('/api/v1/singularity-lab/', expect.objectContaining({
-        method: 'POST',
-      }));
+      expect(apiClient).toHaveBeenCalledWith(
+        '/api/v1/singularity-lab/',
+        expect.objectContaining({
+          method: 'POST',
+        }),
+      );
     });
   });
 });

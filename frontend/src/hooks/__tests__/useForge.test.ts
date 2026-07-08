@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useForge } from '../useForge';
 import { useAuthStore } from '../../store/authStore';
 import { startFusion, getFusionStatus } from '../../api';
+import type { FusionResponse, FusionStatus } from '../../api';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, defaultValue?: any) => typeof defaultValue === 'string' ? defaultValue : key,
+    t: (key: string, defaultValue?: string) =>
+      typeof defaultValue === 'string' ? defaultValue : key,
   }),
 }));
 
@@ -19,6 +21,11 @@ vi.mock('../../api', () => ({
   getFusionStatus: vi.fn(),
 }));
 
+// The selector param type of the (overloaded) zustand hook, extracted structurally
+// so we don't need to export the store's internal state interface just for tests.
+type AuthStoreSelector = Parameters<typeof useAuthStore>[0];
+type AuthStoreState = AuthStoreSelector extends (state: infer S) => unknown ? S : never;
+
 describe('useForge hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -30,8 +37,8 @@ describe('useForge hook', () => {
   });
 
   it('should initialize with default states', () => {
-    (useAuthStore as any).mockImplementation((selector: any) =>
-      selector({ isAuthenticated: true, user: { wallet_balance: 150 } })
+    vi.mocked(useAuthStore).mockImplementation((selector: AuthStoreSelector) =>
+      selector({ isAuthenticated: true, user: { wallet_balance: 150 } } as AuthStoreState),
     );
 
     const { result } = renderHook(() => useForge());
@@ -47,8 +54,8 @@ describe('useForge hook', () => {
   });
 
   it('should handle setting values', () => {
-    (useAuthStore as any).mockImplementation((selector: any) =>
-      selector({ isAuthenticated: true, user: { wallet_balance: 150 } })
+    vi.mocked(useAuthStore).mockImplementation((selector: AuthStoreSelector) =>
+      selector({ isAuthenticated: true, user: { wallet_balance: 150 } } as AuthStoreState),
     );
 
     const { result } = renderHook(() => useForge());
@@ -65,8 +72,8 @@ describe('useForge hook', () => {
   });
 
   it('should reject starting fusion if not authenticated', async () => {
-    (useAuthStore as any).mockImplementation((selector: any) =>
-      selector({ isAuthenticated: false, user: null })
+    vi.mocked(useAuthStore).mockImplementation((selector: AuthStoreSelector) =>
+      selector({ isAuthenticated: false, user: null } as AuthStoreState),
     );
 
     const { result } = renderHook(() => useForge());
@@ -80,18 +87,18 @@ describe('useForge hook', () => {
   });
 
   it('should start fusion and poll status until complete', async () => {
-    (useAuthStore as any).mockImplementation((selector: any) =>
-      selector({ isAuthenticated: true, user: { wallet_balance: 150 } })
+    vi.mocked(useAuthStore).mockImplementation((selector: AuthStoreSelector) =>
+      selector({ isAuthenticated: true, user: { wallet_balance: 150 } } as AuthStoreState),
     );
 
     const mockStartRes = { task_id: 'task-123', fusion_id: 99 };
-    (startFusion as any).mockResolvedValue(mockStartRes);
+    vi.mocked(startFusion).mockResolvedValue(mockStartRes as FusionResponse);
 
     const mockStatusPending = { completed: false, status: 'processing' };
     const mockStatusComplete = { completed: true, status: 'success', output: 'result_url' };
-    (getFusionStatus as any)
-      .mockResolvedValueOnce(mockStatusPending)
-      .mockResolvedValueOnce(mockStatusComplete);
+    vi.mocked(getFusionStatus)
+      .mockResolvedValueOnce(mockStatusPending as FusionStatus)
+      .mockResolvedValueOnce(mockStatusComplete as unknown as FusionStatus);
 
     const { result } = renderHook(() => useForge());
 
@@ -122,8 +129,8 @@ describe('useForge hook', () => {
   });
 
   it('should reset all states on resetForge', () => {
-    (useAuthStore as any).mockImplementation((selector: any) =>
-      selector({ isAuthenticated: true, user: { wallet_balance: 150 } })
+    vi.mocked(useAuthStore).mockImplementation((selector: AuthStoreSelector) =>
+      selector({ isAuthenticated: true, user: { wallet_balance: 150 } } as AuthStoreState),
     );
 
     const { result } = renderHook(() => useForge());
