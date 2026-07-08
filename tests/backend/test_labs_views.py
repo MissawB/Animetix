@@ -12,7 +12,7 @@ def user(db):
 
 @pytest.mark.integration  # Boots the full production stack (live LLM, GCP, pgvector).
 @pytest.mark.django_db
-@patch("adapters.inference.workflows_client.GCPWorkflowsClient")
+@patch("animetix.api.labs.GCPWorkflowsClient")
 def test_manga_voice_endpoint_production(
     mock_workflows_client_class, client, settings, user
 ):
