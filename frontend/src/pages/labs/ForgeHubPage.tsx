@@ -84,6 +84,16 @@ const ForgeHubPage: React.FC = () => {
     [],
   );
 
+  const translatedCategoryLabs = useMemo(() => {
+    if (!selectedCategory) return [];
+    const labs = categoryLabs[selectedCategory] || [];
+    return labs.map((lab) => ({
+      ...lab,
+      title: t(`forge_hub.labs.${lab.id}.title`, lab.title),
+      desc: t(`forge_hub.labs.${lab.id}.desc`, lab.desc),
+    }));
+  }, [selectedCategory, t]);
+
   return (
     <AnimatedPage>
       <div className="min-h-screen flex flex-col items-center justify-center px-6 py-20 relative overflow-hidden bg-[#020202]">
@@ -146,26 +156,11 @@ const ForgeHubPage: React.FC = () => {
         </footer>
       </div>
 
-      {(() => {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const translatedCategoryLabs = useMemo(() => {
-          if (!selectedCategory) return [];
-          const labs = categoryLabs[selectedCategory] || [];
-          return labs.map((lab) => ({
-            ...lab,
-            title: t(`forge_hub.labs.${lab.id}.title`, lab.title),
-            desc: t(`forge_hub.labs.${lab.id}.desc`, lab.desc),
-          }));
-        }, []);
-
-        return (
-          <LabListOverlay
-            category={selectedCategory}
-            labs={translatedCategoryLabs}
-            onClose={() => setSelectedCategory(null)}
-          />
-        );
-      })()}
+      <LabListOverlay
+        category={selectedCategory}
+        labs={translatedCategoryLabs}
+        onClose={() => setSelectedCategory(null)}
+      />
     </AnimatedPage>
   );
 };
