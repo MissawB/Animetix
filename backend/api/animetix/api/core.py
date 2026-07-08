@@ -930,11 +930,30 @@ class FavoriteMangaListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        from ..models import FavoriteManga
+        from django.db.models import Count, IntegerField, OuterRef, Subquery
+        from django.db.models.functions import Coalesce
+
+        from ..models import FavoriteManga, MangaChapter
         from ..serializers import FavoriteMangaSerializer
 
-        favorites = FavoriteManga.objects.filter(user=request.user).select_related(
-            "manga"
+        # Use a correlated subquery to avoid N+1 query per FavoriteManga in the list
+        unread_chapters_subquery = (
+            MangaChapter.objects.filter(
+                manga=OuterRef("manga"), number__gt=OuterRef("last_read_chapter")
+            )
+            .values("manga")
+            .annotate(count=Count("id"))
+            .values("count")
+        )
+
+        favorites = (
+            FavoriteManga.objects.filter(user=request.user)
+            .select_related("manga")
+            .annotate(
+                unread_chapters_count_annotated=Coalesce(
+                    Subquery(unread_chapters_subquery, output_field=IntegerField()), 0
+                )
+            )
         )
         serializer = FavoriteMangaSerializer(favorites, many=True)
         return Response(serializer.data)

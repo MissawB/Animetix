@@ -304,6 +304,8 @@ class FavoriteMangaSerializer(serializers.ModelSerializer):
         ]
 
     def get_unread_chapters_count(self, obj):
+        if hasattr(obj, "unread_chapters_count_annotated"):
+            return obj.unread_chapters_count_annotated
         return MangaChapter.objects.filter(
             manga=obj.manga, number__gt=obj.last_read_chapter
         ).count()
@@ -337,16 +339,29 @@ class SocialUserSerializer(serializers.ModelSerializer):
 
 class CreativeFusionSerializer(serializers.ModelSerializer):
     creator_name = serializers.ReadOnlyField(source="creator.username")
-    likes_count = serializers.IntegerField(source="likes.count", read_only=True)
+    likes_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = CreativeFusion
         fields = "__all__"
 
+    def get_likes_count(self, obj):
+        if (
+            hasattr(obj, "_prefetched_objects_cache")
+            and "likes" in obj._prefetched_objects_cache
+        ):
+            return len(obj.likes.all())
+        return obj.likes.count()
+
     def get_is_liked(self, obj):
         user = self.context["request"].user if "request" in self.context else None
         if user and user.is_authenticated:
+            if (
+                hasattr(obj, "_prefetched_objects_cache")
+                and "likes" in obj._prefetched_objects_cache
+            ):
+                return user in obj.likes.all()
             return obj.likes.filter(id=user.id).exists()
         return False
 
@@ -435,9 +450,7 @@ class ClubMembershipSerializer(serializers.ModelSerializer):
 
 
 class ClubEventSerializer(serializers.ModelSerializer):
-    participants_count = serializers.IntegerField(
-        source="participants.count", read_only=True
-    )
+    participants_count = serializers.SerializerMethodField()
     is_participant = serializers.SerializerMethodField()
 
     class Meta:
@@ -453,16 +466,31 @@ class ClubEventSerializer(serializers.ModelSerializer):
             "is_participant",
         ]
 
+    def get_participants_count(self, obj):
+        if hasattr(obj, "participants_count_annotated"):
+            return obj.participants_count_annotated
+        if (
+            hasattr(obj, "_prefetched_objects_cache")
+            and "participants" in obj._prefetched_objects_cache
+        ):
+            return len(obj.participants.all())
+        return obj.participants.count()
+
     def get_is_participant(self, obj):
         user = self.context["request"].user if "request" in self.context else None
         if user and user.is_authenticated:
+            if (
+                hasattr(obj, "_prefetched_objects_cache")
+                and "participants" in obj._prefetched_objects_cache
+            ):
+                return user in obj.participants.all()
             return obj.participants.filter(id=user.id).exists()
         return False
 
 
 class DiscoveryClubSerializer(serializers.ModelSerializer):
     creator_name = serializers.ReadOnlyField(source="creator.username")
-    members_count = serializers.IntegerField(source="members.count", read_only=True)
+    members_count = serializers.SerializerMethodField()
     events = ClubEventSerializer(many=True, read_only=True)
 
     class Meta:
@@ -482,6 +510,11 @@ class DiscoveryClubSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["creator"]
+
+    def get_members_count(self, obj):
+        if hasattr(obj, "members_count_annotated"):
+            return obj.members_count_annotated
+        return obj.members.count()
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)

@@ -11,6 +11,7 @@ from dependency_injector.wiring import Provide, inject
 from django.db import models
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -30,13 +31,14 @@ from ..models import (
     GoldDatasetEntry,
 )
 from ..permissions import IsAdminOrReadOnlyExpert, IsIAPApprovedAdmin  # noqa: E402
-from ..serializers import (
+from ..serializers import (  # noqa: E402
     AIFeedbackInputSerializer,
     AIFeedbackSerializer,
     AIREvalResultSerializer,
     AISafetyEventSerializer,
     DPOCurationSerializer,
     GoldDatasetEntrySerializer,
+    XaiReportSerializer,
 )
 
 logger = logging.getLogger("animetix.mlops")
@@ -98,6 +100,7 @@ class LatentSpaceAPIView(APIView):
         super().__init__(**kwargs)
         self.repository = repository
 
+    @extend_schema(responses={200: XaiReportSerializer})
     def get(self, request):
         media = request.GET.get("media", "anime").lower()
         vibe_type = request.GET.get("type", "thematic").lower()

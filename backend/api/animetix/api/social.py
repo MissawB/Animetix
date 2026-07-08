@@ -58,10 +58,21 @@ class ClubViewSet(viewsets.ModelViewSet):
         - Les anonymes voient uniquement les clubs publics.
         - Les authentifiés voient les clubs publics + ceux dont ils sont membres ou créateurs.
         """
-        from django.db.models import Q  # noqa: E402
+        from django.db.models import Count, Prefetch, Q  # noqa: E402
+
+        from ..models import ClubEvent
 
         user = self.request.user
-        base_qs = DiscoveryClub.objects.all().prefetch_related("members", "events")
+
+        # Prefetch events with participants to avoid N+1 in ClubEventSerializer
+        events_qs = ClubEvent.objects.all().prefetch_related("participants")
+
+        base_qs = (
+            DiscoveryClub.objects.all()
+            .select_related("creator")
+            .annotate(members_count_annotated=Count("members", distinct=True))
+            .prefetch_related("members", Prefetch("events", queryset=events_qs))
+        )
 
         if user.is_authenticated:
             return base_qs.filter(
@@ -328,9 +339,11 @@ class UserSearchView(APIView):
         if len(query) < 2:
             return Response([])
 
-        users = User.objects.filter(username__icontains=query).exclude(
-            id=request.user.id
-        )[:20]
+        users = (
+            User.objects.filter(username__icontains=query)
+            .exclude(id=request.user.id)
+            .select_related("profile")[:20]
+        )
         serializer = SocialUserSerializer(users, many=True)
 
         # Ajouter l'info si on le suit déjà
@@ -361,8 +374,13 @@ class CreativeFusionViewSet(viewsets.ModelViewSet):
 
         user = self.request.user
 
-        # Base : on prend toutes les fusions triées
-        base_qs = CreativeFusion.objects.all().order_by("-created_at")
+        # Base : select_related and prefetch_related to avoid N+1 queries
+        base_qs = (
+            CreativeFusion.objects.all()
+            .select_related("creator", "creator__profile", "parent")
+            .prefetch_related("likes")
+            .order_by("-created_at")
+        )
 
         if user.is_authenticated:
             # L'utilisateur voit les fusions publiques ET ses propres fusions
@@ -426,8 +444,12 @@ class SocialViewSet(viewsets.ViewSet):
         # vide. Le réseau personnel n'apparaît qu'une fois connecté.
         if not request.user.is_authenticated:
             return Response({"following": [], "followers": []})
-        following = request.user.following.all().select_related("to_user__profile")
-        followers = request.user.followers.all().select_related("from_user__profile")
+        following = request.user.following.all().select_related(
+            "to_user", "to_user__profile", "from_user", "from_user__profile"
+        )
+        followers = request.user.followers.all().select_related(
+            "to_user", "to_user__profile", "from_user", "from_user__profile"
+        )
         return Response(
             {
                 "following": FriendshipSerializer(following, many=True).data,
@@ -477,9 +499,11 @@ class LeaderboardView(APIView):
         mode = request.query_params.get("mode", "ranked")  # 'ranked' or 'xp'
 
         if mode == "xp":
-            top_profiles = Profile.objects.order_by("-xp")[:10]
+            top_profiles = Profile.objects.select_related("user").order_by("-xp")[:10]
         else:
-            top_profiles = Profile.objects.order_by("-ranked_points")[:10]
+            top_profiles = Profile.objects.select_related("user").order_by(
+                "-ranked_points"
+            )[:10]
 
         data = []
         for i, p in enumerate(top_profiles):
@@ -535,10 +559,18 @@ class MyCollectionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        fusions = CreativeFusion.objects.filter(creator=request.user).order_by(
-            "-created_at"
+        fusions = (
+            CreativeFusion.objects.filter(creator=request.user)
+            .select_related("creator", "creator__profile", "parent")
+            .prefetch_related("likes")
+            .order_by("-created_at")
         )
-        liked_fusions = request.user.liked_fusions.all().order_by("-created_at")
+        liked_fusions = (
+            request.user.liked_fusions.all()
+            .select_related("creator", "creator__profile", "parent")
+            .prefetch_related("likes")
+            .order_by("-created_at")
+        )
 
         return Response(
             {
@@ -592,7 +624,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        queryset = ClubEvent.objects.all().order_by("event_date")
+        queryset = (
+            ClubEvent.objects.all()
+            .prefetch_related("participants")
+            .order_by("event_date")
+        )
         club_id = self.request.query_params.get("club")
         if club_id:
             queryset = queryset.filter(club_id=club_id)
