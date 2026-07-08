@@ -20,10 +20,12 @@ export const SynapticWeightMatrix: React.FC<SynapticWeightMatrixProps> = ({
   setLr,
   handleSimulate,
   isSimulationPending,
-  selectedSpikes,
 }) => {
   return (
-    <Card padding="lg" className="bg-navy-950/40 border-white/10 rounded-[2rem] shadow-2xl flex flex-col min-h-[380px]">
+    <Card
+      padding="lg"
+      className="bg-navy-950/40 border-white/10 rounded-[2rem] shadow-2xl flex flex-col min-h-[380px]"
+    >
       <span className="text-[10px] font-black uppercase opacity-30 block mb-6 tracking-widest flex items-center gap-2">
         <Layers className="w-4 h-4" /> Synaptic Weight Matrix (W)
       </span>
@@ -42,7 +44,7 @@ export const SynapticWeightMatrix: React.FC<SynapticWeightMatrixProps> = ({
             >
               {val > 0 ? val.toFixed(1) : '0'}
             </div>
-          ))
+          )),
         )}
       </div>
 
@@ -50,7 +52,10 @@ export const SynapticWeightMatrix: React.FC<SynapticWeightMatrixProps> = ({
       <div className="mt-6 flex gap-4">
         <div className="flex-grow space-y-1">
           <div className="flex justify-between items-center px-1">
-            <label htmlFor="learning-rate-slider" className="text-[8px] font-black opacity-30 uppercase tracking-widest">
+            <label
+              htmlFor="learning-rate-slider"
+              className="text-[8px] font-black opacity-30 uppercase tracking-widest"
+            >
               Step Learning Rate (η)
             </label>
             <span className="text-[9px] font-mono text-red-500 font-bold">{lr.toFixed(3)}</span>

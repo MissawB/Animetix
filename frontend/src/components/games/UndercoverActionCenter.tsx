@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Ghost, Lock, HelpCircle, Vote, RotateCcw } from 'lucide-react';
-import { UPlayer, UMsg, UResult } from '../../types';
+import { UPlayer, UResult } from '../../types';
 
 interface UndercoverActionCenterProps {
   state: string;
@@ -17,7 +17,7 @@ interface UndercoverActionCenterProps {
   civilWord?: string;
   undercoverWord?: string;
   isHost: boolean;
-  sendAction: (action: string, payload?: any) => void;
+  sendAction: (action: string, payload?: Record<string, unknown>) => void;
   winnerBanner: () => { cls: string; title: string; sub: string };
 }
 
@@ -31,7 +31,6 @@ export const UndercoverActionCenter: React.FC<UndercoverActionCenterProps> = ({
   guess,
   setGuess,
   submitGuess,
-  result,
   civilWord,
   undercoverWord,
   isHost,
@@ -55,14 +54,21 @@ export const UndercoverActionCenter: React.FC<UndercoverActionCenterProps> = ({
                   {t('games.undercover.room.you_are_mrwhite', 'Tu es Mr. White')}
                 </p>
                 <p className="text-lg font-black italic text-white leading-tight">
-                  {t('games.undercover.room.mrwhite_card_text', 'Pas de mot — bluffe, devine, survis.')}
+                  {t(
+                    'games.undercover.room.mrwhite_card_text',
+                    'Pas de mot — bluffe, devine, survis.',
+                  )}
                 </p>
               </div>
             </div>
           ) : (
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-yellow-400/15 to-transparent border-2 border-yellow-400/40">
               {myRole.image ? (
-                <img src={myRole.image} alt="" className="w-16 h-20 object-cover rounded-xl shadow-lg" />
+                <img
+                  src={myRole.image}
+                  alt=""
+                  className="w-16 h-20 object-cover rounded-xl shadow-lg"
+                />
               ) : (
                 <div className="w-16 h-20 rounded-xl bg-white/10 grid place-items-center">
                   <Lock className="w-6 h-6 text-white/30" />
@@ -89,11 +95,16 @@ export const UndercoverActionCenter: React.FC<UndercoverActionCenterProps> = ({
             >
               <p className="text-sm text-white/85 flex items-start gap-2">
                 <HelpCircle className="w-5 h-5 text-purple-300 shrink-0 mt-0.5" />{' '}
-                {t('games.undercover.room.guess_prompt_before', 'Tu es éliminé ! Devine le mot des')}{' '}
-                <b className="text-green-400">{t('games.undercover.room.guess_prompt_civils', 'civils')}</b>
+                {t(
+                  'games.undercover.room.guess_prompt_before',
+                  'Tu es éliminé ! Devine le mot des',
+                )}{' '}
+                <b className="text-green-400">
+                  {t('games.undercover.room.guess_prompt_civils', 'civils')}
+                </b>
                 {t(
                   'games.undercover.room.guess_prompt_after',
-                  ' — si tu trouves, tu gagnes la partie.'
+                  ' — si tu trouves, tu gagnes la partie.',
                 )}
               </p>
               <div className="flex gap-3">
@@ -120,7 +131,7 @@ export const UndercoverActionCenter: React.FC<UndercoverActionCenterProps> = ({
                 <b className="text-purple-300">{pendingWhiteName}</b>
                 {t(
                   'games.undercover.room.pending_white_status',
-                  ' (Mr. White) a été éliminé et tente de deviner le mot des civils…'
+                  ' (Mr. White) a été éliminé et tente de deviner le mot des civils…',
                 )}
               </span>
             </div>
@@ -134,15 +145,20 @@ export const UndercoverActionCenter: React.FC<UndercoverActionCenterProps> = ({
           {iAmAlive ? (
             <span>
               {t('games.undercover.room.vote_hint_before', 'Décris ton mot sans le nommer, puis')}{' '}
-              <b className="text-red-400">{t('games.undercover.room.vote_hint_click', 'clique un agent vivant')}</b>{' '}
+              <b className="text-red-400">
+                {t('games.undercover.room.vote_hint_click', 'clique un agent vivant')}
+              </b>{' '}
               {t(
                 'games.undercover.room.vote_hint_after',
-                'pour voter. Quand tout le monde a voté, le plus visé est éliminé (égalité → on revote).'
+                'pour voter. Quand tout le monde a voté, le plus visé est éliminé (égalité → on revote).',
               )}
             </span>
           ) : (
             <span className="italic text-white/50">
-              {t('games.undercover.room.spectator_hint', 'Tu es éliminé — observe la partie en spectateur.')}
+              {t(
+                'games.undercover.room.spectator_hint',
+                'Tu es éliminé — observe la partie en spectateur.',
+              )}
             </span>
           )}
         </div>
@@ -152,11 +168,14 @@ export const UndercoverActionCenter: React.FC<UndercoverActionCenterProps> = ({
       {state === 'ended' && (
         <div className="space-y-5">
           <div className={`p-6 rounded-2xl text-center border-2 ${winnerBanner().cls}`}>
-            <p className="font-black text-2xl italic manga-font text-white">{winnerBanner().title}</p>
+            <p className="font-black text-2xl italic manga-font text-white">
+              {winnerBanner().title}
+            </p>
             <p className="mt-2 font-bold text-white/80">{winnerBanner().sub}</p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm">
               <span className="px-3 py-1.5 rounded-xl bg-green-500/10 text-green-400 font-bold">
-                {t('games.undercover.room.civil_word_label', 'Mot civil :')} <span className="text-white">{civilWord}</span>
+                {t('games.undercover.room.civil_word_label', 'Mot civil :')}{' '}
+                <span className="text-white">{civilWord}</span>
               </span>
               <span className="px-3 py-1.5 rounded-xl bg-red-500/10 text-red-400 font-bold">
                 {t('games.undercover.room.undercover_word_label', 'Mot intrus :')}{' '}
@@ -169,7 +188,8 @@ export const UndercoverActionCenter: React.FC<UndercoverActionCenterProps> = ({
               onClick={() => sendAction('back_to_lobby')}
               className="w-full py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic uppercase tracking-wide flex items-center justify-center gap-2 transition-colors"
             >
-              <RotateCcw className="w-5 h-5" /> {t('games.undercover.room.new_game', 'Nouvelle partie')}
+              <RotateCcw className="w-5 h-5" />{' '}
+              {t('games.undercover.room.new_game', 'Nouvelle partie')}
             </button>
           )}
         </div>

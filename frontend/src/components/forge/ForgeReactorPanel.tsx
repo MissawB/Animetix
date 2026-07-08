@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Flame, Zap, Sparkles } from 'lucide-react';
+import { Zap, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CyberSlider } from './CyberSlider';
 import { CyberButton } from './CyberButton';
@@ -38,8 +38,14 @@ export const ForgeReactorPanel: React.FC<ForgeReactorPanelProps> = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const errLoginRequired = t('games.forge.errors.login_required', 'Connexion requise pour forger une réalité.');
-  const errInsufficientBx = t('games.forge.errors.insufficient_bx', { defaultValue: 'Berrix insuffisants — la fusion coûte {{cost}} Bx.', cost: fusionCost });
+  const errLoginRequired = t(
+    'games.forge.errors.login_required',
+    'Connexion requise pour forger une réalité.',
+  );
+  const errInsufficientBx = t('games.forge.errors.insufficient_bx', {
+    defaultValue: 'Berrix insuffisants — la fusion coûte {{cost}} Bx.',
+    cost: fusionCost,
+  });
 
   return (
     <div className="space-y-12">
@@ -56,7 +62,13 @@ export const ForgeReactorPanel: React.FC<ForgeReactorPanelProps> = ({
           <span className="text-2xl font-black italic manga-font text-red-500">{chaosLevel}%</span>
         </div>
         <div className="relative group pt-4">
-          <CyberSlider min={0} max={100} value={chaosLevel} onChange={setChaosLevel} color="magenta" />
+          <CyberSlider
+            min={0}
+            max={100}
+            value={chaosLevel}
+            onChange={setChaosLevel}
+            color="magenta"
+          />
           <div className="flex justify-between mt-3 text-[9px] font-black uppercase opacity-45">
             <span>{t('games.forge.chaos_scale_low', 'Cohérent')}</span>
             <span>{t('games.forge.chaos_scale_mid', 'Distordu')}</span>
@@ -72,7 +84,10 @@ export const ForgeReactorPanel: React.FC<ForgeReactorPanelProps> = ({
               {t('games.forge.dna_balance', 'Équilibre des ADN')}
             </span>
             <p className="text-[10px] font-bold opacity-55 max-w-[180px]">
-              {t('games.forge.dna_balance_desc', 'Quel univers doit dominer la structure globale ?')}
+              {t(
+                'games.forge.dna_balance_desc',
+                'Quel univers doit dominer la structure globale ?',
+              )}
             </p>
           </div>
           <span className="text-2xl font-black italic manga-font text-blue-500">{balance}%</span>
@@ -127,12 +142,18 @@ export const ForgeReactorPanel: React.FC<ForgeReactorPanelProps> = ({
           <div className="text-red-500 text-center text-xs font-black uppercase bg-red-500/10 p-4 rounded-2xl space-y-3">
             <p>{error}</p>
             {error === errLoginRequired && (
-              <button onClick={() => navigate('/auth/login/')} className="underline hover:text-red-400">
+              <button
+                onClick={() => navigate('/auth/login/')}
+                className="underline hover:text-red-400"
+              >
                 {t('games.forge.login_button', 'Se connecter')}
               </button>
             )}
             {error === errInsufficientBx && (
-              <button onClick={() => navigate('/power-station/')} className="underline hover:text-red-400">
+              <button
+                onClick={() => navigate('/power-station/')}
+                className="underline hover:text-red-400"
+              >
                 {t('games.forge.recharge_button', 'Recharger des Berrix')}
               </button>
             )}

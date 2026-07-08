@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import useSocket from './useSocket';
 import { UPlayer, UMsg, UResult } from '../types';
@@ -135,10 +135,14 @@ export function useUndercoverRoom() {
     maxWhiteSlider,
 
     // Local form states
-    name, setName,
-    chat, setChat,
-    guess, setGuess,
-    vote, setVote,
+    name,
+    setName,
+    chat,
+    setChat,
+    guess,
+    setGuess,
+    vote,
+    setVote,
     copied,
 
     // Handlers
