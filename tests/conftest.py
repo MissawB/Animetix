@@ -99,8 +99,16 @@ def _cleanup_module_pollution():
     """
     snapshot = dict(sys.modules)
     yield
+    # Modules with irreversible import-time global registration must never be
+    # purged: deleting them forces a re-import that duplicate-registers and
+    # crashes unrelated later tests. numba registers PolynomialType (and other
+    # numpy types) into a process-global type registry on import; llvmlite holds
+    # native LLVM bindings. Keep them pinned once imported.
+    _unpurgeable = ("numba", "llvmlite")
     # Remove any module added during the test
     for name in set(sys.modules) - set(snapshot):
+        if name.startswith(_unpurgeable):
+            continue
         del sys.modules[name]
     # Restore any module that was replaced or deleted during the test
     for name, mod in snapshot.items():

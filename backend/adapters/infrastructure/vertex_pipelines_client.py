@@ -23,6 +23,11 @@ try:
 
     HAS_KFP = True
 except ImportError:
+    # Keep the `compiler` attribute defined even when kfp is unavailable, so tests
+    # that patch `animetix...vertex_pipelines_client.compiler` don't hit
+    # AttributeError. This also makes the module robust to suite import-order
+    # pollution (a prior test mocking kfp out of sys.modules then a reload here).
+    compiler = None
     HAS_KFP = False
 
 
