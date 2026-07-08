@@ -163,6 +163,8 @@ For production scale and security, Animetix utilizes managed Google Cloud Platfo
    python -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    pip install -r requirements.txt
+   # Contributors who run the test suite also need the dev tooling:
+   #   pip install -r requirements-dev.txt
 
    # Initialize SQLite database and media
    python backend/api/manage.py migrate

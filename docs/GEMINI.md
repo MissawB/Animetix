@@ -46,11 +46,12 @@ All modifications must strictly respect the separation of layers:
 ### Dependency Management
 - **Tooling:** Use `pip-compile` for Python dependency management.
 - **Virtual Environments:** Always work within a virtual environment.
+- **Two locks:** `requirements.in` → `requirements.txt` holds runtime/prod deps (shipped in the Docker images). `requirements-dev.in` → `requirements-dev.txt` holds dev/test-only tooling (pytest, Playwright, coloredlogs, watchdog) and is kept OUT of the images; it is constrained by the prod lock via `-c requirements.txt`.
 - **Update Process:**
     1. Activate your virtual environment.
-    2. Modify `requirements.in` (add/remove/update packages).
-    3. Run `pip-compile requirements.in` to generate `requirements.txt`.
-    4. Install/update dependencies with `pip install -r requirements.txt`.
+    2. Modify the right source file: `requirements.in` for a runtime dep, `requirements-dev.in` for a dev/test-only tool.
+    3. Recompile the matching lock: `pip-compile --allow-unsafe --strip-extras requirements.in` and/or `pip-compile --allow-unsafe --strip-extras requirements-dev.in`.
+    4. Install a full dev/test env with `pip install -r requirements.txt -r requirements-dev.txt` (runtime-only: drop the second file).
 
 ### Git Workflow & Version Control
 - **Branching Strategy:**

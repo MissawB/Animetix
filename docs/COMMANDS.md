@@ -132,7 +132,8 @@ Maintenance scripts, database reconciliation, and background worker pools.
 
 | Command | Directory | Description |
 | :--- | :--- | :--- |
-| `pip install -r requirements.txt` | Root | Installs and updates required Python libraries. |
+| `pip install -r requirements.txt` | Root | Installs the runtime/prod Python libraries (what the Docker images ship). |
+| `pip install -r requirements.txt -r requirements-dev.txt` | Root | Full dev/test env — adds pytest, the Playwright stack and other dev-only tooling (kept out of the prod lock). |
 | `python scripts/reconcile_db.py` | Root | **(CRITICAL)** Analyzes and resolves sync discrepancies between PostgreSQL and Neo4j. |
 | `python scripts/check_vector_counts.py` | Root | Inspects document counts in the pgvector vector store. |
 | `python scripts/check_db_tables.py` | Root | Provides a quick inspection of PostgreSQL physical table statuses. |
