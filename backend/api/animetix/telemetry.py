@@ -14,8 +14,16 @@ def init_telemetry(service_name: str):
     """
     Initializes Google Cloud Profiler and OpenTelemetry tracing.
     """
-    # 1. Start Google Cloud Profiler in production
-    if os.getenv("DJANGO_ENV") == "production":
+    # 1. Start Google Cloud Profiler in production, only when explicitly enabled.
+    # The agent polls cloudprofiler.googleapis.com from a background thread; if the
+    # runtime service account lacks roles/cloudprofiler.agent (or the API is off),
+    # every poll logs a 403 PERMISSION_DENIED every few seconds. Gate it so an
+    # unconfigured env stays silent. To enable: set ENABLE_PROFILER=true AND grant
+    # the SA roles/cloudprofiler.agent + enable cloudprofiler.googleapis.com.
+    if (
+        os.getenv("DJANGO_ENV") == "production"
+        and os.getenv("ENABLE_PROFILER") == "true"
+    ):
         try:
             import googlecloudprofiler  # noqa: E402
 

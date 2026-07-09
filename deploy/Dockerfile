@@ -44,7 +44,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg=7:5.1.* \
     zlib1g \
     && rm -rf /var/lib/apt/lists/*
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# -m creates /home/appuser: gunicorn's control server writes under $HOME, and a
+# home-less system user (`useradd -r` without -m) made it fail at startup with
+# "Control server error: [Errno 13] Permission denied: '/home/appuser'".
+RUN groupadd -r appuser && useradd -r -m -g appuser appuser
 WORKDIR /app
 
 # Copy assets & venv
