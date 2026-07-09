@@ -57,7 +57,7 @@ def monitor_inference_health():
 
 def exported_user_feedback():
     """Exporte les feedbacks RLHF et les sessions de jeu depuis la base de données Django."""
-    manage_py = os.path.join(BASE_DIR, "backend", "manage.py")
+    manage_py = os.path.join(BASE_DIR, "api", "manage.py")
     try:
         import subprocess  # noqa: E402
 
@@ -73,7 +73,7 @@ def exported_user_feedback():
 
 def run_sql_quality_checks():
     """Runs dbt data quality checks via Django management command before compilation."""
-    manage_py = os.path.join(BASE_DIR, "backend", "manage.py")
+    manage_py = os.path.join(BASE_DIR, "api", "manage.py")
     try:
         import subprocess  # noqa: E402
 
