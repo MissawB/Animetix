@@ -362,11 +362,17 @@ jobs:
     - name: Build & push prod image (Cloud Build)
       # Tag the image with the exact commit SHA so the deploy below pins this
       # build's artifact, not the mutable :latest tag.
+      # _BUILD_TARGET=web: this job only `gcloud run deploy`s animetix-web, so
+      # build ONLY the web image. Building `all` also rebuilds the brain and the
+      # heavy Dataflow image — the latter overruns the Cloud Build step timeout
+      # (context deadline exceeded) and the >1h build outlives the Workload
+      # Identity token (STS refresh then fails), so `all` never completes. Brain
+      # and Dataflow have their own targeted builds when they actually change.
       run: |
         gcloud builds submit \
           --project "$GCP_PROJECT" \
           --config cloudbuild.yaml \
-          --substitutions=_TAG=${{ github.sha }} \
+          --substitutions=_TAG=${{ github.sha }},_BUILD_TARGET=web \
           .
     - name: Deploy to Cloud Run (animetix-web)
       # Minimal update: only the image changes. The service keeps its existing
