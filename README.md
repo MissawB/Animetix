@@ -229,11 +229,11 @@ pytest
 
 ### End-to-End User Journeys (Playwright)
 
-To execute frontend tests:
+The e2e suite lives in the frontend and runs against a mocked backend API (no
+live Django/GPU needed):
 
 ```bash
-python scripts/verify/setup_e2e.py
-pytest tests/e2e
+cd frontend && npm run test:e2e
 ```
 
 ---

@@ -195,11 +195,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
         pip install -r requirements.txt -r requirements-dev.txt
-    - name: Install Playwright browser
-      # The e2e tests (tests/e2e/*) are marked @pytest.mark.integration, so they
-      # run in this job and need a real Chromium. playwright the pip package is in
-      # requirements-dev.txt; the browser binary is a separate download.
-      run: python -m playwright install --with-deps chromium
     - name: Run integration tests
       env:
         DATABASE_URL: 'sqlite:///:memory:'

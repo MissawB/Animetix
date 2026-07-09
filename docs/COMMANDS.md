@@ -118,8 +118,7 @@ Unit tests, integration tests, visual regression tests, and end-to-end suites.
 | Command | Directory | Description |
 | :--- | :--- | :--- |
 | `pytest` | Root | Runs the backend Django test suite and domain logic validations. |
-| `python scripts/setup_e2e.py` | Root | Downloads and installs browser binaries (Playwright) required for integration testing. |
-| `pytest tests/e2e` | Root | Runs Playwright end-to-end user journey tests on the API and database. |
+| `npm run test:e2e` | `frontend/` | Runs the Playwright end-to-end user-journey tests (mocked backend API) against the Vite app. |
 | `npm run test` | `frontend/` | Runs Vitest unit and component tests for the React application. |
 | `npm run test:e2e` | `frontend/` | Runs Playwright end-to-end integration tests on the complete React frontend. |
 | `npm run test:vrt` | `frontend/` | Runs Visual Regression Testing (VRT) using Playwright screenshots. |
