@@ -7,17 +7,23 @@ test.describe('Visual Regression Testing - Design System @vrt', () => {
   // nous allons créer des tests sur les pages clés qui utilisent le Design System.
 
   test('Page Akinetix - Intégrité Visuelle', async ({ page }) => {
-    // Mocker l'état pour avoir un rendu constant (déterminisme visuel)
+    // Mocker l'état pour avoir un rendu constant (déterminisme visuel).
+    // akinetixService.normalize() attend du snake_case (RawAkinetixState) et le
+    // convertit en camelCase pour le store — le mock doit donc renvoyer les clés
+    // brutes de l'API (current_question/game_over), pas déjà les clés du state.
     await page.route('**/api/v1/game/akinetix/state/', async route => {
       await route.fulfill({ json: {
-        history: [{q: 'Question Test', a: 'OUI'}],
-        currentQuestion: 'Est-ce un personnage iconique ?',
-        gameOver: false,
+        history: [{ q: 'Question Test', a: 'OUI' }],
+        current_question: 'Est-ce un personnage iconique ?',
+        game_over: false,
       }});
     });
 
-    await page.goto('/static/akinetix/');
-    
+    // Route réelle de la partie (celle qui affiche le plateau de jeu) : la page
+    // lobby /akinetix/ n'appelle jamais akinetixService, donc le mock ci-dessus
+    // ne servirait à rien si on y naviguait.
+    await page.goto('/static/akinetix/play/');
+
     // Attendre que les polices et images soient chargées
     await page.waitForLoadState('networkidle');
 
@@ -32,7 +38,9 @@ test.describe('Visual Regression Testing - Design System @vrt', () => {
   test('Page Vision Quest - Intégrité Visuelle', async ({ page }) => {
     await page.route('**/api/v1/game/vision/state/', async route => {
       await route.fulfill({ json: {
-        image_url: 'https://via.placeholder.com/800x600', // Image constante pour le test
+        // Asset local servi par Vite plutôt qu'une URL externe (via.placeholder.com) :
+        // le test ne doit dépendre d'aucun accès réseau externe.
+        image_url: '/static/favicon-32x32.png',
         guesses: [{text: 'Guerrier', score: 85}],
         best_score: 85,
         gameOver: false,
