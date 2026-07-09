@@ -19,8 +19,12 @@ export const apiClient = async (
     defaultHeaders['Content-Type'] = 'application/json';
   }
 
-  // Inject Firebase Auth Token if available
-  const firebaseUser = auth.currentUser;
+  // Inject Firebase Auth Token if available. `auth` is exported as non-null for
+  // compile-time convenience but is genuinely null at runtime when the Firebase
+  // config is absent (e.g. CI/e2e, where firebase.googleapis.com is blocked), so
+  // guard it — otherwise every apiClient call throws and AllowAny features (e.g.
+  // akinetix classic) crash for unauthenticated users.
+  const firebaseUser = auth?.currentUser;
   if (firebaseUser) {
     try {
       const token = await firebaseUser.getIdToken();
