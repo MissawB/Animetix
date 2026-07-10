@@ -15,8 +15,6 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Backend — module mort `brain_api.py` (539 lignes)** _(audit dette 2026-07-05)_
-  - [brain_api.py](backend/adapters/inference/brain_api.py) n'est importé nulle part (le container câble `brain_api_adapter`). À supprimer — son nom quasi identique au module actif est un piège.
 - [ ] **Backend — signaux dispersés + write amplification** _(audit dette 2026-07-05)_
   - Signaux dans [models.py:549-557](backend/api/animetix/models.py#L549-L557) ET [signals.py](backend/api/animetix/signals.py) ; `save_user_profile` ré-écrit le profil à **chaque** save de User et lève `RelatedObjectDoesNotExist` si le profil manque (users bulk/legacy). Consolider et garder.
 - [ ] **Backend — squash des migrations : purge des originales** _(audit dette 2026-07-05 ; squash livrée le 2026-07-08, archivée dans [docs/HISTORY.md](docs/HISTORY.md))_

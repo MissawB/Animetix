@@ -1,11 +1,11 @@
-import os
+﻿import os
 import pathlib
 from unittest.mock import patch
 
 
 def test_brain_api_host_default_logic():
     """
-    Verify that the host selection logic used in brain_api.py
+    Verify that the host selection logic used in brain_service.py
     correctly defaults to '127.0.0.1'.
 
     This addresses Bandit B104 (binding to all interfaces).
@@ -20,7 +20,7 @@ def test_brain_api_host_default_logic():
 
 def test_brain_api_host_override_logic():
     """
-    Verify that the host selection logic used in brain_api.py
+    Verify that the host selection logic used in brain_service.py
     respects the 'BRAIN_API_HOST' environment variable.
     """
     custom_host = "192.168.1.5"
@@ -33,7 +33,7 @@ def test_brain_api_host_override_logic():
 
 def test_production_file_contains_logic():
     """
-    Verify that the actual brain_api.py file contains the expected secure host logic.
+    Verify that the actual brain_service.py file contains the expected secure host logic.
     This ensures that the tests above are validating the real production code's intent.
     """
     # Get project root
@@ -42,7 +42,7 @@ def test_production_file_contains_logic():
     # project_root is 2 levels up
     project_root = current_dir.parent.parent
     brain_api_path = (
-        project_root / "backend" / "adapters" / "inference" / "brain_api.py"
+        project_root / "backend" / "adapters" / "inference" / "brain_service.py"
     )
 
     assert brain_api_path.exists(), f"Brain API file not found at {brain_api_path}"

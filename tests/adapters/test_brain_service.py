@@ -1,4 +1,4 @@
-"""Real-behavior tests for adapters.inference.brain_api.
+﻿"""Real-behavior tests for adapters.inference.brain_service.
 
 NOTE: this module is the FastAPI *server* (the "Brain API"), NOT the HTTP
 client `brain_api_adapter`. It defines a `FastAPI` app whose endpoints delegate
@@ -24,7 +24,7 @@ from fastapi.testclient import TestClient
 # setdefault avoids clobbering a real key from the environment / CI secrets.
 os.environ.setdefault("BRAIN_API_KEY", "secure-test-key-brain-api")
 
-from adapters.inference.brain_api import (  # noqa: E402
+from adapters.inference.brain_service import (  # noqa: E402
     EXPECTED_API_KEY,
     app,
     brain_engine,

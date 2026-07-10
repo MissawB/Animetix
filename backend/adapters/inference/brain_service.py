@@ -1,3 +1,15 @@
+"""FastAPI entrypoint of the standalone GPU "brain" inference service.
+
+This module is NOT imported by the Django application — it is the app served
+by the dedicated Cloud Run GPU service (see ``deploy/Dockerfile.brain``:
+``uvicorn adapters.inference.brain_service:app``). The web side talks to it
+over HTTP through ``BrainAPIAdapter`` (``brain_api_adapter.py``).
+
+Historical note: this file used to be named ``brain_api.py``, whose
+near-identical name with the adapter repeatedly got it misflagged as dead
+code — a 2026-07-05 debt audit even scheduled it for deletion.
+"""
+
 import base64
 import logging
 import os

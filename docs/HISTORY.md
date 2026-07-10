@@ -2,6 +2,10 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-10] Session: `brain_api.py` was never dead — renamed to `brain_service.py` to kill the trap
+
+Closure of the 🟡 debt item "module mort `brain_api.py` (539 lignes)" — **by correcting the audit, not by deleting**. The file is the FastAPI entrypoint of the standalone GPU "brain" Cloud Run service, launched by [deploy/Dockerfile.brain](../deploy/Dockerfile.brain) (`uvicorn adapters.inference.brain_service:app`); it is "imported nowhere" in Django precisely because it belongs to another service — deleting it would have killed the brain on the next image build. The item's underlying concern was real though: the near-identical name with the consuming adapter (`brain_api_adapter.py`) was confusing enough to fool the audit itself. Fixed at the source: module renamed to `brain_service.py` (Dockerfile CMD, the two dedicated test suites and the B104 security test updated in the same commit, so the next brain image stays coherent; the currently deployed image is untouched), plus an explicit module docstring stating its role and the historical misflag. 124 brain-related tests green.
+
 ## [2026-07-10] Session: Silent exception swallowing eliminated from the runtime paths
 
 Closure of the 🟡 debt item "exceptions avalées à grande échelle" (2026-07-05 audit). The inventory corrected the audit twice over: the ~168 `except Exception` log-and-continue handlers had already been AST-audited in June (legitimate defensive code — they log), and of the "77 silent `pass`" only **11 real silent handlers remained in the backend runtime** (the rest sat in tests/scripts or had been fixed since). All 11 made observable, zero behavior change:
