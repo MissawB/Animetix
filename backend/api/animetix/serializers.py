@@ -384,6 +384,11 @@ class VsBattleSerializer(serializers.ModelSerializer):
     def get_is_liked(self, obj):
         user = self.context["request"].user if "request" in self.context else None
         if user and user.is_authenticated:
+            if (
+                hasattr(obj, "_prefetched_objects_cache")
+                and "likes" in obj._prefetched_objects_cache
+            ):
+                return user in obj.likes.all()
             return obj.likes.filter(id=user.id).exists()
         return False
 

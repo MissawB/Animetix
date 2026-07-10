@@ -21,7 +21,12 @@ logger = logging.getLogger(__name__)
 @permission_classes([AllowAny])
 def list_vs_battles(request):
     """Liste les combats publics récents pour l'Arène."""
-    battles = VsBattle.objects.filter(is_public=True).order_by("-created_at")[:20]
+    battles = (
+        VsBattle.objects.filter(is_public=True)
+        .select_related("creator")
+        .prefetch_related("likes")
+        .order_by("-created_at")[:20]
+    )
     serializer = VsBattleSerializer(battles, many=True)
     return Response(serializer.data)
 

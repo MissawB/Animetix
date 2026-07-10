@@ -137,9 +137,11 @@ class AIFeedbackAPIView(APIView):
 
     def get(self, request):
         """Récupère l'historique des feedbacks de l'utilisateur connecté."""
-        feedbacks = AIFeedback.objects.filter(user=request.user).order_by(
-            "-created_at"
-        )[:100]
+        feedbacks = (
+            AIFeedback.objects.filter(user=request.user)
+            .select_related("user")
+            .order_by("-created_at")[:100]
+        )
         serializer = AIFeedbackSerializer(feedbacks, many=True)
         return Response(serializer.data)
 

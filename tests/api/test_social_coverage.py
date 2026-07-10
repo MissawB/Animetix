@@ -429,19 +429,20 @@ def test_leaderboard_xp_mode(auth_client, user):
 # ==========================================================================
 # ProfileDetailView
 # ==========================================================================
-def test_profile_detail_known_bug(other_user):
-    """ProfileDetailView raises because ``user.user_achievements`` is not a valid
-    reverse accessor (UserAchievement has no related_name -> ``userachievement_set``).
-    BUG: the endpoint is broken for every existing user. We assert the real,
-    current behaviour via an exception-propagating client.
+def test_profile_detail_returns_achievements_and_fusions(other_user):
+    """Regression: ``user.user_achievements`` (invalid reverse accessor) used to
+    crash ProfileDetailView with a 500 for every existing user — fixed to
+    ``userachievement_set``.
     """
     ach = Achievement.objects.create(code="A1", name="First", description="d", icon="x")
     UserAchievement.objects.create(user=other_user, achievement=ach)
     _make_fusion(other_user, is_public=True)
-    client = APIClient(raise_request_exception=False)
+    client = APIClient()
     client.force_authenticate(user=other_user)
     resp = client.get(reverse("api_profile_detail", args=["bob"]))
-    assert resp.status_code == 500
+    assert resp.status_code == 200
+    assert resp.data["achievements_count"] == 1
+    assert len(resp.data["recent_fusions"]) == 1
 
 
 def test_profile_detail_not_found(auth_client):
