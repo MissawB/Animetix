@@ -3,6 +3,25 @@ from datetime import date
 from typing import Optional
 
 
+def rank_label_for(ranked_points: int) -> str:
+    """Canonical ranked-ladder label for a ranked-points total.
+
+    Shared by the domain entity and the Django ``Profile.rank`` property so
+    the ladder thresholds live in exactly one place.
+    """
+    if ranked_points < 500:
+        return "Bronze 🥉"
+    if ranked_points < 1500:
+        return "Argent 🥈"
+    if ranked_points < 3000:
+        return "Or 🥇"
+    if ranked_points < 6000:
+        return "Platine 💎"
+    if ranked_points < 10000:
+        return "Diamant 💠"
+    return "Maître de la Data 👑"
+
+
 @dataclass
 class UserProfile:
     id: int
@@ -22,14 +41,4 @@ class UserProfile:
 
     @property
     def rank_label(self) -> str:
-        if self.ranked_points < 500:
-            return "Bronze 🥉"
-        if self.ranked_points < 1500:
-            return "Argent 🥈"
-        if self.ranked_points < 3000:
-            return "Or 🥇"
-        if self.ranked_points < 6000:
-            return "Platine 💎"
-        if self.ranked_points < 10000:
-            return "Diamant 💠"
-        return "Maître de la Data 👑"
+        return rank_label_for(self.ranked_points)

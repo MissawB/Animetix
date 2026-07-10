@@ -2,6 +2,10 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-10] Session: `Profile.rank` defined — authenticated `/config/` no longer 500s
+
+Closure of the 🟡 item "`Profile.rank` n'existe pas". Empirical reproduction confirmed both halves of the finding: `ProfileSerializer.rank` (a `ReadOnlyField` with no matching model attribute) silently serialized to nothing — which is why the leaderboard and `/auth/me` never crashed and the frontend showed its `'Explorateur'` fallback — while the authenticated `GET /api/v1/config/` genuinely crashed with `AttributeError: 'Profile' object has no attribute 'rank'` (500 on every authenticated call, critical now that the maintenance-mode frontend polls this endpoint). Root cause: the ranked ladder existed only on the domain entity (`UserProfile.rank_label` — zero consumers, dead code) and was never bridged to the Django model. Fix at the source: the ladder extracted into `rank_label_for(ranked_points)` in [entities/user.py](../backend/core/domain/entities/user.py) (single source of truth, the entity property delegates), and `Profile.rank` added as a property using it. TDD: 10 regression locks written first and watched fail with the AttributeError ([test_profile_rank.py](../tests/api/test_profile_rank.py) — ladder thresholds, serializer exposure, endpoint 200), the artificial `patch(..., create=True)` in the config coverage test removed in favor of asserting the real value ("Bronze 🥉"). 152 tests green across the impacted suites.
+
 ## [2026-07-10] Session: API god-files decomposed — `api/labs.py` and `api/core.py` split into domain packages
 
 Closure of the 🟡 debt item "fichiers-dieux dans la couche API" (2026-07-05 audit). Both worst runtime offenders are now domain packages whose `__init__` star-re-exports keep the public surface intact (the `api_views.py` aggregator and every URL keep working unchanged):
