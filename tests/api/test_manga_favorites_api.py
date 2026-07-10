@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+﻿from unittest.mock import MagicMock
 
 import pytest
 from animetix.containers import get_container
@@ -30,7 +30,7 @@ def mock_suwayomi_adapter():
     container.persistence.suwayomi_adapter.override(mock)
     yield mock
     # Reset override after test
-    container.persistence.suwayomi_adapter.reset_override()
+    container.persistence.suwayomi_adapter.reset_last_overriding()
 
 
 @pytest.mark.django_db
@@ -93,7 +93,7 @@ def test_favorite_toggle_post_auto_import(authenticated_client, mock_suwayomi_ad
             manga__external_id="suwayomi:1:123"
         ).exists()
     finally:
-        container.core.manga_service.reset_override()
+        container.core.manga_service.reset_last_overriding()
 
 
 @pytest.mark.django_db

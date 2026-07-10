@@ -35,7 +35,7 @@ def test_manga_clean_lab_view(dummy_image):
             view = MangaCleanLabView.as_view()
             response = view(request)
     finally:
-        container.inference.inference_engine.reset_override()
+        container.inference.inference_engine.reset_last_overriding()
 
     assert response.status_code == 200
     assert response.data["status"] == "success"
@@ -62,7 +62,7 @@ def test_manga_translate_lab_view(dummy_image):
         view = MangaTranslateLabView.as_view()
         response = view(request)
     finally:
-        container.core.manga_flow_service.reset_override()
+        container.core.manga_flow_service.reset_last_overriding()
 
     assert response.status_code == 200
     assert response.data["status"] == "success"

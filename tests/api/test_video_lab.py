@@ -48,7 +48,7 @@ def test_video_fatezero_lab_view(dummy_video):
         view = VideoFateZeroLabView.as_view()
         response = view(request)
     finally:
-        container.core.studio_transform_service.reset_override()
+        container.core.studio_transform_service.reset_last_overriding()
 
     assert response.status_code == 200
     assert response.data["status"] == "success"

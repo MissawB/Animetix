@@ -31,7 +31,7 @@ def mock_suwayomi_adapter():
     container.persistence.suwayomi_adapter.override(mock)
     yield mock
     # Reset override after test
-    container.persistence.suwayomi_adapter.reset_override()
+    container.persistence.suwayomi_adapter.reset_last_overriding()
 
 
 @pytest.mark.django_db

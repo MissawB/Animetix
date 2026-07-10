@@ -1,4 +1,4 @@
-from contextlib import contextmanager
+﻿from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 from animetix.api.cognition import (
@@ -30,7 +30,7 @@ def _override(**services):
         yield
     finally:
         for provider in touched:
-            provider.reset_override()
+            provider.reset_last_overriding()
 
 
 def test_archetype_nexus_view_unauthenticated():

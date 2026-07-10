@@ -48,7 +48,7 @@ def test_soundscape_generation_view(dummy_video):
             view = SoundscapeGenerationView.as_view(permission_classes=[])
             response = view(request)
     finally:
-        container.core.soundscape_service.reset_override()
+        container.core.soundscape_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data["audio_url"] == "http://storage.com/ambient.wav"
 
@@ -72,7 +72,7 @@ def test_speech_to_speech_lab_view(dummy_audio):
             view = SpeechToSpeechLabView.as_view(permission_classes=[])
             response = view(request)
     finally:
-        container.core.native_speech_llm_service.reset_override()
+        container.core.native_speech_llm_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data["audio_data"] == base64.b64encode(
         b"voice_output_bytes"

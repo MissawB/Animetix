@@ -75,7 +75,7 @@ def test_singularity_synthesize_success(api_client, authenticated_user):
                 universe_data
             )
     finally:
-        container.core.autonomous_domain_synthesizer.reset_override()
+        container.core.autonomous_domain_synthesizer.reset_last_overriding()
 
 
 @pytest.mark.django_db
@@ -95,7 +95,7 @@ def test_singularity_synthesize_error(api_client, authenticated_user):
             assert response.status_code == 500
             assert response.data["error"] == "Internal server error"
     finally:
-        container.core.autonomous_domain_synthesizer.reset_override()
+        container.core.autonomous_domain_synthesizer.reset_last_overriding()
 
 
 @pytest.mark.django_db
@@ -141,8 +141,8 @@ def test_singularity_lab_get_unified_state(api_client, authenticated_user):
         assert "personalization_settings" in response.data
         assert response.data["current_archetype"]["id"] == "shonen_hero"
     finally:
-        container.core.synaptic_plasticity_simulator.reset_override()
-        container.core.archetype_drift_service.reset_override()
+        container.core.synaptic_plasticity_simulator.reset_last_overriding()
+        container.core.archetype_drift_service.reset_last_overriding()
 
 
 @pytest.mark.django_db
@@ -198,5 +198,5 @@ def test_singularity_lab_update_config(api_client, authenticated_user):
         assert profile.personalization_settings["intensity_multiplier"] == 1.5
         assert profile.personalization_settings["features"]["font"] is False
     finally:
-        container.core.synaptic_plasticity_simulator.reset_override()
-        container.core.archetype_drift_service.reset_override()
+        container.core.synaptic_plasticity_simulator.reset_last_overriding()
+        container.core.archetype_drift_service.reset_last_overriding()

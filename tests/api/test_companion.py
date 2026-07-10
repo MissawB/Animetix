@@ -1,4 +1,4 @@
-from contextlib import contextmanager
+﻿from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 from animetix.api.companion import CompanionInteractView
@@ -22,7 +22,7 @@ def _override_services(companion_service, guardrail_service, usage_port):
         yield
     finally:
         for provider, _ in overrides:
-            provider.reset_override()
+            provider.reset_last_overriding()
 
 
 def test_companion_interact_view_unauthenticated():

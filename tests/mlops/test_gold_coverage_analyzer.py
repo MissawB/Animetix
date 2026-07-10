@@ -66,7 +66,7 @@ def mock_inference_engine(mock_neo4j):
         mock_engine.generate_structured.return_value = mock_result
 
         mock_container_instance = MagicMock()
-        mock_container_instance.inference_engine.return_value = mock_engine
+        mock_container_instance.inference.inference_engine.return_value = mock_engine
         mock_container_instance.persistence.graph_persistence_port.return_value = (
             mock_neo4j
         )

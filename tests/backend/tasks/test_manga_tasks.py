@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+﻿from unittest.mock import MagicMock
 
 import pytest
 from animetix.containers import get_container
@@ -18,7 +18,7 @@ def mock_suwayomi_adapter():
     container = get_container()
     container.persistence.suwayomi_adapter.override(mock)
     yield mock
-    container.persistence.suwayomi_adapter.reset_override()
+    container.persistence.suwayomi_adapter.reset_last_overriding()
 
 
 @pytest.mark.django_db

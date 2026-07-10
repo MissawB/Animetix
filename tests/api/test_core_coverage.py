@@ -192,7 +192,7 @@ def test_media_search_success(factory):
         drf_request = Request(request, parsers=[JSONParser()])
         response = view.get(drf_request)
     finally:
-        real_container.core.catalog_service.reset_override()
+        real_container.core.catalog_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data[0]["id"] == "1"
 
@@ -394,7 +394,7 @@ def test_media_detail_catalog_fallback(factory):
     try:
         response = _drive(MediaDetailView, request, media_type="Anime", item_id="cat-9")
     finally:
-        real_container.core.catalog_service.reset_override()
+        real_container.core.catalog_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data["studios"] == ["MAPPA"]
 
@@ -411,7 +411,7 @@ def test_media_detail_not_found(factory):
             MediaDetailView, request, media_type="Anime", item_id="missing"
         )
     finally:
-        real_container.core.catalog_service.reset_override()
+        real_container.core.catalog_service.reset_last_overriding()
     assert response.status_code == 404
 
 
@@ -431,8 +431,8 @@ def test_transparency_data(factory):
     try:
         response = _drive(TransparencyDataView, request)
     finally:
-        real_container.core.sota_benchmark_service.reset_override()
-        real_container.core.drift_service.reset_override()
+        real_container.core.sota_benchmark_service.reset_last_overriding()
+        real_container.core.drift_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data["status"] == "synchronized"
     assert "global_metrics" in response.data
@@ -452,7 +452,7 @@ def test_manga_chapter_list(factory):
             mock_ser.return_value.data = [{"number": 1.0}]
             response = _drive(MangaChapterListView, request, media_id="m1")
     finally:
-        real_container.core.manga_service.reset_override()
+        real_container.core.manga_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data == [{"number": 1.0}]
 
@@ -470,7 +470,7 @@ def test_manga_chapter_detail_found(factory):
                 MangaChapterDetailView, request, media_id="m1", chapter_number="1"
             )
     finally:
-        real_container.core.manga_service.reset_override()
+        real_container.core.manga_service.reset_last_overriding()
     assert response.status_code == 200
 
 
@@ -485,7 +485,7 @@ def test_manga_chapter_detail_not_found(factory):
             MangaChapterDetailView, request, media_id="m1", chapter_number="99"
         )
     finally:
-        real_container.core.manga_service.reset_override()
+        real_container.core.manga_service.reset_last_overriding()
     assert response.status_code == 404
 
 
@@ -708,7 +708,7 @@ def test_suwayomi_import_success(factory):
 
         response = view.post(Request(request, parsers=[JSONParser()]))
     finally:
-        real_container.core.manga_service.reset_override()
+        real_container.core.manga_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data["success"] is True
     assert response.data["media_item"]["title"] == "Imported"

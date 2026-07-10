@@ -1,4 +1,4 @@
-"""Coverage-focused tests for ``animetix.api.cognition`` DRF views.
+﻿"""Coverage-focused tests for ``animetix.api.cognition`` DRF views.
 
 Exercises success, validation (400) and error (500) paths of every endpoint
 via the real URL routing + APIClient, with the constructor-injected services
@@ -100,7 +100,7 @@ def _patch_container():
             yield
         finally:
             for provider, _ in overrides:
-                provider.reset_override()
+                provider.reset_last_overriding()
 
     return _cm(), fake
 

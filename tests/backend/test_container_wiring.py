@@ -15,6 +15,11 @@ def test_guardrail_alias_resolves_to_agentic():
 def test_agentic_rag_receives_guardrail_without_get_container():
     from animetix.containers import container
 
+    # Hermétique vis-à-vis de l'ordre de la suite : le conftest des jeux reset le
+    # singleton guardrail entre ses tests, donc un agentic_rag memoïsé plus tôt
+    # garderait une instance périmée. ``reset()`` ne touche que la mémoïsation,
+    # jamais le câblage des sous-conteneurs.
+    container.agentic.agentic_rag.reset()
     agentic_rag = container.agentic.agentic_rag()
     # Le guardrail est injecté par le conteneur, plus via get_container().
     assert agentic_rag.guardrail_service is container.agentic.guardrail_service()

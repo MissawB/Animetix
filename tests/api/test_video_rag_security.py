@@ -51,6 +51,6 @@ def test_video_rag_happy_path_deducts_and_returns():
         c.force_authenticate(u)
         resp = c.get("/api/v1/labs/video/search/", {"q": "duel"})
     finally:
-        container.agentic.video_rag_service.reset_override()
+        container.agentic.video_rag_service.reset_last_overriding()
     assert resp.status_code == 200
     assert Profile.objects.get(user=u).wallet_balance == 94  # 100 - 6

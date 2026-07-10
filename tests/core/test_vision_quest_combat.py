@@ -1,4 +1,4 @@
-import os
+﻿import os
 import sys
 from unittest.mock import MagicMock, patch
 
@@ -84,7 +84,7 @@ def test_process_video_for_combat_lore_e2e(mock_vlm_response, tmp_path):
                 media_id, expected_combats
             )
     finally:
-        container.core.video_quest_service.reset_override()
+        container.core.video_quest_service.reset_last_overriding()
 
         print("\n✅ End-to-End Verification Successful!")
 

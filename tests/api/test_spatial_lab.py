@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+﻿from unittest.mock import MagicMock, patch
 
 import pytest
 from animetix.api.labs import (
@@ -50,7 +50,7 @@ def test_generate_3d_data_view(dummy_image):
             view = Generate3DDataView.as_view(permission_classes=[])
             response = view(request)
     finally:
-        container.core.spatial_computing_service.reset_override()
+        container.core.spatial_computing_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data["model_url"] == "http://storage.com/model.ply"
 
@@ -71,6 +71,6 @@ def test_cinematic_reconstruction_view(dummy_video):
             view = CinematicReconstructionView.as_view(permission_classes=[])
             response = view(request)
     finally:
-        container.core.cinematic_volumetric_reconstruction_service.reset_override()
+        container.core.cinematic_volumetric_reconstruction_service.reset_last_overriding()
     assert response.status_code == 200
     assert len(response.data["frames"]) > 0

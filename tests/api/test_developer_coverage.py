@@ -1,4 +1,4 @@
-"""Coverage for animetix.api.developer view module.
+﻿"""Coverage for animetix.api.developer view module.
 
 Covers the B2B developer RAG endpoint, API-key metadata/generation and the
 (now free/manual) Pro-tier subscription mock endpoint.
@@ -28,7 +28,7 @@ def _override_agentic_rag(agent):
     try:
         yield
     finally:
-        real_container.agentic.agentic_rag.reset_override()
+        real_container.agentic.agentic_rag.reset_last_overriding()
 
 
 @pytest.fixture

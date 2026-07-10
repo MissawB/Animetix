@@ -185,7 +185,7 @@ def test_media_search_post_success(factory):
         ):
             response = view.post(drf_request)
     finally:
-        real_container.core.cross_modal_search_service.reset_override()
+        real_container.core.cross_modal_search_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data[0]["id"] == "7"
     view.usage_port.log_usage.assert_called_once()
@@ -270,8 +270,8 @@ def test_transparency_with_feedback(factory):
     try:
         response = _drive(TransparencyDataView, request)
     finally:
-        real_container.core.sota_benchmark_service.reset_override()
-        real_container.core.drift_service.reset_override()
+        real_container.core.sota_benchmark_service.reset_last_overriding()
+        real_container.core.drift_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data["global_metrics"]["total_feedbacks"] == 2
     assert response.data["global_metrics"]["community_satisfaction"] == 0.5
@@ -405,7 +405,7 @@ def test_favorite_toggle_autoimport_not_configured(factory):
             view = FavoriteMangaToggleView.as_view()
             response = view(request, media_id="new-x")
     finally:
-        real_container.persistence.suwayomi_adapter.reset_override()
+        real_container.persistence.suwayomi_adapter.reset_last_overriding()
     assert response.status_code == 500
 
 
@@ -427,7 +427,7 @@ def test_favorite_toggle_autoimport_details_missing(factory):
             view = FavoriteMangaToggleView.as_view()
             response = view(request, media_id="new-y")
     finally:
-        real_container.persistence.suwayomi_adapter.reset_override()
+        real_container.persistence.suwayomi_adapter.reset_last_overriding()
     assert response.status_code == 404
 
 
@@ -460,8 +460,8 @@ def test_favorite_toggle_autoimport_success(factory):
             view = FavoriteMangaToggleView.as_view()
             response = view(request, media_id="new-z")
     finally:
-        real_container.persistence.suwayomi_adapter.reset_override()
-        real_container.core.manga_service.reset_override()
+        real_container.persistence.suwayomi_adapter.reset_last_overriding()
+        real_container.core.manga_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data["is_favorite"] is True
     # Manga was auto-created and favorited.

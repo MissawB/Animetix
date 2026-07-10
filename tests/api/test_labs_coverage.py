@@ -1,4 +1,4 @@
-"""Coverage-focused tests for animetix.api.labs endpoints.
+﻿"""Coverage-focused tests for animetix.api.labs endpoints.
 
 Complements the existing per-feature labs tests (test_audio_lab, test_video_lab,
 test_manga_lab, test_spatial_lab, test_singularity_api, test_voice_cloning_api,
@@ -185,7 +185,7 @@ def _run_singularity(payload, overrides=()):
         return view(request)
     finally:
         for provider in overridden_providers:
-            provider.reset_override()
+            provider.reset_last_overriding()
         d.stop()
 
 
@@ -353,7 +353,7 @@ def test_liquid_nn_success():
         view = LiquidNeuralNetworkLabView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        container.core.liquid_neural_network.reset_override()
+        container.core.liquid_neural_network.reset_last_overriding()
     assert response.status_code == 200
     assert response.data["status"] == "success"
     assert response.data["final_state"] == [0.1, 0.2]
@@ -373,7 +373,7 @@ def test_liquid_nn_error():
         view = LiquidNeuralNetworkLabView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        container.core.liquid_neural_network.reset_override()
+        container.core.liquid_neural_network.reset_last_overriding()
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
 
@@ -508,7 +508,7 @@ def test_video_rag_index_success():
         view = VideoRAGIndexView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        container.agentic.video_rag_service.reset_override()
+        container.agentic.video_rag_service.reset_last_overriding()
     assert response.status_code == 200
     assert response.data["indexed_segments"] == 7
 
@@ -529,7 +529,7 @@ def test_video_rag_index_error():
         view = VideoRAGIndexView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        container.agentic.video_rag_service.reset_override()
+        container.agentic.video_rag_service.reset_last_overriding()
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
 
@@ -562,8 +562,8 @@ def test_video_rag_search_success():
         view = VideoRAGSearchView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        container.agentic.video_rag_service.reset_override()
-        container.infrastructure.usage_port.reset_override()
+        container.agentic.video_rag_service.reset_last_overriding()
+        container.infrastructure.usage_port.reset_last_overriding()
         d.stop()
     assert response.status_code == 200
     assert response.data["status"] == "success"
@@ -586,8 +586,8 @@ def test_video_rag_search_error():
         view = VideoRAGSearchView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        container.agentic.video_rag_service.reset_override()
-        container.infrastructure.usage_port.reset_override()
+        container.agentic.video_rag_service.reset_last_overriding()
+        container.infrastructure.usage_port.reset_last_overriding()
         d.stop()
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"

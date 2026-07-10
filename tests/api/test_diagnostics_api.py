@@ -54,8 +54,8 @@ def test_neural_diagnostics_api_success(api_client):
             # We use the string URL because the name might not be registered yet
             response = api_client.post(url, payload, format="json")
     finally:
-        container.inference.inference_engine.reset_override()
-        container.core.xai_service.reset_override()
+        container.inference.inference_engine.reset_last_overriding()
+        container.core.xai_service.reset_last_overriding()
 
     assert response.status_code == 200
     assert "avg_entropy" in response.data

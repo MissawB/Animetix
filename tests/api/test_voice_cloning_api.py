@@ -41,7 +41,7 @@ def test_voice_cloning_api_endpoint():
             format="multipart",
         )
     finally:
-        container.core.voice_cloning_service.reset_override()
+        container.core.voice_cloning_service.reset_last_overriding()
 
     if response.status_code != 200:
         print(f"Response error: {response.data}")
