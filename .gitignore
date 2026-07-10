@@ -144,6 +144,9 @@ data/processed/failed_attempts.json
 # dbt build artifacts & local state
 backend/pipeline/dbt_project/target/
 backend/pipeline/dbt_project/.user.yml
+# profiles.yml est GÉNÉRÉ par run_data_quality_tests (chemins absolus locaux) :
+# le tracker garantissait un working tree sale après chaque run.
+backend/pipeline/dbt_project/profiles.yml
 
 # Uploaded media (generated at runtime, not source)
 backend/api/media/
@@ -151,3 +154,8 @@ backend/api/media/
 # Frontend test coverage reports
 frontend/coverage/
 coverage/
+# Backend coverage report (pytest --cov)
+coverage.xml
+
+# Catalogue offline généré au runtime (SQLite), pas une source
+backend/api/animetix/static/animetix/data/
