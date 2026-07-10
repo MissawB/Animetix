@@ -196,6 +196,7 @@ export async function getAuthUser(): Promise<User> {
     id: profile.user.id,
     username: profile.user.username,
     email: profile.user.email,
+    is_staff: profile.user.is_staff,
     is_authenticated: true,
     xp: profile.xp,
     tier: profile.tier,

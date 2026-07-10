@@ -24,12 +24,30 @@ MIN_EVAL_SAMPLE = 20
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class ConfigView(APIView):
+    """Configuration publique de l'app (type frontend ``AppConfig``).
+
+    Porte aussi le mode maintenance : le frontend polle cet endpoint pendant
+    la maintenance pour détecter la sortie, d'où l'absence de throttle (le
+    day-cap anonyme couperait le poll) et son exemption dans
+    ``MaintenanceModeMiddleware``.
+    """
+
     permission_classes = [permissions.AllowAny]
+    throttle_classes = []
 
     def get(self, request):
+        from ...models import SiteConfiguration  # noqa: E402
+
+        site = SiteConfiguration.get_solo()
         data = {
+            "version": AI_MODEL_VERSION,
             "theme": "auto",
             "language": "fr",
+            "maintenance_mode": site.maintenance_mode,
+            "maintenance_message": site.maintenance_message,
+            "maintenance_until": (
+                site.maintenance_until.isoformat() if site.maintenance_until else None
+            ),
             "user": {
                 "is_authenticated": request.user.is_authenticated,
                 "username": (

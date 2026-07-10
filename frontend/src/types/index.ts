@@ -18,6 +18,8 @@ export interface User {
 export interface AppConfig {
   version: string;
   maintenance_mode: boolean;
+  maintenance_message?: string | null;
+  maintenance_until?: string | null;
   features: Record<string, boolean>;
 }
 
@@ -32,8 +34,8 @@ export interface MediaItem {
 
 import type { components } from './api';
 
-type ApiAchievement = components["schemas"]["Achievement"];
-type ApiCreativeFusion = components["schemas"]["CreativeFusion"];
+type ApiAchievement = components['schemas']['Achievement'];
+type ApiCreativeFusion = components['schemas']['CreativeFusion'];
 
 export interface Profile {
   username: string;
@@ -228,6 +230,7 @@ export interface EmojiState {
 export interface BlindtestState extends GameState {
   video_url?: string;
   secret_title?: string;
+  secret_image?: string | null;
   theme_type?: string;
   sequence?: number | string;
   song?: string;
@@ -246,7 +249,15 @@ export interface VisionState extends GameState {
   guesses: Array<{ text: string; score: number }>;
 }
 
-export type ClassicHintKey = 'year' | 'origin' | 'tags' | 'genres' | 'studio' | 'letter' | 'words' | 'desc';
+export type ClassicHintKey =
+  | 'year'
+  | 'origin'
+  | 'tags'
+  | 'genres'
+  | 'studio'
+  | 'letter'
+  | 'words'
+  | 'desc';
 
 export interface ClassicHint {
   label: string;
@@ -403,7 +414,6 @@ export interface VoiceProfile {
   updated_at: string;
 }
 
-
 export interface ClubEvent {
   id: number;
   club: number;
@@ -516,12 +526,12 @@ export interface PlotlyEvent {
 }
 
 // Types XAI générés depuis le schéma OpenAPI backend (évènement SSE `xai_report`).
-export type DocumentAttribution = components["schemas"]["DocumentAttribution"];
-export type LogitLensTrajectory = components["schemas"]["LogitLensTrajectory"];
-export type ModelDiagnostics = components["schemas"]["ModelDiagnostics"];
-export type Uncertainty = components["schemas"]["Uncertainty"];
-export type AgentTraceStep = components["schemas"]["AgentTraceStep"];
-export type XaiReport = components["schemas"]["XaiReport"];
+export type DocumentAttribution = components['schemas']['DocumentAttribution'];
+export type LogitLensTrajectory = components['schemas']['LogitLensTrajectory'];
+export type ModelDiagnostics = components['schemas']['ModelDiagnostics'];
+export type Uncertainty = components['schemas']['Uncertainty'];
+export type AgentTraceStep = components['schemas']['AgentTraceStep'];
+export type XaiReport = components['schemas']['XaiReport'];
 
 export interface MediaDetail extends MediaItem {
   genres?: string[];
@@ -655,6 +665,3 @@ export interface UResult {
   reason?: string;
   mrwhite_winners?: string[];
 }
-
-
-

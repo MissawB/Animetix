@@ -886,3 +886,43 @@ class VoiceProfile(models.Model):
                 )
             return self.origin_detail
         return ""
+
+
+# --- SITE CONFIGURATION (singleton) ---
+class SiteConfiguration(models.Model):
+    """Réglages globaux du site, togglables depuis l'admin sans redéploiement.
+
+    Singleton (pk=1) : toujours passer par ``get_solo()``.
+    """
+
+    maintenance_mode = models.BooleanField(
+        default=False,
+        help_text="ON : les visiteurs voient la page de maintenance ; le staff navigue normalement.",
+    )
+    maintenance_message = models.TextField(
+        blank=True,
+        default="",
+        help_text="Message optionnel affiché sur la page de maintenance.",
+    )
+    maintenance_until = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Heure de retour estimée (informatif, affiché sur la page).",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Configuration du site"
+        verbose_name_plural = "Configuration du site"
+
+    def __str__(self):
+        return "Configuration du site"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1  # Singleton : toute sauvegarde écrase l'unique ligne.
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_solo(cls) -> "SiteConfiguration":
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

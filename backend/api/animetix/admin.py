@@ -11,7 +11,22 @@ from animetix.models import (
     BossParticipation,
     GlobalBoss,
     GoldDatasetEntry,
+    SiteConfiguration,
 )
+
+
+@admin.register(SiteConfiguration)
+class SiteConfigurationAdmin(admin.ModelAdmin):
+    """Réglages globaux (mode maintenance). Singleton : ni ajout ni suppression."""
+
+    list_display = ("__str__", "maintenance_mode", "maintenance_until", "updated_at")
+
+    def has_add_permission(self, request):
+        # Une seule ligne : on la crée à la volée au premier accès.
+        return not SiteConfiguration.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(GlobalBoss)

@@ -1,23 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, ArrowLeft, Ghost } from 'lucide-react';
+import { Home, ArrowLeft, ShieldAlert } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { ErrorPageShell } from '../../components/ui/ErrorPageShell';
 
-const NotFoundPage: React.FC = () => {
+const ForbiddenPage: React.FC = () => {
   const { t } = useTranslation();
 
   return (
     <ErrorPageShell
-      code="404"
-      accent="yellow"
-      icon={<Ghost className="w-16 h-16 text-black" />}
-      title={t('errors.not_found_title', 'Dimension')}
-      titleAccent={t('errors.not_found_title_accent', 'inconnue')}
+      code="403"
+      accent="orange"
+      icon={<ShieldAlert className="w-16 h-16 text-black" />}
+      title={t('errors.forbidden_title', 'Zone')}
+      titleAccent={t('errors.forbidden_title_accent', 'interdite')}
       description={t(
-        'errors.not_found_desc',
-        "Cette page n'existe pas dans le multivers d'Animetix. Peut-être a-t-elle été absorbée par un trou noir narratif...",
+        'errors.forbidden_desc',
+        "Cette dimension est réservée aux administrateurs du Nexus. Ton compte n'a pas les autorisations requises.",
       )}
       actions={
         <>
@@ -43,4 +43,4 @@ const NotFoundPage: React.FC = () => {
   );
 };
 
-export default NotFoundPage;
+export default ForbiddenPage;

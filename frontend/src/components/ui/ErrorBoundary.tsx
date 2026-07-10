@@ -13,7 +13,7 @@ interface State {
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null
+    error: null,
   };
 
   public static getDerivedStateFromError(error: Error): State {
@@ -30,21 +30,41 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      // Volontairement auto-suffisant (pas d'i18n, de router ni de composants
+      // partagés : ils peuvent être la cause du crash) — mais aligné sur
+      // l'univers visuel des pages d'erreur (ErrorPageShell).
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-900 p-6">
-          <div className="bg-red-500/10 border-2 border-red-500 rounded-3xl p-10 max-w-2xl text-center">
-            <h1 className="text-4xl font-black text-red-500 mb-6">CRITICAL FAILURE</h1>
-            <p className="text-white text-lg opacity-80 mb-8">
-              Une erreur inattendue s'est produite lors du rendu de l'interface.
-            </p>
-            <div className="bg-black/50 p-4 rounded-xl text-left overflow-auto max-h-40 mb-8 font-mono text-sm text-red-300">
-                {this.state.error?.message}
+        <div className="min-h-screen flex items-center justify-center bg-[#05050a] text-white p-6">
+          <div className="text-center space-y-8 max-w-xl">
+            <div className="relative inline-block">
+              <div className="absolute -inset-8 bg-red-500/10 rounded-full blur-3xl animate-pulse" />
+              <div className="relative w-32 h-32 bg-gradient-to-br from-red-500 to-rose-600 rounded-[2rem] flex items-center justify-center rotate-12 shadow-2xl mx-auto">
+                <span className="text-6xl font-black text-black select-none">!</span>
+              </div>
             </div>
+
+            <h1 className="text-[7rem] leading-none font-black italic manga-font tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white/20 to-white/5 select-none">
+              CRASH
+            </h1>
+
+            <div className="space-y-3">
+              <h2 className="text-3xl font-black italic manga-font uppercase tracking-tight">
+                Erreur <span className="text-red-500 text-glow">critique</span>
+              </h2>
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em] max-w-md mx-auto">
+                Une erreur inattendue s'est produite lors du rendu de l'interface.
+              </p>
+            </div>
+
+            <div className="bg-white/5 border border-red-500/20 p-4 rounded-2xl text-left overflow-auto max-h-40 font-mono text-sm text-red-300">
+              {this.state.error?.message}
+            </div>
+
             <button
-              className="bg-red-500 hover:bg-red-600 text-white font-black py-4 px-8 rounded-full transition-transform hover:scale-105"
+              className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black py-4 px-8 rounded-2xl shadow-xl hover:scale-105 transition-all font-black uppercase italic tracking-wider"
               onClick={() => window.location.reload()}
             >
-              REDÉMARRER LE SYSTÈME
+              Redémarrer le système
             </button>
           </div>
         </div>

@@ -215,3 +215,93 @@ class TracingMiddleware:
                 span.record_exception(e)
                 span.set_status(Status(StatusCode.ERROR, description=str(e)))
                 raise e
+
+
+class MaintenanceModeMiddleware:
+    """Mode maintenance global (flag ``SiteConfiguration.maintenance_mode``).
+
+    Quand le flag est ON, les requêtes ``/api/…`` reçoivent 503
+    ``{"maintenance": true}`` pour que le frontend bascule sur la page dédiée.
+    Exemptions : l'endpoint de config (le poll de sortie doit passer), le
+    monitoring (health checks) et le staff — session admin ou token Firebase.
+    Hors ``/api/`` (SPA, statiques, /admin/), rien n'est bloqué : le gating UX
+    est fait côté frontend.
+    """
+
+    sync_capable = True
+    async_capable = True
+
+    EXEMPT_PREFIXES = (
+        "/api/v1/config/",
+        "/api/monitoring/",
+    )
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.async_mode = iscoroutinefunction(self.get_response)
+
+    # --- Helpers (sync : appelés via sync_to_async en mode ASGI) ---
+
+    def _guarded(self, request) -> bool:
+        path = request.path
+        if not path.startswith("/api/"):
+            return False
+        return not path.startswith(self.EXEMPT_PREFIXES)
+
+    @staticmethod
+    def _maintenance_on() -> bool:
+        from .models import SiteConfiguration
+
+        return SiteConfiguration.get_solo().maintenance_mode
+
+    @staticmethod
+    def _is_staff(request) -> bool:
+        """Session admin, ou token Firebase d'un compte staff.
+
+        L'authentification DRF n'est tentée que sur le chemin bloquant (mode
+        ON + non exempt) : coût nul en fonctionnement normal.
+        """
+        if getattr(request, "user", None) is not None and request.user.is_staff:
+            return True
+        try:
+            from .auth import GoogleIdentityAuthentication
+
+            result = GoogleIdentityAuthentication().authenticate(request)
+            return bool(result and result[0].is_staff)
+        except Exception:
+            return False
+
+    @staticmethod
+    def _blocked_response():
+        from django.http import JsonResponse
+
+        return JsonResponse(
+            {
+                "detail": "Animetix est en maintenance. Réessayez dans quelques instants.",
+                "maintenance": True,
+            },
+            status=503,
+        )
+
+    def _should_block(self, request) -> bool:
+        return (
+            self._guarded(request)
+            and self._maintenance_on()
+            and not self._is_staff(request)
+        )
+
+    # --- Entrées sync / async ---
+
+    def __call__(self, request):
+        if self.async_mode:
+            return self.__acall__(request)
+        if self._should_block(request):
+            return self._blocked_response()
+        return self.get_response(request)
+
+    async def __acall__(self, request):
+        from asgiref.sync import sync_to_async
+
+        if await sync_to_async(self._should_block)(request):
+            return self._blocked_response()
+        return await self.get_response(request)

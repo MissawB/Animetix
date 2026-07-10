@@ -674,6 +674,20 @@
     },
     "title": "Creative Forge"
   },
+  "errors": {
+    "back": "Back",
+    "forbidden_desc": "This dimension is reserved for Nexus administrators. Your account doesn't have the required permissions.",
+    "forbidden_title": "Restricted",
+    "forbidden_title_accent": "zone",
+    "home": "Home",
+    "not_found_desc": "This page doesn't exist in the Animetix multiverse. Maybe it was swallowed by a narrative black hole...",
+    "not_found_title": "Unknown",
+    "not_found_title_accent": "dimension",
+    "reload": "Reload",
+    "server_desc": "An anomaly disrupted the server. The Nexus technicians are already on it — try again in a moment.",
+    "server_title": "Dimensional",
+    "server_title_accent": "breakdown"
+  },
   "games": {
     "akinetix": {
       "ai_confidence": "AI confidence",
@@ -796,6 +810,7 @@
         "round_progress": "Round {{round}} / {{total}}",
         "round_tooltip": "Round {{num}}: {{score}} pts{{secret}}",
         "round_won_score": "🎉 +{{score}} pts",
+        "secret_poster_alt": "Anime poster",
         "see_result": "SEE THE RESULT",
         "session_over": "Session over",
         "session_summary": "out of {{max}} points · {{wins}}/{{total}} found",
@@ -1695,7 +1710,28 @@
       "x_wins": "{{name}} WINS"
     },
     "world_boss": {
-      "guess_aria": "Boss title to guess"
+      "communal_strike": "Communal Strike",
+      "damage_dealt": "-{{dmg}} HP!",
+      "event_active": "Global Event Active",
+      "guess_aria": "Boss title to guess",
+      "guess_placeholder": "WHO IS THIS BOSS? ENTER THE TITLE...",
+      "hints_title": "Deciphered Data",
+      "loading": "Loading Raid",
+      "missed": "MISSED",
+      "no_boss_desc": "The world is currently safe... or the next threat is still gathering its strength. Come back later for the next global raid!",
+      "no_boss_title": "No Active Boss",
+      "no_hints": "No hints deciphered yet.",
+      "no_raiders": "No raiders yet. Be the first!",
+      "protocol_desc": "The World Boss is a massive entity that requires community cooperation. As its HP drops, it will enter new, more dangerous phases, revealing more hints. Defeat it before the time expires to earn exclusive rewards.",
+      "protocol_title": "Raid Protocol",
+      "strike": "STRIKE",
+      "strike_hint": "Each correct guess damages the boss and reveals it to the world.",
+      "striking": "STRIKING...",
+      "top_raiders": "Top Raiders",
+      "type_label": "{{type}} Type",
+      "villain_alt": "Boss incarnation",
+      "world_integrity": "World Integrity",
+      "xp_reward": "{{xp}} XP REWARD"
     }
   },
   "home": {
@@ -2447,6 +2483,14 @@
     "tab_reading": "Reading",
     "title": "Manga Library"
   },
+  "maintenance": {
+    "default_desc": "Animetix is taking a technical break to come back stronger. Thanks for your patience!",
+    "eta": "Estimated return: {{date}}",
+    "retry": "Retry",
+    "staff_banner": "Maintenance mode active - only admins can see the site",
+    "title_1": "Maintenance",
+    "title_2": "in progress"
+  },
   "media.character.alignment": "Alignment",
   "media.character.analyze_graph": "Analyze in Graph",
   "media.character.archetype": "Archetype",
@@ -2550,7 +2594,7 @@
     "tier_boosted": "Boosted",
     "tier_standard": "Standard",
     "toggle_sidebar": "Open menu",
-    "transparency": "Transparency",
+    "transparency": "transparency",
     "xp_amount": "{{xp}} XP",
     "xp_to_next": "{{xp}} XP → LVL {{level}}"
   },
@@ -2558,7 +2602,7 @@
     "forge": "THE FORGE",
     "lab": "SINGULARITY LABS",
     "latent": "LATENT SPACE",
-    "transparency": "TRANSPARENCY"
+    "transparency": "transparency"
   },
   "personalization": {
     "btn_auto": "Auto",
@@ -2946,6 +2990,7 @@
   "social.transparency.cta_lab": "DISCOVER THE LAB",
   "social.transparency.cta_research": "AI RESEARCH",
   "social.transparency.cta_title": "Become a Nexus Curator",
+  "social.transparency.elo_label": "ELO (ARENA)",
   "social.transparency.ethics_1": "No user data is resold.",
   "social.transparency.ethics_2": "AI models are primarily Open Source.",
   "social.transparency.ethics_3": "100% transparent infrastructure.",
@@ -2961,13 +3006,19 @@
   "social.transparency.loading": "Syncing with the Nexus...",
   "social.transparency.no_eval": "No evaluation recorded yet",
   "social.transparency.not_enough_data": "Not enough evaluation data yet",
+  "social.transparency.our_model_badge": "OUR BASE MODEL",
+  "social.transparency.params_label": "{{params}} parameters",
   "social.transparency.safety_compliance": "Security Compliance",
   "social.transparency.sample": "Sample",
   "social.transparency.security_audit": "Security Audit",
   "social.transparency.subtitle": "Discover how your interactions shape Animetix's brain. We believe in open, auditable AI aligned with its community.",
-  "social.transparency.title_accent": "TRANSPARENCY",
+  "social.transparency.title_accent": "transparency",
   "social.transparency.uptime_badge": "Model reliability: {{pct}}% (hallucination-free responses)",
   "social.transparency.vector_base": "Vector Database",
+  "social.transparency.vs_footnote": "Champion runs on Qwen3.5-9B: a compact model hosted on our own GPU, specialized in anime/manga through continuous DPO fine-tuning. The giants above dominate general benchmarks — our bet is specialization, not size.",
+  "social.transparency.vs_subtitle": "Animetix's base model versus the market's best open-source LLMs",
+  "social.transparency.vs_title_1": "OUR MODEL",
+  "social.transparency.vs_title_2": "VS OPEN SOURCE",
   "theme": {
     "auto": "Auto",
     "dark": "Dark",

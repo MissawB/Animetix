@@ -1,41 +1,41 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, ArrowLeft, Ghost } from 'lucide-react';
+import { Home, RefreshCw, ServerCrash } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { ErrorPageShell } from '../../components/ui/ErrorPageShell';
 
-const NotFoundPage: React.FC = () => {
+const ServerErrorPage: React.FC = () => {
   const { t } = useTranslation();
 
   return (
     <ErrorPageShell
-      code="404"
-      accent="yellow"
-      icon={<Ghost className="w-16 h-16 text-black" />}
-      title={t('errors.not_found_title', 'Dimension')}
-      titleAccent={t('errors.not_found_title_accent', 'inconnue')}
+      code="500"
+      accent="red"
+      icon={<ServerCrash className="w-16 h-16 text-black" />}
+      title={t('errors.server_title', 'Panne')}
+      titleAccent={t('errors.server_title_accent', 'dimensionnelle')}
       description={t(
-        'errors.not_found_desc',
-        "Cette page n'existe pas dans le multivers d'Animetix. Peut-être a-t-elle été absorbée par un trou noir narratif...",
+        'errors.server_desc',
+        'Une anomalie a perturbé le serveur. Les techniciens du Nexus sont déjà sur le coup — réessaie dans un instant.',
       )}
       actions={
         <>
           <Button
-            as={Link}
-            to="/"
+            as="button"
             variant="primary"
             className="bg-yellow-400 !text-black border-none py-4 px-8 rounded-2xl shadow-xl hover:scale-105 transition-all font-black uppercase italic tracking-wider"
+            onClick={() => window.location.reload()}
           >
-            <Home className="w-5 h-5" /> {t('errors.home', 'Accueil')}
+            <RefreshCw className="w-5 h-5" /> {t('errors.reload', 'Recharger')}
           </Button>
           <Button
-            as="button"
+            as={Link}
+            to="/"
             variant="outline"
             className="py-4 px-8 rounded-2xl font-black uppercase italic tracking-wider"
-            onClick={() => window.history.back()}
           >
-            <ArrowLeft className="w-5 h-5" /> {t('errors.back', 'Retour')}
+            <Home className="w-5 h-5" /> {t('errors.home', 'Accueil')}
           </Button>
         </>
       }
@@ -43,4 +43,4 @@ const NotFoundPage: React.FC = () => {
   );
 };
 
-export default NotFoundPage;
+export default ServerErrorPage;

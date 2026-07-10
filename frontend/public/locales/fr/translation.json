@@ -674,6 +674,20 @@
     },
     "title": "Forge Créative"
   },
+  "errors": {
+    "back": "Retour",
+    "forbidden_desc": "Cette dimension est réservée aux administrateurs du Nexus. Ton compte n'a pas les autorisations requises.",
+    "forbidden_title": "Zone",
+    "forbidden_title_accent": "interdite",
+    "home": "Accueil",
+    "not_found_desc": "Cette page n'existe pas dans le multivers d'Animetix. Peut-être a-t-elle été absorbée par un trou noir narratif...",
+    "not_found_title": "Dimension",
+    "not_found_title_accent": "inconnue",
+    "reload": "Recharger",
+    "server_desc": "Une anomalie a perturbé le serveur. Les techniciens du Nexus sont déjà sur le coup — réessaie dans un instant.",
+    "server_title": "Panne",
+    "server_title_accent": "dimensionnelle"
+  },
   "games": {
     "akinetix": {
       "ai_confidence": "Confiance de l'IA",
@@ -796,6 +810,7 @@
         "round_progress": "Manche {{round}} / {{total}}",
         "round_tooltip": "Manche {{num}}: {{score}} pts{{secret}}",
         "round_won_score": "🎉 +{{score}} pts",
+        "secret_poster_alt": "Affiche de l'animé",
         "see_result": "VOIR LE RÉSULTAT",
         "session_over": "Session terminée",
         "session_summary": "sur {{max}} points · {{wins}}/{{total}} trouvés",
@@ -1695,7 +1710,28 @@
       "x_wins": "{{name}} GAGNE"
     },
     "world_boss": {
-      "guess_aria": "Titre du boss à deviner"
+      "communal_strike": "Frappe communautaire",
+      "damage_dealt": "-{{dmg}} PV !",
+      "event_active": "Événement mondial en cours",
+      "guess_aria": "Titre du boss à deviner",
+      "guess_placeholder": "QUI EST CE BOSS ? ENTRE LE TITRE...",
+      "hints_title": "Données déchiffrées",
+      "loading": "Chargement du raid",
+      "missed": "RATÉ",
+      "no_boss_desc": "Le monde est en sécurité pour le moment... ou la prochaine menace rassemble encore ses forces. Reviens plus tard pour le prochain raid mondial !",
+      "no_boss_title": "Aucun boss actif",
+      "no_hints": "Aucun indice déchiffré pour le moment.",
+      "no_raiders": "Aucun raider pour le moment. Sois le premier !",
+      "protocol_desc": "Le World Boss est une entité colossale qui exige la coopération de toute la communauté. À mesure que ses PV baissent, il entre dans de nouvelles phases plus dangereuses et révèle davantage d'indices. Terrassez-le avant la fin du temps imparti pour remporter des récompenses exclusives.",
+      "protocol_title": "Protocole de raid",
+      "strike": "FRAPPER",
+      "strike_hint": "Chaque bonne réponse inflige des dégâts au boss et le révèle au monde.",
+      "striking": "FRAPPE...",
+      "top_raiders": "Meilleurs raiders",
+      "type_label": "Type {{type}}",
+      "villain_alt": "Incarnation du boss",
+      "world_integrity": "Intégrité du monde",
+      "xp_reward": "RÉCOMPENSE : {{xp}} XP"
     }
   },
   "home": {
@@ -2447,6 +2483,14 @@
     "tab_reading": "En cours",
     "title": "Bibliothèque Manga"
   },
+  "maintenance": {
+    "default_desc": "Animetix fait une pause technique pour revenir plus fort. Merci de votre patience !",
+    "eta": "Retour estimé : {{date}}",
+    "retry": "Réessayer",
+    "staff_banner": "Mode maintenance actif — seuls les admins voient le site",
+    "title_1": "Maintenance",
+    "title_2": "en cours"
+  },
   "media.character.alignment": "Alignement",
   "media.character.analyze_graph": "Analyser dans le Graphe",
   "media.character.archetype": "Archétype",
@@ -2550,7 +2594,7 @@
     "tier_boosted": "Boosté",
     "tier_standard": "Standard",
     "toggle_sidebar": "Ouvrir le menu",
-    "transparency": "Transparence",
+    "transparency": "transparence",
     "xp_amount": "{{xp}} XP",
     "xp_to_next": "{{xp}} XP → NIV. {{level}}"
   },
@@ -2558,7 +2602,7 @@
     "forge": "LA FORGE",
     "lab": "BETA LAB",
     "latent": "LATENT SPACE",
-    "transparency": "TRANSPARENCE"
+    "transparency": "transparence"
   },
   "personalization": {
     "btn_auto": "Auto",
@@ -2946,6 +2990,7 @@
   "social.transparency.cta_lab": "DÉCOUVRIR LE LAB",
   "social.transparency.cta_research": "LA RECHERCHE IA",
   "social.transparency.cta_title": "Devenez Curateur du Nexus",
+  "social.transparency.elo_label": "ELO (ARENA)",
   "social.transparency.ethics_1": "Aucune donnée utilisateur n'est revendue.",
   "social.transparency.ethics_2": "Modèles IA prioritairement Open Source.",
   "social.transparency.ethics_3": "Infrastructure 100% transparente.",
@@ -2961,13 +3006,19 @@
   "social.transparency.loading": "Synchronisation avec le Nexus...",
   "social.transparency.no_eval": "Aucune évaluation enregistrée pour le moment",
   "social.transparency.not_enough_data": "Pas encore assez de données d'évaluation",
+  "social.transparency.our_model_badge": "NOTRE MODÈLE DE BASE",
+  "social.transparency.params_label": "{{params}} paramètres",
   "social.transparency.safety_compliance": "Conformité Sécurité",
   "social.transparency.sample": "Échantillon",
   "social.transparency.security_audit": "Audit de Sécurité",
   "social.transparency.subtitle": "Découvrez comment vos interactions façonnent le cerveau d'Animetix. Nous croyons en une intelligence artificielle ouverte, auditable et alignée sur sa communauté.",
-  "social.transparency.title_accent": "TRANSPARENCE",
+  "social.transparency.title_accent": "transparence",
   "social.transparency.uptime_badge": "Fiabilité du modèle : {{pct}}% (réponses sans hallucination)",
   "social.transparency.vector_base": "Base Vectorielle",
+  "social.transparency.vs_footnote": "Champion tourne sur Qwen3.5-9B : un modèle compact hébergé sur notre propre GPU, spécialisé anime/manga par fine-tuning DPO continu. Les géants ci-dessus dominent les benchmarks généralistes — notre pari est la spécialisation, pas la taille.",
+  "social.transparency.vs_subtitle": "Le modèle de base d'Animetix face aux meilleurs LLM open source du marché",
+  "social.transparency.vs_title_1": "NOTRE MODÈLE",
+  "social.transparency.vs_title_2": "VS L'OPEN SOURCE",
   "theme": {
     "auto": "Auto",
     "dark": "Sombre",

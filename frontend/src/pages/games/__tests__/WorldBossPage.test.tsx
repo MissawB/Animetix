@@ -18,12 +18,9 @@ describe('WorldBossPage', () => {
         <MemoryRouter>
           <WorldBossPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
-    // Initially it might be loading or showing "No Active Boss" if fetch fails
-    expect(screen.getByLabelText(/Loading Raid/i)).toBeInTheDocument();
+    // Initially it might be loading or showing "Aucun boss actif" if fetch fails
+    expect(screen.getByLabelText(/Chargement du raid/i)).toBeInTheDocument();
   });
 });
-
-
-

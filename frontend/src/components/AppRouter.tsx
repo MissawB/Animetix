@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { motion, AnimatePresence } from 'framer-motion';
 import { pageVariants } from './ui/animations';
 import Layout from './Layout';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '../utils/queryClient';
+import { MaintenanceGate } from './MaintenanceGate';
 import { GameRoutes } from '../features/games/routes/GameRoutes';
 import { SocialRoutes } from '../features/social/routes/SocialRoutes';
 import { LabRoutes } from '../features/labs/routes/LabRoutes';
@@ -99,9 +102,15 @@ const AppRouter: React.FC = () => {
 
   return (
     <Router basename={basename}>
-      <Layout>
-        <AnimatedRoutes />
-      </Layout>
+      {/* La garde vit au-dessus du Layout (elle le remplace en maintenance) :
+          elle a donc besoin du provider ici — même client que celui du Layout. */}
+      <QueryClientProvider client={queryClient}>
+        <MaintenanceGate>
+          <Layout>
+            <AnimatedRoutes />
+          </Layout>
+        </MaintenanceGate>
+      </QueryClientProvider>
     </Router>
   );
 };

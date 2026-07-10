@@ -57,8 +57,16 @@ export const apiClient = async (
         errorData?.detail ||
         `Erreur ${response.status}: Impossible de récupérer les données.`;
 
+      // 503 {maintenance:true} : le middleware backend annonce le mode
+      // maintenance — on notifie la garde globale (bascule immédiate) et on
+      // n'affiche pas de toast (la page dédiée prend le relais).
+      const isMaintenance = response.status === 503 && errorData?.maintenance === true;
+      if (isMaintenance) {
+        window.dispatchEvent(new CustomEvent('animetix:maintenance'));
+      }
+
       // Déclenchement global du Toast
-      if (!skipToast) {
+      if (!skipToast && !isMaintenance) {
         useToastStore.getState().addToast(errorMessage, 'error');
       }
 

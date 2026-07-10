@@ -237,6 +237,7 @@ MIDDLEWARE = [
     "django.middleware.locale.LocaleMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "animetix.auth.IAPRemoteUserMiddleware",
+    "animetix.middleware.MaintenanceModeMiddleware",  # After auth: staff bypass reads request.user
     "animetix.middleware.UserTierMiddleware",
     "animetix.middleware.UserTrackingMiddleware",  # Moved after Auth
     "animetix.middleware.PersonalizationMiddleware",

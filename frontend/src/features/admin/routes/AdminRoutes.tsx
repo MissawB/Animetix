@@ -1,6 +1,8 @@
 import { Route } from 'react-router-dom';
 import { lazy } from 'react';
 
+import { RequireStaff } from '../../../components/RequireStaff';
+
 const AdminCurationPage = lazy(() => import('../../../pages/admin/AdminCurationPage'));
 const AdminEvalPage = lazy(() => import('../../../pages/admin/AdminEvalPage'));
 const AdminGoldDatasetPage = lazy(() => import('../../../pages/admin/AdminGoldDatasetPage'));
@@ -18,7 +20,8 @@ const EconomicAuditPage = lazy(() => import('../../../pages/admin/EconomicAuditP
 const ObservabilityConsolePage = lazy(() => import('../../../pages/dev/ObservabilityConsolePage'));
 
 export const AdminRoutes = () => (
-  <>
+  // Route-gabarit : tout le sous-arbre /admin/ est réservé au staff (page 403 sinon).
+  <Route element={<RequireStaff />}>
     <Route path="/admin/" element={<AdminDashboardPage />} />
     <Route path="/admin/dashboard/" element={<AdminDashboardPage />} />
     <Route path="/admin/mlops/" element={<MLOpsDashboard />} />
@@ -37,5 +40,5 @@ export const AdminRoutes = () => (
     <Route path="/admin/ttc-monitoring/" element={<TTCMonitoringPage />} />
     <Route path="/admin/financials/" element={<FinancialDashboardPage />} />
     <Route path="/admin/users/" element={<UserManagementPage />} />
-  </>
+  </Route>
 );
