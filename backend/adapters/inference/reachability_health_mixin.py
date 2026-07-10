@@ -14,8 +14,11 @@ its existing test patch targets — the function is resolved in the adapter's ow
 module namespace and handed in.
 """
 
+import logging
 import time
 from typing import Any, Callable, Dict, Optional
+
+logger = logging.getLogger("animetix.inference.health")
 
 
 class ReachabilityHealthCheckMixin:
@@ -57,7 +60,11 @@ class ReachabilityHealthCheckMixin:
                 try:
                     fields.update(ok_extra(res))
                 except Exception:
-                    pass
+                    logger.debug(
+                        "Best-effort health enrichment failed for %s",
+                        engine,
+                        exc_info=True,
+                    )
             return self._health_status("online" if online else "degraded", **fields)
         except Exception:
             return self._health_status("offline", engine=engine)

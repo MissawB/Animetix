@@ -70,7 +70,7 @@ class DailyChallengeDataView(APIView):
                 if parsed <= today and (today - parsed).days <= self.MAX_BACK_DAYS:
                     day = parsed
             except ValueError:
-                pass
+                logger.debug("Ignoring invalid daily date param: %r", raw_date)
 
         modes = [
             {

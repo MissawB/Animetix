@@ -161,7 +161,7 @@ class ClassicGameStartView(APIView):
                     if parsed <= today and (today - parsed).days <= 30:
                         day = parsed
                 except ValueError:
-                    pass
+                    logger.debug("Ignoring invalid daily date param: %r", raw_date)
             port.update(
                 {"is_daily": True, "is_ranked": False, "daily_date": day.isoformat()}
             )

@@ -124,3 +124,28 @@ def test_ping_ok_extra_failure_keeps_online_status():
         req, "http://svc/api/tags", engine="Svc", ok_extra=boom
     )
     assert out == {"status": "online", "engine": "Svc"}
+
+
+def test_ping_ok_extra_failure_is_logged():
+    # Regression (silent-except sweep): the best-effort enrichment failure must
+    # be observable — a debug record with the engine name, not a bare ``pass``.
+    # The module logger is mocked directly because the project logging config
+    # does not propagate to the root handler caplog listens on.
+    from unittest.mock import patch
+
+    import adapters.inference.reachability_health_mixin as mixin_mod
+
+    req = MagicMock(return_value=_resp(200))
+
+    def boom(_res):
+        raise ValueError("malformed body")
+
+    with patch.object(mixin_mod, "logger") as mock_logger:
+        out = _Dummy()._http_ping_health(
+            req, "http://svc/api/tags", engine="Svc", ok_extra=boom
+        )
+
+    assert out["status"] == "online"
+    mock_logger.debug.assert_called_once()
+    assert "Svc" in mock_logger.debug.call_args.args
+    assert mock_logger.debug.call_args.kwargs.get("exc_info") is True

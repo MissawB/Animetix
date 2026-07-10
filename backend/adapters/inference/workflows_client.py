@@ -88,7 +88,9 @@ class GCPWorkflowsClient:
 
             inject_trace_context(task_headers)
         except ImportError:
-            pass
+            logger.debug(
+                "Telemetry module unavailable; task enqueued without trace context"
+            )
 
         task = {
             "http_request": {

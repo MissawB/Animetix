@@ -15,8 +15,6 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Backend — exceptions avalées à grande échelle** _(audit dette 2026-07-05)_
-  - 168 `except Exception` log-et-continue + 77 `pass` silencieux, dont un consumer WebSocket ([undercover.py:148-149](backend/api/animetix/consumers/undercover.py#L148-L149)), plusieurs vues des sous-modules [api/labs/](backend/api/animetix/api/labs/), [reachability_health_mixin.py:59-60](backend/adapters/inference/reachability_health_mixin.py#L59-L60). Remplacer par du log/handling explicite, au moins sur les chemins runtime.
 - [ ] **Backend — module mort `brain_api.py` (539 lignes)** _(audit dette 2026-07-05)_
   - [brain_api.py](backend/adapters/inference/brain_api.py) n'est importé nulle part (le container câble `brain_api_adapter`). À supprimer — son nom quasi identique au module actif est un piège.
 - [ ] **Backend — signaux dispersés + write amplification** _(audit dette 2026-07-05)_

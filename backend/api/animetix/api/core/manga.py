@@ -335,7 +335,11 @@ class MangaChapterSyncView(APIView):
                     try:
                         anilist_id = int(manga.metadata["id"])
                     except (ValueError, TypeError):
-                        pass
+                        logger.debug(
+                            "Non-numeric AniList id in metadata for %s; "
+                            "falling back to title search",
+                            media_id,
+                        )
 
                 # If not resolved yet, let's search AniList GraphQL API by title
                 if not anilist_id:

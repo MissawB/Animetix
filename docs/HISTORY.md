@@ -2,6 +2,16 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-10] Session: Silent exception swallowing eliminated from the runtime paths
+
+Closure of the 🟡 debt item "exceptions avalées à grande échelle" (2026-07-05 audit). The inventory corrected the audit twice over: the ~168 `except Exception` log-and-continue handlers had already been AST-audited in June (legitimate defensive code — they log), and of the "77 silent `pass`" only **11 real silent handlers remained in the backend runtime** (the rest sat in tests/scripts or had been fixed since). All 11 made observable, zero behavior change:
+
+- **Flagship fixes (both named in the audit):** the Undercover consumer's public-lobby index registration now logs a `warning` with the room code and traceback when the state store fails (a room silently missing from the lobby was invisible); [ReachabilityHealthCheckMixin](../backend/adapters/inference/reachability_health_mixin.py)'s best-effort health enrichment now logs a `debug` with the engine name (200 still never downgraded). Both files gained module loggers; both behaviors locked by logger-mock regression tests ([test_undercover_index_logging.py](../tests/api/test_undercover_index_logging.py), mixin suite) — caplog can't be used since the project logging config doesn't propagate to root.
+- **Narrowed:** the Vertex pipeline timestamp fallback (`except Exception` → `(TypeError, ValueError, OSError, OverflowError)` + debug).
+- **Made observable (debug):** temp-YAML cleanup failure, optional-telemetry ImportError, AniList-id metadata fallback, and the 6 user-input coercions (daily-date params in classic/dashboards, `intensity_multiplier`/`tau_plus`/`tau_minus` in the Singularity lab) — all deliberate fallbacks, now visible.
+
+Sweep verified: **0 silent `except: pass` left** in backend runtime code; 170 tests green across the touched suites; ruff clean.
+
 ## [2026-07-10] Session: Service locator eradicated from the view layer — constructor injection everywhere
 
 Closure of the 🟡 debt item "service locator au lieu d'injection" (2026-07-05 audit). The view layer resolved services through 49 `get_container()` call sites (~158 `container.x.y()` expressions across 20 files); all converted to `dependency_injector` constructor injection (`@inject __init__` with `Provide[Container.<sub>.<service>]` defaults, the house pattern already used by MediaSearchView/Suwayomi/ToT), including the 5 native-async SSE views in [streams.py](../backend/api/animetix/api/streams.py) and the function view `run_vs_battle` (`@inject` on the function). [apps.py](../backend/api/animetix/apps.py) wiring extended with the 5 modules that were missing (cognition, developer, monitoring, streams, games.vs_battle).

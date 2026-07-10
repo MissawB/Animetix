@@ -4,11 +4,14 @@ import unicodedata
 from difflib import SequenceMatcher
 from urllib.parse import parse_qs
 
+from animetix_project.logging_config import get_logger
 from asgiref.sync import sync_to_async
 
 from ..containers import get_container
 from ..services import DIFFICULTY_SETTINGS
 from .base import BaseConsumer, state_adapter
+
+logger = get_logger("animetix." + __name__)
 
 KNOWN_CATS = {"Anime", "Manga", "Character", "Movie", "Game", "Actor", "VGChar"}
 # Cache key holding the list of known room codes — public ones are surfaced in
@@ -146,7 +149,13 @@ class UndercoverConsumer(BaseConsumer):
                 codes.append(self.room_code)
                 await state_adapter.set_state(INDEX_KEY, codes, timeout=86400)
         except Exception:
-            pass
+            # Best-effort: the room stays joinable via its code even if the
+            # public-lobby listing misses it — but that degradation must be visible.
+            logger.warning(
+                "Failed to register room %s in the public lobby index",
+                self.room_code,
+                exc_info=True,
+            )
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)

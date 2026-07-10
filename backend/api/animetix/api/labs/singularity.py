@@ -114,7 +114,9 @@ class SingularityLabDataView(APIView):
                     try:
                         settings["intensity_multiplier"] = float(intensity)
                     except ValueError:
-                        pass
+                        logger.debug(
+                            "Ignoring non-numeric intensity_multiplier: %r", intensity
+                        )
                 features = request.data.get("features")
                 if isinstance(features, dict):
                     settings["features"] = {
@@ -136,13 +138,13 @@ class SingularityLabDataView(APIView):
                 try:
                     service.tau_plus = float(tau_plus)
                 except ValueError:
-                    pass
+                    logger.debug("Ignoring non-numeric tau_plus: %r", tau_plus)
             tau_minus = request.data.get("tau_minus")
             if tau_minus is not None:
                 try:
                     service.tau_minus = float(tau_minus)
                 except ValueError:
-                    pass
+                    logger.debug("Ignoring non-numeric tau_minus: %r", tau_minus)
 
             service.save_checkpoint()
             return self.get(request)

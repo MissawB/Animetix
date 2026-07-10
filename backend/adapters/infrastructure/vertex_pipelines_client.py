@@ -51,8 +51,8 @@ def _safe_isoformat(val):
     if hasattr(val, "seconds"):
         try:
             return datetime.fromtimestamp(val.seconds, timezone.utc).isoformat()
-        except Exception:
-            pass
+        except (TypeError, ValueError, OSError, OverflowError):
+            logger.debug("Unconvertible pipeline timestamp %r", val, exc_info=True)
     return str(val)
 
 
@@ -202,7 +202,11 @@ class VertexPipelinesClient:
             try:
                 os.remove(temp_yaml_path)
             except OSError:
-                pass
+                logger.debug(
+                    "Temp pipeline YAML cleanup failed: %s",
+                    temp_yaml_path,
+                    exc_info=True,
+                )
 
     def get_pipeline_run(self, pipeline_job_name: str) -> dict:
         """
