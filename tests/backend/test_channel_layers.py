@@ -48,10 +48,24 @@ def test_plain_redis_url_uses_redis_backend_without_ssl_kwargs():
     assert layers["default"]["CONFIG"]["hosts"] == ["redis://example.com:6379/0"]
 
 
-def test_rediss_url_relaxes_cert_verification_like_caches():
+def test_rediss_url_verifies_certs_by_default():
+    # Secure by default: a rediss:// URL gets strict certificate verification
+    # unless the escape hatch is explicitly used (mirrors REDIS_SSL_CERT_REQS).
     layers = build_channel_layers(
         redis_url="rediss://example.com:6380/0", is_production=True
     )
     (host,) = layers["default"]["CONFIG"]["hosts"]
     assert host["address"] == "rediss://example.com:6380/0"
+    assert host["ssl_cert_reqs"] == "required"
+
+
+def test_rediss_url_none_escape_hatch_relaxes_cert_verification():
+    # REDIS_SSL_CERT_REQS=none restores the legacy insecure mode for providers
+    # whose certificate chain fails validation — same kwargs as the CACHES block.
+    layers = build_channel_layers(
+        redis_url="rediss://example.com:6380/0",
+        is_production=True,
+        ssl_cert_reqs="none",
+    )
+    (host,) = layers["default"]["CONFIG"]["hosts"]
     assert host["ssl_cert_reqs"] is None

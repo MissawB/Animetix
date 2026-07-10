@@ -10,16 +10,12 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Sécu — révoquer les clés mortes du `.env` local** _(reliquat de l'hygiène post-fuite `.env`, close le 2026-07-09 — secrets montés sur `animetix-web` + 33 images pré-exclusion purgées, archivé dans [docs/HISTORY.md](docs/HISTORY.md))_
-  - ⏳ Révoquer `TRIPO_API_KEY` et `MAPBOX_TOKEN` depuis leurs dashboards respectifs (Tripo3D / Mapbox — action manuelle externe) : valeurs réelles dans le `.env` local, consommées nulle part dans le code. Risque résiduel faible depuis la purge des anciennes images.
 
 ## 🟡 Moyens
 
 
 ## 🟢 Faibles
 
-- [ ] **Settings — défauts d'infra codés en dur** _(audit dette 2026-07-05)_
-  - `DEBUG=True` par défaut hors-prod ([settings.py:104](backend/api/animetix_project/settings.py#L104)) : toute la sécurité repose sur `DJANGO_ENV=production` ; URLs hf.space et emails de service accounts en littéraux ([settings.py:331,391,395,581,595,620](backend/api/animetix_project/settings.py#L331)) ; `print()` au démarrage ([settings.py:375,510](backend/api/animetix_project/settings.py#L375)) au lieu du logger ; `ssl_cert_reqs: None` sur le cache `rediss://` ([settings.py:361](backend/api/animetix_project/settings.py#L361)) désactive la vérif de cert.
 - [ ] **Backend — duplication entre adapters d'inférence** _(revue archi 2026-06-22 ; mixins de factorisation livrés, archivés dans [docs/HISTORY.md](docs/HISTORY.md))_
   - ⏳ **Reste (résiduel, hors scope)** : `RerankMixin` et `LocalTextAdapter.get_text_embedding` (chargements inline aux sémantiques d'erreur différentes) ; `LocalGuardrailAdapter` (aucun modèle).
 - [ ] **Backend — exposer le streaming async aux endpoints HTTP** _(suite du streaming async natif — les 5 vues SSE sont désormais async natives, détail archivé dans [docs/HISTORY.md](docs/HISTORY.md))_

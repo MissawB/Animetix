@@ -24,6 +24,33 @@ PROJECT_ROOT = BASE_DIR.parent.parent
 DJANGO_ENV = os.getenv("DJANGO_ENV", "development").lower()
 IS_PRODUCTION = DJANGO_ENV == "production"
 
+# Fail-fast tripwire: on Cloud Run (service or job) the platform always sets
+# K_SERVICE / CLOUD_RUN_JOB. Booting there without DJANGO_ENV=production would
+# silently run with DEBUG=True and the insecure dev SECRET_KEY — refuse to
+# start instead of degrading invisibly.
+if not IS_PRODUCTION and (os.getenv("K_SERVICE") or os.getenv("CLOUD_RUN_JOB")):
+    raise RuntimeError(
+        "Cloud Run detected (K_SERVICE/CLOUD_RUN_JOB) but DJANGO_ENV is not "
+        "'production' — refusing to boot with development defaults."
+    )
+
+# --- SHARED GCP / SERVICE IDENTIFIERS ---
+# Public base URL of the web service; every GCP callback URL below derives its
+# default from it (each stays individually overridable). The default points at
+# the HF Space mirror; production overrides via env/deployments.yaml.
+SERVICE_PUBLIC_BASE_URL = env(
+    "SERVICE_PUBLIC_BASE_URL", default="https://missawb-animetix-web.hf.space"
+).rstrip("/")
+GCP_TASKS_SERVICE_ACCOUNT = env(
+    "GCP_TASKS_SERVICE_ACCOUNT",
+    default="animetix-tasks-invoker@animetix.iam.gserviceaccount.com",
+)
+# TLS verification for rediss:// cache/channel connections. "required" by
+# default; set REDIS_SSL_CERT_REQS=none for a provider whose certificate chain
+# fails validation (legacy behavior). The current prod REDIS_URL is plain
+# redis:// (in-VPC), so this only takes effect if TLS Redis is introduced.
+REDIS_SSL_CERT_REQS = env("REDIS_SSL_CERT_REQS", default="required")
+
 import logging  # noqa: E402
 
 # --- LOGGING CONFIGURATION ---
@@ -104,10 +131,10 @@ else:
     SECRET_KEY = env(
         "DJANGO_SECRET_KEY", default="dev-insecure-animetix-2026-v2-local-only"
     )
-    DEBUG = True
+    DEBUG = env.bool("DJANGO_DEBUG", default=True)
     ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
     logger.info(
-        "🛠️  Running in DEVELOPMENT mode (DEBUG=True). Restricted to localhost."
+        "🛠️  Running in DEVELOPMENT mode (DEBUG=%s). Restricted to localhost.", DEBUG
     )
 
 # --- DOS PREVENTION (OOM) ---
@@ -224,7 +251,9 @@ ASGI_APPLICATION = "animetix_project.asgi.application"
 from animetix_project.channels_config import build_channel_layers  # noqa: E402
 
 REDIS_URL = os.getenv("REDIS_URL")
-CHANNEL_LAYERS = build_channel_layers(REDIS_URL, is_production=IS_PRODUCTION)
+CHANNEL_LAYERS = build_channel_layers(
+    REDIS_URL, is_production=IS_PRODUCTION, ssl_cert_reqs=REDIS_SSL_CERT_REQS
+)
 
 MIDDLEWARE = [
     "animetix.middleware.TracingMiddleware",  # Tracing at the very beginning of the stack
@@ -340,10 +369,7 @@ if os.getenv("DATABASE_URL"):
     if DJANGO_DB_USE_IAM:
         DATABASES["default"]["ENGINE"] = "animetix.db.postgresql"
         # In Cloud SQL IAM, the user is the service account email address
-        DATABASES["default"]["USER"] = env(
-            "GCP_TASKS_SERVICE_ACCOUNT",
-            default="animetix-tasks-invoker@animetix.iam.gserviceaccount.com",
-        )
+        DATABASES["default"]["USER"] = GCP_TASKS_SERVICE_ACCOUNT
         DATABASES["default"][
             "PASSWORD"
         ] = ""  # nosec B105 # Will be dynamically set by wrapper
@@ -372,7 +398,15 @@ if REDIS_URL:
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
                 "CONNECTION_POOL_KWARGS": (
-                    {"ssl_cert_reqs": None} if REDIS_URL.startswith("rediss://") else {}
+                    {
+                        "ssl_cert_reqs": (
+                            None
+                            if REDIS_SSL_CERT_REQS == "none"
+                            else REDIS_SSL_CERT_REQS
+                        )
+                    }
+                    if REDIS_URL.startswith("rediss://")
+                    else {}
                 ),
             },
         }
@@ -386,7 +420,7 @@ else:
         }
     }
     if not IS_PRODUCTION:
-        print("[INFO] Redis not found, using Local Memory Cache.")
+        logger.info("Redis not found, using Local Memory Cache.")
 
 # In local development the database is often a remote (e.g. Neon) instance, so
 # DB-backed sessions add a round-trip to every request. Store sessions in the
@@ -402,12 +436,9 @@ GCP_TASKS_QUEUE_NAME = env("GCP_TASKS_QUEUE_NAME", default="animetix-queue")
 GCP_TASKS_LOCATION = env("GCP_TASKS_LOCATION", default="europe-west1")
 GCP_TASKS_WORKER_URL = env(
     "GCP_TASKS_WORKER_URL",
-    default="https://missawb-animetix-web.hf.space/api/tasks/run/",
+    default=f"{SERVICE_PUBLIC_BASE_URL}/api/tasks/run/",
 )
-GCP_TASKS_SERVICE_ACCOUNT = env(
-    "GCP_TASKS_SERVICE_ACCOUNT",
-    default="animetix-tasks-invoker@animetix.iam.gserviceaccount.com",
-)
+# GCP_TASKS_SERVICE_ACCOUNT is defined in the shared identifiers block above.
 
 # CELERY_BEAT_SCHEDULE has been decommissioned in favor of serverless Google Cloud Run Jobs
 # and Cloud Scheduler triggers.
@@ -521,7 +552,7 @@ if sentry_dsn and not os.environ.get("PYTEST_CURRENT_TEST"):
         traces_sample_rate=0.0,
         send_default_pii=False,  # Sécurité/RGPD : Ne pas envoyer d'infos personnelles identifiables (IP, emails, etc.)
     )
-    print("[SUCCESS] Sentry initialized with Django integration.")
+    logger.info("Sentry initialized with Django integration.")
 
 # --- 🛡️ CONTENT SECURITY POLICY (CSP) ---
 CSP_DEFAULT_SRC = ("'self'",)
@@ -592,7 +623,7 @@ GCP_BRAIN_SERVICE_NAME = env("GCP_BRAIN_SERVICE_NAME", default="animetix-brain")
 GCP_BRAIN_REGION = env("GCP_BRAIN_REGION", default="europe-west1")
 GCP_BILLING_WEBHOOK_URL = env(
     "GCP_BILLING_WEBHOOK_URL",
-    default="https://missawb-animetix-web.hf.space/api/billing/webhook/",
+    default=f"{SERVICE_PUBLIC_BASE_URL}/api/billing/webhook/",
 )
 
 # GCP Identity-Aware Proxy (IAP) Configuration
@@ -606,11 +637,11 @@ GCP_LOCATION = env("GCP_LOCATION", default="europe-west1")
 GCS_MEDIA_BUCKET = env("GCS_MEDIA_BUCKET", default="animetix-media-bucket")
 EVENTARC_RECEIVER_URL = env(
     "EVENTARC_RECEIVER_URL",
-    default="https://missawb-animetix-web.hf.space/api/events/gcs-upload/",
+    default=f"{SERVICE_PUBLIC_BASE_URL}/api/events/gcs-upload/",
 )
 GCP_WORKFLOW_POLL_URL = env(
     "GCP_WORKFLOW_POLL_URL",
-    default="https://missawb-animetix-web.hf.space/api/tasks/workflow/poll/",
+    default=f"{SERVICE_PUBLIC_BASE_URL}/api/tasks/workflow/poll/",
 )
 
 # --- SECURITY ---

@@ -11,7 +11,11 @@ from typing import Optional
 from django.core.exceptions import ImproperlyConfigured
 
 
-def build_channel_layers(redis_url: Optional[str], is_production: bool) -> dict:
+def build_channel_layers(
+    redis_url: Optional[str],
+    is_production: bool,
+    ssl_cert_reqs: str = "required",
+) -> dict:
     if not redis_url:
         if is_production:
             # InMemoryChannelLayer is per-process: with several ASGI workers the
@@ -26,11 +30,16 @@ def build_channel_layers(redis_url: Optional[str], is_production: bool) -> dict:
     # channels_redis accepts each host as a plain URL string or a config dict.
     hosts: list[str | dict[str, object]]
     if redis_url.startswith("rediss://"):
-        # Mirror the CACHES connection kwargs: this Redis serves TLS with a cert
-        # that fails strict verification, so django_redis already runs with
-        # ssl_cert_reqs=None — the channel layer must match or it 500s while
-        # HTTP keeps working.
-        hosts = [{"address": redis_url, "ssl_cert_reqs": None}]
+        # Mirror the CACHES connection kwargs (REDIS_SSL_CERT_REQS): strict
+        # certificate verification by default; "none" restores the legacy
+        # insecure mode for providers whose cert chain fails validation — the
+        # channel layer must match CACHES or it 500s while HTTP keeps working.
+        hosts = [
+            {
+                "address": redis_url,
+                "ssl_cert_reqs": None if ssl_cert_reqs == "none" else ssl_cert_reqs,
+            }
+        ]
     else:
         hosts = [redis_url]
 
