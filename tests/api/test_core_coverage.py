@@ -260,12 +260,10 @@ def test_config_view_anonymous(factory):
 def test_config_view_authenticated(factory):
     user = User.objects.create_user(username="cfg", password="pw")
     request = factory.get("/config/")
-    # NOTE: production ConfigView reads ``request.user.profile.rank`` which the
-    # Profile model does not define; patch it so the auth branch is exercised.
-    with patch("animetix.models.Profile.rank", "Bronze", create=True):
-        response = _drive(ConfigView, request, user=user)
+    response = _drive(ConfigView, request, user=user)
     assert response.status_code == 200
     assert response.data["user"]["username"] == "cfg"
+    assert response.data["user"]["rank"] == "Bronze 🥉"
 
 
 def test_current_user_unauthenticated(factory):

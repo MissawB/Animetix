@@ -166,6 +166,12 @@ class Profile(models.Model):
         return (self.xp // 500) + 1
 
     @property
+    def rank(self):
+        from core.domain.entities.user import rank_label_for  # noqa: E402
+
+        return rank_label_for(self.ranked_points)
+
+    @property
     def level_xp_progress(self):
         return ((self.xp % 500) / 500) * 100
 
