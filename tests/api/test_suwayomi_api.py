@@ -1,4 +1,4 @@
-import base64
+﻿import base64
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -89,7 +89,7 @@ def test_suwayomi_import_view(authenticated_client, mock_suwayomi_adapter):
 
 
 @pytest.mark.django_db
-@patch("animetix.api.core.safe_http_request")
+@patch("animetix.api.core.suwayomi.safe_http_request")
 def test_suwayomi_image_proxy(mock_safe_req, api_client):
     mock_response = MagicMock()
     mock_response.status_code = 200

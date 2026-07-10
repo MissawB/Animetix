@@ -9,8 +9,9 @@ evolve_dynamic / swarm), the Liquid Neural Network lab, the Manga metadata +
 Manga-Voice orchestration, Video-RAG index/search, Tree-of-Thoughts, and the
 Singularity Command Center -- plus validation (400) and error (500) paths.
 
-Pattern: views resolve services via ``get_container`` imported into the
-``animetix.api.labs`` namespace, so it is patched there. Permission classes are
+Pattern: views resolve services via ``get_container`` imported into each
+``animetix.api.labs.*`` domain submodule, so it is patched in the submodule
+that defines the view under test. Permission classes are
 bypassed via ``as_view(permission_classes=[])`` (same trick used in the existing
 audio/spatial tests) so we exercise the handler logic directly with a
 ``RequestFactory`` request.
@@ -41,8 +42,8 @@ from rest_framework.test import force_authenticate
 factory = RequestFactory()
 
 
-def _container_patch(mock_container):
-    p = patch("animetix.api.labs.get_container")
+def _container_patch(mock_container, module="singularity"):
+    p = patch(f"animetix.api.labs.{module}.get_container")
     started = p.start()
     started.return_value = mock_container
     return p
@@ -55,7 +56,7 @@ def test_latent_space_data_view_404_when_missing(tmp_path):
     """No artifact files -> 404 with empty list body."""
     request = factory.get("/api/v1/latent-space/?media=anime&type=thematic")
     view = LatentSpaceDataView.as_view()
-    with patch("animetix.api.labs.os.path.exists", return_value=False):
+    with patch("animetix.api.labs.dashboards.os.path.exists", return_value=False):
         response = view(request)
     assert response.status_code == 404
     assert response.data == []
@@ -70,8 +71,8 @@ def test_latent_space_data_view_success(tmp_path):
     m = MagicMock()
     m.read.return_value = json.dumps(payload)
     with (
-        patch("animetix.api.labs.os.path.exists", return_value=True),
-        patch("animetix.api.labs.json.load", return_value=payload),
+        patch("animetix.api.labs.dashboards.os.path.exists", return_value=True),
+        patch("animetix.api.labs.dashboards.json.load", return_value=payload),
         patch("builtins.open", MagicMock()),
     ):
         response = view(request)
@@ -84,7 +85,7 @@ def test_latent_space_data_view_read_error():
     request = factory.get("/api/v1/latent-space/")
     view = LatentSpaceDataView.as_view()
     with (
-        patch("animetix.api.labs.os.path.exists", return_value=True),
+        patch("animetix.api.labs.dashboards.os.path.exists", return_value=True),
         patch("builtins.open", side_effect=OSError("disk gone")),
     ):
         response = view(request)
@@ -110,6 +111,37 @@ def test_daily_challenge_data_view_creates_and_returns():
     assert response.data["modes"][0]["media_type"] == "Anime"
 
 
+@pytest.mark.django_db
+def test_daily_challenge_data_view_authenticated_scores():
+    """Regression: the authenticated branch does ``from ...models import
+    DailyResult`` — in the old monolithic ``labs.py`` (package ``animetix.api``)
+    the 3-dot relative import climbed beyond the top-level package and raised
+    ImportError on every authenticated request. The move into the
+    ``animetix.api.labs`` package makes it resolve to ``animetix.models``.
+    """
+    import datetime
+
+    from animetix.models import DailyResult
+
+    user = User.objects.create_user(username="daily_auth")
+    DailyResult.objects.create(
+        user=user,
+        media_type="Anime",
+        date=datetime.date.today(),
+        score=42,
+        attempts=3,
+    )
+    request = factory.get("/api/v1/daily-challenge/")
+    force_authenticate(request, user=user)
+    view = DailyChallengeDataView.as_view()
+    response = view(request)
+    assert response.status_code == 200
+    assert response.data["total_score"] == 42
+    anime_mode = next(m for m in response.data["modes"] if m["id"] == "anime")
+    assert anime_mode["completed"] is True
+    assert anime_mode["score"] == 42
+
+
 # --------------------------------------------------------------------------- #
 # SingularityLabDataView POST actions
 # --------------------------------------------------------------------------- #
@@ -126,7 +158,7 @@ def _singularity_request(payload):
 def _run_singularity(payload, mock_container):
     request = _singularity_request(payload)
     p = _container_patch(mock_container)
-    d = patch("animetix.api.labs.deduct_berrix")
+    d = patch("animetix.api.labs.singularity.deduct_berrix")
     d.start()
     try:
         view = SingularityLabDataView.as_view(permission_classes=[])
@@ -363,9 +395,9 @@ def test_manga_voice_local_fallback():
     )
     force_authenticate(request, user=MagicMock(id=1))
     with (
-        patch("animetix.api.labs.deduct_berrix"),
+        patch("animetix.api.labs.manga.deduct_berrix"),
         patch("django.core.cache.cache.set") as mock_cache_set,
-        patch("animetix.api.labs.settings") as mock_settings,
+        patch("animetix.api.labs.manga.settings") as mock_settings,
     ):
         mock_settings.IS_PRODUCTION = False
         view = MangaVoiceLabView.as_view(permission_classes=[])
@@ -384,10 +416,10 @@ def test_manga_voice_production_success():
     )
     force_authenticate(request, user=MagicMock(id=1))
     with (
-        patch("animetix.api.labs.deduct_berrix"),
+        patch("animetix.api.labs.manga.deduct_berrix"),
         patch("django.core.cache.cache.set"),
-        patch("animetix.api.labs.settings") as mock_settings,
-        patch("animetix.api.labs.GCPWorkflowsClient") as mock_client_cls,
+        patch("animetix.api.labs.manga.settings") as mock_settings,
+        patch("animetix.api.labs.manga.GCPWorkflowsClient") as mock_client_cls,
     ):
         mock_settings.IS_PRODUCTION = True
         client = mock_client_cls.return_value
@@ -408,10 +440,10 @@ def test_manga_voice_production_error():
     )
     force_authenticate(request, user=MagicMock(id=1))
     with (
-        patch("animetix.api.labs.deduct_berrix"),
+        patch("animetix.api.labs.manga.deduct_berrix"),
         patch("django.core.cache.cache.set"),
-        patch("animetix.api.labs.settings") as mock_settings,
-        patch("animetix.api.labs.GCPWorkflowsClient") as mock_client_cls,
+        patch("animetix.api.labs.manga.settings") as mock_settings,
+        patch("animetix.api.labs.manga.GCPWorkflowsClient") as mock_client_cls,
     ):
         mock_settings.IS_PRODUCTION = True
         mock_client_cls.return_value.trigger_pipeline.side_effect = Exception(
@@ -447,7 +479,7 @@ def test_video_rag_index_success():
     force_authenticate(request, user=user)
     mock_container = MagicMock()
     mock_container.agentic.video_rag_service.return_value.index_video.return_value = 7
-    p = _container_patch(mock_container)
+    p = _container_patch(mock_container, "video")
     try:
         view = VideoRAGIndexView.as_view(permission_classes=[])
         response = view(request)
@@ -469,7 +501,7 @@ def test_video_rag_index_error():
     mock_container.agentic.video_rag_service.return_value.index_video.side_effect = (
         Exception("index fail")
     )
-    p = _container_patch(mock_container)
+    p = _container_patch(mock_container, "video")
     try:
         view = VideoRAGIndexView.as_view(permission_classes=[])
         response = view(request)
@@ -498,8 +530,8 @@ def test_video_rag_search_success():
     mock_container.agentic.video_rag_service.return_value.search_video_segment.return_value = [
         {"ts": 12, "score": 0.9}
     ]
-    p = _container_patch(mock_container)
-    d = patch("animetix.api.labs.deduct_berrix")
+    p = _container_patch(mock_container, "video")
+    d = patch("animetix.api.labs.video.deduct_berrix")
     d.start()
     try:
         view = VideoRAGSearchView.as_view(permission_classes=[])
@@ -519,8 +551,8 @@ def test_video_rag_search_error():
     mock_container.agentic.video_rag_service.return_value.search_video_segment.side_effect = Exception(
         "search down"
     )
-    p = _container_patch(mock_container)
-    d = patch("animetix.api.labs.deduct_berrix")
+    p = _container_patch(mock_container, "video")
+    d = patch("animetix.api.labs.video.deduct_berrix")
     d.start()
     try:
         view = VideoRAGSearchView.as_view(permission_classes=[])
@@ -571,7 +603,7 @@ def test_tree_of_thoughts_success():
                 lambda self, **kw: setattr(self, "tot_service", instance_service)
                 or super(TreeOfThoughtsLabView, self).__init__(),
             ),
-            patch("animetix.api.labs.deduct_berrix"),
+            patch("animetix.api.labs.singularity.deduct_berrix"),
         ):
             response = view(request)
     assert response.status_code == 200
@@ -595,7 +627,7 @@ def test_tree_of_thoughts_error():
             lambda self, **kw: setattr(self, "tot_service", instance_service)
             or super(TreeOfThoughtsLabView, self).__init__(),
         ),
-        patch("animetix.api.labs.deduct_berrix"),
+        patch("animetix.api.labs.singularity.deduct_berrix"),
     ):
         response = view(request)
     assert response.status_code == 500

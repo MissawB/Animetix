@@ -1,4 +1,4 @@
-import base64
+﻿import base64
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,8 +24,8 @@ def test_manga_clean_lab_view(dummy_image):
     force_authenticate(request, user=user)
 
     with (
-        patch("animetix.api.labs.get_container") as mock_get_container,
-        patch("animetix.api.labs.deduct_berrix"),
+        patch("animetix.api.labs.manga.get_container") as mock_get_container,
+        patch("animetix.api.labs.manga.deduct_berrix"),
     ):
         mock_container = MagicMock()
         mock_primary = MagicMock()
@@ -55,7 +55,7 @@ def test_manga_translate_lab_view(dummy_image):
     )
     force_authenticate(request, user=user)
 
-    with patch("animetix.api.labs.get_container") as mock_get_container:
+    with patch("animetix.api.labs.manga.get_container") as mock_get_container:
         mock_container = MagicMock()
         mock_service = MagicMock()
         mock_service.translate_manga_page.return_value = b"translated_image_bytes"

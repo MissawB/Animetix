@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+﻿from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth.models import User
@@ -26,7 +26,7 @@ def test_singularity_synthesize_success(api_client, authenticated_user):
         "genre": "Sci-Fi",
     }
 
-    with patch("animetix.api.labs.get_container") as mock_get_container:
+    with patch("animetix.api.labs.singularity.get_container") as mock_get_container:
         mock_container = MagicMock()
         mock_synthesizer = MagicMock()
 
@@ -54,7 +54,7 @@ def test_singularity_synthesize_success(api_client, authenticated_user):
         )
         mock_get_container.return_value = mock_container
 
-        with patch("animetix.api.labs.deduct_berrix") as mock_deduct:
+        with patch("animetix.api.labs.singularity.deduct_berrix") as mock_deduct:
             response = api_client.post(url, payload, format="json")
 
             assert response.status_code == 200
@@ -84,7 +84,7 @@ def test_singularity_synthesize_error(api_client, authenticated_user):
     url = "/api/v1/singularity-lab/"
     payload = {"action": "synthesize", "universe_name": "NeonGenesisX"}
 
-    with patch("animetix.api.labs.get_container") as mock_get_container:
+    with patch("animetix.api.labs.singularity.get_container") as mock_get_container:
         mock_container = MagicMock()
         mock_synthesizer = MagicMock()
 
@@ -96,7 +96,7 @@ def test_singularity_synthesize_error(api_client, authenticated_user):
         )
         mock_get_container.return_value = mock_container
 
-        with patch("animetix.api.labs.deduct_berrix"):
+        with patch("animetix.api.labs.singularity.deduct_berrix"):
             response = api_client.post(url, payload, format="json")
 
             assert response.status_code == 500
@@ -118,7 +118,7 @@ def test_singularity_lab_get_unified_state(api_client, authenticated_user):
 
     url = "/api/v1/singularity-lab/"
 
-    with patch("animetix.api.labs.get_container") as mock_get_container:
+    with patch("animetix.api.labs.singularity.get_container") as mock_get_container:
         mock_container = MagicMock()
         mock_plasticity = MagicMock()
         mock_drift = MagicMock()
@@ -167,7 +167,7 @@ def test_singularity_lab_update_config(api_client, authenticated_user):
     # Verify profile exists
     profile = authenticated_user.profile
 
-    with patch("animetix.api.labs.get_container") as mock_get_container:
+    with patch("animetix.api.labs.singularity.get_container") as mock_get_container:
         mock_container = MagicMock()
         mock_plasticity = MagicMock()
         mock_drift = MagicMock()

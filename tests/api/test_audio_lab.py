@@ -1,4 +1,4 @@
-import base64
+﻿import base64
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -36,8 +36,8 @@ def test_soundscape_generation_view(dummy_video):
     request = factory.post("/api/v1/labs/audio/soundscape/", {"video": dummy_video})
 
     with (
-        patch("animetix.api.labs.get_container") as mock_get_container,
-        patch("animetix.api.labs.deduct_berrix"),
+        patch("animetix.api.labs.audio.get_container") as mock_get_container,
+        patch("animetix.api.labs.audio.deduct_berrix"),
     ):
         mock_container = MagicMock()
         mock_service = MagicMock()
@@ -61,8 +61,8 @@ def test_speech_to_speech_lab_view(dummy_audio):
     )
 
     with (
-        patch("animetix.api.labs.get_container") as mock_get_container,
-        patch("animetix.api.labs.deduct_berrix"),
+        patch("animetix.api.labs.audio.get_container") as mock_get_container,
+        patch("animetix.api.labs.audio.deduct_berrix"),
     ):
         mock_container = MagicMock()
         mock_service = MagicMock()

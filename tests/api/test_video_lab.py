@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+﻿from unittest.mock import MagicMock, patch
 
 import pytest
 from animetix.api.labs import VideoFateZeroLabView, VideoLabDataView
@@ -37,7 +37,7 @@ def test_video_fatezero_lab_view(dummy_video):
     )
     force_authenticate(request, user=user)
 
-    with patch("animetix.api.labs.get_container") as mock_get_container:
+    with patch("animetix.api.labs.video.get_container") as mock_get_container:
         mock_container = MagicMock()
         mock_service = MagicMock()
         mock_service.transform_video_to_anime_sota.return_value = (

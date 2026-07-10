@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+﻿from unittest.mock import MagicMock, patch
 
 import pytest
 from animetix.models import VoiceProfile
@@ -92,7 +92,7 @@ def test_voice_profile_ingest_endpoint():
         patch("yt_dlp.YoutubeDL") as mock_yt,
         patch("pydub.AudioSegment.from_file") as mock_audio_segment,
         patch("pydub.silence.detect_leading_silence", return_value=0),
-        patch("animetix.api.labs.deduct_berrix"),
+        patch("animetix.api.labs.audio.deduct_berrix"),
         patch("os.path.exists", return_value=True),
     ):
         # Setup mock for yt-dlp

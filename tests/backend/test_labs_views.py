@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+﻿from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth.models import User
@@ -12,7 +12,7 @@ def user(db):
 
 @pytest.mark.integration  # Boots the full production stack (live LLM, GCP, pgvector).
 @pytest.mark.django_db
-@patch("animetix.api.labs.GCPWorkflowsClient")
+@patch("animetix.api.labs.manga.GCPWorkflowsClient")
 def test_manga_voice_endpoint_production(
     mock_workflows_client_class, client, settings, user
 ):

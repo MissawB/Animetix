@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+﻿from unittest.mock import MagicMock, patch
 
 import pytest
 from animetix.api.labs import (
@@ -37,8 +37,8 @@ def test_generate_3d_data_view(dummy_image):
     )
 
     with (
-        patch("animetix.api.labs.get_container") as mock_get_container,
-        patch("animetix.api.labs.deduct_berrix"),
+        patch("animetix.api.labs.spatial.get_container") as mock_get_container,
+        patch("animetix.api.labs.spatial.deduct_berrix"),
     ):
         mock_container = MagicMock()
         mock_service = MagicMock()
@@ -61,8 +61,8 @@ def test_cinematic_reconstruction_view(dummy_video):
     request = factory.post("/api/v1/labs/spatial/cinematic/", {"video": dummy_video})
 
     with (
-        patch("animetix.api.labs.get_container") as mock_get_container,
-        patch("animetix.api.labs.deduct_berrix"),
+        patch("animetix.api.labs.spatial.get_container") as mock_get_container,
+        patch("animetix.api.labs.spatial.deduct_berrix"),
     ):
         mock_container = MagicMock()
         mock_service = MagicMock()

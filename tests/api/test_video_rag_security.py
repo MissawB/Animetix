@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
@@ -40,7 +40,7 @@ def test_video_rag_happy_path_deducts_and_returns(mocker):
 
     u = _mk_user(100)
     mocker.patch(
-        "animetix.api.labs.get_container"
+        "animetix.api.labs.video.get_container"
     ).return_value.agentic.video_rag_service.return_value.search_video_segment.return_value = [
         {"id": 1}
     ]

@@ -1,4 +1,4 @@
-import io
+﻿import io
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,8 +18,8 @@ def test_voice_cloning_api_endpoint():
     # Mocking the container and service
     # The path to get_container depends on where it's imported in labs.py
     # In labs.py it's: from ..containers import get_container
-    # So it's animetix.containers.get_container or animetix.api.labs.get_container
-    with patch("animetix.api.labs.get_container") as mock_get_container:
+    # So it's animetix.containers.get_container or animetix.api.labs.audio.get_container
+    with patch("animetix.api.labs.audio.get_container") as mock_get_container:
         mock_service = MagicMock()
         mock_service.clone.return_value = b"fake_audio_content"
 

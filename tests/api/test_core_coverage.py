@@ -1,7 +1,8 @@
-"""Coverage-focused tests for animetix.api.core view module.
+﻿"""Coverage-focused tests for animetix.api.core view module.
 
-Pattern: build a MagicMock container, patch ``animetix.api.core.get_container``
-to return it, drive the views via ``RequestFactory`` + ``force_authenticate``
+Pattern: build a MagicMock container, patch ``get_container`` in the
+``animetix.api.core.*`` domain submodule that defines the view under test,
+then drive the views via ``RequestFactory`` + ``force_authenticate``
 with ``permission_classes`` neutralised (matching the existing test_cognition
 style). DB-backed views use the real ORM under ``@pytest.mark.django_db``.
 
@@ -42,7 +43,9 @@ from django.contrib.auth.models import User
 from django.test import RequestFactory
 from rest_framework.test import force_authenticate
 
-GET_CONTAINER = "animetix.api.core.get_container"
+GET_CONTAINER_MEDIA = "animetix.api.core.media.get_container"
+GET_CONTAINER_MANGA = "animetix.api.core.manga.get_container"
+GET_CONTAINER_SUWAYOMI = "animetix.api.core.suwayomi.get_container"
 
 
 @pytest.fixture
@@ -77,7 +80,7 @@ def test_image_proxy_bad_base64(factory):
 def test_image_proxy_invalid_signature(factory):
     encoded = base64.b64encode(b"http://example.com/a.png").decode()
     request = factory.get("/img/", {"url": encoded, "sig": "deadbeef"})
-    with patch("animetix.api.core.verify_proxy_signature", return_value=False):
+    with patch("animetix.api.core.media.verify_proxy_signature", return_value=False):
         response = image_proxy_view(request)
     assert response.status_code == 403
 
@@ -86,8 +89,8 @@ def test_image_proxy_cache_hit(factory):
     encoded = base64.b64encode(b"http://example.com/a.png").decode()
     request = factory.get("/img/", {"url": encoded, "sig": "good"})
     with (
-        patch("animetix.api.core.verify_proxy_signature", return_value=True),
-        patch("animetix.api.core.cache") as mock_cache,
+        patch("animetix.api.core.media.verify_proxy_signature", return_value=True),
+        patch("animetix.api.core.media.cache") as mock_cache,
     ):
         mock_cache.get.return_value = {
             "content": b"BYTES",
@@ -105,11 +108,11 @@ def test_image_proxy_success_fetch(factory):
         status_code=200, content=b"IMG", headers={"Content-Type": "image/png"}
     )
     with (
-        patch("animetix.api.core.verify_proxy_signature", return_value=True),
-        patch("animetix.api.core.cache") as mock_cache,
-        patch("animetix.api.core.safe_http_request", return_value=upstream),
-        patch("animetix.api.core.validate_file_size", return_value=True),
-        patch("animetix.api.core.validate_file_mime_type", return_value=True),
+        patch("animetix.api.core.media.verify_proxy_signature", return_value=True),
+        patch("animetix.api.core.media.cache") as mock_cache,
+        patch("animetix.api.core.media.safe_http_request", return_value=upstream),
+        patch("animetix.api.core.media.validate_file_size", return_value=True),
+        patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
     ):
         mock_cache.get.return_value = None
         response = image_proxy_view(request)
@@ -122,10 +125,10 @@ def test_image_proxy_too_large(factory):
     request = factory.get("/img/", {"url": encoded, "sig": "good"})
     upstream = MagicMock(status_code=200, content=b"IMG", headers={})
     with (
-        patch("animetix.api.core.verify_proxy_signature", return_value=True),
-        patch("animetix.api.core.cache") as mock_cache,
-        patch("animetix.api.core.safe_http_request", return_value=upstream),
-        patch("animetix.api.core.validate_file_size", return_value=False),
+        patch("animetix.api.core.media.verify_proxy_signature", return_value=True),
+        patch("animetix.api.core.media.cache") as mock_cache,
+        patch("animetix.api.core.media.safe_http_request", return_value=upstream),
+        patch("animetix.api.core.media.validate_file_size", return_value=False),
     ):
         mock_cache.get.return_value = None
         response = image_proxy_view(request)
@@ -137,11 +140,11 @@ def test_image_proxy_wrong_mime(factory):
     request = factory.get("/img/", {"url": encoded, "sig": "good"})
     upstream = MagicMock(status_code=200, content=b"IMG", headers={})
     with (
-        patch("animetix.api.core.verify_proxy_signature", return_value=True),
-        patch("animetix.api.core.cache") as mock_cache,
-        patch("animetix.api.core.safe_http_request", return_value=upstream),
-        patch("animetix.api.core.validate_file_size", return_value=True),
-        patch("animetix.api.core.validate_file_mime_type", return_value=False),
+        patch("animetix.api.core.media.verify_proxy_signature", return_value=True),
+        patch("animetix.api.core.media.cache") as mock_cache,
+        patch("animetix.api.core.media.safe_http_request", return_value=upstream),
+        patch("animetix.api.core.media.validate_file_size", return_value=True),
+        patch("animetix.api.core.media.validate_file_mime_type", return_value=False),
     ):
         mock_cache.get.return_value = None
         response = image_proxy_view(request)
@@ -152,9 +155,12 @@ def test_image_proxy_unsafe_request(factory):
     encoded = base64.b64encode(b"http://example.com/a.png").decode()
     request = factory.get("/img/", {"url": encoded, "sig": "good"})
     with (
-        patch("animetix.api.core.verify_proxy_signature", return_value=True),
-        patch("animetix.api.core.cache") as mock_cache,
-        patch("animetix.api.core.safe_http_request", side_effect=ValueError("blocked")),
+        patch("animetix.api.core.media.verify_proxy_signature", return_value=True),
+        patch("animetix.api.core.media.cache") as mock_cache,
+        patch(
+            "animetix.api.core.media.safe_http_request",
+            side_effect=ValueError("blocked"),
+        ),
     ):
         mock_cache.get.return_value = None
         response = image_proxy_view(request)
@@ -178,7 +184,7 @@ def test_media_search_success(factory):
     container.core.catalog_service.return_value.search_items.return_value = [
         {"id": "1", "title": "Naruto"}
     ]
-    with patch(GET_CONTAINER, return_value=container):
+    with patch(GET_CONTAINER_MEDIA, return_value=container):
         view = MediaSearchView()
         view.guardrail_service = MagicMock()
         view.guardrail_service.validate_input.return_value = {"is_safe": True}
@@ -240,7 +246,9 @@ def test_media_search_post_unauthenticated(factory):
 # --------------------------------------------------------------------------- #
 # GameSessionView covered indirectly; Config / CurrentUser / CustomConfig
 # --------------------------------------------------------------------------- #
+@pytest.mark.django_db
 def test_config_view_anonymous(factory):
+    # ConfigView reads SiteConfiguration (maintenance mode) from the DB.
     request = factory.get("/config/")
     response = _drive(ConfigView, request)
     assert response.status_code == 200
@@ -298,7 +306,7 @@ def test_custom_config_authenticated(factory):
 def test_login_success(factory):
     User.objects.create_user(username="lo", password="secret123")
     request = factory.post("/auth/login/", {"username": "lo", "password": "secret123"})
-    with patch("animetix.api.core.login"):
+    with patch("animetix.api.core.accounts.login"):
         response = _drive(LoginView, request)
     assert response.status_code == 200
     assert response.data["success"] is True
@@ -316,7 +324,7 @@ def test_login_invalid(factory):
 def test_logout(factory):
     user = User.objects.create_user(username="out", password="pw")
     request = factory.post("/auth/logout/")
-    with patch("animetix.api.core.logout"):
+    with patch("animetix.api.core.accounts.logout"):
         response = _drive(LogoutView, request, user=user)
     assert response.status_code == 200
     assert response.data["success"] is True
@@ -347,7 +355,7 @@ def test_register_success(factory):
         "/auth/register/",
         {"username": "newbie", "password": "pw12345", "email": "n@x.com"},
     )
-    with patch("animetix.api.core.login"):
+    with patch("animetix.api.core.accounts.login"):
         response = _drive(RegisterView, request)
     assert response.status_code == 200
     assert response.data["success"] is True
@@ -385,7 +393,7 @@ def test_media_detail_catalog_fallback(factory):
             }
         ]
     }
-    with patch(GET_CONTAINER, return_value=container):
+    with patch(GET_CONTAINER_MEDIA, return_value=container):
         response = _drive(MediaDetailView, request, media_type="Anime", item_id="cat-9")
     assert response.status_code == 200
     assert response.data["studios"] == ["MAPPA"]
@@ -396,7 +404,7 @@ def test_media_detail_not_found(factory):
     request = factory.get("/media/Anime/missing/")
     container = MagicMock()
     container.core.catalog_service.load_data.return_value = {"db": []}
-    with patch(GET_CONTAINER, return_value=container):
+    with patch(GET_CONTAINER_MEDIA, return_value=container):
         response = _drive(
             MediaDetailView, request, media_type="Anime", item_id="missing"
         )
@@ -423,8 +431,8 @@ def test_manga_chapter_list(factory):
     container = MagicMock()
     container.core.manga_service.return_value.get_chapters.return_value = []
     with (
-        patch(GET_CONTAINER, return_value=container),
-        patch("animetix.api.core.MangaChapterSerializer") as mock_ser,
+        patch(GET_CONTAINER_MANGA, return_value=container),
+        patch("animetix.api.core.manga.MangaChapterSerializer") as mock_ser,
     ):
         mock_ser.return_value.data = [{"number": 1.0}]
         response = _drive(MangaChapterListView, request, media_id="m1")
@@ -439,8 +447,8 @@ def test_manga_chapter_detail_found(factory):
         object()
     )
     with (
-        patch(GET_CONTAINER, return_value=container),
-        patch("animetix.api.core.MangaChapterSerializer") as mock_ser,
+        patch(GET_CONTAINER_MANGA, return_value=container),
+        patch("animetix.api.core.manga.MangaChapterSerializer") as mock_ser,
     ):
         mock_ser.return_value.data = {"number": 1.0}
         response = _drive(
@@ -453,7 +461,7 @@ def test_manga_chapter_detail_not_found(factory):
     request = factory.get("/media/Manga/m1/chapters/99/")
     container = MagicMock()
     container.core.manga_service.return_value.get_chapter_details.return_value = None
-    with patch(GET_CONTAINER, return_value=container):
+    with patch(GET_CONTAINER_MANGA, return_value=container):
         response = _drive(
             MangaChapterDetailView, request, media_id="m1", chapter_number="99"
         )
@@ -493,7 +501,7 @@ def test_suwayomi_image_success(factory):
     )
     with (
         patch("core.config.settings") as mock_settings,
-        patch("animetix.api.core.safe_http_request", return_value=upstream),
+        patch("animetix.api.core.suwayomi.safe_http_request", return_value=upstream),
     ):
         mock_settings.SUWAYOMI_URL = "http://suwayomi.local"
         mock_settings.SUWAYOMI_PASSWORD = "secret"
@@ -674,7 +682,7 @@ def test_suwayomi_import_success(factory):
     from rest_framework.parsers import JSONParser
     from rest_framework.request import Request
 
-    with patch(GET_CONTAINER, return_value=container):
+    with patch(GET_CONTAINER_SUWAYOMI, return_value=container):
         response = view.post(Request(request, parsers=[JSONParser()]))
     assert response.status_code == 200
     assert response.data["success"] is True

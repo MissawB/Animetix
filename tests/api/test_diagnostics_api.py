@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+﻿from unittest.mock import MagicMock, patch
 
 import pytest
 from core.domain.entities.ai_schemas import (
@@ -7,6 +7,10 @@ from core.domain.entities.ai_schemas import (
     TokenLogProb,
 )
 from rest_framework.test import APIClient
+
+# The requests traverse the full middleware stack (session/profile lookups),
+# which needs DB access even with the container and billing mocked out.
+pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
@@ -21,8 +25,8 @@ def test_neural_diagnostics_api_success(api_client):
     api_client.force_authenticate(user=MagicMock(id=1))
 
     with (
-        patch("animetix.api.labs.get_container") as mock_get_container,
-        patch("animetix.api.labs.deduct_berrix"),
+        patch("animetix.api.labs.singularity.get_container") as mock_get_container,
+        patch("animetix.api.labs.singularity.deduct_berrix"),
     ):
         mock_container = MagicMock()
         mock_inference = MagicMock()

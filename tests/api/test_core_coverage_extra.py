@@ -1,4 +1,4 @@
-"""Extra coverage tests for animetix.api.core targeting branches not covered by
+﻿"""Extra coverage tests for animetix.api.core targeting branches not covered by
 ``test_core_coverage.py``.
 
 Same pattern as the sibling file: neutralise permissions, drive views via
@@ -43,7 +43,8 @@ from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.request import Request
 from rest_framework.test import force_authenticate
 
-GET_CONTAINER = "animetix.api.core.get_container"
+GET_CONTAINER_MEDIA = "animetix.api.core.media.get_container"
+GET_CONTAINER_MANGA = "animetix.api.core.manga.get_container"
 
 
 @pytest.fixture
@@ -66,10 +67,10 @@ def test_image_proxy_generic_exception_returns_404(factory):
     encoded = base64.b64encode(b"http://example.com/a.png").decode()
     request = factory.get("/img/", {"url": encoded, "sig": "good"})
     with (
-        patch("animetix.api.core.verify_proxy_signature", return_value=True),
-        patch("animetix.api.core.cache") as mock_cache,
+        patch("animetix.api.core.media.verify_proxy_signature", return_value=True),
+        patch("animetix.api.core.media.cache") as mock_cache,
         patch(
-            "animetix.api.core.safe_http_request",
+            "animetix.api.core.media.safe_http_request",
             side_effect=RuntimeError("network boom"),
         ),
     ):
@@ -84,9 +85,9 @@ def test_image_proxy_non_200_upstream_returns_404(factory):
     request = factory.get("/img/", {"url": encoded, "sig": "good"})
     upstream = MagicMock(status_code=500, content=b"", headers={})
     with (
-        patch("animetix.api.core.verify_proxy_signature", return_value=True),
-        patch("animetix.api.core.cache") as mock_cache,
-        patch("animetix.api.core.safe_http_request", return_value=upstream),
+        patch("animetix.api.core.media.verify_proxy_signature", return_value=True),
+        patch("animetix.api.core.media.cache") as mock_cache,
+        patch("animetix.api.core.media.safe_http_request", return_value=upstream),
     ):
         mock_cache.get.return_value = None
         response = image_proxy_view(request)
@@ -140,7 +141,7 @@ def test_media_search_post_image_too_large(factory):
     force_authenticate(request, user=user)
     request.user = user
     view, drf_request = _post_image_view(request)
-    with patch("animetix.api.core.validate_file_size", return_value=False):
+    with patch("animetix.api.core.media.validate_file_size", return_value=False):
         response = view.post(drf_request)
     assert response.status_code == 413
 
@@ -156,8 +157,8 @@ def test_media_search_post_invalid_mime(factory):
     request.user = user
     view, drf_request = _post_image_view(request)
     with (
-        patch("animetix.api.core.validate_file_size", return_value=True),
-        patch("animetix.api.core.validate_file_mime_type", return_value=False),
+        patch("animetix.api.core.media.validate_file_size", return_value=True),
+        patch("animetix.api.core.media.validate_file_mime_type", return_value=False),
     ):
         response = view.post(drf_request)
     assert response.status_code == 415
@@ -178,9 +179,9 @@ def test_media_search_post_success(factory):
         {"id": "7", "title": "ByImage"}
     ]
     with (
-        patch("animetix.api.core.validate_file_size", return_value=True),
-        patch("animetix.api.core.validate_file_mime_type", return_value=True),
-        patch(GET_CONTAINER, return_value=container),
+        patch("animetix.api.core.media.validate_file_size", return_value=True),
+        patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
+        patch(GET_CONTAINER_MEDIA, return_value=container),
     ):
         response = view.post(drf_request)
     assert response.status_code == 200
@@ -199,7 +200,7 @@ def test_media_search_post_exception_returns_500(factory):
     request.user = user
     view, drf_request = _post_image_view(request)
     with patch(
-        "animetix.api.core.validate_file_size",
+        "animetix.api.core.media.validate_file_size",
         side_effect=RuntimeError("boom"),
     ):
         response = view.post(drf_request)
@@ -219,7 +220,9 @@ def test_game_session_get(factory):
         "game_over": False,
         "guesses": ["a", "b"],
     }
-    with patch("animetix.api.core.get_session_service", return_value=fake_session):
+    with patch(
+        "animetix.api.core.accounts.get_session_service", return_value=fake_session
+    ):
         response = _drive(GameSessionView, request)
     assert response.status_code == 200
     assert response.data["media_type"] == "Anime"
@@ -236,7 +239,7 @@ def test_register_create_user_exception(factory):
         {"username": "newx", "password": "pw12345", "email": "n@x.com"},
     )
     with patch(
-        "animetix.api.core.User.objects.create_user",
+        "animetix.api.core.accounts.User.objects.create_user",
         side_effect=RuntimeError("db down"),
     ):
         response = _drive(RegisterView, request)
@@ -270,7 +273,7 @@ def test_suwayomi_image_non_200(factory):
     upstream = MagicMock(status_code=404, content=b"", headers={})
     with (
         patch("core.config.settings") as mock_settings,
-        patch("animetix.api.core.safe_http_request", return_value=upstream),
+        patch("animetix.api.core.suwayomi.safe_http_request", return_value=upstream),
     ):
         mock_settings.SUWAYOMI_URL = "http://suwayomi.local"
         mock_settings.SUWAYOMI_PASSWORD = ""
@@ -284,7 +287,7 @@ def test_suwayomi_image_exception(factory):
     with (
         patch("core.config.settings") as mock_settings,
         patch(
-            "animetix.api.core.safe_http_request",
+            "animetix.api.core.suwayomi.safe_http_request",
             side_effect=RuntimeError("conn refused"),
         ),
     ):
@@ -303,7 +306,7 @@ def test_suwayomi_image_absolute_authorized_url(factory):
     )
     with (
         patch("core.config.settings") as mock_settings,
-        patch("animetix.api.core.safe_http_request", return_value=upstream),
+        patch("animetix.api.core.suwayomi.safe_http_request", return_value=upstream),
     ):
         mock_settings.SUWAYOMI_URL = "http://suwayomi.local"
         mock_settings.SUWAYOMI_PASSWORD = "pw"
@@ -383,7 +386,7 @@ def test_favorite_toggle_autoimport_not_configured(factory):
     )
     container = MagicMock()
     container.persistence.suwayomi_adapter.return_value = None
-    with patch(GET_CONTAINER, return_value=container):
+    with patch(GET_CONTAINER_MANGA, return_value=container):
         force_authenticate(request, user=user)
         with patch.object(FavoriteMangaToggleView, "permission_classes", []):
             view = FavoriteMangaToggleView.as_view()
@@ -403,7 +406,7 @@ def test_favorite_toggle_autoimport_details_missing(factory):
     adapter = MagicMock()
     adapter.get_manga_details.return_value = None
     container.persistence.suwayomi_adapter.return_value = adapter
-    with patch(GET_CONTAINER, return_value=container):
+    with patch(GET_CONTAINER_MANGA, return_value=container):
         force_authenticate(request, user=user)
         with patch.object(FavoriteMangaToggleView, "permission_classes", []):
             view = FavoriteMangaToggleView.as_view()
@@ -432,7 +435,7 @@ def test_favorite_toggle_autoimport_success(factory):
         "status": "ongoing",
     }
     container.persistence.suwayomi_adapter.return_value = adapter
-    with patch(GET_CONTAINER, return_value=container):
+    with patch(GET_CONTAINER_MANGA, return_value=container):
         force_authenticate(request, user=user)
         with patch.object(FavoriteMangaToggleView, "permission_classes", []):
             view = FavoriteMangaToggleView.as_view()
