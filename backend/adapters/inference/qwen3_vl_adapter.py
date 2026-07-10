@@ -9,6 +9,7 @@ from adapters.inference.lazy_local_model_adapter import (
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.ports.inference_port import InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
+from core.utils.local_models import LOCAL_VLM_MODEL
 from core.utils.model_registry import get_verified_revision
 from huggingface_hub import InferenceClient
 
@@ -23,7 +24,7 @@ class Qwen3VLAdapter(LazyLocalModelAdapter):
 
     def __init__(
         self,
-        model_id: str = "Qwen/Qwen3-VL-30B-A3B-Instruct",
+        model_id: str = LOCAL_VLM_MODEL,
         token: Optional[str] = None,
         usage_port: Optional[UsagePort] = None,
     ):

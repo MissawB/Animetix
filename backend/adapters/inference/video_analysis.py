@@ -42,8 +42,10 @@ class VideoAnalysisMixin:
                 Qwen2VLForConditionalGeneration,
             )
 
-            logger.info("📽️ Loading Qwen3-VL-8B for Temporal RAG...")
-            model_id = "Qwen/Qwen3-VL-8B-Instruct"
+            logger.info("📽️ Loading the video VLM for Temporal RAG...")
+            from core.utils.local_models import LOCAL_VIDEO_VLM_MODEL  # noqa: E402
+
+            model_id = LOCAL_VIDEO_VLM_MODEL
 
             quantization_config = None
             if self.use_4bit:

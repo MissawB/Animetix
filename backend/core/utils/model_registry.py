@@ -14,6 +14,8 @@ The former 404 ids `unsloth/DeepSeek-R1-Distill-Qwen-8B` and
 """
 
 import logging
+import os
+from typing import Optional
 
 from core.config import get_config
 
@@ -156,3 +158,47 @@ def trusted_revision(model_id: str) -> str | None:
     if entry and entry["trust_remote_code"]:
         return entry["revision"]
     return None
+
+
+class ModelIntegrityVerifier:
+    """Hub-side integrity guard: safetensors presence (anti-pickle/RCE).
+
+    Moved here from ``pipeline/models_registry.py`` (Phase 2b of the model
+    registry consolidation) so every security policy about model loading lives
+    in this single module.
+    """
+
+    TRUSTED_AUTHORS = ["jinaai", "google", "sentence-transformers", "BAAI", "nomic-ai"]
+
+    @staticmethod
+    def verify(model_id: str, revision: Optional[str] = None) -> str:
+        try:
+            from huggingface_hub import model_info  # noqa: E402
+
+            info = model_info(model_id, revision=revision)
+
+            author = getattr(info, "author", "unknown")
+            if author not in ModelIntegrityVerifier.TRUSTED_AUTHORS:
+                logger.warning(
+                    f"⚠️ Modèle '{model_id}' provient d'un auteur non listé comme 'Premium Trust': {author}"
+                )
+
+            has_safetensors = any(
+                f.rfilename.endswith(".safetensors") for f in info.siblings
+            )
+            if not has_safetensors:
+                logger.error(
+                    f"❌ Sécurité: Le modèle {model_id} ne contient pas de fichiers .safetensors (Risque RCE via Pickle)."
+                )
+                if os.getenv("STRICT_MODEL_SECURITY", "true") == "true":
+                    raise ValueError(f"Blocking insecure model: {model_id}")
+
+            logger.info(f"✅ Modèle vérifié: {model_id} (Revision: {info.sha[:8]})")
+            return info.sha
+        except Exception as e:
+            logger.error(
+                f"❌ Échec de la vérification d'intégrité pour {model_id}: {e}"
+            )
+            if os.getenv("STRICT_MODEL_SECURITY", "true") == "true":
+                raise
+            return revision or "main"

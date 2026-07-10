@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from core.ports.gold_dataset_port import GoldDatasetPort
 from core.ports.inference_port import InferencePort
+from core.utils.local_models import SMALL_TRAINABLE_MODEL
 
 from .prompt_manager import PromptManager
 
@@ -60,7 +61,7 @@ class ModelDistillationPipeline:
         return count
 
     def fine_tune_student(
-        self, student_model_id: str = "Qwen/Qwen3-0.6B", epochs: float = 3.0
+        self, student_model_id: str = SMALL_TRAINABLE_MODEL, epochs: float = 3.0
     ):
         """
         Lance le fine-tuning du modèle étudiant sur les données validées par l'humain.

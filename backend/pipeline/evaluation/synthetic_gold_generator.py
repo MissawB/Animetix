@@ -131,10 +131,11 @@ def ask_ollama(prompt: str) -> str:
         if backend_path not in sys.path:
             sys.path.insert(0, backend_path)
 
+        from core.utils.local_models import LLM_OLLAMA_MODEL  # noqa: E402
         from core.utils.security import safe_http_request  # noqa: E402
 
         payload = {
-            "model": "qwen3.5",
+            "model": LLM_OLLAMA_MODEL,
             "messages": [
                 {
                     "role": "system",

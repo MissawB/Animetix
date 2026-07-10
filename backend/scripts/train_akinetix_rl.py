@@ -4,6 +4,7 @@ import sys
 
 import numpy as np
 import torch
+from core.utils.local_models import SMALL_TRAINABLE_MODEL
 from core.utils.model_registry import resolve_trust_remote_code
 
 # Setup environment for Django-related imports
@@ -84,7 +85,7 @@ def run_rl_training_simulation(episodes: int = 100):
 
 
 def train_dpo(
-    model_id: str = "Qwen/Qwen3-0.6B",
+    model_id: str = SMALL_TRAINABLE_MODEL,
     dataset_path: str = "data/mlops/datasets/dpo_train_swarm.jsonl",
 ):
     """
@@ -215,7 +216,7 @@ if __name__ == "__main__":
         "--episodes", type=int, default=100, help="Number of episodes for RL sim"
     )
     parser.add_argument(
-        "--model", type=str, default="Qwen/Qwen3-0.6B", help="Model ID for DPO"
+        "--model", type=str, default=SMALL_TRAINABLE_MODEL, help="Model ID for DPO"
     )
     parser.add_argument(
         "--dataset",

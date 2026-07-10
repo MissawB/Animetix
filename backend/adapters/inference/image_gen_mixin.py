@@ -1,4 +1,4 @@
-"""Image generation and transformation mixin for Inference adapters."""
+﻿"""Image generation and transformation mixin for Inference adapters."""
 
 import base64  # noqa: E402
 import os  # noqa: E402
@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Dict, List  # noqa: E402
 from adapters.inference.lazy_load_mixin import LazyLoadMixin  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
+from core.utils.local_models import LOCAL_DIFFUSION_MODEL_ID  # noqa: E402
 from core.utils.model_registry import (  # noqa: E402
     resolve_trust_remote_code,
     trusted_revision,
@@ -76,7 +77,7 @@ class ImageGenMixin(LazyLoadMixin):
     def _build_txt2img(self):
         from diffusers import AutoPipelineForText2Image  # noqa: E402
 
-        model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
+        model_id = getattr(self, "model_id", LOCAL_DIFFUSION_MODEL_ID)
         logger.info(f"🏗️ Loading Txt2Img: {model_id}")
         self.pipe = AutoPipelineForText2Image.from_pretrained(
             model_id,
@@ -97,7 +98,7 @@ class ImageGenMixin(LazyLoadMixin):
     def _build_img2img(self):
         from diffusers import AutoPipelineForImage2Image  # noqa: E402
 
-        model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
+        model_id = getattr(self, "model_id", LOCAL_DIFFUSION_MODEL_ID)
         logger.info(f"🏗️ Loading Img2Img: {model_id}")
         self._img2img_pipe = AutoPipelineForImage2Image.from_pretrained(
             model_id,
@@ -117,7 +118,7 @@ class ImageGenMixin(LazyLoadMixin):
     def _build_inpainting(self):
         from diffusers import AutoPipelineForInpainting  # noqa: E402
 
-        model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
+        model_id = getattr(self, "model_id", LOCAL_DIFFUSION_MODEL_ID)
         logger.info(f"🏗️ Loading Inpainting: {model_id}")
         self._inpaint_pipe = AutoPipelineForInpainting.from_pretrained(
             model_id,
@@ -132,7 +133,7 @@ class ImageGenMixin(LazyLoadMixin):
     def generate_image(self, prompt: str, style: str = "") -> str:
         self._load_txt2img()
         try:
-            model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
+            model_id = getattr(self, "model_id", LOCAL_DIFFUSION_MODEL_ID)
             num_steps = (
                 4
                 if "schnell" in model_id.lower()
@@ -170,7 +171,7 @@ class ImageGenMixin(LazyLoadMixin):
     ) -> str:
         self._load_img2img()
         try:
-            model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
+            model_id = getattr(self, "model_id", LOCAL_DIFFUSION_MODEL_ID)
             pil_img = Image.open(BytesIO(image_data)).convert("RGB").resize((512, 512))
             res = self._img2img_pipe(
                 prompt=f"anime style, {studio_style}, {prompt}",
@@ -200,7 +201,7 @@ class ImageGenMixin(LazyLoadMixin):
             input_frames = frames[:8]
             attn_proc = CrossFrameAttentionProcessor(unet_chunk_size=len(input_frames))
             self._img2img_pipe.unet.set_attn_processor(attn_proc)
-            model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
+            model_id = getattr(self, "model_id", LOCAL_DIFFUSION_MODEL_ID)
             styled_images = self._img2img_pipe(
                 prompt=[f"anime style, {studio_style}, {prompt}"] * len(input_frames),
                 image=input_frames,
@@ -249,7 +250,7 @@ class ImageGenMixin(LazyLoadMixin):
                     bbox = b.get("bbox")
                     if bbox:
                         d.rectangle(bbox, fill=255)
-                model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
+                model_id = getattr(self, "model_id", LOCAL_DIFFUSION_MODEL_ID)
                 inpainted = self._inpaint_pipe(
                     prompt="clean manga bubble, no text, white background",
                     image=init_image,

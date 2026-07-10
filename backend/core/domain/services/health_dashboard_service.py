@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from core.ports.generic_cache_port import CachePort, InMemoryCache
 from core.ports.usage_port import UsagePort
+from core.utils.local_models import LOCAL_DIFFUSION_MODEL_ID
 
 from .sota_benchmark_service import SOTABenchmarkService
 
@@ -284,6 +285,6 @@ class HealthDashboardService:
                 "queue_length": max(0, queue_length),
                 "active_task": active_task,
                 "fallback_mode": fallback_mode,
-                "model_id": "black-forest-labs/FLUX.1-schnell",
+                "model_id": LOCAL_DIFFUSION_MODEL_ID,
             },
         }

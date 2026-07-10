@@ -14,3 +14,11 @@ COMPACT_REASONING_MODEL = os.getenv("COMPACT_MODEL_ID", "WeiboAI/VibeThinker-3B"
 LOCAL_DIFFUSION_MODEL_ID = os.getenv(
     "LOCAL_DIFFUSION_MODEL", "black-forest-labs/FLUX.1-schnell"
 )
+# Default multimodal VLM (image understanding) served by the local/brain stack.
+LOCAL_VLM_MODEL = os.getenv("LOCAL_VLM_MODEL_ID", "Qwen/Qwen3-VL-30B-A3B-Instruct")
+# Lighter VLM used for temporal/video analysis.
+LOCAL_VIDEO_VLM_MODEL = os.getenv(
+    "LOCAL_VIDEO_VLM_MODEL_ID", "Qwen/Qwen3-VL-8B-Instruct"
+)
+# Small student model for distillation and RL/DPO training runs.
+SMALL_TRAINABLE_MODEL = os.getenv("SMALL_TRAINABLE_MODEL_ID", "Qwen/Qwen3-0.6B")

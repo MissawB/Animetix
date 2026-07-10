@@ -15,8 +15,6 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Backend — noms de modèles hardcodés + mismatch de version** _(revue archi 2026-06-22 ; Phases 1/2a livrées, archivées dans [docs/HISTORY.md](docs/HISTORY.md))_
-  - ⏳ **Reste (Phase 2b)** : registre d'**IDs logiques locaux** (`llama3`, `Qwen2.5-1.5B` vs `Qwen3.5-4B`, `DRAFT_MODEL_ID`, `VibeThinker-3B`, `FLUX`) + fusion résiduelle [pipeline/models_registry.py](backend/pipeline/models_registry.py).
 
 ## 🟢 Faibles
 
