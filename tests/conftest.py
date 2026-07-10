@@ -87,6 +87,23 @@ def enable_tracemalloc():
     tracemalloc.stop()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _preload_urlconf():
+    """Charge l'URLConf (donc tous les modules de vues) AVANT le premier
+    snapshot de ``_cleanup_module_pollution``.
+
+    Sans ça, l'URLConf se charge paresseusement pendant le premier test qui
+    fait un ``reverse()`` : ses modules de vues sont purgés au teardown alors
+    que le résolveur d'URLs Django (persistant) garde les fonctions de
+    l'ancienne instance. Un ``patch("animetix.xxx.yyy")`` ultérieur ré-importe
+    une seconde instance et patche la mauvaise (split-brain) — vu en CI le
+    2026-07-10 sur test_eventarc_gcs_upload_endpoint_success.
+    """
+    from django.urls import get_resolver
+
+    get_resolver().url_patterns
+
+
 @pytest.fixture(autouse=True)
 def _cleanup_module_pollution():
     """Garde-fou anti-pollution entre tests (défense en profondeur).

@@ -108,3 +108,30 @@ def test_middleware_ignores_non_api_paths(api_client):
     # Hors /api/ (SPA, statiques, admin) : jamais bloqué par le middleware.
     resp = api_client.get("/admin/login/")
     assert resp.status_code != 503
+
+
+def test_middleware_fails_open_without_database():
+    """Base indisponible (tests sans django_db, outage) → passthrough.
+
+    Régression CI 2026-07-10 : le middleware interrogeait la base sur chaque
+    requête /api/, faisant échouer en RuntimeError les tests d'endpoints qui
+    n'ont pas besoin de la base (billing webhook, eventarc). La maintenance
+    est un état déclaré, jamais l'effet de bord d'une panne.
+    """
+    from unittest.mock import MagicMock, patch
+
+    from animetix.middleware import MaintenanceModeMiddleware
+    from django.test import RequestFactory
+
+    get_response = MagicMock(return_value="ok")
+    middleware = MaintenanceModeMiddleware(get_response)
+    request = RequestFactory().get("/api/v1/transparency/")
+
+    with patch(
+        "animetix.models.SiteConfiguration.get_solo",
+        side_effect=RuntimeError("Database access not allowed"),
+    ):
+        result = middleware(request)
+
+    assert result == "ok"
+    get_response.assert_called_once_with(request)

@@ -250,9 +250,16 @@ class MaintenanceModeMiddleware:
 
     @staticmethod
     def _maintenance_on() -> bool:
+        """Fail-open : la maintenance est un état DÉCLARÉ, jamais l'effet de
+        bord d'une panne. Base indisponible (tests sans ``django_db``, outage)
+        → mode OFF ; les vraies erreurs DB surgiront des vues elles-mêmes.
+        """
         from .models import SiteConfiguration
 
-        return SiteConfiguration.get_solo().maintenance_mode
+        try:
+            return SiteConfiguration.get_solo().maintenance_mode
+        except Exception:
+            return False
 
     @staticmethod
     def _is_staff(request) -> bool:
