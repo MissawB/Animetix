@@ -15,8 +15,6 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Backend — squash des migrations : purge des originales** _(audit dette 2026-07-05 ; squash livrée le 2026-07-08, archivée dans [docs/HISTORY.md](docs/HISTORY.md))_
-  - ⏳ La squash `0001_squashed_0049` existe (commit `68fec496`). Reste : une fois la squash enregistrée comme appliquée partout (prod Neon comprise), supprimer les 49 migrations d'origine et retirer l'attribut `replaces` (procédure Django standard).
 - [ ] **Backend — noms de modèles hardcodés + mismatch de version** _(revue archi 2026-06-22 ; Phases 1/2a livrées, archivées dans [docs/HISTORY.md](docs/HISTORY.md))_
   - ⏳ **Reste (Phase 2b)** : registre d'**IDs logiques locaux** (`llama3`, `Qwen2.5-1.5B` vs `Qwen3.5-4B`, `DRAFT_MODEL_ID`, `VibeThinker-3B`, `FLUX`) + fusion résiduelle [pipeline/models_registry.py](backend/pipeline/models_registry.py).
 

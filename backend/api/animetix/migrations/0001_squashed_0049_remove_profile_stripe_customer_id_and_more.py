@@ -61,73 +61,10 @@ def setup_alloydb_features(apps, schema_editor):
     )
 
 
-# Functions from the following migrations need manual copying.
-# Move them and any dependencies into this file, then update the
-# RunPython operations to refer to the local versions:
-# animetix.migrations.0006_mediaitem_plot_embedding_and_more
-# animetix.migrations.0010_add_hnsw_indexes
-# animetix.migrations.0027_pgvector_migration
-# animetix.migrations.0028_alloydb_scann_and_ml
-
-
 class Migration(migrations.Migration):
-
-    replaces = [
-        ("animetix", "0001_initial"),
-        ("animetix", "0002_rename_timestamp_challengeresult_completed_at_and_more"),
-        ("animetix", "0003_gameplaysession"),
-        ("animetix", "0004_mediaitem"),
-        ("animetix", "0005_mediaitem_popularity"),
-        ("animetix", "0006_mediaitem_plot_embedding_and_more"),
-        ("animetix", "0007_airevalresult_globalboss_and_more"),
-        (
-            "animetix",
-            "0008_alter_mediaitem_options_remove_airevalresult_context_and_more",
-        ),
-        ("animetix", "0009_gameplaysession_user"),
-        ("animetix", "0010_add_hnsw_indexes"),
-        ("animetix", "0011_update_embedding_dimensions"),
-        ("animetix", "0012_datacurationticket_aitokenusage_golddatasetentry"),
-        ("animetix", "0013_semanticcache"),
-        ("animetix", "0014_creativefusion"),
-        ("animetix", "0015_profile_collected_fusions"),
-        ("animetix", "0016_alter_mediaitem_visual_embedding"),
-        ("animetix", "0018_notification"),
-        ("animetix", "0019_profile_api_key_profile_tier_latentspacepoint"),
-        ("animetix", "0020_creativefusion_vn_script"),
-        ("animetix", "0021_clubmembership_discoveryclub_clubmembership_club_and_more"),
-        ("animetix", "0022_discoveryclub_theme_alter_clubmembership_club_and_more"),
-        ("animetix", "0023_remove_mediaitem_plot_embedding_and_more"),
-        (
-            "animetix",
-            "0024_remove_profile_api_key_profile_api_key_hash_vsbattle_and_more",
-        ),
-        ("animetix", "0025_profile_personalization_settings"),
-        ("animetix", "0026_delete_donation_table"),
-        ("animetix", "0027_pgvector_migration"),
-        ("animetix", "0028_alloydb_scann_and_ml"),
-        ("animetix", "0029_userrecommendation_and_more"),
-        ("animetix", "0030_aitokenusage_allocated_budget_aisafetyevent"),
-        ("animetix", "0031_aisafetyevent_supportticket"),
-        ("animetix", "0032_golddatasetentry_entry_type_and_more"),
-        ("animetix", "0033_adevent"),
-        ("animetix", "0034_profile_wallet_balance_wallettransaction"),
-        ("animetix", "0035_mangachapter_mangapage"),
-        ("animetix", "0036_aifeedback_is_ignored_aifeedback_weight_and_more"),
-        ("animetix", "0037_alter_wallettransaction_transaction_type_and_more"),
-        ("animetix", "0038_remove_profile_collected_fusions_and_more"),
-        ("animetix", "0039_voiceprofile"),
-        ("animetix", "0040_favoritemanga"),
-        ("animetix", "0041_trackerconnection"),
-        ("animetix", "0042_favoritemanga_last_read_chapter_favoritemanga_status"),
-        ("animetix", "0043_favoritemanga_updated_at"),
-        ("animetix", "0044_quizwhoroom"),
-        ("animetix", "0045_dailyresult"),
-        ("animetix", "0046_delete_quizwhoroom"),
-        ("animetix", "0047_globalboss_reward_distributed"),
-        ("animetix", "0048_driftbaseline"),
-        ("animetix", "0049_remove_profile_stripe_customer_id_and_more"),
-    ]
+    # ``replaces`` removed on 2026-07-10 after the squash was recorded as
+    # applied on every database (prod Neon included) and the 49 original
+    # migration files were deleted — standard Django squash finalization.
 
     initial = True
 
