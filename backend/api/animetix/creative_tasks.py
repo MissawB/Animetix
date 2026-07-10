@@ -1,4 +1,4 @@
-from animetix_project.logging_config import get_logger
+﻿from animetix_project.logging_config import get_logger
 
 from animetix.tasks_registry import register_task
 
@@ -16,10 +16,12 @@ def process_video_search_task(video_data_b64, query):
     video_bytes = base64.b64decode(video_data_b64)
 
     # 1. Indexation temporelle
-    segments = container.video_quest_service().index_video_clips(video_bytes)
+    segments = container.core.video_quest_service().index_video_clips(video_bytes)
 
     # 2. Recherche du moment
-    result = container.video_quest_service().search_moment_in_video(query, segments)
+    result = container.core.video_quest_service().search_moment_in_video(
+        query, segments
+    )
     return result
 
 
@@ -33,7 +35,7 @@ def transform_user_image_task(image_data_b64, studio_name):
     container = get_container()
     image_bytes = base64.b64decode(image_data_b64)
 
-    image_url = container.studio_transform_service().transform_user_to_anime(
+    image_url = container.core.studio_transform_service().transform_user_to_anime(
         image_bytes, studio_name
     )
     return {"image_url": image_url}
@@ -49,7 +51,7 @@ def translate_manga_page_task(image_data_b64, target_lang):
     container = get_container()
     image_bytes = base64.b64decode(image_data_b64)
 
-    translated_image_url = container.manga_flow_service().translate_manga_page(
+    translated_image_url = container.core.manga_flow_service().translate_manga_page(
         image_bytes, target_lang
     )
     return {"translated_image_url": translated_image_url}
@@ -66,7 +68,7 @@ def localize_video_action_task(video_data_b64, actions):
     video_bytes = base64.b64decode(video_data_b64)
 
     # 1. Détection des bornes de l'action
-    action_boundaries = container.video_quest_service().find_action_boundaries(
+    action_boundaries = container.core.video_quest_service().find_action_boundaries(
         video_bytes, actions
     )
     return {"actions_found": action_boundaries}
@@ -83,7 +85,7 @@ def transform_video_task(video_data_b64, studio_name):
     video_bytes = base64.b64decode(video_data_b64)
 
     video_url = (
-        container.studio_transform_service().transform_video_to_anime_consistent(
+        container.core.studio_transform_service().transform_video_to_anime_consistent(
             video_bytes, studio_name
         )
     )
@@ -100,7 +102,7 @@ def generate_video_soundscape_task(video_data_b64):
     container = get_container()
     video_bytes = base64.b64decode(video_data_b64)
 
-    audio_url = container.soundscape_service().generate_soundscape_for_video(
+    audio_url = container.core.soundscape_service().generate_soundscape_for_video(
         video_bytes
     )
     return {"audio_url": audio_url}
@@ -116,7 +118,7 @@ def generate_3d_scene_task(image_data_b64, title):
     container = get_container()
     image_bytes = base64.b64decode(image_data_b64)
 
-    scene_result = container.spatial_computing_service().reconstruct_3d_scene(
+    scene_result = container.core.spatial_computing_service().reconstruct_3d_scene(
         image_bytes, title
     )
     return scene_result
@@ -127,7 +129,7 @@ def generate_fusion_image(item1, item2, art_style="Cyberpunk"):
     from .containers import get_container  # noqa: E402
 
     container = get_container()
-    return container.fusion_service().generate_fusion_image(
+    return container.core.fusion_service().generate_fusion_image(
         item1, item2, art_style=art_style
     )
 
@@ -173,7 +175,7 @@ def process_gcs_upload_task(bucket, name):
             raise download_err
 
     try:
-        translated_b64 = container.manga_flow_service().translate_manga_page(
+        translated_b64 = container.core.manga_flow_service().translate_manga_page(
             image_bytes, target_lang="French"
         )
         if not translated_b64.startswith("data:image/"):

@@ -37,14 +37,12 @@ from animetix.api.core import (
     image_proxy_view,
     suwayomi_image_proxy,
 )
+from animetix.containers import get_container
 from django.contrib.auth.models import User
 from django.test import RequestFactory
 from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.request import Request
 from rest_framework.test import force_authenticate
-
-GET_CONTAINER_MEDIA = "animetix.api.core.media.get_container"
-GET_CONTAINER_MANGA = "animetix.api.core.manga.get_container"
 
 
 @pytest.fixture
@@ -173,17 +171,21 @@ def test_media_search_post_success(factory):
     request = factory.post("/search/", {"image": img})
     force_authenticate(request, user=user)
     request.user = user
-    view, drf_request = _post_image_view(request)
-    container = MagicMock()
-    container.core.cross_modal_search_service.deep_multimodal_search.return_value = [
+    mock_cross_modal = MagicMock()
+    mock_cross_modal.deep_multimodal_search.return_value = [
         {"id": "7", "title": "ByImage"}
     ]
-    with (
-        patch("animetix.api.core.media.validate_file_size", return_value=True),
-        patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
-        patch(GET_CONTAINER_MEDIA, return_value=container),
-    ):
-        response = view.post(drf_request)
+    real_container = get_container()
+    real_container.core.cross_modal_search_service.override(mock_cross_modal)
+    try:
+        view, drf_request = _post_image_view(request)
+        with (
+            patch("animetix.api.core.media.validate_file_size", return_value=True),
+            patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
+        ):
+            response = view.post(drf_request)
+    finally:
+        real_container.core.cross_modal_search_service.reset_override()
     assert response.status_code == 200
     assert response.data[0]["id"] == "7"
     view.usage_port.log_usage.assert_called_once()
@@ -258,7 +260,18 @@ def test_transparency_with_feedback(factory):
     AIFeedback.objects.create(is_positive=True)
     AIFeedback.objects.create(is_positive=False)
     request = factory.get("/transparency/")
-    response = _drive(TransparencyDataView, request)
+    mock_sota = MagicMock()
+    mock_sota.get_all_benchmarks.return_value = []
+    mock_drift = MagicMock()
+    mock_drift.get_drift_report.return_value = {}
+    real_container = get_container()
+    real_container.core.sota_benchmark_service.override(mock_sota)
+    real_container.core.drift_service.override(mock_drift)
+    try:
+        response = _drive(TransparencyDataView, request)
+    finally:
+        real_container.core.sota_benchmark_service.reset_override()
+        real_container.core.drift_service.reset_override()
     assert response.status_code == 200
     assert response.data["global_metrics"]["total_feedbacks"] == 2
     assert response.data["global_metrics"]["community_satisfaction"] == 0.5
@@ -384,13 +397,15 @@ def test_favorite_toggle_autoimport_not_configured(factory):
         json.dumps({"source_id": "s", "suwayomi_manga_id": "m"}),
         content_type="application/json",
     )
-    container = MagicMock()
-    container.persistence.suwayomi_adapter.return_value = None
-    with patch(GET_CONTAINER_MANGA, return_value=container):
+    real_container = get_container()
+    real_container.persistence.suwayomi_adapter.override(None)
+    try:
         force_authenticate(request, user=user)
         with patch.object(FavoriteMangaToggleView, "permission_classes", []):
             view = FavoriteMangaToggleView.as_view()
             response = view(request, media_id="new-x")
+    finally:
+        real_container.persistence.suwayomi_adapter.reset_override()
     assert response.status_code == 500
 
 
@@ -402,15 +417,17 @@ def test_favorite_toggle_autoimport_details_missing(factory):
         json.dumps({"source_id": "s", "suwayomi_manga_id": "m"}),
         content_type="application/json",
     )
-    container = MagicMock()
     adapter = MagicMock()
     adapter.get_manga_details.return_value = None
-    container.persistence.suwayomi_adapter.return_value = adapter
-    with patch(GET_CONTAINER_MANGA, return_value=container):
+    real_container = get_container()
+    real_container.persistence.suwayomi_adapter.override(adapter)
+    try:
         force_authenticate(request, user=user)
         with patch.object(FavoriteMangaToggleView, "permission_classes", []):
             view = FavoriteMangaToggleView.as_view()
             response = view(request, media_id="new-y")
+    finally:
+        real_container.persistence.suwayomi_adapter.reset_override()
     assert response.status_code == 404
 
 
@@ -424,7 +441,6 @@ def test_favorite_toggle_autoimport_success(factory):
         json.dumps({"source_id": "s", "suwayomi_manga_id": "m"}),
         content_type="application/json",
     )
-    container = MagicMock()
     adapter = MagicMock()
     adapter.get_manga_details.return_value = {
         "title": "Auto Imported",
@@ -434,12 +450,18 @@ def test_favorite_toggle_autoimport_success(factory):
         "artist": "B",
         "status": "ongoing",
     }
-    container.persistence.suwayomi_adapter.return_value = adapter
-    with patch(GET_CONTAINER_MANGA, return_value=container):
+    mock_manga_service = MagicMock()
+    real_container = get_container()
+    real_container.persistence.suwayomi_adapter.override(adapter)
+    real_container.core.manga_service.override(mock_manga_service)
+    try:
         force_authenticate(request, user=user)
         with patch.object(FavoriteMangaToggleView, "permission_classes", []):
             view = FavoriteMangaToggleView.as_view()
             response = view(request, media_id="new-z")
+    finally:
+        real_container.persistence.suwayomi_adapter.reset_override()
+        real_container.core.manga_service.reset_override()
     assert response.status_code == 200
     assert response.data["is_favorite"] is True
     # Manga was auto-created and favorited.

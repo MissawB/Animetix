@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 from animetix.api.cognition import (
@@ -5,14 +6,41 @@ from animetix.api.cognition import (
     ArchetypeNexusView,
     NeuroMemoryManagementView,
 )
+from animetix.containers import get_container
 from django.test import RequestFactory
+
+container = get_container()
+
+
+@contextmanager
+def _override(**services):
+    """Override core/persistence providers by name, reset on exit (provider-level)."""
+    providers_map = {
+        "drift_service": container.core.archetype_drift_service,
+        "profiler": container.core.neuro_symbolic_user_profiler,
+        "feedback_port": container.persistence.feedback_adapter,
+        "debate_service": container.core.self_play_debate_service,
+    }
+    touched = []
+    try:
+        for name, mock in services.items():
+            provider = providers_map[name]
+            provider.override(mock)
+            touched.append(provider)
+        yield
+    finally:
+        for provider in touched:
+            provider.reset_override()
 
 
 def test_archetype_nexus_view_unauthenticated():
     factory = RequestFactory()
     request = factory.get("/api/v1/cognition/archetype-nexus/")
-    view = ArchetypeNexusView.as_view()
-    response = view(request)
+    with _override(
+        drift_service=MagicMock(), profiler=MagicMock(), feedback_port=MagicMock()
+    ):
+        view = ArchetypeNexusView.as_view()
+        response = view(request)
     assert response.status_code in [401, 403]
 
 
@@ -24,27 +52,30 @@ def test_archetype_nexus_view_authenticated():
     user.is_authenticated = True
     request.user = user
 
+    drift_service = MagicMock()
+    drift_service.calculate_drift.return_value = MagicMock(
+        archetype_id="The Sage",
+        primary_accent="blue",
+        aura_type="calm",
+        aura_intensity=0.8,
+        font_vibe="serif",
+    )
+    profiler = MagicMock()
+    profiler.deduce_preference_rules.return_value = ["Likes action"]
+    feedback_port = MagicMock()
+    feedback_port.get_user_feedback.return_value = [
+        {"input_context": "test", "is_positive": True}
+    ]
+
     with (
         patch("animetix.api.cognition.ArchetypeDriftSnapshot.objects.filter"),
         patch("animetix.api.cognition.ArchetypeDriftSnapshot.objects.create"),
-        patch("animetix.api.cognition.get_container") as mock_get_container,
+        _override(
+            drift_service=drift_service,
+            profiler=profiler,
+            feedback_port=feedback_port,
+        ),
     ):
-        mock_container = MagicMock()
-        mock_container.core.archetype_drift_service.return_value.calculate_drift.return_value = MagicMock(
-            archetype_id="The Sage",
-            primary_accent="blue",
-            aura_type="calm",
-            aura_intensity=0.8,
-            font_vibe="serif",
-        )
-        mock_container.core.neuro_symbolic_user_profiler.return_value.deduce_preference_rules.return_value = [
-            "Likes action"
-        ]
-        mock_container.persistence.feedback_adapter.return_value.get_user_feedback.return_value = [
-            {"input_context": "test", "is_positive": True}
-        ]
-        mock_get_container.return_value = mock_container
-
         with patch.object(ArchetypeNexusView, "permission_classes", []):
             from rest_framework.test import force_authenticate  # noqa: E402
 
@@ -69,17 +100,16 @@ def test_ai_debate_arena_view():
     user.is_authenticated = True
     request.user = user
 
+    debate_service = MagicMock()
+    debate_service.run_debate.return_value = {
+        "status": "success",
+        "debate": "Naruto vs Sasuke",
+    }
+
     with (
-        patch("animetix.api.cognition.get_container") as mock_get_container,
+        _override(debate_service=debate_service),
         patch("animetix.api.cognition.deduct_berrix"),
     ):
-        mock_container = MagicMock()
-        mock_container.core.self_play_debate_service.return_value.run_debate.return_value = {
-            "status": "success",
-            "debate": "Naruto vs Sasuke",
-        }
-        mock_get_container.return_value = mock_container
-
         with patch.object(AIDebateArenaView, "permission_classes", []):
             from rest_framework.test import force_authenticate  # noqa: E402
 
@@ -100,18 +130,12 @@ def test_neuro_memory_management_view_get():
     user.is_authenticated = True
     request.user = user
 
-    with patch("animetix.api.cognition.get_container") as mock_get_container:
-        mock_container = MagicMock()
-        mock_container.core.neuro_symbolic_user_profiler.return_value.deduce_preference_rules.return_value = [
-            "Rule 1",
-            "Rule 2",
-        ]
-        mock_container.persistence.feedback_adapter.return_value.get_user_feedback.return_value = [
-            {},
-            {},
-        ]
-        mock_get_container.return_value = mock_container
+    profiler = MagicMock()
+    profiler.deduce_preference_rules.return_value = ["Rule 1", "Rule 2"]
+    feedback_port = MagicMock()
+    feedback_port.get_user_feedback.return_value = [{}, {}]
 
+    with _override(profiler=profiler, feedback_port=feedback_port):
         with patch.object(NeuroMemoryManagementView, "permission_classes", []):
             from rest_framework.test import force_authenticate  # noqa: E402
 
@@ -137,6 +161,7 @@ def test_neuro_memory_management_view_post():
     request.user = user
 
     with (
+        _override(profiler=MagicMock(), feedback_port=MagicMock()),
         patch.object(NeuroMemoryManagementView, "permission_classes", []),
         patch("animetix.api.cognition.AIFeedback"),
     ):

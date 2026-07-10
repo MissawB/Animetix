@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+﻿from unittest.mock import MagicMock, patch
 
 import pytest
 from animetix.admin import GoldDatasetEntryAdmin
@@ -100,7 +100,9 @@ def test_gold_dataset_entry_admin_promote_selected(
     }
 
     mock_container = MagicMock()
-    mock_container.synthetic_promotion_service.return_value = mock_promotion_service
+    mock_container.core.synthetic_promotion_service.return_value = (
+        mock_promotion_service
+    )
     mock_get_container.return_value = mock_container
 
     model_admin = GoldDatasetEntryAdmin(GoldDatasetEntry, admin_site)
@@ -125,7 +127,9 @@ def test_gold_dataset_entry_admin_promote_view(
     }
 
     mock_container = MagicMock()
-    mock_container.synthetic_promotion_service.return_value = mock_promotion_service
+    mock_container.core.synthetic_promotion_service.return_value = (
+        mock_promotion_service
+    )
     mock_get_container.return_value = mock_container
 
     model_admin = GoldDatasetEntryAdmin(GoldDatasetEntry, admin_site)

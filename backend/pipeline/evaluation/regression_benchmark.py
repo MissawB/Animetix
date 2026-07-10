@@ -1,4 +1,4 @@
-import json
+﻿import json
 import logging
 import os
 import sys
@@ -227,7 +227,7 @@ def run_regression_test(model_adapter=None):
 
     logger.info("🧪 Starting AI Regression Test...")
     container = get_container()
-    agent = container.agentic_rag()
+    agent = container.agentic.agentic_rag()
 
     # DÉSACTIVATION DU CACHE POUR LE TEST
     agent.semantic_cache = None

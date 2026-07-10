@@ -1,11 +1,14 @@
 import logging
 import os
 
+from dependency_injector.wiring import Provide, inject
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.management import call_command
 from django.utils.decorators import method_decorator
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from ..containers import Container
 
 logger = logging.getLogger("animetix.monitoring")
 
@@ -74,14 +77,18 @@ class ClusterHealthView(APIView):
     NVIDIA H100 GPUs, Ollama Inference, Neo4j Knowledge Graph.
     """
 
+    @inject
+    def __init__(
+        self,
+        health_service=Provide[Container.core.health_dashboard_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.health_service = health_service
+
     def get(self, request):
-
-        from animetix.containers import get_container
-
         try:
-            container = get_container()
-            health_service = container.core.health_dashboard_service()
-            data = health_service.get_cluster_health()
+            data = self.health_service.get_cluster_health()
             return Response(data)
         except Exception:
             logger.exception("Cluster health check failed")

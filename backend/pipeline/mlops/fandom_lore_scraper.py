@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import os
 import re
 import sys
@@ -237,7 +237,7 @@ class FandomLoreScraper:
                 # Indexation pgvector réelle via le repository
                 if self.container:
                     try:
-                        repo = self.container.repository()
+                        repo = self.container.persistence.repository()
                         collection_name = repo.vectors.coll_names.get(
                             "Anime", "anime_thematic"
                         )

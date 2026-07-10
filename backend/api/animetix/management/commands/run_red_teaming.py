@@ -1,4 +1,4 @@
-import json
+﻿import json
 
 from django.core.management.base import BaseCommand
 
@@ -17,10 +17,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("🚀 Starting Red-Teaming Session..."))
 
         container = get_container()
-        red_teamer = container.red_teaming_agent()
+        red_teamer = container.core.red_teaming_agent()
 
         # 1. Sélection d'un échantillon d'œuvres
-        catalog_service = container.catalog_service()
+        catalog_service = container.core.catalog_service()
         catalog = catalog_service.load_data("Anime")
         if not catalog:
             self.stdout.write(self.style.ERROR("Catalogue non trouvé."))
@@ -40,7 +40,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"  🔥 Query: {q}")
 
                 # 3. Exécution via l'IA normale (Agentic RAG)
-                agentic_rag = container.agentic_rag()
+                agentic_rag = container.agentic.agentic_rag()
                 response = agentic_rag.plan_and_solve(q, "Anime")
 
                 # 4. Évaluation de la vulnérabilité

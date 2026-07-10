@@ -31,7 +31,7 @@ def generate_fusion_scenario_task(
 ):
     try:
         container = get_container()
-        return container.llm_service.generate_fusion_scenario(
+        return container.agentic.llm_service().generate_fusion_scenario(
             media_type,
             item1,
             item2,
@@ -95,7 +95,7 @@ def run_star_training_cycle_task():
 @register_task("sync_media_item_task")
 def sync_media_item_task(media_type, item_id, data):
     container = get_container()
-    container.sync_service.handle_media_update(media_type, item_id, data)
+    container.core.sync_service().handle_media_update(media_type, item_id, data)
 
 
 @register_task("trigger_club_event")

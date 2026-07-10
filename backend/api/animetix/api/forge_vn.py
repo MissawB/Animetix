@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 
 from animetix.api.billing import deduct_berrix  # noqa: E402
 
-from ..containers import Container, get_container
+from ..containers import Container
 from ..models import CreativeFusion
 from ..serializers import CreativeFusionSerializer
 
@@ -43,11 +43,13 @@ class ForgeVNView(APIView):
         self,
         guardrail_service: GuardrailService = Provide[Container.core.guardrail_service],
         usage_port: UsagePort = Provide[Container.infrastructure.usage_port],
+        vn_service=Provide[Container.core.visual_novel_service],
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.guardrail_service = guardrail_service
         self.usage_port = usage_port
+        self.vn_service = vn_service
 
     def get(self, request, fusion_id):
         """Returns the VN script for a specific fusion."""
@@ -108,8 +110,7 @@ class ForgeVNView(APIView):
                     )
 
                 try:
-                    vn_service = get_container().core.visual_novel_service()
-                    script = vn_service.generate_script(fusion_id)
+                    script = self.vn_service.generate_script(fusion_id)
                     if script:
                         # Conversion Pydantic -> Dict pour stockage JSONField
                         script_data = script.model_dump()

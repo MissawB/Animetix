@@ -1,12 +1,13 @@
 """Video labs: style transfer (FateZero) and Video-RAG indexing/search."""
 
 from animetix_project.logging_config import get_logger
+from dependency_injector.wiring import Provide, inject  # noqa: E402
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from ...containers import get_container  # noqa: E402
+from ...containers import Container  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
@@ -22,8 +23,16 @@ class VideoFateZeroLabView(APIView):
     throttle_scope = "gpu"
     throttle_classes = [ScopedRateThrottle]
 
+    @inject
+    def __init__(
+        self,
+        studio_transform_service=Provide[Container.core.studio_transform_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.studio_transform_service = studio_transform_service
+
     def post(self, request):
-        container = get_container()
         video_file = request.FILES.get("video")
         studio_style = request.data.get("studio_style", "Ufotable")
 
@@ -39,9 +48,8 @@ class VideoFateZeroLabView(APIView):
 
         try:
             video_bytes = video_file.read()
-            service = container.core.studio_transform_service()
 
-            result_url = service.transform_video_to_anime_sota(
+            result_url = self.studio_transform_service.transform_video_to_anime_sota(
                 video_bytes, studio_style
             )
 
@@ -62,6 +70,15 @@ class VideoRAGIndexView(APIView):
 
     permission_classes = [permissions.IsAdminUser]
 
+    @inject
+    def __init__(
+        self,
+        video_rag_service=Provide[Container.agentic.video_rag_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.video_rag_service = video_rag_service
+
     def post(self, request):
         video_file = request.FILES.get("video")
         video_id = request.data.get("video_id")
@@ -69,12 +86,9 @@ class VideoRAGIndexView(APIView):
         if not video_file or not video_id:
             return Response({"error": "video and video_id are required"}, status=400)
 
-        container = get_container()
-        video_rag = container.agentic.video_rag_service()
-
         try:
             video_data = video_file.read()
-            count = video_rag.index_video(video_id, video_data)
+            count = self.video_rag_service.index_video(video_id, video_data)
             return Response({"status": "success", "indexed_segments": count})
         except Exception:
             logger.exception("VideoRAGIndex Error")
@@ -91,24 +105,34 @@ class VideoRAGSearchView(APIView):
     throttle_scope = "gpu"
     throttle_classes = [ScopedRateThrottle]
 
+    @inject
+    def __init__(
+        self,
+        video_rag_service=Provide[Container.agentic.video_rag_service],
+        usage_port=Provide[Container.infrastructure.usage_port],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.video_rag_service = video_rag_service
+        self.usage_port = usage_port
+
     def get(self, request):
         query = request.GET.get("q")
         if not query:
             return Response({"error": "query q is required"}, status=400)
 
-        container = get_container()
-        usage_port = container.infrastructure.usage_port()
         tier = getattr(request, "user_tier", "free")
-        if not usage_port.check_quota(request.user.id, tier):
+        if not self.usage_port.check_quota(request.user.id, tier):
             return Response({"error": "Daily AI quota exceeded."}, status=403)
         deduct_berrix(
             request.user, FEATURE_BX_COSTS["video_rag"], "VideoRAG — recherche vidéo"
         )
 
-        video_rag = container.agentic.video_rag_service()
         try:
-            results = video_rag.search_video_segment(query, limit=10)
-            usage_port.log_usage(engine="video-rag", units=1, user_id=request.user.id)
+            results = self.video_rag_service.search_video_segment(query, limit=10)
+            self.usage_port.log_usage(
+                engine="video-rag", units=1, user_id=request.user.id
+            )
             return Response({"status": "success", "results": results})
         except Exception:
             logger.exception("VideoRAGSearch Error")

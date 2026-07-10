@@ -17,8 +17,6 @@ _Aucun item ouvert._
 
 - [ ] **Backend — `Profile.rank` n'existe pas (consommé par ConfigView + ProfileSerializer)** _(découvert lors du découpage API du 2026-07-10 — à confirmer)_
   - `ConfigView` lit `request.user.profile.rank` ([core/config.py](backend/api/animetix/api/core/config.py)) et `ProfileSerializer` déclare `rank = ReadOnlyField()`, mais le modèle `Profile` ne définit aucun attribut `rank` — [test_core_coverage.py](tests/api/test_core_coverage.py) le patche même (`create=True`) avec le commentaire « which the Profile model does not define ». Vérifier le comportement réel en prod (500 probable sur `/config/` authentifié ?) et soit définir la propriété (dérivée de `ranked_points` ?), soit retirer le champ.
-- [ ] **Backend — service locator au lieu d'injection** _(audit dette 2026-07-05)_
-  - 169 appels directs `container.x.y()` dans les vues + monkey-patch `ProviderDelegate` ([containers/\_\_init\_\_.py:40-54](backend/api/animetix/containers/__init__.py#L40-L54)) pour contourner le wiring de `dependency_injector`. Couplage global difficile à tester ; lié au bug DI contourné dans [tests/api/games/conftest.py](tests/api/games/conftest.py).
 - [ ] **Backend — exceptions avalées à grande échelle** _(audit dette 2026-07-05)_
   - 168 `except Exception` log-et-continue + 77 `pass` silencieux, dont un consumer WebSocket ([undercover.py:148-149](backend/api/animetix/consumers/undercover.py#L148-L149)), [labs.py:87,215,237,243](backend/api/animetix/api/labs.py#L87), [reachability_health_mixin.py:59-60](backend/adapters/inference/reachability_health_mixin.py#L59-L60). Remplacer par du log/handling explicite, au moins sur les chemins runtime.
 - [ ] **Backend — module mort `brain_api.py` (539 lignes)** _(audit dette 2026-07-05)_

@@ -1,4 +1,4 @@
-import argparse
+﻿import argparse
 import json
 
 from animetix.containers import get_container
@@ -13,7 +13,7 @@ def run_evaluation(max_size=32000):
 
     container = get_container()
     long_ctx_service = LongContextDiscoveryService(
-        inference_engine=container.inference_engine()
+        inference_engine=container.inference.inference_engine()
     )
 
     sizes = [2000, 8000, 16000, 32000]

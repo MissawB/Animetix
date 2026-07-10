@@ -1,7 +1,7 @@
 ﻿"""Coverage-focused tests for animetix.api.core view module.
 
-Pattern: build a MagicMock container, patch ``get_container`` in the
-``animetix.api.core.*`` domain submodule that defines the view under test,
+Pattern: build a MagicMock service, override the matching provider on the
+real DI container (``container.core.X.override(mock)`` / ``reset_override()``),
 then drive the views via ``RequestFactory`` + ``force_authenticate``
 with ``permission_classes`` neutralised (matching the existing test_cognition
 style). DB-backed views use the real ORM under ``@pytest.mark.django_db``.
@@ -39,13 +39,10 @@ from animetix.api.core import (
     image_proxy_view,
     suwayomi_image_proxy,
 )
+from animetix.containers import get_container
 from django.contrib.auth.models import User
 from django.test import RequestFactory
 from rest_framework.test import force_authenticate
-
-GET_CONTAINER_MEDIA = "animetix.api.core.media.get_container"
-GET_CONTAINER_MANGA = "animetix.api.core.manga.get_container"
-GET_CONTAINER_SUWAYOMI = "animetix.api.core.suwayomi.get_container"
 
 
 @pytest.fixture
@@ -179,12 +176,11 @@ def test_media_search_empty_returns_empty_list(factory):
 
 def test_media_search_success(factory):
     request = factory.get("/search/", {"q": "naruto", "media_type": "Anime"})
-    container = MagicMock()
-    # The view calls the provider: container.core.catalog_service().search_items(...)
-    container.core.catalog_service.return_value.search_items.return_value = [
-        {"id": "1", "title": "Naruto"}
-    ]
-    with patch(GET_CONTAINER_MEDIA, return_value=container):
+    mock_catalog = MagicMock()
+    mock_catalog.search_items.return_value = [{"id": "1", "title": "Naruto"}]
+    real_container = get_container()
+    real_container.core.catalog_service.override(mock_catalog)
+    try:
         view = MediaSearchView()
         view.guardrail_service = MagicMock()
         view.guardrail_service.validate_input.return_value = {"is_safe": True}
@@ -195,6 +191,8 @@ def test_media_search_success(factory):
 
         drf_request = Request(request, parsers=[JSONParser()])
         response = view.get(drf_request)
+    finally:
+        real_container.core.catalog_service.reset_override()
     assert response.status_code == 200
     assert response.data[0]["id"] == "1"
 
@@ -379,8 +377,8 @@ def test_media_detail_from_sql(factory):
 @pytest.mark.django_db
 def test_media_detail_catalog_fallback(factory):
     request = factory.get("/media/Anime/cat-9/")
-    container = MagicMock()
-    container.core.catalog_service.return_value.load_data.return_value = {
+    mock_catalog = MagicMock()
+    mock_catalog.load_data.return_value = {
         "db": [
             {
                 "id": "cat-9",
@@ -393,8 +391,12 @@ def test_media_detail_catalog_fallback(factory):
             }
         ]
     }
-    with patch(GET_CONTAINER_MEDIA, return_value=container):
+    real_container = get_container()
+    real_container.core.catalog_service.override(mock_catalog)
+    try:
         response = _drive(MediaDetailView, request, media_type="Anime", item_id="cat-9")
+    finally:
+        real_container.core.catalog_service.reset_override()
     assert response.status_code == 200
     assert response.data["studios"] == ["MAPPA"]
 
@@ -402,12 +404,16 @@ def test_media_detail_catalog_fallback(factory):
 @pytest.mark.django_db
 def test_media_detail_not_found(factory):
     request = factory.get("/media/Anime/missing/")
-    container = MagicMock()
-    container.core.catalog_service.load_data.return_value = {"db": []}
-    with patch(GET_CONTAINER_MEDIA, return_value=container):
+    mock_catalog = MagicMock()
+    mock_catalog.load_data.return_value = {"db": []}
+    real_container = get_container()
+    real_container.core.catalog_service.override(mock_catalog)
+    try:
         response = _drive(
             MediaDetailView, request, media_type="Anime", item_id="missing"
         )
+    finally:
+        real_container.core.catalog_service.reset_override()
     assert response.status_code == 404
 
 
@@ -417,7 +423,18 @@ def test_media_detail_not_found(factory):
 @pytest.mark.django_db
 def test_transparency_data(factory):
     request = factory.get("/transparency/")
-    response = _drive(TransparencyDataView, request)
+    mock_sota = MagicMock()
+    mock_sota.get_all_benchmarks.return_value = []
+    mock_drift = MagicMock()
+    mock_drift.get_drift_report.return_value = {}
+    real_container = get_container()
+    real_container.core.sota_benchmark_service.override(mock_sota)
+    real_container.core.drift_service.override(mock_drift)
+    try:
+        response = _drive(TransparencyDataView, request)
+    finally:
+        real_container.core.sota_benchmark_service.reset_override()
+        real_container.core.drift_service.reset_override()
     assert response.status_code == 200
     assert response.data["status"] == "synchronized"
     assert "global_metrics" in response.data
@@ -428,43 +445,49 @@ def test_transparency_data(factory):
 # --------------------------------------------------------------------------- #
 def test_manga_chapter_list(factory):
     request = factory.get("/media/Manga/m1/chapters/")
-    container = MagicMock()
-    container.core.manga_service.return_value.get_chapters.return_value = []
-    with (
-        patch(GET_CONTAINER_MANGA, return_value=container),
-        patch("animetix.api.core.manga.MangaChapterSerializer") as mock_ser,
-    ):
-        mock_ser.return_value.data = [{"number": 1.0}]
-        response = _drive(MangaChapterListView, request, media_id="m1")
+    mock_manga_service = MagicMock()
+    mock_manga_service.get_chapters.return_value = []
+    real_container = get_container()
+    real_container.core.manga_service.override(mock_manga_service)
+    try:
+        with patch("animetix.api.core.manga.MangaChapterSerializer") as mock_ser:
+            mock_ser.return_value.data = [{"number": 1.0}]
+            response = _drive(MangaChapterListView, request, media_id="m1")
+    finally:
+        real_container.core.manga_service.reset_override()
     assert response.status_code == 200
     assert response.data == [{"number": 1.0}]
 
 
 def test_manga_chapter_detail_found(factory):
     request = factory.get("/media/Manga/m1/chapters/1/")
-    container = MagicMock()
-    container.core.manga_service.return_value.get_chapter_details.return_value = (
-        object()
-    )
-    with (
-        patch(GET_CONTAINER_MANGA, return_value=container),
-        patch("animetix.api.core.manga.MangaChapterSerializer") as mock_ser,
-    ):
-        mock_ser.return_value.data = {"number": 1.0}
-        response = _drive(
-            MangaChapterDetailView, request, media_id="m1", chapter_number="1"
-        )
+    mock_manga_service = MagicMock()
+    mock_manga_service.get_chapter_details.return_value = object()
+    real_container = get_container()
+    real_container.core.manga_service.override(mock_manga_service)
+    try:
+        with patch("animetix.api.core.manga.MangaChapterSerializer") as mock_ser:
+            mock_ser.return_value.data = {"number": 1.0}
+            response = _drive(
+                MangaChapterDetailView, request, media_id="m1", chapter_number="1"
+            )
+    finally:
+        real_container.core.manga_service.reset_override()
     assert response.status_code == 200
 
 
 def test_manga_chapter_detail_not_found(factory):
     request = factory.get("/media/Manga/m1/chapters/99/")
-    container = MagicMock()
-    container.core.manga_service.return_value.get_chapter_details.return_value = None
-    with patch(GET_CONTAINER_MANGA, return_value=container):
+    mock_manga_service = MagicMock()
+    mock_manga_service.get_chapter_details.return_value = None
+    real_container = get_container()
+    real_container.core.manga_service.override(mock_manga_service)
+    try:
         response = _drive(
             MangaChapterDetailView, request, media_id="m1", chapter_number="99"
         )
+    finally:
+        real_container.core.manga_service.reset_override()
     assert response.status_code == 404
 
 
@@ -671,19 +694,23 @@ def test_suwayomi_import_success(factory):
         json.dumps({"source_id": "s", "suwayomi_manga_id": "m"}),
         content_type="application/json",
     )
-    view = SuwayomiImportView()
-    view.suwayomi_adapter = MagicMock()
-    view.suwayomi_adapter.get_manga_details.return_value = {
-        "title": "Imported",
-        "description": "d",
-        "thumbnailUrl": "http://thumb/x.png",
-    }
-    container = MagicMock()
-    from rest_framework.parsers import JSONParser
-    from rest_framework.request import Request
+    mock_manga_service = MagicMock()
+    real_container = get_container()
+    real_container.core.manga_service.override(mock_manga_service)
+    try:
+        view = SuwayomiImportView()
+        view.suwayomi_adapter = MagicMock()
+        view.suwayomi_adapter.get_manga_details.return_value = {
+            "title": "Imported",
+            "description": "d",
+            "thumbnailUrl": "http://thumb/x.png",
+        }
+        from rest_framework.parsers import JSONParser
+        from rest_framework.request import Request
 
-    with patch(GET_CONTAINER_SUWAYOMI, return_value=container):
         response = view.post(Request(request, parsers=[JSONParser()]))
+    finally:
+        real_container.core.manga_service.reset_override()
     assert response.status_code == 200
     assert response.data["success"] is True
     assert response.data["media_item"]["title"] == "Imported"

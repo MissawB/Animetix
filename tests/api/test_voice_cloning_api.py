@@ -1,7 +1,8 @@
 ﻿import io
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
+from animetix.containers import get_container
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.test import APIClient
@@ -15,18 +16,13 @@ def test_voice_cloning_api_endpoint():
 
     url = reverse("api_voice_cloning")
 
-    # Mocking the container and service
-    # The path to get_container depends on where it's imported in labs.py
-    # In labs.py it's: from ..containers import get_container
-    # So it's animetix.containers.get_container or animetix.api.labs.audio.get_container
-    with patch("animetix.api.labs.audio.get_container") as mock_get_container:
-        mock_service = MagicMock()
-        mock_service.clone.return_value = b"fake_audio_content"
+    # Override the real provider so the injected view receives the mock.
+    mock_service = MagicMock()
+    mock_service.clone.return_value = b"fake_audio_content"
 
-        mock_container = MagicMock()
-        mock_container.core.voice_cloning_service.return_value = mock_service
-        mock_get_container.return_value = mock_container
-
+    container = get_container()
+    container.core.voice_cloning_service.override(mock_service)
+    try:
         # Create a dummy audio file
         size_bytes = 100
         header = (
@@ -44,14 +40,16 @@ def test_voice_cloning_api_endpoint():
             {"target_text": "Hello world", "reference_audio": audio_file, "pitch": 0},
             format="multipart",
         )
+    finally:
+        container.core.voice_cloning_service.reset_override()
 
-        if response.status_code != 200:
-            print(f"Response error: {response.data}")
+    if response.status_code != 200:
+        print(f"Response error: {response.data}")
 
-        assert response.status_code == 200
-        assert response.data["status"] == "success"
-        assert "audio_data" in response.data
-        assert response.data["audio_data"].startswith("data:audio/wav;base64,")
+    assert response.status_code == 200
+    assert response.data["status"] == "success"
+    assert "audio_data" in response.data
+    assert response.data["audio_data"].startswith("data:audio/wav;base64,")
 
 
 @pytest.mark.django_db

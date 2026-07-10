@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from ...containers import Container, get_container  # noqa: E402
+from ...containers import Container  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
@@ -28,14 +28,41 @@ class SingularityLabDataView(APIView):
     throttle_scope = "gpu"
     throttle_classes = [ScopedRateThrottle]
 
+    @inject
+    def __init__(
+        self,
+        synaptic_plasticity_simulator=Provide[
+            Container.core.synaptic_plasticity_simulator
+        ],
+        archetype_drift_service=Provide[Container.core.archetype_drift_service],
+        self_evolving_compiler=Provide[Container.core.self_evolving_compiler],
+        quantum_cognitive_model=Provide[Container.core.quantum_cognitive_model],
+        swarm_consensus_orchestrator=Provide[
+            Container.core.swarm_consensus_orchestrator
+        ],
+        autonomous_domain_synthesizer=Provide[
+            Container.core.autonomous_domain_synthesizer
+        ],
+        llm_service=Provide[Container.agentic.llm_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.synaptic_plasticity_simulator = synaptic_plasticity_simulator
+        self.archetype_drift_service = archetype_drift_service
+        self.self_evolving_compiler = self_evolving_compiler
+        self.quantum_cognitive_model = quantum_cognitive_model
+        self.swarm_consensus_orchestrator = swarm_consensus_orchestrator
+        self.autonomous_domain_synthesizer = autonomous_domain_synthesizer
+        self.llm_service = llm_service
+
     def get(self, request):
-        container = get_container()
-        service = container.core.synaptic_plasticity_simulator()
-        drift_service = container.core.archetype_drift_service()
+        service = self.synaptic_plasticity_simulator
 
         profile = getattr(request.user, "profile", None)
         settings = profile.personalization_settings if profile else {}
-        drift_config = drift_service.calculate_drift(request.user.id, settings)
+        drift_config = self.archetype_drift_service.calculate_drift(
+            request.user.id, settings
+        )
 
         return Response(
             {
@@ -71,7 +98,6 @@ class SingularityLabDataView(APIView):
 
     def post(self, request):
         action = request.data.get("action", "")
-        container = get_container()
 
         if action == "update_config":
             profile = getattr(request.user, "profile", None)
@@ -104,7 +130,7 @@ class SingularityLabDataView(APIView):
 
                 cache.delete(f"personalization_drift_user_{request.user.id}")
 
-            service = container.core.synaptic_plasticity_simulator()
+            service = self.synaptic_plasticity_simulator
             tau_plus = request.data.get("tau_plus")
             if tau_plus is not None:
                 try:
@@ -140,7 +166,7 @@ class SingularityLabDataView(APIView):
                     {"error": f'Function "{function_name}" not allowed.'}, status=400
                 )
             try:
-                compiler = container.core.self_evolving_compiler()
+                compiler = self.self_evolving_compiler
                 optimized_fn = compiler.analyze_and_optimize(function_name)
                 a = np.array([1.0, 2.0, 3.0])
                 b = np.array([1.0, 2.0, 3.0])
@@ -169,7 +195,7 @@ class SingularityLabDataView(APIView):
             active_indices = request.data.get("trigger_spikes", [0, 1])
             learning_rate = float(request.data.get("learning_rate", 0.05))
             try:
-                service = container.core.synaptic_plasticity_simulator()
+                service = self.synaptic_plasticity_simulator
                 now = time.time()
                 service.trigger_spikes(active_indices, now)
                 updated_W = service.update_hebbian(
@@ -204,7 +230,7 @@ class SingularityLabDataView(APIView):
             )
             theme = request.data.get("theme", "shonen").lower()
             try:
-                model = container.core.quantum_cognitive_model()
+                model = self.quantum_cognitive_model
                 prob, outcome = model.measure_preference(theme)
                 return Response(
                     {
@@ -228,8 +254,8 @@ class SingularityLabDataView(APIView):
             )
             task = request.data.get("task", "dot_product")
             try:
-                compiler = container.core.self_evolving_compiler()
-                llm = container.agentic.llm_service()
+                compiler = self.self_evolving_compiler
+                llm = self.llm_service
                 # Évolution dynamique réelle via LLM
                 fn = compiler.evolve_with_llm(task, llm_proxy=llm)
 
@@ -265,7 +291,7 @@ class SingularityLabDataView(APIView):
                 return Response({"error": "fact and media are required"}, status=400)
 
             try:
-                orchestrator = container.core.swarm_consensus_orchestrator()
+                orchestrator = self.swarm_consensus_orchestrator
                 # On utilise les diagnostics pour exposer Paxos-sémantique
                 diagnostics = orchestrator.get_paxos_diagnostics(
                     fact=fact, media_title=media
@@ -285,7 +311,7 @@ class SingularityLabDataView(APIView):
             genre = request.data.get("genre", "Cyberpunk")
 
             try:
-                synthesizer = container.core.autonomous_domain_synthesizer()
+                synthesizer = self.autonomous_domain_synthesizer
                 universe_data = synthesizer.synthesize_multiverse(
                     universe_name=universe_name, primary_genre=genre
                 )
@@ -320,12 +346,20 @@ class LiquidNeuralNetworkLabView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        liquid_neural_network=Provide[Container.core.liquid_neural_network],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.liquid_neural_network = liquid_neural_network
+
     def post(self, request):
-        container = get_container()
         input_signal = request.data.get("signal", [[0.5, 0.2]])
         dt = float(request.data.get("dt", 0.05))
         try:
-            lnn = container.core.liquid_neural_network()
+            lnn = self.liquid_neural_network
             state_history = lnn.process_continuous_signal(input_signal, dt=dt)
             return Response(
                 {
@@ -380,8 +414,6 @@ class SingularityCommandCenterView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        get_container()
-
         # 1. État des services (Simulation de santé système)
         services = []
         try:
@@ -475,6 +507,17 @@ class NeuralDiagnosticsLabView(APIView):
     # GPU-backed (LLM generate + logprobs) → requires login and consumes Berrix.
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        inference_engine=Provide[Container.inference.inference_engine],
+        xai_service=Provide[Container.core.xai_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.inference_engine = inference_engine
+        self.xai_service = xai_service
+
     def post(self, request):
         prompt = request.data.get("prompt")
         if not prompt:
@@ -489,16 +532,12 @@ class NeuralDiagnosticsLabView(APIView):
             "Neural Diagnostics (IA)",
         )
 
-        container = get_container()
         try:
-            inference_engine = container.inference.inference_engine()
-            xai_service = container.core.xai_service()
-
             # 1. Generate response with logprobs
-            response = inference_engine.generate(prompt, include_logprobs=True)
+            response = self.inference_engine.generate(prompt, include_logprobs=True)
 
             # 2. Get rich diagnostics report
-            report = xai_service.get_diagnostics_report(prompt, response)
+            report = self.xai_service.get_diagnostics_report(prompt, response)
 
             return Response(report)
         except Exception:

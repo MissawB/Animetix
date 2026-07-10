@@ -1,18 +1,23 @@
 """Coverage-focused tests for ``animetix.api.cognition`` DRF views.
 
 Exercises success, validation (400) and error (500) paths of every endpoint
-via the real URL routing + APIClient, with external services mocked through
-``get_container`` and the throttle cache forced to local memory (CI sets
-REDIS_URL which would otherwise make DRF throttling hit a real redis).
+via the real URL routing + APIClient, with the constructor-injected services
+mocked through real-container provider overrides and the throttle cache
+forced to local memory (CI sets REDIS_URL which would otherwise make DRF
+throttling hit a real redis).
 """
 
-from unittest.mock import MagicMock, patch
+from contextlib import contextmanager
+from unittest.mock import MagicMock
 
 import pytest
+from animetix.containers import get_container
 from django.contrib.auth.models import User
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework.test import APIClient
+
+real_container = get_container()
 
 LOCMEM_CACHE = {
     "default": {
@@ -48,12 +53,56 @@ def auth_client(api_client, user):
 
 
 def _patch_container():
-    """Patch the cognition module's get_container and return the mock container."""
-    container = MagicMock()
-    return (
-        patch("animetix.api.cognition.get_container", return_value=container),
-        container,
-    )
+    """Override the cognition providers on the real container with mocks.
+
+    Returns a context manager plus a container-shaped MagicMock whose
+    ``.core.X.return_value`` is the very service instance injected into the
+    views — the historical call sites keep configuring their mocks the same
+    way, but the wiring now goes through constructor injection.
+    """
+    fake = MagicMock()
+    overrides = [
+        (
+            real_container.core.archetype_drift_service,
+            fake.core.archetype_drift_service.return_value,
+        ),
+        (
+            real_container.core.neuro_symbolic_user_profiler,
+            fake.core.neuro_symbolic_user_profiler.return_value,
+        ),
+        (
+            real_container.persistence.feedback_adapter,
+            fake.persistence.feedback_adapter.return_value,
+        ),
+        (
+            real_container.core.self_play_debate_service,
+            fake.core.self_play_debate_service.return_value,
+        ),
+        (
+            real_container.core.counterfactual_simulator,
+            fake.core.counterfactual_simulator.return_value,
+        ),
+        (
+            real_container.core.cove_oracle_service,
+            fake.core.cove_oracle_service.return_value,
+        ),
+        (
+            real_container.core.cfr_game_solver,
+            fake.core.cfr_game_solver.return_value,
+        ),
+    ]
+
+    @contextmanager
+    def _cm():
+        try:
+            for provider, mock in overrides:
+                provider.override(mock)
+            yield
+        finally:
+            for provider, _ in overrides:
+                provider.reset_override()
+
+    return _cm(), fake
 
 
 # --------------------------------------------------------------------------

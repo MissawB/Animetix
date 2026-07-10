@@ -35,17 +35,22 @@ def test_video_rag_zero_balance_is_402(mocker):
     assert resp.status_code == 402
 
 
-def test_video_rag_happy_path_deducts_and_returns(mocker):
+def test_video_rag_happy_path_deducts_and_returns():
+    from unittest.mock import MagicMock
+
+    from animetix.containers import get_container
     from animetix.models import Profile
 
     u = _mk_user(100)
-    mocker.patch(
-        "animetix.api.labs.video.get_container"
-    ).return_value.agentic.video_rag_service.return_value.search_video_segment.return_value = [
-        {"id": 1}
-    ]
-    c = APIClient()
-    c.force_authenticate(u)
-    resp = c.get("/api/v1/labs/video/search/", {"q": "duel"})
+    mock_service = MagicMock()
+    mock_service.search_video_segment.return_value = [{"id": 1}]
+    container = get_container()
+    container.agentic.video_rag_service.override(mock_service)
+    try:
+        c = APIClient()
+        c.force_authenticate(u)
+        resp = c.get("/api/v1/labs/video/search/", {"q": "duel"})
+    finally:
+        container.agentic.video_rag_service.reset_override()
     assert resp.status_code == 200
     assert Profile.objects.get(user=u).wallet_balance == 94  # 100 - 6

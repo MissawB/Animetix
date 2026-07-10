@@ -27,15 +27,12 @@ async def test_agentic_rag_async_stream_serializes_events():
     session.get_current_mode.return_value = "Anime"
     session.get.return_value = "Français"
 
-    container = MagicMock()
-
     async def _agen(query, media_type, user_id=None, language="Français"):
         yield {"type": "thought", "content": "..."}
         yield {"type": "token", "content": "hi"}
 
-    container.agentic.agentic_rag.return_value.aplan_and_solve_stream.side_effect = (
-        _agen
-    )
+    agent = MagicMock()
+    agent.aplan_and_solve_stream.side_effect = _agen
 
     with (
         patch.object(streams_mod, "check_rate_limit", new=AsyncMock(return_value=None)),
@@ -43,9 +40,9 @@ async def test_agentic_rag_async_stream_serializes_events():
             streams_mod, "_charge_bx_or_402", new=AsyncMock(return_value=None)
         ),
         patch.object(streams_mod, "get_session_service", return_value=session),
-        patch.object(streams_mod, "get_container", return_value=container),
     ):
-        resp = await streams_mod.AgenticRAGStreamView().get(request)
+        view = streams_mod.AgenticRAGStreamView(agentic_rag=agent)
+        resp = await view.get(request)
         events = await _sse_events(resp)
 
     assert any(e["type"] == "token" and e["content"] == "hi" for e in events)
@@ -58,5 +55,6 @@ async def test_agentic_rag_async_stream_no_query_returns_400():
     with patch.object(
         streams_mod, "check_rate_limit", new=AsyncMock(return_value=None)
     ):
-        resp = await streams_mod.AgenticRAGStreamView().get(request)
+        view = streams_mod.AgenticRAGStreamView(agentic_rag=MagicMock())
+        resp = await view.get(request)
     assert resp.status_code == 400

@@ -24,11 +24,9 @@ async def test_emoji_async_stream_serializes_service_events():
     session = MagicMock()
     session.get_current_mode.return_value = "Anime"
 
-    container = MagicMock()
-    # The view calls the providers — container.core.catalog_service().load_data(...)
-    # and container.core.emoji_service().agenerate_emojis_stream(...) — so configure
-    # the return_value (the resolved service instance), not the provider mock.
-    container.core.catalog_service.return_value.load_data.return_value = {
+    # Services are constructor-injected: pass the mocks directly.
+    catalog_service = MagicMock()
+    catalog_service.load_data.return_value = {
         "title_to_full_data": {"Naruto": {"description": "ninja"}}
     }
 
@@ -36,9 +34,8 @@ async def test_emoji_async_stream_serializes_service_events():
         yield {"type": "thought", "content": "..."}
         yield {"type": "result", "content": ["🍥", "🦊"]}
 
-    container.core.emoji_service.return_value.agenerate_emojis_stream.side_effect = (
-        _agen
-    )
+    emoji_service = MagicMock()
+    emoji_service.agenerate_emojis_stream.side_effect = _agen
 
     with (
         patch.object(streams_mod, "check_rate_limit", new=AsyncMock(return_value=None)),
@@ -46,9 +43,11 @@ async def test_emoji_async_stream_serializes_service_events():
             streams_mod, "_charge_bx_or_402", new=AsyncMock(return_value=None)
         ),
         patch.object(streams_mod, "get_session_service", return_value=session),
-        patch.object(streams_mod, "get_container", return_value=container),
     ):
-        resp = await streams_mod.EmojiStreamView().get(request)
+        view = streams_mod.EmojiStreamView(
+            catalog_service=catalog_service, emoji_service=emoji_service
+        )
+        resp = await view.get(request)
         events = await _sse_events(resp)
 
     assert {"type": "result", "content": ["🍥", "🦊"]} in events
@@ -61,5 +60,8 @@ async def test_emoji_async_stream_missing_secret_returns_400():
     with patch.object(
         streams_mod, "check_rate_limit", new=AsyncMock(return_value=None)
     ):
-        resp = await streams_mod.EmojiStreamView().get(request)
+        view = streams_mod.EmojiStreamView(
+            catalog_service=MagicMock(), emoji_service=MagicMock()
+        )
+        resp = await view.get(request)
     assert resp.status_code == 400

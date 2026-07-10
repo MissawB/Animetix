@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from animetix.api.labs import MangaCleanLabView, MangaTranslateLabView
+from animetix.containers import get_container
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
@@ -23,27 +24,25 @@ def test_manga_clean_lab_view(dummy_image):
     request = factory.post("/api/v1/manga-lab/clean/", {"image": dummy_image})
     force_authenticate(request, user=user)
 
-    with (
-        patch("animetix.api.labs.manga.get_container") as mock_get_container,
-        patch("animetix.api.labs.manga.deduct_berrix"),
-    ):
-        mock_container = MagicMock()
-        mock_primary = MagicMock()
-        # Mock returns bytes
-        mock_primary.inpaint_text_bubbles.return_value = b"cleaned_image_bytes"
-        # The view resolves the engine via container.inference.inference_engine().
-        mock_container.inference.inference_engine.return_value = mock_primary
-        mock_get_container.return_value = mock_container
+    mock_primary = MagicMock()
+    # Mock returns bytes
+    mock_primary.inpaint_text_bubbles.return_value = b"cleaned_image_bytes"
+    # The view gets the engine injected from Container.inference.inference_engine.
+    container = get_container()
+    container.inference.inference_engine.override(mock_primary)
+    try:
+        with patch("animetix.api.labs.manga.deduct_berrix"):
+            view = MangaCleanLabView.as_view()
+            response = view(request)
+    finally:
+        container.inference.inference_engine.reset_override()
 
-        view = MangaCleanLabView.as_view()
-        response = view(request)
-
-        assert response.status_code == 200
-        assert response.data["status"] == "success"
-        assert response.data["image"] == base64.b64encode(
-            b"cleaned_image_bytes"
-        ).decode("utf-8")
-        mock_primary.inpaint_text_bubbles.assert_called_once_with(b"file_content", [])
+    assert response.status_code == 200
+    assert response.data["status"] == "success"
+    assert response.data["image"] == base64.b64encode(b"cleaned_image_bytes").decode(
+        "utf-8"
+    )
+    mock_primary.inpaint_text_bubbles.assert_called_once_with(b"file_content", [])
 
 
 @pytest.mark.django_db
@@ -55,21 +54,21 @@ def test_manga_translate_lab_view(dummy_image):
     )
     force_authenticate(request, user=user)
 
-    with patch("animetix.api.labs.manga.get_container") as mock_get_container:
-        mock_container = MagicMock()
-        mock_service = MagicMock()
-        mock_service.translate_manga_page.return_value = b"translated_image_bytes"
-        mock_container.core.manga_flow_service.return_value = mock_service
-        mock_get_container.return_value = mock_container
-
+    mock_service = MagicMock()
+    mock_service.translate_manga_page.return_value = b"translated_image_bytes"
+    container = get_container()
+    container.core.manga_flow_service.override(mock_service)
+    try:
         view = MangaTranslateLabView.as_view()
         response = view(request)
+    finally:
+        container.core.manga_flow_service.reset_override()
 
-        assert response.status_code == 200
-        assert response.data["status"] == "success"
-        assert response.data["image"] == base64.b64encode(
-            b"translated_image_bytes"
-        ).decode("utf-8")
-        mock_service.translate_manga_page.assert_called_once_with(
-            b"file_content", "English"
-        )
+    assert response.status_code == 200
+    assert response.data["status"] == "success"
+    assert response.data["image"] == base64.b64encode(b"translated_image_bytes").decode(
+        "utf-8"
+    )
+    mock_service.translate_manga_page.assert_called_once_with(
+        b"file_content", "English"
+    )

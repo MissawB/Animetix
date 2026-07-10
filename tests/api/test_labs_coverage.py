@@ -9,12 +9,13 @@ evolve_dynamic / swarm), the Liquid Neural Network lab, the Manga metadata +
 Manga-Voice orchestration, Video-RAG index/search, Tree-of-Thoughts, and the
 Singularity Command Center -- plus validation (400) and error (500) paths.
 
-Pattern: views resolve services via ``get_container`` imported into each
-``animetix.api.labs.*`` domain submodule, so it is patched in the submodule
-that defines the view under test. Permission classes are
-bypassed via ``as_view(permission_classes=[])`` (same trick used in the existing
-audio/spatial tests) so we exercise the handler logic directly with a
-``RequestFactory`` request.
+Pattern: views receive their services via ``@inject``/``Provide[...]`` from the
+real DI container, so tests override the concrete providers
+(``container.<sub>.<service>.override(mock)``) and reset them afterwards with
+``reset_override()`` on the provider (never on the container). Permission
+classes are bypassed via ``as_view(permission_classes=[])`` (same trick used in
+the existing audio/spatial tests) so we exercise the handler logic directly
+with a ``RequestFactory`` request.
 """
 
 import json
@@ -34,19 +35,13 @@ from animetix.api.labs import (
     VideoRAGIndexView,
     VideoRAGSearchView,
 )
+from animetix.containers import get_container
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 from rest_framework.test import force_authenticate
 
 factory = RequestFactory()
-
-
-def _container_patch(mock_container, module="singularity"):
-    p = patch(f"animetix.api.labs.{module}.get_container")
-    started = p.start()
-    started.return_value = mock_container
-    return p
 
 
 # --------------------------------------------------------------------------- #
@@ -155,27 +150,53 @@ def _singularity_request(payload):
     return request
 
 
-def _run_singularity(payload, mock_container):
+def _run_singularity(payload, overrides=()):
+    """Run SingularityLabDataView with the given (provider, mock) overrides.
+
+    ``overrides`` is an iterable of ``(provider, mock)`` tuples; each provider
+    is overridden before the request and reset (per provider — never
+    ``container.reset_override()``) afterwards.
+    """
     request = _singularity_request(payload)
-    p = _container_patch(mock_container)
+    # The view injects every singularity service in __init__: stub out the ones
+    # the test does not care about so no real (heavy) service is constructed.
+    container = get_container()
+    default_providers = [
+        container.core.synaptic_plasticity_simulator,
+        container.core.archetype_drift_service,
+        container.core.self_evolving_compiler,
+        container.core.quantum_cognitive_model,
+        container.core.swarm_consensus_orchestrator,
+        container.core.autonomous_domain_synthesizer,
+        container.agentic.llm_service,
+    ]
+    overridden_providers = [provider for provider, _ in overrides]
+    explicit_ids = {id(provider) for provider in overridden_providers}
+    for provider in default_providers:
+        if id(provider) not in explicit_ids:
+            provider.override(MagicMock())
+            overridden_providers.append(provider)
+    for provider, mock in overrides:
+        provider.override(mock)
     d = patch("animetix.api.labs.singularity.deduct_berrix")
     d.start()
     try:
         view = SingularityLabDataView.as_view(permission_classes=[])
         return view(request)
     finally:
-        p.stop()
+        for provider in overridden_providers:
+            provider.reset_override()
         d.stop()
 
 
 def test_singularity_compile_success():
-    mock_container = MagicMock()
     compiler = MagicMock()
     compiler.mode = "jit"
     compiler.analyze_and_optimize.return_value = lambda a, b: 1.0
-    mock_container.core.self_evolving_compiler.return_value = compiler
+    container = get_container()
     response = _run_singularity(
-        {"action": "compile", "function_name": "cosine_similarity"}, mock_container
+        {"action": "compile", "function_name": "cosine_similarity"},
+        [(container.core.self_evolving_compiler, compiler)],
     )
     assert response.status_code == 200
     assert response.data["status"] == "success"
@@ -183,34 +204,31 @@ def test_singularity_compile_success():
 
 
 def test_singularity_compile_disallowed_function():
-    response = _run_singularity(
-        {"action": "compile", "function_name": "os.system"}, MagicMock()
-    )
+    response = _run_singularity({"action": "compile", "function_name": "os.system"})
     assert response.status_code == 400
     assert "not allowed" in response.data["error"]
 
 
 def test_singularity_compile_error():
-    mock_container = MagicMock()
-    mock_container.core.self_evolving_compiler.return_value.analyze_and_optimize.side_effect = Exception(
-        "compile boom"
-    )
+    compiler = MagicMock()
+    compiler.analyze_and_optimize.side_effect = Exception("compile boom")
+    container = get_container()
     response = _run_singularity(
-        {"action": "compile", "function_name": "vector_norm"}, mock_container
+        {"action": "compile", "function_name": "vector_norm"},
+        [(container.core.self_evolving_compiler, compiler)],
     )
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
 
 
 def test_singularity_plasticity_success():
-    mock_container = MagicMock()
     service = MagicMock()
     service.update_hebbian.return_value = np.zeros((10, 10))
     service.update_stdp.return_value = 0.01
-    mock_container.core.synaptic_plasticity_simulator.return_value = service
+    container = get_container()
     response = _run_singularity(
         {"action": "plasticity", "trigger_spikes": [0, 1], "learning_rate": 0.05},
-        mock_container,
+        [(container.core.synaptic_plasticity_simulator, service)],
     )
     assert response.status_code == 200
     assert response.data["status"] == "success"
@@ -219,23 +237,25 @@ def test_singularity_plasticity_success():
 
 
 def test_singularity_plasticity_error():
-    mock_container = MagicMock()
-    mock_container.core.synaptic_plasticity_simulator.return_value.trigger_spikes.side_effect = Exception(
-        "spike fail"
+    service = MagicMock()
+    service.trigger_spikes.side_effect = Exception("spike fail")
+    container = get_container()
+    response = _run_singularity(
+        {"action": "plasticity"},
+        [(container.core.synaptic_plasticity_simulator, service)],
     )
-    response = _run_singularity({"action": "plasticity"}, mock_container)
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
 
 
 def test_singularity_quantum_success():
-    mock_container = MagicMock()
     model = MagicMock()
     model.measure_preference.return_value = (0.73, "shonen")
     model.state = [1, 0, 0, 0]
-    mock_container.core.quantum_cognitive_model.return_value = model
+    container = get_container()
     response = _run_singularity(
-        {"action": "quantum", "theme": "Shonen"}, mock_container
+        {"action": "quantum", "theme": "Shonen"},
+        [(container.core.quantum_cognitive_model, model)],
     )
     assert response.status_code == 200
     assert response.data["theme"] == "shonen"
@@ -244,25 +264,29 @@ def test_singularity_quantum_success():
 
 
 def test_singularity_quantum_error():
-    mock_container = MagicMock()
-    mock_container.core.quantum_cognitive_model.return_value.measure_preference.side_effect = Exception(
-        "decohere"
+    model = MagicMock()
+    model.measure_preference.side_effect = Exception("decohere")
+    container = get_container()
+    response = _run_singularity(
+        {"action": "quantum"},
+        [(container.core.quantum_cognitive_model, model)],
     )
-    response = _run_singularity({"action": "quantum"}, mock_container)
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
 
 
 def test_singularity_evolve_dynamic_success():
-    mock_container = MagicMock()
     compiler = MagicMock()
     fn = MagicMock(return_value=42)
     fn.__name__ = "dynamic_kernel"
     compiler.evolve_with_llm.return_value = fn
-    mock_container.core.self_evolving_compiler.return_value = compiler
-    mock_container.agentic.llm_service.return_value = MagicMock()
+    container = get_container()
     response = _run_singularity(
-        {"action": "evolve_dynamic", "task": "dot_product"}, mock_container
+        {"action": "evolve_dynamic", "task": "dot_product"},
+        [
+            (container.core.self_evolving_compiler, compiler),
+            (container.agentic.llm_service, MagicMock()),
+        ],
     )
     assert response.status_code == 200
     assert response.data["kernel_name"] == "dynamic_kernel"
@@ -270,41 +294,42 @@ def test_singularity_evolve_dynamic_success():
 
 
 def test_singularity_evolve_dynamic_error():
-    mock_container = MagicMock()
-    mock_container.core.self_evolving_compiler.return_value.evolve_with_llm.side_effect = Exception(
-        "llm down"
+    compiler = MagicMock()
+    compiler.evolve_with_llm.side_effect = Exception("llm down")
+    container = get_container()
+    response = _run_singularity(
+        {"action": "evolve_dynamic"},
+        [(container.core.self_evolving_compiler, compiler)],
     )
-    response = _run_singularity({"action": "evolve_dynamic"}, mock_container)
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
 
 
 def test_singularity_swarm_missing_fields():
-    response = _run_singularity({"action": "swarm", "fact": "x"}, MagicMock())
+    response = _run_singularity({"action": "swarm", "fact": "x"})
     assert response.status_code == 400
     assert "fact and media" in response.data["error"]
 
 
 def test_singularity_swarm_success():
-    mock_container = MagicMock()
     orchestrator = MagicMock()
     orchestrator.get_paxos_diagnostics.return_value = {"consensus": True, "round": 3}
-    mock_container.core.swarm_consensus_orchestrator.return_value = orchestrator
+    container = get_container()
     response = _run_singularity(
         {"action": "swarm", "fact": "Luffy is captain", "media": "One Piece"},
-        mock_container,
+        [(container.core.swarm_consensus_orchestrator, orchestrator)],
     )
     assert response.status_code == 200
     assert response.data["consensus"] is True
 
 
 def test_singularity_swarm_error():
-    mock_container = MagicMock()
-    mock_container.core.swarm_consensus_orchestrator.return_value.get_paxos_diagnostics.side_effect = Exception(
-        "no quorum"
-    )
+    orchestrator = MagicMock()
+    orchestrator.get_paxos_diagnostics.side_effect = Exception("no quorum")
+    container = get_container()
     response = _run_singularity(
-        {"action": "swarm", "fact": "a", "media": "b"}, mock_container
+        {"action": "swarm", "fact": "a", "media": "b"},
+        [(container.core.swarm_consensus_orchestrator, orchestrator)],
     )
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
@@ -319,17 +344,16 @@ def test_liquid_nn_success():
         json.dumps({"signal": [[0.5, 0.2]], "dt": 0.1}),
         content_type="application/json",
     )
-    mock_container = MagicMock()
     lnn = MagicMock()
     lnn.process_continuous_signal.return_value = [[0.1, 0.2]]
     lnn.state = np.array([0.1, 0.2])
-    mock_container.core.liquid_neural_network.return_value = lnn
-    p = _container_patch(mock_container)
+    container = get_container()
+    container.core.liquid_neural_network.override(lnn)
     try:
         view = LiquidNeuralNetworkLabView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        p.stop()
+        container.core.liquid_neural_network.reset_override()
     assert response.status_code == 200
     assert response.data["status"] == "success"
     assert response.data["final_state"] == [0.1, 0.2]
@@ -341,16 +365,15 @@ def test_liquid_nn_error():
         json.dumps({"signal": [[0.5, 0.2]]}),
         content_type="application/json",
     )
-    mock_container = MagicMock()
-    mock_container.core.liquid_neural_network.return_value.process_continuous_signal.side_effect = Exception(
-        "diverged"
-    )
-    p = _container_patch(mock_container)
+    lnn = MagicMock()
+    lnn.process_continuous_signal.side_effect = Exception("diverged")
+    container = get_container()
+    container.core.liquid_neural_network.override(lnn)
     try:
         view = LiquidNeuralNetworkLabView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        p.stop()
+        container.core.liquid_neural_network.reset_override()
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
 
@@ -477,14 +500,15 @@ def test_video_rag_index_success():
         "/api/v1/labs/video/index/", {"video": video, "video_id": "ep1"}
     )
     force_authenticate(request, user=user)
-    mock_container = MagicMock()
-    mock_container.agentic.video_rag_service.return_value.index_video.return_value = 7
-    p = _container_patch(mock_container, "video")
+    mock_service = MagicMock()
+    mock_service.index_video.return_value = 7
+    container = get_container()
+    container.agentic.video_rag_service.override(mock_service)
     try:
         view = VideoRAGIndexView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        p.stop()
+        container.agentic.video_rag_service.reset_override()
     assert response.status_code == 200
     assert response.data["indexed_segments"] == 7
 
@@ -497,16 +521,15 @@ def test_video_rag_index_error():
         "/api/v1/labs/video/index/", {"video": video, "video_id": "ep1"}
     )
     force_authenticate(request, user=user)
-    mock_container = MagicMock()
-    mock_container.agentic.video_rag_service.return_value.index_video.side_effect = (
-        Exception("index fail")
-    )
-    p = _container_patch(mock_container, "video")
+    mock_service = MagicMock()
+    mock_service.index_video.side_effect = Exception("index fail")
+    container = get_container()
+    container.agentic.video_rag_service.override(mock_service)
     try:
         view = VideoRAGIndexView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        p.stop()
+        container.agentic.video_rag_service.reset_override()
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
 
@@ -526,18 +549,21 @@ def test_video_rag_search_missing_query():
 def test_video_rag_search_success():
     request = factory.get("/api/v1/labs/video/search/?q=fight")
     force_authenticate(request, user=MagicMock(id=1))
-    mock_container = MagicMock()
-    mock_container.agentic.video_rag_service.return_value.search_video_segment.return_value = [
-        {"ts": 12, "score": 0.9}
-    ]
-    p = _container_patch(mock_container, "video")
+    mock_service = MagicMock()
+    mock_service.search_video_segment.return_value = [{"ts": 12, "score": 0.9}]
+    mock_usage = MagicMock()
+    mock_usage.check_quota.return_value = True
+    container = get_container()
+    container.agentic.video_rag_service.override(mock_service)
+    container.infrastructure.usage_port.override(mock_usage)
     d = patch("animetix.api.labs.video.deduct_berrix")
     d.start()
     try:
         view = VideoRAGSearchView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        p.stop()
+        container.agentic.video_rag_service.reset_override()
+        container.infrastructure.usage_port.reset_override()
         d.stop()
     assert response.status_code == 200
     assert response.data["status"] == "success"
@@ -547,18 +573,21 @@ def test_video_rag_search_success():
 def test_video_rag_search_error():
     request = factory.get("/api/v1/labs/video/search/?q=fight")
     force_authenticate(request, user=MagicMock(id=1))
-    mock_container = MagicMock()
-    mock_container.agentic.video_rag_service.return_value.search_video_segment.side_effect = Exception(
-        "search down"
-    )
-    p = _container_patch(mock_container, "video")
+    mock_service = MagicMock()
+    mock_service.search_video_segment.side_effect = Exception("search down")
+    mock_usage = MagicMock()
+    mock_usage.check_quota.return_value = True
+    container = get_container()
+    container.agentic.video_rag_service.override(mock_service)
+    container.infrastructure.usage_port.override(mock_usage)
     d = patch("animetix.api.labs.video.deduct_berrix")
     d.start()
     try:
         view = VideoRAGSearchView.as_view(permission_classes=[])
         response = view(request)
     finally:
-        p.stop()
+        container.agentic.video_rag_service.reset_override()
+        container.infrastructure.usage_port.reset_override()
         d.stop()
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
@@ -639,13 +668,8 @@ def test_tree_of_thoughts_error():
 # --------------------------------------------------------------------------- #
 def test_singularity_command_center():
     request = factory.get("/api/v1/singularity-lab/command-center/")
-    mock_container = MagicMock()
-    p = _container_patch(mock_container)
-    try:
-        view = SingularityCommandCenterView.as_view(permission_classes=[])
-        response = view(request)
-    finally:
-        p.stop()
+    view = SingularityCommandCenterView.as_view(permission_classes=[])
+    response = view(request)
     assert response.status_code == 200
     assert response.data["status"] == "operational"
     service_ids = {s["id"] for s in response.data["services"]}

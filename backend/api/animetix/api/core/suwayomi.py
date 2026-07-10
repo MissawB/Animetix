@@ -11,7 +11,7 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ...containers import Container, get_container
+from ...containers import Container
 
 logger = get_logger("animetix.api")
 
@@ -117,10 +117,14 @@ class SuwayomiImportView(APIView):
 
     @inject
     def __init__(
-        self, suwayomi_adapter=Provide[Container.persistence.suwayomi_adapter], **kwargs
+        self,
+        suwayomi_adapter=Provide[Container.persistence.suwayomi_adapter],
+        manga_service=Provide[Container.core.manga_service],
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.suwayomi_adapter = suwayomi_adapter
+        self.manga_service = manga_service
 
     def post(self, request):
         from ...models import MediaItem
@@ -172,9 +176,7 @@ class SuwayomiImportView(APIView):
             },
         )
 
-        container = get_container()
-        manga_service = container.core.manga_service()
-        manga_service.get_chapters(external_id)
+        self.manga_service.get_chapters(external_id)
 
         return Response(
             {

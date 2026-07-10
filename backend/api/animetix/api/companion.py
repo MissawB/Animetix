@@ -1,10 +1,11 @@
 import logging
 
+from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..containers import get_container
+from ..containers import Container
 
 logger = logging.getLogger("animetix.companion")
 
@@ -17,11 +18,23 @@ class CompanionInteractView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        companion_service=Provide[Container.core.companion_service],
+        guardrail_service=Provide[Container.core.guardrail_service],
+        usage_port=Provide[Container.infrastructure.usage_port],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.companion_service = companion_service
+        self.guardrail_service = guardrail_service
+        self.usage_port = usage_port
+
     def post(self, request):
-        container = get_container()
-        companion_service = container.core.companion_service()
-        guardrail_service = container.core.guardrail_service()
-        usage_port = container.infrastructure.usage_port()
+        companion_service = self.companion_service
+        guardrail_service = self.guardrail_service
+        usage_port = self.usage_port
 
         mentor_id = request.data.get("mentor_id")
         user_message = request.data.get("user_message")

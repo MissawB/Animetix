@@ -1,4 +1,4 @@
-import argparse
+﻿import argparse
 
 from animetix.containers import get_container
 
@@ -11,8 +11,8 @@ def run_self_play_session(limit: int = 5):
     print("⚔️ Starting Self-Play Debating Session...")
 
     container = get_container()
-    debate_service = container.self_play_debate_service()
-    catalog = container.repository().load_catalog("Anime")
+    debate_service = container.core.self_play_debate_service()
+    catalog = container.persistence.repository().load_catalog("Anime")
 
     if not catalog:
         print("❌ Catalog not found.")

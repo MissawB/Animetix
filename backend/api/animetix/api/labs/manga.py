@@ -4,6 +4,7 @@ import base64
 
 from adapters.inference.workflows_client import GCPWorkflowsClient
 from animetix_project.logging_config import get_logger
+from dependency_injector.wiring import Provide, inject  # noqa: E402
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
@@ -12,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from ...containers import get_container  # noqa: E402
+from ...containers import Container  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
@@ -136,8 +137,16 @@ class MangaCleanLabView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        inference_engine=Provide[Container.inference.inference_engine],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.inference_engine = inference_engine
+
     def post(self, request):
-        container = get_container()
         image_file = request.FILES.get("image")
 
         if not image_file:
@@ -150,10 +159,9 @@ class MangaCleanLabView(APIView):
 
         try:
             image_bytes = image_file.read()
-            inference_engine = container.inference.inference_engine()
 
             # Un nettoyage simple équivaut à un inpainting avec une liste de bulles vide.
-            cleaned_bytes = inference_engine.inpaint_text_bubbles(image_bytes, [])
+            cleaned_bytes = self.inference_engine.inpaint_text_bubbles(image_bytes, [])
 
             b64_img = base64.b64encode(cleaned_bytes).decode("utf-8")
             return Response({"status": "success", "image": b64_img})
@@ -167,8 +175,16 @@ class MangaTranslateLabView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        manga_flow_service=Provide[Container.core.manga_flow_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.manga_flow_service = manga_flow_service
+
     def post(self, request):
-        container = get_container()
         image_file = request.FILES.get("image")
         target_lang = request.data.get("target_lang", "French")
 
@@ -184,9 +200,8 @@ class MangaTranslateLabView(APIView):
 
         try:
             image_bytes = image_file.read()
-            manga_flow_service = container.core.manga_flow_service()
 
-            translated_bytes = manga_flow_service.translate_manga_page(
+            translated_bytes = self.manga_flow_service.translate_manga_page(
                 image_bytes, target_lang
             )
 

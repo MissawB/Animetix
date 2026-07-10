@@ -2,6 +2,16 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-10] Session: Service locator eradicated from the view layer — constructor injection everywhere
+
+Closure of the 🟡 debt item "service locator au lieu d'injection" (2026-07-05 audit). The view layer resolved services through 49 `get_container()` call sites (~158 `container.x.y()` expressions across 20 files); all converted to `dependency_injector` constructor injection (`@inject __init__` with `Provide[Container.<sub>.<service>]` defaults, the house pattern already used by MediaSearchView/Suwayomi/ToT), including the 5 native-async SSE views in [streams.py](../backend/api/animetix/api/streams.py) and the function view `run_vs_battle` (`@inject` on the function). [apps.py](../backend/api/animetix/apps.py) wiring extended with the 5 modules that were missing (cognition, developer, monitoring, streams, games.vs_battle).
+
+- **`ProviderDelegate` monkey-patch deleted** ([containers/\_\_init\_\_.py](../backend/api/animetix/containers/__init__.py)): its 8 flat root-container shortcuts had 10 real consumers (scripts benchmark/curation/verify, `run_red_teaming`, codemanga consumer, 3 evaluation pipelines, `regression_benchmark`) — all migrated to the explicit sub-container paths (`container.core.x()`, `container.agentic.y()`, …).
+- **Latent prod breakage found and fixed**: [creative_tasks.py](../backend/api/animetix/creative_tasks.py) called five flat services (`studio_transform_service`, `manga_flow_service`, `soundscape_service`, `spatial_computing_service`, `fusion_service`) that never existed on the root container nor among the delegate shortcuts — every one of those task paths raised AttributeError in production and only passed in tests because the whole container was mocked. Now routed through `container.core.*`. Similarly, `pre_flight_check`'s `if not container.neo4j_manager:` guard could never trigger (a delegate instance is always truthy) — it now checks the resolved port.
+- **Dead code removed**: `views/common.py` shrunk to its logger — the `LazyServiceProxy` shim and its 9 service proxies resolved flat attribute names that don't exist on the root container (broken since the sub-container split) and had zero consumers.
+- **Canonical test pattern switched**: mocking `module.get_container` replaced by real-container provider overrides (`container.core.x.override(mock)` + provider-level `reset_override()` in `finally`) or, for directly-instantiated views, passing mocks as constructor kwargs — ~20 test files migrated. The generic `mock_container` fixture no longer pre-seeds misleading flat attributes.
+- Accepted residual: the 4 WebSocket consumers (undercover, codemanga, duel, speech_to_speech_live) keep a `get_container()` call each — long-lived stateful objects where per-connection constructor injection buys little; their accesses now use the explicit sub-container paths.
+
 ## [2026-07-10] Session: API god-files decomposed — `api/labs.py` and `api/core.py` split into domain packages
 
 Closure of the 🟡 debt item "fichiers-dieux dans la couche API" (2026-07-05 audit). Both worst runtime offenders are now domain packages whose `__init__` star-re-exports keep the public surface intact (the `api_views.py` aggregator and every URL keep working unchanged):

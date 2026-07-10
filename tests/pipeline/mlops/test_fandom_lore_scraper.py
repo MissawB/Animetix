@@ -1,4 +1,4 @@
-"""Behavior tests for the Fandom lore scraper MLOps pipeline.
+﻿"""Behavior tests for the Fandom lore scraper MLOps pipeline.
 
 Covers ``FandomLoreScraper``: popular-franchise discovery (SQL hit / SQL error /
 fallback), polite URL scraping (BeautifulSoup noise-stripping, regex fallback,
@@ -175,7 +175,7 @@ def test_pipeline_dry_run_does_not_upsert(mocker, scraper):
 
     scraper.execute_pipeline()
     # Dry-run path never touches the repository.
-    scraper.container.repository.assert_not_called()
+    scraper.container.persistence.repository.assert_not_called()
 
 
 def test_pipeline_real_upsert_payload(mocker, scraper):
@@ -193,7 +193,7 @@ def test_pipeline_real_upsert_payload(mocker, scraper):
     mocker.patch.object(scraper, "scrape_url", side_effect=fake_scrape)
 
     container = MagicMock()
-    repo = container.repository.return_value
+    repo = container.persistence.repository.return_value
     repo.vectors.coll_names = {"Anime": "anime_thematic"}
     repo.vectors.embedding_fn = lambda texts: [[0.1, 0.2, 0.3] for _ in texts]
     scraper.container = container
@@ -220,7 +220,7 @@ def test_pipeline_resilient_to_upsert_error(mocker, scraper):
     mocker.patch.object(scraper, "get_popular_franchises", return_value=["naruto"])
     mocker.patch.object(scraper, "scrape_url", return_value="A sentence here. Two.")
     container = MagicMock()
-    repo = container.repository.return_value
+    repo = container.persistence.repository.return_value
     repo.vectors.coll_names = {"Anime": "anime_thematic"}
     repo.vectors.embedding_fn = lambda texts: [[0.0] for _ in texts]
     repo.vectors.upsert_items.side_effect = RuntimeError("pgvector down")
@@ -239,4 +239,4 @@ def test_pipeline_no_texts_when_all_scrapes_fail(mocker, scraper):
     scraper.container = container
     scraper.dry_run = False
     scraper.execute_pipeline()
-    container.repository.return_value.vectors.upsert_items.assert_not_called()
+    container.persistence.repository.return_value.vectors.upsert_items.assert_not_called()

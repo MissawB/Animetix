@@ -1,4 +1,4 @@
-import json
+﻿import json
 import logging
 import os
 import sys
@@ -17,7 +17,7 @@ sys.path.append(os.path.join(BASE_DIR, "pipeline"))
 from animetix.containers import get_container  # noqa: E402
 from models_registry import models_registry  # noqa: E402
 
-repo = get_container().repository()
+repo = get_container().persistence.repository()
 
 INPUT_FILE = os.path.join(BASE_DIR, "data", "raw", "raw_vg_characters_db.json")
 LOOKUP_FILE = os.path.join(

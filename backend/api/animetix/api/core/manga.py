@@ -3,11 +3,12 @@
 import base64
 
 from animetix_project.logging_config import get_logger
+from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ...containers import get_container
+from ...containers import Container
 from ...serializers import MangaChapterSerializer
 
 logger = get_logger("animetix.api")
@@ -18,10 +19,13 @@ class MangaChapterListView(APIView):
 
     permission_classes = [permissions.AllowAny]
 
+    @inject
+    def __init__(self, manga_service=Provide[Container.core.manga_service], **kwargs):
+        super().__init__(**kwargs)
+        self.manga_service = manga_service
+
     def get(self, request, media_id):
-        container = get_container()
-        manga_service = container.core.manga_service()
-        chapters = manga_service.get_chapters(media_id)
+        chapters = self.manga_service.get_chapters(media_id)
         serializer = MangaChapterSerializer(chapters, many=True)
         return Response(serializer.data)
 
@@ -31,10 +35,15 @@ class MangaChapterDetailView(APIView):
 
     permission_classes = [permissions.AllowAny]
 
+    @inject
+    def __init__(self, manga_service=Provide[Container.core.manga_service], **kwargs):
+        super().__init__(**kwargs)
+        self.manga_service = manga_service
+
     def get(self, request, media_id, chapter_number):
-        container = get_container()
-        manga_service = container.core.manga_service()
-        chapter = manga_service.get_chapter_details(media_id, float(chapter_number))
+        chapter = self.manga_service.get_chapter_details(
+            media_id, float(chapter_number)
+        )
 
         if chapter:
             serializer = MangaChapterSerializer(chapter)
@@ -48,6 +57,17 @@ class FavoriteMangaToggleView(APIView):
     """Permet de s'abonner / désabonner (favoris) à un manga."""
 
     permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self,
+        suwayomi_adapter=Provide[Container.persistence.suwayomi_adapter],
+        manga_service=Provide[Container.core.manga_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.suwayomi_adapter = suwayomi_adapter
+        self.manga_service = manga_service
 
     def post(self, request, media_id):
         from ...models import FavoriteManga, MediaItem
@@ -68,14 +88,12 @@ class FavoriteMangaToggleView(APIView):
                 )
 
             # Import automatique depuis Suwayomi
-            container = get_container()
-            suwayomi_adapter = container.persistence.suwayomi_adapter()
-            if not suwayomi_adapter:
+            if not self.suwayomi_adapter:
                 return Response(
                     {"error": "Intégration Suwayomi non configurée."}, status=500
                 )
 
-            manga_details = suwayomi_adapter.get_manga_details(suwayomi_manga_id)
+            manga_details = self.suwayomi_adapter.get_manga_details(suwayomi_manga_id)
             if not manga_details:
                 return Response(
                     {"error": "Impossible de charger les détails du manga."}, status=404
@@ -108,8 +126,7 @@ class FavoriteMangaToggleView(APIView):
             )
 
             # Synchronisation initiale des chapitres
-            manga_service = container.core.manga_service()
-            manga_service.get_chapters(media_id)
+            self.manga_service.get_chapters(media_id)
 
         # 2. Toggle or set status
         status_payload = request.data.get("status")

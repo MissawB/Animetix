@@ -1,11 +1,12 @@
 """Spatial-computing labs: image/video to 3D reconstruction."""
 
 from animetix_project.logging_config import get_logger
+from dependency_injector.wiring import Provide, inject  # noqa: E402
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ...containers import get_container  # noqa: E402
+from ...containers import Container  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
@@ -46,8 +47,16 @@ class Generate3DDataView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        spatial_service=Provide[Container.core.spatial_computing_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.spatial_service = spatial_service
+
     def post(self, request):
-        container = get_container()
         image_file = request.FILES.get("image")
         title = request.data.get("title", "Poster 3D")
 
@@ -61,8 +70,7 @@ class Generate3DDataView(APIView):
 
         try:
             image_bytes = image_file.read()
-            service = container.core.spatial_computing_service()
-            result = service.reconstruct_3d_scene(image_bytes, title)
+            result = self.spatial_service.reconstruct_3d_scene(image_bytes, title)
             return Response(result)
         except Exception:
             logger.exception("Error in Generate3DDataView")
@@ -74,8 +82,18 @@ class CinematicReconstructionView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        cinematic_service=Provide[
+            Container.core.cinematic_volumetric_reconstruction_service
+        ],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.cinematic_service = cinematic_service
+
     def post(self, request):
-        container = get_container()
         video_file = request.FILES.get("video")
         title = request.data.get("title", "Cinematic 3D")
 
@@ -91,8 +109,9 @@ class CinematicReconstructionView(APIView):
 
         try:
             video_bytes = video_file.read()
-            service = container.core.cinematic_volumetric_reconstruction_service()
-            result = service.reconstruct_dynamic_cinematic_scene(video_bytes, title)
+            result = self.cinematic_service.reconstruct_dynamic_cinematic_scene(
+                video_bytes, title
+            )
             return Response(result)
         except Exception:
             logger.exception("Error in CinematicReconstructionView")

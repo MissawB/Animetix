@@ -1,4 +1,4 @@
-import json
+﻿import json
 import logging
 import os
 
@@ -62,7 +62,7 @@ def run_combat_data_ingestion(limit: int = 100):
             )
 
     container = get_container()
-    vs_service: VsBattleService = container.vs_battle_service()
+    vs_service: VsBattleService = container.core.vs_battle_service()
 
     results = []
     count = 0

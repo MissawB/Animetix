@@ -25,7 +25,7 @@ from rest_framework.views import APIView
 
 from animetix.api.billing import deduct_berrix
 
-from ...containers import Container, get_container
+from ...containers import Container
 from ...serializers import MediaItemSerializer
 
 logger = get_logger("animetix.api")
@@ -113,11 +113,15 @@ class MediaSearchView(APIView):
         self,
         guardrail_service: GuardrailService = Provide[Container.core.guardrail_service],
         usage_port: UsagePort = Provide[Container.infrastructure.usage_port],
+        catalog_service=Provide[Container.core.catalog_service],
+        cross_modal_search_service=Provide[Container.core.cross_modal_search_service],
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.guardrail_service = guardrail_service
         self.usage_port = usage_port
+        self.catalog_service = catalog_service
+        self.cross_modal_search_service = cross_modal_search_service
 
     def get(self, request):
         media_type = request.query_params.get("media_type")
@@ -138,11 +142,7 @@ class MediaSearchView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        results = (
-            get_container()
-            .core.catalog_service()
-            .search_items(query, media_type, limit)
-        )
+        results = self.catalog_service.search_items(query, media_type, limit)
         return Response(self._format_results(results))
 
     def post(self, request):
@@ -184,7 +184,6 @@ class MediaSearchView(APIView):
                     status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 )
 
-            container = get_container()
             image_data = b"".join(chunk for chunk in image_file.chunks())
 
             if not validate_file_mime_type(image_data, ALLOWED_IMAGE_MIMES):
@@ -196,7 +195,7 @@ class MediaSearchView(APIView):
                 )
 
             # Appel au service Cross-Modal
-            results = container.core.cross_modal_search_service.deep_multimodal_search(
+            results = self.cross_modal_search_service.deep_multimodal_search(
                 text_query="", image_data=image_data, limit=limit
             )
 
@@ -221,6 +220,15 @@ class MediaDetailView(APIView):
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    @inject
+    def __init__(
+        self,
+        catalog_service=Provide[Container.core.catalog_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.catalog_service = catalog_service
+
     def get(self, request, media_type, item_id):
         from ...models import MediaItem  # noqa: E402
         from ...serializers import MediaItemSerializer  # noqa: E402
@@ -236,8 +244,7 @@ class MediaDetailView(APIView):
             )
 
         # 2. Fallback via Catalog Service (si non synchronisé en SQL)
-        container = get_container()
-        data = container.core.catalog_service().load_data(media_type)
+        data = self.catalog_service.load_data(media_type)
         if data:
             item = next(
                 (i for i in data.get("db", []) if str(i.get("id")) == str(item_id)),

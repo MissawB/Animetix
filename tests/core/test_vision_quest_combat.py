@@ -63,25 +63,28 @@ def test_process_video_for_combat_lore_e2e(mock_vlm_response, tmp_path):
 
     media_id = "anime_123"
 
-    # 2. Mock VLM Adapter
+    # 2. Mock VLM Adapter (provider override on the real container)
     container = get_container()
-    # Reset container cache to ensure mocks are used
-    container._cache = {}
 
     mock_v_service = MagicMock()
     mock_v_service.extract_combat_lore.return_value = mock_vlm_response["combats"]
-    container.video_quest_service = mock_v_service
+    container.core.video_quest_service.override(mock_v_service)
 
     # 3. Mock Neo4j Manager and run test
-    with patch("scripts.curation.vision_quest_worker.neo4j_manager") as mock_neo4j:
-        # 4. Run the worker logic
-        process_video_for_combat_lore(media_id, str(video_file))
+    try:
+        with patch("scripts.curation.vision_quest_worker.neo4j_manager") as mock_neo4j:
+            # 4. Run the worker logic
+            process_video_for_combat_lore(media_id, str(video_file))
 
-        # 5. Verification
-        expected_combats = mock_vlm_response["combats"]
+            # 5. Verification
+            expected_combats = mock_vlm_response["combats"]
 
-        # Verify Neo4j sync was called with correct arguments
-        mock_neo4j.sync_combat_lore.assert_called_once_with(media_id, expected_combats)
+            # Verify Neo4j sync was called with correct arguments
+            mock_neo4j.sync_combat_lore.assert_called_once_with(
+                media_id, expected_combats
+            )
+    finally:
+        container.core.video_quest_service.reset_override()
 
         print("\n✅ End-to-End Verification Successful!")
 

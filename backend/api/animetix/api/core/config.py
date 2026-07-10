@@ -1,6 +1,7 @@
 """Public app config (incl. maintenance mode) and the transparency report."""
 
 from animetix_project.logging_config import get_logger
+from dependency_injector.wiring import Provide, inject
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import permissions
@@ -9,7 +10,7 @@ from rest_framework.views import APIView
 
 from animetix.api.throttles import CpuGameThrottle
 
-from ...containers import get_container
+from ...containers import Container
 
 logger = get_logger("animetix.api")
 
@@ -87,6 +88,17 @@ class TransparencyDataView(APIView):
 
     permission_classes = [permissions.AllowAny]
 
+    @inject
+    def __init__(
+        self,
+        sota_benchmark_service=Provide[Container.core.sota_benchmark_service],
+        drift_service=Provide[Container.core.drift_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.sota_benchmark_service = sota_benchmark_service
+        self.drift_service = drift_service
+
     def get(self, request):
         from datetime import timedelta  # noqa: E402
 
@@ -101,7 +113,6 @@ class TransparencyDataView(APIView):
             VectorRecord,
         )
 
-        container = get_container()
         cutoff = timezone.now() - timedelta(days=TRANSPARENCY_WINDOW_DAYS)
 
         # 1. Feedbacks communautaires (réel, cumulés).
@@ -170,16 +181,14 @@ class TransparencyDataView(APIView):
 
         # 6. Benchmarks SOTA (source curée canonique de l'app).
         try:
-            sota_benchmarks = (
-                container.core.sota_benchmark_service().get_all_benchmarks()
-            )
+            sota_benchmarks = self.sota_benchmark_service.get_all_benchmarks()
         except Exception:
             sota_benchmarks = []
             logger.warning("Transparency: SOTA benchmarks unavailable", exc_info=True)
 
         # 7. Dérive des embeddings (réel — test KS ; "unknown" sans baseline).
         try:
-            embedding_drift = container.core.drift_service().get_drift_report()
+            embedding_drift = self.drift_service.get_drift_report()
         except Exception:
             embedding_drift = {}
             logger.warning("Transparency: drift report unavailable", exc_info=True)

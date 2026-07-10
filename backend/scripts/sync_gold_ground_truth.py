@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import json
 import logging
 import os
@@ -152,7 +152,7 @@ def run_synchronization(dry_run: bool = False) -> Dict[str, Any]:
 
     container = get_container()
     neo4j_manager = container.persistence.graph_persistence_port()
-    inference_engine = container.inference_engine()
+    inference_engine = container.inference.inference_engine()
 
     # Verify Neo4j health once
     neo4j_online = False

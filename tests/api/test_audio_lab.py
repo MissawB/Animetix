@@ -7,6 +7,7 @@ from animetix.api.labs import (
     SoundscapeGenerationView,
     SpeechToSpeechLabView,
 )
+from animetix.containers import get_container
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 
@@ -35,23 +36,21 @@ def test_soundscape_generation_view(dummy_video):
     factory = RequestFactory()
     request = factory.post("/api/v1/labs/audio/soundscape/", {"video": dummy_video})
 
-    with (
-        patch("animetix.api.labs.audio.get_container") as mock_get_container,
-        patch("animetix.api.labs.audio.deduct_berrix"),
-    ):
-        mock_container = MagicMock()
-        mock_service = MagicMock()
-        mock_service.generate_soundscape_for_video.return_value = (
-            "http://storage.com/ambient.wav"
-        )
-        mock_container.core.soundscape_service.return_value = mock_service
-        mock_get_container.return_value = mock_container
-
-        # Bypass permissions for testing
-        view = SoundscapeGenerationView.as_view(permission_classes=[])
-        response = view(request)
-        assert response.status_code == 200
-        assert response.data["audio_url"] == "http://storage.com/ambient.wav"
+    mock_service = MagicMock()
+    mock_service.generate_soundscape_for_video.return_value = (
+        "http://storage.com/ambient.wav"
+    )
+    container = get_container()
+    container.core.soundscape_service.override(mock_service)
+    try:
+        with patch("animetix.api.labs.audio.deduct_berrix"):
+            # Bypass permissions for testing
+            view = SoundscapeGenerationView.as_view(permission_classes=[])
+            response = view(request)
+    finally:
+        container.core.soundscape_service.reset_override()
+    assert response.status_code == 200
+    assert response.data["audio_url"] == "http://storage.com/ambient.wav"
 
 
 def test_speech_to_speech_lab_view(dummy_audio):
@@ -60,23 +59,21 @@ def test_speech_to_speech_lab_view(dummy_audio):
         "/api/v1/labs/audio/s2s/", {"audio": dummy_audio, "persona": "Saber"}
     )
 
-    with (
-        patch("animetix.api.labs.audio.get_container") as mock_get_container,
-        patch("animetix.api.labs.audio.deduct_berrix"),
-    ):
-        mock_container = MagicMock()
-        mock_service = MagicMock()
-        mock_service.process_voice_interaction.return_value = {
-            "status": "success",
-            "audio_data": b"voice_output_bytes",
-        }
-        mock_container.core.native_speech_llm_service.return_value = mock_service
-        mock_get_container.return_value = mock_container
-
-        # Bypass permissions for testing
-        view = SpeechToSpeechLabView.as_view(permission_classes=[])
-        response = view(request)
-        assert response.status_code == 200
-        assert response.data["audio_data"] == base64.b64encode(
-            b"voice_output_bytes"
-        ).decode("utf-8")
+    mock_service = MagicMock()
+    mock_service.process_voice_interaction.return_value = {
+        "status": "success",
+        "audio_data": b"voice_output_bytes",
+    }
+    container = get_container()
+    container.core.native_speech_llm_service.override(mock_service)
+    try:
+        with patch("animetix.api.labs.audio.deduct_berrix"):
+            # Bypass permissions for testing
+            view = SpeechToSpeechLabView.as_view(permission_classes=[])
+            response = view(request)
+    finally:
+        container.core.native_speech_llm_service.reset_override()
+    assert response.status_code == 200
+    assert response.data["audio_data"] == base64.b64encode(
+        b"voice_output_bytes"
+    ).decode("utf-8")

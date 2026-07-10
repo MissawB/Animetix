@@ -5,11 +5,12 @@ from rest_framework.views import APIView
 
 logger = logging.getLogger("animetix.api.cognition")
 from core.domain.services.berrix_economy import FEATURE_BX_COSTS  # noqa: E402
+from dependency_injector.wiring import Provide, inject  # noqa: E402
 from rest_framework.response import Response  # noqa: E402
 
 from animetix.api.billing import deduct_berrix  # noqa: E402
 
-from ..containers import get_container  # noqa: E402
+from ..containers import Container  # noqa: E402
 from ..models import AIFeedback, ArchetypeDriftSnapshot  # noqa: E402
 from ..serializers import (  # noqa: E402
     AIDebateSerializer,
@@ -27,11 +28,23 @@ class ArchetypeNexusView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        drift_service=Provide[Container.core.archetype_drift_service],
+        profiler=Provide[Container.core.neuro_symbolic_user_profiler],
+        feedback_port=Provide[Container.persistence.feedback_adapter],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.drift_service = drift_service
+        self.profiler = profiler
+        self.feedback_port = feedback_port
+
     def get(self, request):
-        container = get_container()
-        drift_service = container.core.archetype_drift_service()
-        profiler = container.core.neuro_symbolic_user_profiler()
-        feedback_port = container.persistence.feedback_adapter()
+        drift_service = self.drift_service
+        profiler = self.profiler
+        feedback_port = self.feedback_port
 
         user = request.user
         user_id = user.id
@@ -131,13 +144,21 @@ class AIDebateArenaView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        debate_service=Provide[Container.core.self_play_debate_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.debate_service = debate_service
+
     def post(self, request):
         serializer = AIDebateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        container = get_container()
-        debate_service = container.core.self_play_debate_service()
+        debate_service = self.debate_service
 
         # GPU (multi-agent LLM debate) → consume Berrix. Before the try so a 402
         # isn't swallowed into a 500.
@@ -159,10 +180,20 @@ class NeuroMemoryManagementView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        profiler=Provide[Container.core.neuro_symbolic_user_profiler],
+        feedback_port=Provide[Container.persistence.feedback_adapter],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.profiler = profiler
+        self.feedback_port = feedback_port
+
     def get(self, request):
-        container = get_container()
-        profiler = container.core.neuro_symbolic_user_profiler()
-        feedback_port = container.persistence.feedback_adapter()
+        profiler = self.profiler
+        feedback_port = self.feedback_port
         user_id = request.user.id
         feedbacks = feedback_port.get_user_feedback(user_id, limit=100)
 
@@ -238,13 +269,21 @@ class CounterfactualSimulatorView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        simulator=Provide[Container.core.counterfactual_simulator],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.simulator = simulator
+
     def post(self, request):
         serializer = CounterfactualSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        container = get_container()
-        simulator = container.core.counterfactual_simulator()
+        simulator = self.simulator
 
         # GPU (LLM counterfactual generation) → consume Berrix (before the try).
         deduct_berrix(
@@ -272,13 +311,21 @@ class CoveOracleView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        cove_service=Provide[Container.core.cove_oracle_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.cove_service = cove_service
+
     def post(self, request):
         serializer = CoveOracleSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        container = get_container()
-        cove_service = container.core.cove_oracle_service()
+        cove_service = self.cove_service
 
         # GPU (chain-of-verification LLM calls) → consume Berrix (before the try).
         deduct_berrix(request.user, FEATURE_BX_COSTS["cove_oracle"], "CoVe Oracle (IA)")
@@ -299,13 +346,21 @@ class CFRStrategyLabView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        cfr_solver=Provide[Container.core.cfr_game_solver],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.cfr_solver = cfr_solver
+
     def post(self, request):
         serializer = CFRStrategySerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        container = get_container()
-        cfr_solver = container.core.cfr_game_solver()
+        cfr_solver = self.cfr_solver
 
         try:
             result = cfr_solver.solve_with_history(**serializer.validated_data)
