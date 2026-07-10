@@ -4,10 +4,14 @@ import { Play, Pause, Check, X, Music, Trophy, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useBlindtestStore } from '../../features/games/stores/blindtestStore';
 import { blindtestService } from '../../features/games/services/blindtestService';
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 
-const norm = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+const norm = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
 
 type HintType = 'invert' | 'blur' | 'grayscale' | 'hue' | 'noise';
 const HINT_TYPES: HintType[] = ['invert', 'blur', 'grayscale', 'hue', 'noise'];
@@ -21,19 +25,29 @@ const filterFor = (type: HintType, level: number): string => {
   const L = Math.max(0, Math.min(1, level));
   const blur = `blur(${(3 + L * 13).toFixed(1)}px)`;
   switch (type) {
-    case 'invert': return `invert(1) ${blur}`;
-    case 'grayscale': return `grayscale(1) contrast(1.15) ${blur}`;
-    case 'hue': return `hue-rotate(160deg) saturate(2.5) ${blur}`;
-    case 'blur': return `blur(${(6 + L * 18).toFixed(1)}px)`;
-    case 'noise': return `${blur} brightness(0.9)`;
-    default: return blur;
+    case 'invert':
+      return `invert(1) ${blur}`;
+    case 'grayscale':
+      return `grayscale(1) contrast(1.15) ${blur}`;
+    case 'hue':
+      return `hue-rotate(160deg) saturate(2.5) ${blur}`;
+    case 'blur':
+      return `blur(${(6 + L * 18).toFixed(1)}px)`;
+    case 'noise':
+      return `${blur} brightness(0.9)`;
+    default:
+      return blur;
   }
 };
 
 const BonusRecap: React.FC<{
-  bonusArtistOn: boolean; bonusSeqOn: boolean;
-  artistCorrect: boolean; seqCorrect: boolean;
-  artists?: string[]; sequence?: number | string; type: 'OP' | 'ED';
+  bonusArtistOn: boolean;
+  bonusSeqOn: boolean;
+  artistCorrect: boolean;
+  seqCorrect: boolean;
+  artists?: string[];
+  sequence?: number | string;
+  type: 'OP' | 'ED';
 }> = ({ bonusArtistOn, bonusSeqOn, artistCorrect, seqCorrect, artists, sequence, type }) => {
   const { t } = useTranslation();
   return (
@@ -42,16 +56,46 @@ const BonusRecap: React.FC<{
         <p className={artistCorrect ? 'text-green-500' : 'text-red-400'}>
           {artistCorrect
             ? t('games.blindtest.game.bonus_singer_ok', 'Chanteur ✓ +25')
-            : t('games.blindtest.game.bonus_singer_ko', { defaultValue: 'Chanteur : {{artists}}', artists: (artists ?? []).join(', ') })}
+            : t('games.blindtest.game.bonus_singer_ko', {
+                defaultValue: 'Chanteur : {{artists}}',
+                artists: (artists ?? []).join(', '),
+              })}
         </p>
       )}
       {bonusSeqOn && (
         <p className={seqCorrect ? 'text-green-500' : 'text-red-400'}>
           {seqCorrect
             ? t('games.blindtest.game.bonus_number_ok', 'Numéro ✓ +25')
-            : t('games.blindtest.game.bonus_number_ko', { defaultValue: "C'était {{type}} n°{{sequence}}", type, sequence })}
+            : t('games.blindtest.game.bonus_number_ko', {
+                defaultValue: "C'était {{type}} n°{{sequence}}",
+                type,
+                sequence,
+              })}
         </p>
       )}
+    </div>
+  );
+};
+
+// Révélation de fin de manche : l'affiche de l'œuvre + son titre,
+// que la manche soit gagnée ou perdue.
+const SecretReveal: React.FC<{ title?: string; image?: string | null }> = ({ title, image }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="mt-3 flex flex-col items-center gap-3">
+      {image && (
+        <img
+          src={image}
+          alt={title ?? t('games.blindtest.game.secret_poster_alt', "Affiche de l'animé")}
+          className="w-32 rounded-2xl shadow-xl border-2 border-white/10 object-cover"
+          loading="lazy"
+          decoding="async"
+        />
+      )}
+      <p className="text-lg font-bold">
+        {t('games.blindtest.game.it_was', "C'était :")}{' '}
+        <span className="text-yellow-500">{title}</span>
+      </p>
     </div>
   );
 };
@@ -61,7 +105,15 @@ const BlindtestPage: React.FC = () => {
   const { gameState, isLoading, error, loadGame, restartGame, submitGuess } = useBlindtestStore();
   const location = useLocation();
   const navigate = useNavigate();
-  const cfg = location.state as { mode?: 'session' | 'single'; type?: 'OP' | 'ED'; difficulty?: string; length?: number; hints?: boolean; guessArtist?: boolean; guessSequence?: boolean } | null;
+  const cfg = location.state as {
+    mode?: 'session' | 'single';
+    type?: 'OP' | 'ED';
+    difficulty?: string;
+    length?: number;
+    hints?: boolean;
+    guessArtist?: boolean;
+    guessSequence?: boolean;
+  } | null;
   const mode = cfg?.mode ?? 'single';
   const sessionLength = cfg?.length ?? 1;
   const hintsEnabled = cfg?.hints ?? false;
@@ -98,8 +150,15 @@ const BlindtestPage: React.FC = () => {
   // Anime titles for the guess autocomplete (fetched once).
   useEffect(() => {
     let active = true;
-    blindtestService.getTitles().then((t) => { if (active) setTitles(t); }).catch(() => {});
-    return () => { active = false; };
+    blindtestService
+      .getTitles()
+      .then((t) => {
+        if (active) setTitles(t);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, []);
 
   const onSubmit = (value?: string) => {
@@ -114,7 +173,11 @@ const BlindtestPage: React.FC = () => {
   const onGuessChange = (val: string) => {
     setGuess(val);
     const q = norm(val.trim());
-    if (q.length < 2) { setSuggestions([]); setShowSug(false); return; }
+    if (q.length < 2) {
+      setSuggestions([]);
+      setShowSug(false);
+      return;
+    }
     const starts: string[] = [];
     const incl: string[] = [];
     for (const t of titles) {
@@ -137,15 +200,24 @@ const BlindtestPage: React.FC = () => {
     else el.pause();
   };
 
-  if (isLoading) return <div className="text-center py-20 text-white font-black animate-pulse uppercase tracking-widest">{t('games.blindtest.game.loading', "Récupération de l'audio...")}</div>;
+  if (isLoading)
+    return (
+      <div className="text-center py-20 text-white font-black animate-pulse uppercase tracking-widest">
+        {t('games.blindtest.game.loading', "Récupération de l'audio...")}
+      </div>
+    );
 
   if (error) {
     return (
       <div className="flex justify-center items-center py-20">
         <Card padding="lg" className="text-center border-red-500/50">
-           <h2 className="text-2xl font-black text-red-500 mb-4 italic">{t('games.blindtest.game.error_title', 'SIGNAL PERDU')}</h2>
-           <p className="mb-8 opacity-60 font-bold">{error}</p>
-           <Button variant="danger" onClick={() => restartGame()}>{t('games.blindtest.game.reconnect', 'RECONNEXION')}</Button>
+          <h2 className="text-2xl font-black text-red-500 mb-4 italic">
+            {t('games.blindtest.game.error_title', 'SIGNAL PERDU')}
+          </h2>
+          <p className="mb-8 opacity-60 font-bold">{error}</p>
+          <Button variant="danger" onClick={() => restartGame()}>
+            {t('games.blindtest.game.reconnect', 'RECONNEXION')}
+          </Button>
         </Card>
       </div>
     );
@@ -171,17 +243,27 @@ const BlindtestPage: React.FC = () => {
   const bonusSeqOn = guessSequence && sequenceAvailable;
   const bonusEnabled = !!gameState.won && (bonusArtistOn || bonusSeqOn);
   const bonusPending = bonusEnabled && !bonusDone;
-  const bonusScore = (bonusArtistOn && artistCorrect ? 25 : 0) + (bonusSeqOn && seqCorrect ? 25 : 0);
+  const bonusScore =
+    (bonusArtistOn && artistCorrect ? 25 : 0) + (bonusSeqOn && seqCorrect ? 25 : 0);
   const roundScore = baseScore + bonusScore;
 
   const resetBonus = () => {
-    setBonusDone(false); setArtistCorrect(false); setSeqCorrect(false);
-    setArtistGuess(''); setSeqGuess('');
+    setBonusDone(false);
+    setArtistCorrect(false);
+    setSeqCorrect(false);
+    setArtistGuess('');
+    setSeqGuess('');
   };
   const validateBonus = () => {
     if (bonusArtistOn) {
       const g = norm(artistGuess);
-      setArtistCorrect(!!g && (gameState.artists ?? []).some((a) => { const n = norm(a); return n.includes(g) || g.includes(n); }));
+      setArtistCorrect(
+        !!g &&
+          (gameState.artists ?? []).some((a) => {
+            const n = norm(a);
+            return n.includes(g) || g.includes(n);
+          }),
+      );
     }
     if (bonusSeqOn) {
       const want = String(gameState.sequence ?? '').replace(/[^0-9]/g, '');
@@ -191,10 +273,16 @@ const BlindtestPage: React.FC = () => {
     setBonusDone(true);
   };
 
-  const replay = () => { resetBonus(); restartGame(currentMode, gameState.difficulty); };
+  const replay = () => {
+    resetBonus();
+    restartGame(currentMode, gameState.difficulty);
+  };
 
   const finishRound = () => {
-    setResults((r) => [...r, { score: roundScore, won: !!gameState.won, secret: gameState.secret_title }]);
+    setResults((r) => [
+      ...r,
+      { score: roundScore, won: !!gameState.won, secret: gameState.secret_title },
+    ]);
     setTotalScore((t) => t + roundScore);
     if (round >= sessionLength) {
       setSessionOver(true);
@@ -214,17 +302,33 @@ const BlindtestPage: React.FC = () => {
       <div className="max-w-2xl mx-auto px-6 py-20">
         <Card padding="lg" className="text-center">
           <Trophy className="w-14 h-14 text-yellow-400 mx-auto mb-4" />
-          <h1 className="text-4xl font-black italic manga-font uppercase text-black dark:text-white">{t('games.blindtest.game.session_over', 'Session terminée')}</h1>
+          <h1 className="text-4xl font-black italic manga-font uppercase text-black dark:text-white">
+            {t('games.blindtest.game.session_over', 'Session terminée')}
+          </h1>
           <p className="mt-6 text-6xl font-black manga-font text-yellow-500">{totalScore}</p>
-          <p className="text-xs font-black uppercase tracking-widest text-gray-400 mt-1">{t('games.blindtest.game.session_summary', { defaultValue: 'sur {{max}} points · {{wins}}/{{total}} trouvés', max: maxScore, wins, total: sessionLength })}</p>
+          <p className="text-xs font-black uppercase tracking-widest text-gray-400 mt-1">
+            {t('games.blindtest.game.session_summary', {
+              defaultValue: 'sur {{max}} points · {{wins}}/{{total}} trouvés',
+              max: maxScore,
+              wins,
+              total: sessionLength,
+            })}
+          </p>
 
           <div className="mt-8 grid grid-cols-5 sm:grid-cols-10 gap-1.5">
             {results.map((r, i) => (
               <div
                 key={i}
-                title={t('games.blindtest.game.round_tooltip', { defaultValue: 'Manche {{num}}: {{score}} pts{{secret}}', num: i + 1, score: r.score, secret: r.secret ? ` — ${r.secret}` : '' })}
+                title={t('games.blindtest.game.round_tooltip', {
+                  defaultValue: 'Manche {{num}}: {{score}} pts{{secret}}',
+                  num: i + 1,
+                  score: r.score,
+                  secret: r.secret ? ` — ${r.secret}` : '',
+                })}
                 className={`h-8 rounded-md grid place-items-center text-[10px] font-black ${
-                  r.won ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/15 text-red-500'
+                  r.won
+                    ? 'bg-green-500/20 text-green-600 dark:text-green-400'
+                    : 'bg-red-500/15 text-red-500'
                 }`}
               >
                 {r.score}
@@ -233,7 +337,9 @@ const BlindtestPage: React.FC = () => {
           </div>
 
           <div className="flex gap-3 justify-center mt-10">
-            <Button variant="primary" onClick={() => navigate('/blindtest/')}>{t('games.blindtest.game.new_session', 'NOUVELLE SESSION')}</Button>
+            <Button variant="primary" onClick={() => navigate('/blindtest/')}>
+              {t('games.blindtest.game.new_session', 'NOUVELLE SESSION')}
+            </Button>
           </div>
         </Card>
       </div>
@@ -250,14 +356,24 @@ const BlindtestPage: React.FC = () => {
         <div className="max-w-7xl mx-auto mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
-              {t('games.blindtest.game.round_progress', { defaultValue: 'Manche {{round}} / {{total}}', round, total: sessionLength })}
+              {t('games.blindtest.game.round_progress', {
+                defaultValue: 'Manche {{round}} / {{total}}',
+                round,
+                total: sessionLength,
+              })}
             </span>
             <span className="text-xs font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400">
-              {t('games.blindtest.game.points', { defaultValue: '{{score}} pts', score: totalScore })}
+              {t('games.blindtest.game.points', {
+                defaultValue: '{{score}} pts',
+                score: totalScore,
+              })}
             </span>
           </div>
           <div className="w-full h-2 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all" style={{ width: `${((round - 1) / sessionLength) * 100}%` }} />
+            <div
+              className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all"
+              style={{ width: `${((round - 1) / sessionLength) * 100}%` }}
+            />
           </div>
         </div>
       )}
@@ -266,7 +382,12 @@ const BlindtestPage: React.FC = () => {
         {/* LECTEUR */}
         <Card padding="md">
           {gameState.gameOver ? (
-            <video src={gameState.video_url} controls className="w-full rounded-3xl shadow-lg" aria-label={t('games.blindtest.game.video_player_aria', "Lecteur vidéo de l'extrait")}>
+            <video
+              src={gameState.video_url}
+              controls
+              className="w-full rounded-3xl shadow-lg"
+              aria-label={t('games.blindtest.game.video_player_aria', "Lecteur vidéo de l'extrait")}
+            >
               <track kind="captions" />
             </video>
           ) : (
@@ -274,7 +395,9 @@ const BlindtestPage: React.FC = () => {
               {/* Current format */}
               <div className="mb-8">
                 <span className="px-4 py-1.5 rounded-full bg-yellow-400/15 border border-yellow-400/30 text-yellow-600 dark:text-yellow-400 text-[11px] font-black uppercase tracking-widest">
-                  {currentMode === 'OP' ? t('games.blindtest.game.format_opening', 'Opening') : t('games.blindtest.game.format_ending', 'Ending')}
+                  {currentMode === 'OP'
+                    ? t('games.blindtest.game.format_opening', 'Opening')
+                    : t('games.blindtest.game.format_ending', 'Ending')}
                 </span>
               </div>
 
@@ -292,10 +415,14 @@ const BlindtestPage: React.FC = () => {
                     className={`w-full h-full object-cover transition-all duration-500 ${showVisual ? 'opacity-100' : 'opacity-0'}`}
                     style={{ filter: showVisual ? filterFor(hintType, hintLevel) : 'none' }}
                     preload="auto"
-                    aria-label={t('games.blindtest.game.visual_hint_aria', 'Indice visuel du générique')}
+                    aria-label={t(
+                      'games.blindtest.game.visual_hint_aria',
+                      'Indice visuel du générique',
+                    )}
                     onLoadedMetadata={(e) => {
                       const el = e.currentTarget;
-                      if (el.videoWidth && el.videoHeight) setAspect(el.videoWidth / el.videoHeight);
+                      if (el.videoWidth && el.videoHeight)
+                        setAspect(el.videoWidth / el.videoHeight);
                     }}
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
@@ -308,7 +435,10 @@ const BlindtestPage: React.FC = () => {
                   {showVisual && hintType === 'noise' && (
                     <div
                       className="absolute inset-0 mix-blend-overlay pointer-events-none"
-                      style={{ backgroundImage: "url('/static/img/noise.png')", opacity: 0.4 + hintLevel * 0.5 }}
+                      style={{
+                        backgroundImage: "url('/static/img/noise.png')",
+                        opacity: 0.4 + hintLevel * 0.5,
+                      }}
                     />
                   )}
 
@@ -316,7 +446,10 @@ const BlindtestPage: React.FC = () => {
                     <div className="absolute inset-0 grid place-items-center">
                       <div
                         className={`relative w-44 h-44 rounded-full grid place-items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isPlaying ? 'motion-safe:animate-[spin_4s_linear_infinite]' : ''}`}
-                        style={{ background: 'repeating-radial-gradient(circle at center, #0d0d12 0 3px, #1b1b24 3px 6px)' }}
+                        style={{
+                          background:
+                            'repeating-radial-gradient(circle at center, #0d0d12 0 3px, #1b1b24 3px 6px)',
+                        }}
                       >
                         <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-white/15" />
                         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500 grid place-items-center border-4 border-black/40 shadow-inner">
@@ -329,20 +462,39 @@ const BlindtestPage: React.FC = () => {
 
                   <button
                     onClick={togglePlay}
-                    aria-label={isPlaying ? t('games.blindtest.game.pause_aria', 'Mettre en pause') : t('games.blindtest.game.play_aria', 'Lancer la lecture')}
+                    aria-label={
+                      isPlaying
+                        ? t('games.blindtest.game.pause_aria', 'Mettre en pause')
+                        : t('games.blindtest.game.play_aria', 'Lancer la lecture')
+                    }
                     className="absolute inset-0 grid place-items-center group outline-none"
                   >
                     <span className="bg-black/60 backdrop-blur-sm text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current" />}
+                      {isPlaying ? (
+                        <Pause className="w-7 h-7" />
+                      ) : (
+                        <Play className="w-7 h-7 fill-current" />
+                      )}
                     </span>
                   </button>
                 </div>
               ) : (
                 /* Vinyl disc — audio only (hints disabled) */
-                <button onClick={togglePlay} aria-label={isPlaying ? t('games.blindtest.game.pause_aria', 'Mettre en pause') : t('games.blindtest.game.play_aria', 'Lancer la lecture')} className="group relative outline-none">
+                <button
+                  onClick={togglePlay}
+                  aria-label={
+                    isPlaying
+                      ? t('games.blindtest.game.pause_aria', 'Mettre en pause')
+                      : t('games.blindtest.game.play_aria', 'Lancer la lecture')
+                  }
+                  className="group relative outline-none"
+                >
                   <div
                     className={`relative w-60 h-60 rounded-full grid place-items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isPlaying ? 'motion-safe:animate-[spin_4s_linear_infinite]' : ''}`}
-                    style={{ background: 'repeating-radial-gradient(circle at center, #0d0d12 0 3px, #1b1b24 3px 6px)' }}
+                    style={{
+                      background:
+                        'repeating-radial-gradient(circle at center, #0d0d12 0 3px, #1b1b24 3px 6px)',
+                    }}
                   >
                     <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500 grid place-items-center border-4 border-black/40 shadow-inner">
@@ -352,7 +504,11 @@ const BlindtestPage: React.FC = () => {
                   </div>
                   <span className="absolute inset-0 grid place-items-center pointer-events-none">
                     <span className="bg-black/60 backdrop-blur-sm text-white p-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 fill-current" />}
+                      {isPlaying ? (
+                        <Pause className="w-8 h-8" />
+                      ) : (
+                        <Play className="w-8 h-8 fill-current" />
+                      )}
                     </span>
                   </span>
                   <video
@@ -360,7 +516,10 @@ const BlindtestPage: React.FC = () => {
                     src={gameState.video_url}
                     className="hidden"
                     preload="auto"
-                    aria-label={t('games.blindtest.game.audio_clip_aria', 'Extrait audio du blind test')}
+                    aria-label={t(
+                      'games.blindtest.game.audio_clip_aria',
+                      'Extrait audio du blind test',
+                    )}
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
                     onEnded={() => setIsPlaying(false)}
@@ -372,11 +531,25 @@ const BlindtestPage: React.FC = () => {
               )}
 
               <p className="mt-8 font-bold text-gray-500 uppercase tracking-widest text-xs">
-                {isPlaying ? t('games.blindtest.game.playing', 'Lecture en cours…') : hintsEnabled ? t('games.blindtest.game.listen_hint_visual', 'Clique pour écouter — le visuel se précise à chaque essai') : t('games.blindtest.game.listen_hint_disc', 'Cliquez sur le disque pour écouter')}
+                {isPlaying
+                  ? t('games.blindtest.game.playing', 'Lecture en cours…')
+                  : hintsEnabled
+                    ? t(
+                        'games.blindtest.game.listen_hint_visual',
+                        'Clique pour écouter — le visuel se précise à chaque essai',
+                      )
+                    : t(
+                        'games.blindtest.game.listen_hint_disc',
+                        'Cliquez sur le disque pour écouter',
+                      )}
               </p>
               {typeof gameState.attemptsLeft === 'number' && (
                 <p className="mt-2 text-[11px] font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400">
-                  {t('games.blindtest.game.attempts_left', { defaultValue: '{{count}} tentative{{plural}} restante{{plural}}', count: gameState.attemptsLeft, plural: gameState.attemptsLeft > 1 ? 's' : '' })}
+                  {t('games.blindtest.game.attempts_left', {
+                    defaultValue: '{{count}} tentative{{plural}} restante{{plural}}',
+                    count: gameState.attemptsLeft,
+                    plural: gameState.attemptsLeft > 1 ? 's' : '',
+                  })}
                 </p>
               )}
             </div>
@@ -386,7 +559,8 @@ const BlindtestPage: React.FC = () => {
         {/* JEU */}
         <Card padding="lg">
           <h2 className="text-3xl font-black mb-8 flex items-center gap-3 italic">
-              <Music className="w-8 h-8 text-yellow-400" /> {t('games.blindtest.game.title', "DÉCOUVREZ L'ANIMÉ")}
+            <Music className="w-8 h-8 text-yellow-400" />{' '}
+            {t('games.blindtest.game.title', "DÉCOUVREZ L'ANIMÉ")}
           </h2>
           {!gameState.gameOver ? (
             <div className="space-y-6">
@@ -395,8 +569,15 @@ const BlindtestPage: React.FC = () => {
                   type="text"
                   value={guess}
                   onChange={(e) => onGuessChange(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && guess.trim()) { setShowSug(false); onSubmit(); } }}
-                  onFocus={() => { if (suggestions.length) setShowSug(true); }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && guess.trim()) {
+                      setShowSug(false);
+                      onSubmit();
+                    }
+                  }}
+                  onFocus={() => {
+                    if (suggestions.length) setShowSug(true);
+                  }}
                   onBlur={() => setTimeout(() => setShowSug(false), 150)}
                   className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
                   placeholder={t('games.blindtest.game.input_placeholder', "Titre de l'animé...")}
@@ -409,7 +590,10 @@ const BlindtestPage: React.FC = () => {
                       <li key={tt}>
                         <button
                           type="button"
-                          onMouseDown={(e) => { e.preventDefault(); pick(tt); }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            pick(tt);
+                          }}
                           className="w-full text-left px-4 py-3 hover:bg-yellow-400/10 font-bold text-sm text-black dark:text-white truncate transition-colors"
                         >
                           {tt}
@@ -425,15 +609,25 @@ const BlindtestPage: React.FC = () => {
             </div>
           ) : bonusPending ? (
             <div className="p-6 rounded-2xl text-center border-2 bg-green-500/10 border-green-500">
-              <p className="font-black text-2xl text-green-500">{t('games.blindtest.game.found_base_score', { defaultValue: '🎉 Trouvé ! +{{score}} pts', score: baseScore })}</p>
-              <p className="text-lg font-bold mt-2">{t('games.blindtest.game.it_was', "C'était :")} <span className="text-yellow-500">{gameState.secret_title}</span></p>
+              <p className="font-black text-2xl text-green-500">
+                {t('games.blindtest.game.found_base_score', {
+                  defaultValue: '🎉 Trouvé ! +{{score}} pts',
+                  score: baseScore,
+                })}
+              </p>
+              <SecretReveal title={gameState.secret_title} image={gameState.secret_image} />
               <div className="mt-5 pt-5 border-t border-white/10 space-y-3 text-left max-w-sm mx-auto">
-                <p className="text-[11px] font-black uppercase tracking-widest text-yellow-500 text-center">{t('games.blindtest.game.bonus_title', 'Bonus (+25 pts chacun)')}</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-yellow-500 text-center">
+                  {t('games.blindtest.game.bonus_title', 'Bonus (+25 pts chacun)')}
+                </p>
                 {bonusArtistOn && (
                   <input
                     value={artistGuess}
                     onChange={(e) => setArtistGuess(e.target.value)}
-                    placeholder={t('games.blindtest.game.singer_placeholder', 'Chanteur / interprète…')}
+                    placeholder={t(
+                      'games.blindtest.game.singer_placeholder',
+                      'Chanteur / interprète…',
+                    )}
                     aria-label={t('games.blindtest.game.singer_aria', 'Chanteur')}
                     className="w-full p-3 rounded-xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
                   />
@@ -443,46 +637,110 @@ const BlindtestPage: React.FC = () => {
                     type="number"
                     value={seqGuess}
                     onChange={(e) => setSeqGuess(e.target.value)}
-                    placeholder={t('games.blindtest.game.number_placeholder', { defaultValue: "Numéro d'{{format}} (ex: 1)", format: currentMode === 'ED' ? 'ending' : 'opening' })}
+                    placeholder={t('games.blindtest.game.number_placeholder', {
+                      defaultValue: "Numéro d'{{format}} (ex: 1)",
+                      format: currentMode === 'ED' ? 'ending' : 'opening',
+                    })}
                     aria-label={t('games.blindtest.game.number_aria', "Numéro d'opening")}
                     className="w-full p-3 rounded-xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
                   />
                 )}
-                <Button variant="primary" fullWidth onClick={validateBonus}>{t('games.blindtest.game.submit_bonus', 'VALIDER LE BONUS')}</Button>
+                <Button variant="primary" fullWidth onClick={validateBonus}>
+                  {t('games.blindtest.game.submit_bonus', 'VALIDER LE BONUS')}
+                </Button>
               </div>
             </div>
           ) : isSession ? (
-            <div className={`p-6 rounded-2xl text-center border-2 ${gameState.won ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
-              <p className={`font-black text-2xl ${gameState.won ? 'text-green-500' : 'text-red-500'}`}>
-                {gameState.won ? t('games.blindtest.game.round_won_score', { defaultValue: '🎉 +{{score}} pts', score: roundScore }) : t('games.blindtest.game.round_lost', '😵 Manche perdue')}
+            <div
+              className={`p-6 rounded-2xl text-center border-2 ${gameState.won ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}
+            >
+              <p
+                className={`font-black text-2xl ${gameState.won ? 'text-green-500' : 'text-red-500'}`}
+              >
+                {gameState.won
+                  ? t('games.blindtest.game.round_won_score', {
+                      defaultValue: '🎉 +{{score}} pts',
+                      score: roundScore,
+                    })
+                  : t('games.blindtest.game.round_lost', '😵 Manche perdue')}
               </p>
-              <p className="text-lg font-bold mt-2">{t('games.blindtest.game.it_was', "C'était :")} <span className="text-yellow-500">{gameState.secret_title}</span></p>
-              {bonusEnabled && bonusDone && <BonusRecap {...{ bonusArtistOn, bonusSeqOn, artistCorrect, seqCorrect, artists: gameState.artists, sequence: gameState.sequence, type: currentMode }} />}
+              <SecretReveal title={gameState.secret_title} image={gameState.secret_image} />
+              {bonusEnabled && bonusDone && (
+                <BonusRecap
+                  {...{
+                    bonusArtistOn,
+                    bonusSeqOn,
+                    artistCorrect,
+                    seqCorrect,
+                    artists: gameState.artists,
+                    sequence: gameState.sequence,
+                    type: currentMode,
+                  }}
+                />
+              )}
               <Button variant="primary" className="mt-6" onClick={finishRound}>
-                {lastRound ? t('games.blindtest.game.see_result', 'VOIR LE RÉSULTAT') : t('games.blindtest.game.next_round', 'MANCHE SUIVANTE')} <ArrowRight className="w-5 h-5" />
+                {lastRound
+                  ? t('games.blindtest.game.see_result', 'VOIR LE RÉSULTAT')
+                  : t('games.blindtest.game.next_round', 'MANCHE SUIVANTE')}{' '}
+                <ArrowRight className="w-5 h-5" />
               </Button>
             </div>
           ) : lost ? (
             <div className="bg-red-500/10 border-2 border-red-500 p-6 rounded-2xl text-center">
-                <p className="text-red-500 font-black text-2xl">{t('games.blindtest.game.lost', '😵 PERDU !')}</p>
-                <p className="text-xl font-bold mt-2">{t('games.blindtest.game.it_was', "C'était :")} <span className="text-yellow-500">{gameState.secret_title}</span></p>
-                <Button variant="danger" className="mt-6" onClick={replay}>{t('games.blindtest.game.replay', 'REJOUER')}</Button>
+              <p className="text-red-500 font-black text-2xl">
+                {t('games.blindtest.game.lost', '😵 PERDU !')}
+              </p>
+              <SecretReveal title={gameState.secret_title} image={gameState.secret_image} />
+              <Button variant="danger" className="mt-6" onClick={replay}>
+                {t('games.blindtest.game.replay', 'REJOUER')}
+              </Button>
             </div>
           ) : (
             <div className="bg-green-500/10 border-2 border-green-500 p-6 rounded-2xl text-center">
-                <p className="text-green-500 font-black text-2xl animate-bounce">{t('games.blindtest.game.well_played', '🎉 BIEN JOUÉ !')}{bonusScore > 0 ? t('games.blindtest.game.bonus_suffix', { defaultValue: ' +{{score}} bonus', score: bonusScore }) : ''}</p>
-                <p className="text-xl font-bold mt-2">{t('games.blindtest.game.it_was', "C'était :")} <span className="text-yellow-500">{gameState.secret_title}</span></p>
-                {bonusEnabled && bonusDone && <BonusRecap {...{ bonusArtistOn, bonusSeqOn, artistCorrect, seqCorrect, artists: gameState.artists, sequence: gameState.sequence, type: currentMode }} />}
-                <Button variant="success" className="mt-6" onClick={replay}>{t('games.blindtest.game.replay', 'REJOUER')}</Button>
+              <p className="text-green-500 font-black text-2xl animate-bounce">
+                {t('games.blindtest.game.well_played', '🎉 BIEN JOUÉ !')}
+                {bonusScore > 0
+                  ? t('games.blindtest.game.bonus_suffix', {
+                      defaultValue: ' +{{score}} bonus',
+                      score: bonusScore,
+                    })
+                  : ''}
+              </p>
+              <SecretReveal title={gameState.secret_title} image={gameState.secret_image} />
+              {bonusEnabled && bonusDone && (
+                <BonusRecap
+                  {...{
+                    bonusArtistOn,
+                    bonusSeqOn,
+                    artistCorrect,
+                    seqCorrect,
+                    artists: gameState.artists,
+                    sequence: gameState.sequence,
+                    type: currentMode,
+                  }}
+                />
+              )}
+              <Button variant="success" className="mt-6" onClick={replay}>
+                {t('games.blindtest.game.replay', 'REJOUER')}
+              </Button>
             </div>
           )}
 
           <div className="mt-10 space-y-3">
-            <h4 className="text-[10px] font-black opacity-30 uppercase tracking-widest">{t('games.blindtest.game.previous_attempts', 'Tentatives précédentes')}</h4>
+            <h4 className="text-[10px] font-black opacity-30 uppercase tracking-widest">
+              {t('games.blindtest.game.previous_attempts', 'Tentatives précédentes')}
+            </h4>
             {gameState.guesses.map((g: { title: string; is_correct: boolean }, i: number) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-navy-900 rounded-xl border border-gray-100 dark:border-white/5">
+              <div
+                key={i}
+                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-navy-900 rounded-xl border border-gray-100 dark:border-white/5"
+              >
                 <span className="font-bold opacity-80">{g.title}</span>
-                {g.is_correct ? <Check className="text-green-500 w-5 h-5" /> : <X className="text-red-500 w-5 h-5" />}
+                {g.is_correct ? (
+                  <Check className="text-green-500 w-5 h-5" />
+                ) : (
+                  <X className="text-red-500 w-5 h-5" />
+                )}
               </div>
             ))}
           </div>

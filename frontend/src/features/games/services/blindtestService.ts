@@ -14,6 +14,7 @@ interface RawBlindtestState {
   won?: boolean;
   is_daily?: boolean;
   secret_title?: string;
+  secret_image?: string | null;
   difficulty?: string;
   max_attempts?: number;
   attempts_left?: number;
@@ -24,6 +25,7 @@ export interface GuessResult {
   won: boolean;
   guesses: Array<{ title: string; is_correct: boolean }>;
   secret_title?: string;
+  secret_image?: string | null;
   attemptsLeft?: number;
 }
 
@@ -33,6 +35,7 @@ const normalize = (raw: RawBlindtestState): BlindtestState => ({
   mediaType: 'Anime',
   video_url: raw.video_url,
   secret_title: raw.secret_title,
+  secret_image: raw.secret_image ?? undefined,
   theme_type: raw.theme_type,
   sequence: raw.blindtest_sequence ?? undefined,
   song: raw.blindtest_song,
@@ -66,7 +69,9 @@ export const blindtestService = {
   },
 
   getTitles: async (): Promise<string[]> => {
-    const data = (await apiClient(`${API_BASE}/titles/`, { skipToast: true })) as { titles?: string[] };
+    const data = (await apiClient(`${API_BASE}/titles/`, { skipToast: true })) as {
+      titles?: string[];
+    };
     return data?.titles ?? [];
   },
 
@@ -80,6 +85,7 @@ export const blindtestService = {
       won: !!raw.won,
       guesses: raw.guesses ?? [],
       secret_title: raw.secret_title,
+      secret_image: raw.secret_image ?? undefined,
       attemptsLeft: raw.attempts_left,
     };
   },

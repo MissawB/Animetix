@@ -24,6 +24,16 @@ def _max_attempts(difficulty: str) -> int:
     return MAX_ATTEMPTS.get(difficulty, MAX_ATTEMPTS["Normal"])
 
 
+def _secret_image(catalog_service, secret: str) -> str | None:
+    """Affiche de l'œuvre secrète, révélée uniquement en fin de manche."""
+    try:
+        data = catalog_service.load_data("Anime") or {}
+        item = data.get("title_to_full_data", {}).get(secret)
+        return str(item["image"]) if item and item.get("image") else None
+    except Exception:  # catalogue indisponible : la révélation reste textuelle
+        return None
+
+
 class BlindtestTitlesView(APIView):
     """Anime titles for the guess autocomplete (same catalog used to validate)."""
 
@@ -47,7 +57,10 @@ class BlindtestGameStateView(APIView):
 
     @inject
     def get(
-        self, request, blind_test_service=Provide[Container.core.blind_test_service]
+        self,
+        request,
+        blind_test_service=Provide[Container.core.blind_test_service],
+        catalog_service=Provide[Container.core.catalog_service],
     ):
         session_service = get_session_service(request)
         port = session_service.port
@@ -74,6 +87,11 @@ class BlindtestGameStateView(APIView):
                 "max_attempts": max_attempts,
                 "attempts_left": max(0, max_attempts - len(state.guesses)),
                 "secret_title": state.secret if state.game_over else None,
+                "secret_image": (
+                    _secret_image(catalog_service, state.secret)
+                    if state.game_over
+                    else None
+                ),
             }
         )
 
@@ -266,6 +284,11 @@ class BlindtestGameGuessView(APIView):
                 "blindtest_song": state.song,
                 "blindtest_artists": state.artists,
                 "secret_title": secret if state.game_over else None,
+                "secret_image": (
+                    str(secret_item.get("image"))
+                    if state.game_over and secret_item and secret_item.get("image")
+                    else None
+                ),
                 "newly_unlocked_achievements": unlocked_achievements,
             }
         )

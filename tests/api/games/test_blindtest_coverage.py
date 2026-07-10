@@ -94,13 +94,20 @@ def test_state_in_progress_hides_secret(api_client):
 
 
 @pytest.mark.django_db
-def test_state_game_over_reveals_secret(api_client):
+def test_state_game_over_reveals_secret(api_client, mock_catalog):
+    cat = MagicMock()
+    cat.load_data.return_value = mock_catalog
     bt = MagicMock()
     bt.get_state.return_value = _state(secret="Naruto", game_over=True)
-    with container.core.blind_test_service.override(providers.Object(bt)):
+    with (
+        container.core.catalog_service.override(providers.Object(cat)),
+        container.core.blind_test_service.override(providers.Object(bt)),
+    ):
         resp = api_client.get(reverse("api_blindtest_state"))
     assert resp.status_code == 200
-    assert resp.json()["secret_title"] == "Naruto"
+    data = resp.json()
+    assert data["secret_title"] == "Naruto"
+    assert data["secret_image"] == "http://naruto.jpg"
 
 
 # --------------------------------------------------------------------------- #
@@ -315,6 +322,7 @@ def test_guess_correct_authenticated_creates_session(api_client, mock_catalog):
     assert data["is_correct"] is True
     assert data["game_over"] is True
     assert data["secret_title"] == "Naruto"
+    assert data["secret_image"] == "http://naruto.jpg"
     assert data["newly_unlocked_achievements"][0]["name"] == "BT Win"
     assert GameplaySession.objects.filter(target_item="Naruto", was_won=True).exists()
 
