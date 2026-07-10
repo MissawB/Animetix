@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import json
 import logging
 import os
@@ -318,7 +318,7 @@ def push_to_hitl_gate(records):
 
         # Tentative d'utilisation du Gate de validation (recommandé)
         try:
-            validation_gate = container.synthetic_validation_service()
+            validation_gate = container.core.synthetic_validation_service()
             count = 0
             for rec in records:
                 validation_gate.validate_and_stage(

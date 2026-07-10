@@ -1,7 +1,28 @@
+from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 from animetix.api.companion import CompanionInteractView
+from animetix.containers import get_container
 from django.test import RequestFactory
+
+real_container = get_container()
+
+
+@contextmanager
+def _override_services(companion_service, guardrail_service, usage_port):
+    """Override the constructor-injected companion providers, reset on exit."""
+    overrides = [
+        (real_container.core.companion_service, companion_service),
+        (real_container.core.guardrail_service, guardrail_service),
+        (real_container.infrastructure.usage_port, usage_port),
+    ]
+    try:
+        for provider, mock in overrides:
+            provider.override(mock)
+        yield
+    finally:
+        for provider, _ in overrides:
+            provider.reset_override()
 
 
 def test_companion_interact_view_unauthenticated():
@@ -9,8 +30,9 @@ def test_companion_interact_view_unauthenticated():
     request = factory.post(
         "/api/v1/companion/interact/", {"mentor_id": "sensei", "user_message": "Hello"}
     )
-    view = CompanionInteractView.as_view()
-    response = view(request)
+    with _override_services(MagicMock(), MagicMock(), MagicMock()):
+        view = CompanionInteractView.as_view()
+        response = view(request)
     # DRF permissions usually return 403 or 401 for unauthenticated
     assert response.status_code in [401, 403]
 
@@ -35,26 +57,20 @@ def test_companion_interact_view_authenticated():
     request.user = user
     request.session = {}
 
+    mock_service = MagicMock()
+    mock_service.generate_response.return_value = "Compagnon says hello!"
+
+    mock_guard = MagicMock()
+    mock_guard.validate_input.return_value = {"is_safe": True}
+    mock_guard.validate_output.return_value = {"is_safe": True}
+
+    mock_usage = MagicMock()
+    mock_usage.check_quota.return_value = True
+
     with (
-        patch("animetix.api.companion.get_container") as mock_get_container,
+        _override_services(mock_service, mock_guard, mock_usage),
         patch("animetix.api.billing.deduct_berrix"),
     ):
-        mock_container = MagicMock()
-        mock_service = MagicMock()
-        mock_service.generate_response.return_value = "Compagnon says hello!"
-        mock_container.core.companion_service.return_value = mock_service
-
-        mock_guard = MagicMock()
-        mock_guard.validate_input.return_value = {"is_safe": True}
-        mock_guard.validate_output.return_value = {"is_safe": True}
-        mock_container.core.guardrail_service.return_value = mock_guard
-
-        mock_usage = MagicMock()
-        mock_usage.check_quota.return_value = True
-        mock_container.infrastructure.usage_port.return_value = mock_usage
-
-        mock_get_container.return_value = mock_container
-
         # Bypass permissions for testing or ensure user is authenticated
         from rest_framework.test import force_authenticate  # noqa: E402
 
@@ -83,21 +99,16 @@ def test_companion_evicts_and_remembers_when_over_five_turns():
     prior = [{"role": "user", "content": f"old{i}"} for i in range(4)]
     request.session = {"companion_history": list(prior)}
 
+    mock_service = MagicMock()
+    mock_service.generate_response.return_value = "hi back"
+    mock_guard = MagicMock()
+    mock_guard.validate_input.return_value = {"is_safe": True}
+    mock_guard.validate_output.return_value = {"is_safe": True}
+
     with (
-        patch("animetix.api.companion.get_container") as mock_get_container,
+        _override_services(mock_service, mock_guard, MagicMock()),
         patch("animetix.api.billing.deduct_berrix"),
     ):
-        mock_container = MagicMock()
-        mock_service = MagicMock()
-        mock_service.generate_response.return_value = "hi back"
-        mock_container.core.companion_service.return_value = mock_service
-        mock_guard = MagicMock()
-        mock_guard.validate_input.return_value = {"is_safe": True}
-        mock_guard.validate_output.return_value = {"is_safe": True}
-        mock_container.core.guardrail_service.return_value = mock_guard
-        mock_container.infrastructure.usage_port.return_value = MagicMock()
-        mock_get_container.return_value = mock_container
-
         from rest_framework.test import force_authenticate  # noqa: E402
 
         view = CompanionInteractView.as_view(permission_classes=[])

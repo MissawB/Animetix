@@ -1,4 +1,4 @@
-import json
+﻿import json
 import logging
 import os
 import sys
@@ -32,7 +32,7 @@ for path in [SRC_DIR, BACKEND_DIR]:
 def get_repo():
     from animetix.containers import get_container  # noqa: E402
 
-    return get_container().repository()
+    return get_container().persistence.repository()
 
 
 def get_pipeline_resources():

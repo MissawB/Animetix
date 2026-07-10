@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 import sys
 import time
@@ -38,7 +38,7 @@ def run_targeted_quality_benchmark():
 
     # 2. Setup Container and RAG
     container = get_container()
-    rag = container.agentic_rag
+    rag = container.agentic.agentic_rag()
 
     # 3. Load and Filter Gold Set
     gold_path = os.path.join(base_dir, "data", "mlops", "gold_dataset.json")
@@ -91,7 +91,7 @@ def run_targeted_quality_benchmark():
                     states_visited.append(state)
 
             # Context for RAGAS (re-retrieval for benchmark consistency)
-            search_results = container.rag_service.hybrid_search(q, "Anime")
+            search_results = container.agentic.rag_service().hybrid_search(q, "Anime")
             contexts = [r.get("description", "") for r in search_results]
             if not contexts:
                 contexts = ["No context found"]

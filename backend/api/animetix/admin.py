@@ -1,4 +1,4 @@
-from django.contrib import admin, messages
+﻿from django.contrib import admin, messages
 from django.shortcuts import redirect
 from django.urls import path
 from django.utils.html import format_html
@@ -198,7 +198,7 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
             return
 
         container = get_container()
-        promotion_service = container.synthetic_promotion_service()
+        promotion_service = container.core.synthetic_promotion_service()
 
         try:
             stats = promotion_service.promote_validated_entries()
@@ -227,7 +227,7 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
 
     def promote_validated_view(self, request):
         container = get_container()
-        promotion_service = container.synthetic_promotion_service()
+        promotion_service = container.core.synthetic_promotion_service()
         try:
             stats = promotion_service.promote_validated_entries()
             count = stats.get("promoted", 0)

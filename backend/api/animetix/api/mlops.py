@@ -17,7 +17,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..containers import Container, get_container  # noqa: E402
+from ..containers import Container  # noqa: E402
 from ..forms import (  # noqa: E402
     UserIDForm,
     VertexFeatureStoreForm,
@@ -206,11 +206,19 @@ class DPOCurationViewSet(viewsets.ViewSet):
 
     permission_classes = [permissions.IsAdminUser]
 
+    @inject
+    def __init__(
+        self,
+        *args,
+        dpo_loop=Provide[Container.core.dpo_feedback_loop],
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.dpo_loop = dpo_loop
+
     def list(self, request):
-        container = get_container()
-        dpo_loop = container.core.dpo_feedback_loop()
         limit = int(request.GET.get("limit", 50))
-        samples = dpo_loop.get_rejected_for_curation(limit=limit)
+        samples = self.dpo_loop.get_rejected_for_curation(limit=limit)
         return Response(samples)
 
     def create(self, request):
@@ -218,10 +226,7 @@ class DPOCurationViewSet(viewsets.ViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        container = get_container()
-        dpo_loop = container.core.dpo_feedback_loop()
-
-        success = dpo_loop.curate_feedback(**serializer.validated_data)
+        success = self.dpo_loop.curate_feedback(**serializer.validated_data)
         if success:
             return Response(
                 {"status": "success", "message": "Feedback successfully curated."}
@@ -290,9 +295,17 @@ class SOTABenchmarkListView(APIView):
 
     permission_classes = [permissions.AllowAny]  # Public pour la transparence
 
+    @inject
+    def __init__(
+        self,
+        benchmark_service=Provide[Container.core.sota_benchmark_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.benchmark_service = benchmark_service
+
     def get(self, request):
-        container = get_container()
-        service = container.core.sota_benchmark_service()
+        service = self.benchmark_service
 
         benchmarks = service.get_all_benchmarks()
         best_elo = service.get_best_model("elo_score")
@@ -317,10 +330,17 @@ class DPOFeedbackLoopView(APIView):
 
     permission_classes = [permissions.IsAdminUser]
 
+    @inject
+    def __init__(
+        self,
+        dpo_loop=Provide[Container.core.dpo_feedback_loop],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.dpo_loop = dpo_loop
+
     def get(self, request, *args, **kwargs):
-        container = get_container()
-        dpo_loop = container.core.dpo_feedback_loop()
-        stats = dpo_loop.analyze_feedback_trends()
+        stats = self.dpo_loop.analyze_feedback_trends()
 
         return Response(
             {
@@ -333,8 +353,7 @@ class DPOFeedbackLoopView(APIView):
 
     def post(self, request, *args, **kwargs):
         action_type = request.data.get("action")
-        container = get_container()
-        dpo_loop = container.core.dpo_feedback_loop()
+        dpo_loop = self.dpo_loop
 
         if action_type == "export":
             dpo_loop.export_preference_dataset()
@@ -369,10 +388,19 @@ class AdaptersView(APIView):
 
     permission_classes = [permissions.IsAdminUser]
 
+    @inject
+    def __init__(
+        self,
+        engine=Provide[Container.inference.inference_engine],
+        unified_adapter=Provide[Container.inference.unified_inference_adapter],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.engine = engine
+        self.unified_adapter = unified_adapter
+
     def get(self, request, *args, **kwargs):
-        container = get_container()
-        engine = container.inference.inference_engine()
-        health = engine.health_check()
+        health = self.engine.health_check()
 
         return Response(
             {"engine": "FallbackInferenceAdapter", "health": health},
@@ -381,8 +409,7 @@ class AdaptersView(APIView):
 
     def post(self, request, *args, **kwargs):
         action_type = request.data.get("action")
-        container = get_container()
-        engine = container.inference.inference_engine()
+        engine = self.engine
 
         if action_type == "set_primary":
             index = int(request.data.get("index", 0))
@@ -401,8 +428,7 @@ class AdaptersView(APIView):
                 return Response({"error": "model_name required"}, status=400)
 
             # Target the unified adapter specifically
-            unified = container.inference.unified_inference_adapter()
-            unified.set_model_name(model_name)
+            self.unified_adapter.set_model_name(model_name)
             return Response(
                 {
                     "status": "success",

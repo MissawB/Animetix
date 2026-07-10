@@ -4,18 +4,31 @@ Covers the B2B developer RAG endpoint, API-key metadata/generation and the
 (now free/manual) Pro-tier subscription mock endpoint.
 
 External collaborators are mocked:
-  - the agentic RAG stream via ``developer.get_container``
+  - the constructor-injected agentic RAG via a real-container provider override
   - usage logging via ``developer.DjangoUsageAdapter``
 ORM access uses the real (sqlite) test DB through ``@pytest.mark.django_db``.
 """
 
+from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 import pytest
 from animetix.api import developer as developer_mod
+from animetix.containers import get_container
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.test import APIClient
+
+real_container = get_container()
+
+
+@contextmanager
+def _override_agentic_rag(agent):
+    real_container.agentic.agentic_rag.override(agent)
+    try:
+        yield
+    finally:
+        real_container.agentic.agentic_rag.reset_override()
 
 
 @pytest.fixture
@@ -56,11 +69,9 @@ def test_developer_rag_success_result_event(auth_client):
             {"type": "result", "content": "Luffy is the captain."},
         ]
     )
-    fake_container = MagicMock()
-    fake_container.agentic.agentic_rag.return_value = agent
 
     with (
-        patch.object(developer_mod, "get_container", return_value=fake_container),
+        _override_agentic_rag(agent),
         patch.object(developer_mod, "DjangoUsageAdapter") as usage_cls,
     ):
         response = auth_client.post(
@@ -87,11 +98,9 @@ def test_developer_rag_fallback_to_last_non_status_event(auth_client):
             {"type": "token", "content": "partial answer"},
         ]
     )
-    fake_container = MagicMock()
-    fake_container.agentic.agentic_rag.return_value = agent
 
     with (
-        patch.object(developer_mod, "get_container", return_value=fake_container),
+        _override_agentic_rag(agent),
         patch.object(developer_mod, "DjangoUsageAdapter"),
     ):
         response = auth_client.post(
@@ -109,10 +118,10 @@ def test_developer_rag_fallback_to_last_non_status_event(auth_client):
 @pytest.mark.django_db
 def test_developer_rag_exception_returns_500(auth_client):
     """Agent raising -> 500 with error message."""
-    fake_container = MagicMock()
-    fake_container.agentic.agentic_rag.side_effect = RuntimeError("boom")
+    agent = MagicMock()
+    agent.plan_and_solve_stream.side_effect = RuntimeError("boom")
 
-    with patch.object(developer_mod, "get_container", return_value=fake_container):
+    with _override_agentic_rag(agent):
         response = auth_client.post(
             reverse("developer_rag"),
             {"query": "x"},

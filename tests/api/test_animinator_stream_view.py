@@ -41,24 +41,22 @@ def _session_mock():
     return session
 
 
-def _container_with_chunks(chunks):
-    container = MagicMock()
+def _service_with_chunks(chunks):
+    service = MagicMock()
 
     async def _astream(media_type, secret, question):
         for c in chunks:
             yield c
 
-    # View calls the provider: container.core.animinator_service().aask_oracle_stream(...)
-    container.core.animinator_service.return_value.aask_oracle_stream.side_effect = (
-        _astream
-    )
-    return container
+    # The service is constructor-injected into the view.
+    service.aask_oracle_stream.side_effect = _astream
+    return service
 
 
 @pytest.mark.asyncio
 async def test_animinator_async_stream_emits_text_tokens_no_error():
     request = RequestFactory().get("/x", {"q": "Is it a ninja?"})
-    container = _container_with_chunks(
+    service = _service_with_chunks(
         [InferenceResponse(text="Hel"), InferenceResponse(text="lo")]
     )
     with (
@@ -67,9 +65,9 @@ async def test_animinator_async_stream_emits_text_tokens_no_error():
             streams_mod, "_charge_bx_or_402", new=AsyncMock(return_value=None)
         ),
         patch.object(streams_mod, "get_session_service", return_value=_session_mock()),
-        patch.object(streams_mod, "get_container", return_value=container),
     ):
-        resp = await streams_mod.AniminatorStreamView().get(request)
+        view = streams_mod.AniminatorStreamView(animinator_service=service)
+        resp = await view.get(request)
         events = await _sse_events(resp)
 
     token_events = [e for e in events if e.get("type") == "token"]
@@ -83,16 +81,16 @@ async def test_animinator_async_stream_sets_cache_control_no_cache():
     # SSE must not be buffered/cached by intermediaries — parity with the other
     # SSE views (which set this via the shared sse_stream_response helper).
     request = RequestFactory().get("/x", {"q": "Is it a ninja?"})
-    container = _container_with_chunks([InferenceResponse(text="hi")])
+    service = _service_with_chunks([InferenceResponse(text="hi")])
     with (
         patch.object(streams_mod, "check_rate_limit", new=AsyncMock(return_value=None)),
         patch.object(
             streams_mod, "_charge_bx_or_402", new=AsyncMock(return_value=None)
         ),
         patch.object(streams_mod, "get_session_service", return_value=_session_mock()),
-        patch.object(streams_mod, "get_container", return_value=container),
     ):
-        resp = await streams_mod.AniminatorStreamView().get(request)
+        view = streams_mod.AniminatorStreamView(animinator_service=service)
+        resp = await view.get(request)
 
     assert resp["Cache-Control"] == "no-cache"
 
@@ -103,5 +101,6 @@ async def test_animinator_async_stream_rate_limited_raises():
     with patch.object(
         streams_mod, "check_rate_limit", new=AsyncMock(side_effect=Ratelimited())
     ):
+        view = streams_mod.AniminatorStreamView(animinator_service=MagicMock())
         with pytest.raises(Ratelimited):
-            await streams_mod.AniminatorStreamView().get(request)
+            await view.get(request)

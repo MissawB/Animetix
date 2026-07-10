@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import logging
 import os
 
@@ -205,7 +205,9 @@ class RAGEvaluator:
             data["expected_contexts"].append(item.get("expected_contexts", []))
             data["expected_chunks"].append(item.get("expected_chunks", []))
 
-        eval_service = RagasEvalService(judge_engine=get_container().inference_engine())
+        eval_service = RagasEvalService(
+            judge_engine=get_container().inference.inference_engine()
+        )
 
         faith_scores = []
         relevance_scores = []

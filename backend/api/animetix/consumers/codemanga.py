@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 import random
 from urllib.parse import parse_qs
@@ -181,7 +181,7 @@ class CodeMangaConsumer(BaseConsumer):
         """Split the selected categories' cards into a "popular" pool (top slice,
         recognisable) and an "otaku" pool (deeper, up to the difficulty limit).
         Same data universes as Undercover. Runs sync — call via sync_to_async."""
-        catalog = get_container().catalog_service
+        catalog = get_container().core.catalog_service()
         seen, popular, otaku = set(), [], []
         for cat in categories:
             try:

@@ -1,13 +1,14 @@
 import json
 
 from asgiref.sync import sync_to_async
+from dependency_injector.wiring import Provide, inject
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.views import View
 
 from animetix.api.dependencies import get_session_service
 from animetix.api.sse import check_rate_limit, sse_stream_response
 
-from ..containers import get_container
+from ..containers import Container
 from ..forms import ToTStreamForm
 
 
@@ -34,6 +35,17 @@ async def _charge_bx_or_402(request, feature_key, label):
 class EmojiStreamView(View):
     """Async SSE: streams emoji generation events for the UI."""
 
+    @inject
+    def __init__(
+        self,
+        catalog_service=Provide[Container.core.catalog_service],
+        emoji_service=Provide[Container.core.emoji_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.catalog_service = catalog_service
+        self.emoji_service = emoji_service
+
     async def get(self, request):
         await check_rate_limit(request, "animetix.api.streams.EmojiStreamView")
         secret = request.GET.get("secret")
@@ -44,20 +56,26 @@ class EmojiStreamView(View):
             return charge
         session = await sync_to_async(get_session_service)(request)
         media_type = await sync_to_async(session.get_current_mode)()
-        container = get_container()
-        data = await sync_to_async(container.core.catalog_service().load_data)(
-            media_type
-        )
+        data = await sync_to_async(self.catalog_service.load_data)(media_type)
         description = data["title_to_full_data"][secret].get("description", "")
         return sse_stream_response(
-            container.core.emoji_service().agenerate_emojis_stream(
-                media_type, secret, description
-            )
+            self.emoji_service.agenerate_emojis_stream(media_type, secret, description)
         )
 
 
 class ParadoxStreamView(View):
     """Async SSE: streams paradox logic generation events."""
+
+    @inject
+    def __init__(
+        self,
+        catalog_service=Provide[Container.core.catalog_service],
+        paradox_service=Provide[Container.core.paradox_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.catalog_service = catalog_service
+        self.paradox_service = paradox_service
 
     async def get(self, request):
         await check_rate_limit(request, "animetix.api.streams.ParadoxStreamView")
@@ -73,17 +91,14 @@ class ParadoxStreamView(View):
             return charge
         session = await sync_to_async(get_session_service)(request)
         media_type = await sync_to_async(session.get_current_mode)()
-        container = get_container()
-        data = await sync_to_async(container.core.catalog_service().load_data)(
-            media_type
-        )
+        data = await sync_to_async(self.catalog_service.load_data)(media_type)
         item_a = data["title_to_full_data"][t1]
         item_b = data["title_to_full_data"][t2]
         item_i = data["title_to_full_data"][intruder]
         language = await sync_to_async(session.get)("language", "Français")
 
         async def _events():
-            async for event in container.core.paradox_service().agenerate_logic_stream(
+            async for event in self.paradox_service.agenerate_logic_stream(
                 media_type, item_a, item_b, item_i, language
             ):
                 if event["type"] == "result":
@@ -98,6 +113,15 @@ class ParadoxStreamView(View):
 
 class AgenticRAGStreamView(View):
     """Async SSE: streams agentic RAG planning and solving events."""
+
+    @inject
+    def __init__(
+        self,
+        agentic_rag=Provide[Container.agentic.agentic_rag],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.agentic_rag = agentic_rag
 
     async def get(self, request):
         await check_rate_limit(request, "animetix.api.streams.AgenticRAGStreamView")
@@ -129,10 +153,9 @@ class AgenticRAGStreamView(View):
             return charge
 
         user = await request.auser()
-        agent = get_container().agentic.agentic_rag()
         user_id = str(user.id) if user.is_authenticated else None
         return sse_stream_response(
-            agent.aplan_and_solve_stream(
+            self.agentic_rag.aplan_and_solve_stream(
                 query, media_type, user_id=user_id, language=language
             )
         )
@@ -141,11 +164,19 @@ class AgenticRAGStreamView(View):
 class AniminatorStreamView(View):
     """Async SSE: streams the Oracle's response and updates game state in session."""
 
+    @inject
+    def __init__(
+        self,
+        animinator_service=Provide[Container.core.animinator_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.animinator_service = animinator_service
+
     async def get(self, request):
         await check_rate_limit(request, "animetix.api.streams.AniminatorStreamView")
 
         session = await sync_to_async(get_session_service)(request)
-        container = get_container()
         media_type = await sync_to_async(session.get)("media_type", "Anime")
         secret = await sync_to_async(session.get)("animinator_secret")
         question = request.GET.get("q")
@@ -160,9 +191,7 @@ class AniminatorStreamView(View):
         async def event_stream():
             full_response = ""
             try:
-                async for (
-                    token
-                ) in container.core.animinator_service().aask_oracle_stream(
+                async for token in self.animinator_service.aask_oracle_stream(
                     media_type, secret, question
                 ):
                     full_response += token.text
@@ -204,6 +233,15 @@ class AniminatorStreamView(View):
 class ToTStreamView(View):
     """Async SSE: streams Tree-of-Thoughts search node/answer events."""
 
+    @inject
+    def __init__(
+        self,
+        tot_service=Provide[Container.core.tree_of_thoughts_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.tot_service = tot_service
+
     async def get(self, request):
         await check_rate_limit(request, "animetix.api.streams.ToTStreamView")
         form = ToTStreamForm(request.GET)
@@ -217,9 +255,8 @@ class ToTStreamView(View):
         )
         if charge:
             return charge
-        tot_service = get_container().core.tree_of_thoughts_service()
         return sse_stream_response(
-            tot_service.asolve_with_tree_of_thoughts_stream(
+            self.tot_service.asolve_with_tree_of_thoughts_stream(
                 query=query, breadth=breadth, depth=depth
             )
         )

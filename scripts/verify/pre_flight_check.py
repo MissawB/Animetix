@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import os
 import sys
 from pathlib import Path
@@ -61,11 +61,12 @@ def check_redis():
 def check_neo4j():
     logger.info("🕸️ Checking Neo4j Knowledge Graph...")
     container = get_container()
-    if not container.neo4j_manager:
+    neo4j = container.persistence.graph_persistence_port()
+    if not neo4j:
         logger.error("❌ Neo4j Manager not found in container.")
         return False
 
-    status = container.neo4j_manager.check_health()
+    status = neo4j.check_health()
     if status.get("status") == "online":
         logger.info("✅ Neo4j Connection OK.")
         return True
@@ -77,7 +78,7 @@ def check_neo4j():
 def check_ai_engines():
     logger.info("🧠 Checking AI Inference Engines...")
     container = get_container()
-    status = container.inference_engine.health_check()
+    status = container.inference.inference_engine().health_check()
 
     if status.get("status") == "online":
         logger.info(f"✅ AI Engine Online. Adapters: {status.get('adapters')}")

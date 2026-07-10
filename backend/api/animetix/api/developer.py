@@ -2,13 +2,14 @@ import logging
 import secrets
 
 from adapters.persistence.django_usage_adapter import DjangoUsageAdapter
+from dependency_injector.wiring import Provide, inject
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from animetix.auth import DeveloperApiKeyAuthentication
 
-from ..containers import get_container
+from ..containers import Container
 
 logger = logging.getLogger("animetix.api.developer")
 
@@ -22,6 +23,15 @@ class DeveloperRAGView(APIView):
     authentication_classes = [DeveloperApiKeyAuthentication]
     permission_classes = [IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        agentic_rag=Provide[Container.agentic.agentic_rag],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.agentic_rag = agentic_rag
+
     def post(self, request):
         query = request.data.get("query")
         media_type = request.data.get("media_type", "Anime")
@@ -31,9 +41,7 @@ class DeveloperRAGView(APIView):
 
         user_id = str(request.user.id)
         try:
-            # Get the RAG agent from container
-            container = get_container()
-            agent = container.agentic.agentic_rag()
+            agent = self.agentic_rag
 
             # Run the agentic RAG stream internally
             events = list(

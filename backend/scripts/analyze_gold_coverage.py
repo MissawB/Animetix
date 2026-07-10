@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import json
 import logging
 import os
@@ -139,7 +139,7 @@ def generate_and_append_missing(report: Dict[str, Any]):
         gold_data = json.load(f)
 
     container = get_container()
-    inference_engine = container.inference_engine()
+    inference_engine = container.inference.inference_engine()
     neo4j_manager = container.persistence.graph_persistence_port()
 
     new_entries = []

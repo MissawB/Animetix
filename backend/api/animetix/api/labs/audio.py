@@ -5,11 +5,12 @@ from animetix_project.logging_config import get_logger
 # Media-upload limits/MIME allow-lists are centralized in core.constants.
 from core.constants import ALLOWED_AUDIO_MIMES  # noqa: E402
 from core.utils.security import validate_file_mime_type, validate_file_size
+from dependency_injector.wiring import Provide, inject  # noqa: E402
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ...containers import get_container  # noqa: E402
+from ...containers import Container  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
@@ -89,6 +90,15 @@ class VoiceProfileIngestView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        voice_ingestion_service=Provide[Container.core.voice_ingestion_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.voice_ingestion_service = voice_ingestion_service
+
     def post(self, request):
         name = request.data.get("name")
         language = request.data.get("language", "japanese")
@@ -120,9 +130,8 @@ class VoiceProfileIngestView(APIView):
 
         from animetix.serializers import VoiceProfileSerializer
 
-        ingestion_service = get_container().core.voice_ingestion_service()
         try:
-            profile = ingestion_service.ingest_voice(
+            profile = self.voice_ingestion_service.ingest_voice(
                 name=name,
                 language=language,
                 youtube_url_or_query=youtube_url_or_query,
@@ -151,8 +160,16 @@ class SoundscapeGenerationView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        soundscape_service=Provide[Container.core.soundscape_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.soundscape_service = soundscape_service
+
     def post(self, request):
-        container = get_container()
         video_file = request.FILES.get("video_file") or request.FILES.get("video")
 
         if not video_file:
@@ -167,8 +184,9 @@ class SoundscapeGenerationView(APIView):
 
         try:
             video_bytes = video_file.read()
-            service = container.core.soundscape_service()
-            result_url = service.generate_soundscape_for_video(video_bytes)
+            result_url = self.soundscape_service.generate_soundscape_for_video(
+                video_bytes
+            )
             return Response({"status": "success", "audio_url": result_url})
         except Exception:
             logger.exception("Error in SoundscapeGenerationView")
@@ -180,8 +198,16 @@ class SpeechToSpeechLabView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @inject
+    def __init__(
+        self,
+        native_speech_llm_service=Provide[Container.core.native_speech_llm_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.native_speech_llm_service = native_speech_llm_service
+
     def post(self, request):
-        container = get_container()
         audio_file = request.FILES.get("audio_file") or request.FILES.get("audio")
         persona = request.data.get("persona", "Standard")
 
@@ -197,8 +223,9 @@ class SpeechToSpeechLabView(APIView):
 
         try:
             audio_bytes = audio_file.read()
-            service = container.core.native_speech_llm_service()
-            result = service.process_voice_interaction(audio_bytes, persona=persona)
+            result = self.native_speech_llm_service.process_voice_interaction(
+                audio_bytes, persona=persona
+            )
 
             if result.get("status") == "success":
                 # Convert audio bytes to base64 for JSON transport
@@ -214,6 +241,15 @@ class SpeechToSpeechLabView(APIView):
 
 class VoiceCloningLabView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self,
+        voice_cloning_service=Provide[Container.core.voice_cloning_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.voice_cloning_service = voice_cloning_service
 
     def post(self, request):
         target_text = request.data.get("target_text")
@@ -242,9 +278,6 @@ class VoiceCloningLabView(APIView):
                 {"error": "Reference audio file too large (Max 5MB)."}, status=400
             )
 
-        container = get_container()
-        service = container.core.voice_cloning_service()
-
         try:
             audio_bytes = ref_audio_file.read()
 
@@ -255,7 +288,7 @@ class VoiceCloningLabView(APIView):
                     status=400,
                 )
 
-            result_audio = service.clone(
+            result_audio = self.voice_cloning_service.clone(
                 reference_audio=audio_bytes, target_text=target_text, pitch=pitch
             )
             # Return as base64 for pure SPA handling

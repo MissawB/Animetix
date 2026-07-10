@@ -1,4 +1,4 @@
-import json
+﻿import json
 import logging
 import os
 import sys
@@ -62,7 +62,9 @@ def ragas_performance_comparison():
         RagasEvalService,
     )
 
-    eval_service = RagasEvalService(judge_engine=get_container().inference_engine())
+    eval_service = RagasEvalService(
+        judge_engine=get_container().inference.inference_engine()
+    )
 
     from pipeline.neo4j_client import neo4j_manager  # noqa: E402
     from pipeline.vector_client import vector_manager  # noqa: E402

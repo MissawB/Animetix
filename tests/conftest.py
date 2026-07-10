@@ -181,14 +181,6 @@ def mock_pipeline():
 def mock_container():
     """Generic mock container for dependency injection tests."""
     container = MagicMock()
-    # Mock services commonly used in tests
-    container.inference_engine = MagicMock()
-    container.prompt_manager = MagicMock()
-    container.llm_service = MagicMock()
-    container.agentic_rag = MagicMock()
-    container.graph_persistence_port = MagicMock()
-    container.visual_novel_service = MagicMock()
-    container.video_quest_service = MagicMock()
-    container.catalog_service = MagicMock()
-    container.red_teaming_agent = MagicMock()
+    # MagicMock auto-creates the nested sub-container paths on access
+    # (container.core.x, container.agentic.y, ...); configure per-test.
     return container

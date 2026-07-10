@@ -1,4 +1,4 @@
-"""Behavior tests for the character multimodal vectorization pipeline.
+﻿"""Behavior tests for the character multimodal vectorization pipeline.
 
 Covers ``run_vectorization``: missing source DB, up-to-date short-circuit, the
 full text + vision embedding/upsert path (asserting the real records and
@@ -105,7 +105,7 @@ def _upserts(repo):
 def test_get_repo_returns_container_repository(mocker):
     repo = MagicMock()
     container = MagicMock()
-    container.repository.return_value = repo
+    container.persistence.repository.return_value = repo
     containers = MagicMock()
     containers.get_container.return_value = container
     mocker.patch.dict("sys.modules", {"animetix.containers": containers})

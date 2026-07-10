@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Real-behavior coverage tests for the Otaku knowledge mass-indexer.
 
 Target module: ``pipeline.mlops.index_otaku_knowledge`` (the
@@ -236,13 +236,13 @@ def test_execute_indexation_dry_run_does_not_touch_vectors(indexer, log_capture)
     """Dry-run logs a simulation and never calls the repository."""
     repo = _make_repo()
     indexer.container = MagicMock()
-    indexer.container.repository.return_value = repo
+    indexer.container.persistence.repository.return_value = repo
 
     result = indexer.execute_indexation()
 
     assert result is None
     # Dry-run must short-circuit before fetching the repository.
-    indexer.container.repository.assert_not_called()
+    indexer.container.persistence.repository.assert_not_called()
     repo.vectors.upsert_items.assert_not_called()
     assert any("Dry-Run" in m for m in log_capture.messages)
 
@@ -272,7 +272,7 @@ def test_execute_indexation_upserts_vectorised_chunks(monkeypatch):
     ix = iok.OtakuKnowledgeIndexer(dry_run=False)
     repo = _make_repo(coll_names={"Anime": "anime_thematic"})
     ix.container = MagicMock()
-    ix.container.repository.return_value = repo
+    ix.container.persistence.repository.return_value = repo
 
     # Two known facts, each a single short sentence -> one chunk each.
     fake_facts = [
@@ -315,7 +315,7 @@ def test_execute_indexation_defaults_collection_name(monkeypatch):
     ix = iok.OtakuKnowledgeIndexer(dry_run=False)
     repo = _make_repo(coll_names={})  # no "Anime" key
     ix.container = MagicMock()
-    ix.container.repository.return_value = repo
+    ix.container.persistence.repository.return_value = repo
     monkeypatch.setattr(
         ix,
         "compile_all_facts",
@@ -334,7 +334,7 @@ def test_execute_indexation_swallows_vector_errors(monkeypatch, log_capture):
     repo = _make_repo(coll_names={"Anime": "anime_thematic"})
     repo.vectors.upsert_items.side_effect = RuntimeError("pgvector exploded")
     ix.container = MagicMock()
-    ix.container.repository.return_value = repo
+    ix.container.persistence.repository.return_value = repo
     monkeypatch.setattr(
         ix,
         "compile_all_facts",
@@ -356,7 +356,7 @@ def test_execute_indexation_real_data_full_pipeline(monkeypatch):
     ix = iok.OtakuKnowledgeIndexer(dry_run=False)
     repo = _make_repo(coll_names={"Anime": "anime_thematic"})
     ix.container = MagicMock()
-    ix.container.repository.return_value = repo
+    ix.container.persistence.repository.return_value = repo
 
     ix.execute_indexation()
 

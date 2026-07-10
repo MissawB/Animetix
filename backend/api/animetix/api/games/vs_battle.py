@@ -1,6 +1,7 @@
 import logging
 
 from core.domain.services.berrix_economy import FEATURE_BX_COSTS
+from dependency_injector.wiring import Provide, inject
 from django_ratelimit.decorators import ratelimit
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -10,7 +11,7 @@ from rest_framework.response import Response
 
 from animetix.api.billing import deduct_berrix
 
-from ...containers import get_container
+from ...containers import Container
 from ...models import MediaItem, VsBattle
 from ...serializers import VsBattleResultSerializer, VsBattleSerializer
 
@@ -81,7 +82,12 @@ def list_vs_characters(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @ratelimit(key="user", rate="1/m", block=True)
-def run_vs_battle(request):
+@inject
+def run_vs_battle(
+    request,
+    vs_service=Provide[Container.core.vs_battle_service],
+    usage_port=Provide[Container.infrastructure.usage_port],
+):
     """
     Exécute un combat entre deux personnages et l'enregistre.
     Sécurisé par authentification, rate-limit et quotas.
@@ -96,10 +102,6 @@ def run_vs_battle(request):
             {"error": "Veuillez fournir char_a et char_b."},
             status=status.HTTP_400_BAD_REQUEST,
         )
-
-    container = get_container()
-    vs_service = container.core.vs_battle_service()
-    usage_port = container.infrastructure.usage_port()
 
     # Quota Check (Inférence coûteuse)
     tier = getattr(request, "user_tier", "free")

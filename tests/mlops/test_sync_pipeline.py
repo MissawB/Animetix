@@ -79,7 +79,7 @@ def test_sync_gold_ground_truth_pipeline(
     # Setup mock container
     mock_container = MagicMock()
     mock_container.persistence.graph_persistence_port.return_value = mock_neo4j
-    mock_container.inference_engine.return_value = mock_inference_engine
+    mock_container.inference.inference_engine.return_value = mock_inference_engine
     mock_get_container.return_value = mock_container
 
     # Mock benchmark list GOLD_SET

@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import os
 import re
 import sys
@@ -239,7 +239,7 @@ class OtakuKnowledgeIndexer:
             return
 
         try:
-            repo = self.container.repository()
+            repo = self.container.persistence.repository()
             # On indexe l'intégralité dans la collection 'anime_thematic'
             collection_name = repo.vectors.coll_names.get("Anime", "anime_thematic")
 

@@ -7,7 +7,7 @@ def test_generate_fusion_scenario_task(mocker):
     # Mock le conteneur et son llm_service
     mock_container = MagicMock()
     mock_llm_service = MagicMock()
-    mock_container.llm_service = mock_llm_service
+    mock_container.agentic.llm_service.return_value = mock_llm_service
     mock_llm_service.generate_fusion_scenario.return_value = {
         "scenario": "A fusion story"
     }

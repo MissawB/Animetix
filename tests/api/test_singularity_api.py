@@ -1,6 +1,7 @@
 ﻿from unittest.mock import MagicMock, patch
 
 import pytest
+from animetix.containers import get_container
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 
@@ -26,34 +27,30 @@ def test_singularity_synthesize_success(api_client, authenticated_user):
         "genre": "Sci-Fi",
     }
 
-    with patch("animetix.api.labs.singularity.get_container") as mock_get_container:
-        mock_container = MagicMock()
-        mock_synthesizer = MagicMock()
+    mock_synthesizer = MagicMock()
 
-        # Mock universe data
-        universe_data = {
-            "name": "NeonGenesisX",
-            "genre": "Sci-Fi",
-            "characters": [{"name": "Shinji"}],
-            "episodes": [{"summary": "Test episode"}],
-        }
-        mock_synthesizer.synthesize_multiverse.return_value = universe_data
-        mock_synthesizer.persist_universe_to_graph.return_value = True
+    # Mock universe data
+    universe_data = {
+        "name": "NeonGenesisX",
+        "genre": "Sci-Fi",
+        "characters": [{"name": "Shinji"}],
+        "episodes": [{"summary": "Test episode"}],
+    }
+    mock_synthesizer.synthesize_multiverse.return_value = universe_data
+    mock_synthesizer.persist_universe_to_graph.return_value = True
 
-        # Mock evaluation
-        evaluation = {
-            "is_worthy": True,
-            "ai_score": 0.85,
-            "community_score": 0.8,
-            "reasoning": "Highly coherent.",
-        }
-        mock_synthesizer.evaluate_coherence_and_interest.return_value = evaluation
+    # Mock evaluation
+    evaluation = {
+        "is_worthy": True,
+        "ai_score": 0.85,
+        "community_score": 0.8,
+        "reasoning": "Highly coherent.",
+    }
+    mock_synthesizer.evaluate_coherence_and_interest.return_value = evaluation
 
-        mock_container.core.autonomous_domain_synthesizer.return_value = (
-            mock_synthesizer
-        )
-        mock_get_container.return_value = mock_container
-
+    container = get_container()
+    container.core.autonomous_domain_synthesizer.override(mock_synthesizer)
+    try:
         with patch("animetix.api.labs.singularity.deduct_berrix") as mock_deduct:
             response = api_client.post(url, payload, format="json")
 
@@ -77,6 +74,8 @@ def test_singularity_synthesize_success(api_client, authenticated_user):
             mock_synthesizer.evaluate_coherence_and_interest.assert_called_once_with(
                 universe_data
             )
+    finally:
+        container.core.autonomous_domain_synthesizer.reset_override()
 
 
 @pytest.mark.django_db
@@ -84,23 +83,19 @@ def test_singularity_synthesize_error(api_client, authenticated_user):
     url = "/api/v1/singularity-lab/"
     payload = {"action": "synthesize", "universe_name": "NeonGenesisX"}
 
-    with patch("animetix.api.labs.singularity.get_container") as mock_get_container:
-        mock_container = MagicMock()
-        mock_synthesizer = MagicMock()
+    mock_synthesizer = MagicMock()
+    mock_synthesizer.synthesize_multiverse.side_effect = Exception("Synthesis failed")
 
-        mock_synthesizer.synthesize_multiverse.side_effect = Exception(
-            "Synthesis failed"
-        )
-        mock_container.core.autonomous_domain_synthesizer.return_value = (
-            mock_synthesizer
-        )
-        mock_get_container.return_value = mock_container
-
+    container = get_container()
+    container.core.autonomous_domain_synthesizer.override(mock_synthesizer)
+    try:
         with patch("animetix.api.labs.singularity.deduct_berrix"):
             response = api_client.post(url, payload, format="json")
 
             assert response.status_code == 500
             assert response.data["error"] == "Internal server error"
+    finally:
+        container.core.autonomous_domain_synthesizer.reset_override()
 
 
 @pytest.mark.django_db
@@ -118,35 +113,36 @@ def test_singularity_lab_get_unified_state(api_client, authenticated_user):
 
     url = "/api/v1/singularity-lab/"
 
-    with patch("animetix.api.labs.singularity.get_container") as mock_get_container:
-        mock_container = MagicMock()
-        mock_plasticity = MagicMock()
-        mock_drift = MagicMock()
+    mock_plasticity = MagicMock()
+    mock_drift = MagicMock()
 
-        mock_plasticity.W = np.zeros((10, 10))
-        mock_plasticity.tau_plus = 20.0
-        mock_plasticity.tau_minus = 20.0
-        mock_plasticity.num_concepts = 10
+    mock_plasticity.W = np.zeros((10, 10))
+    mock_plasticity.tau_plus = 20.0
+    mock_plasticity.tau_minus = 20.0
+    mock_plasticity.num_concepts = 10
 
-        mock_drift_config = MagicMock()
-        mock_drift_config.archetype_id = "shonen_hero"
-        mock_drift_config.primary_accent = "#FD7706"
-        mock_drift_config.aura_type = "none"
-        mock_drift_config.aura_intensity = 0.0
-        mock_drift_config.font_vibe = "default"
+    mock_drift_config = MagicMock()
+    mock_drift_config.archetype_id = "shonen_hero"
+    mock_drift_config.primary_accent = "#FD7706"
+    mock_drift_config.aura_type = "none"
+    mock_drift_config.aura_intensity = 0.0
+    mock_drift_config.font_vibe = "default"
 
-        mock_drift.calculate_drift.return_value = mock_drift_config
+    mock_drift.calculate_drift.return_value = mock_drift_config
 
-        mock_container.core.synaptic_plasticity_simulator.return_value = mock_plasticity
-        mock_container.core.archetype_drift_service.return_value = mock_drift
-        mock_get_container.return_value = mock_container
-
+    container = get_container()
+    container.core.synaptic_plasticity_simulator.override(mock_plasticity)
+    container.core.archetype_drift_service.override(mock_drift)
+    try:
         response = api_client.get(url)
         assert response.status_code == 200
         assert "weights" in response.data
         assert "plasticity_config" in response.data
         assert "personalization_settings" in response.data
         assert response.data["current_archetype"]["id"] == "shonen_hero"
+    finally:
+        container.core.synaptic_plasticity_simulator.reset_override()
+        container.core.archetype_drift_service.reset_override()
 
 
 @pytest.mark.django_db
@@ -167,29 +163,27 @@ def test_singularity_lab_update_config(api_client, authenticated_user):
     # Verify profile exists
     profile = authenticated_user.profile
 
-    with patch("animetix.api.labs.singularity.get_container") as mock_get_container:
-        mock_container = MagicMock()
-        mock_plasticity = MagicMock()
-        mock_drift = MagicMock()
+    mock_plasticity = MagicMock()
+    mock_drift = MagicMock()
 
-        mock_plasticity.W = np.zeros((10, 10))
-        mock_plasticity.tau_plus = 20.0
-        mock_plasticity.tau_minus = 20.0
-        mock_plasticity.num_concepts = 10
+    mock_plasticity.W = np.zeros((10, 10))
+    mock_plasticity.tau_plus = 20.0
+    mock_plasticity.tau_minus = 20.0
+    mock_plasticity.num_concepts = 10
 
-        mock_drift_config = MagicMock()
-        mock_drift_config.archetype_id = "cyberpunk_rebel"
-        mock_drift_config.primary_accent = "#FF00FF"
-        mock_drift_config.aura_type = "electric"
-        mock_drift_config.aura_intensity = 1.5
-        mock_drift_config.font_vibe = "cyber"
+    mock_drift_config = MagicMock()
+    mock_drift_config.archetype_id = "cyberpunk_rebel"
+    mock_drift_config.primary_accent = "#FF00FF"
+    mock_drift_config.aura_type = "electric"
+    mock_drift_config.aura_intensity = 1.5
+    mock_drift_config.font_vibe = "cyber"
 
-        mock_drift.calculate_drift.return_value = mock_drift_config
+    mock_drift.calculate_drift.return_value = mock_drift_config
 
-        mock_container.core.synaptic_plasticity_simulator.return_value = mock_plasticity
-        mock_container.core.archetype_drift_service.return_value = mock_drift
-        mock_get_container.return_value = mock_container
-
+    container = get_container()
+    container.core.synaptic_plasticity_simulator.override(mock_plasticity)
+    container.core.archetype_drift_service.override(mock_drift)
+    try:
         response = api_client.post(url, payload, format="json")
         assert response.status_code == 200
 
@@ -203,3 +197,6 @@ def test_singularity_lab_update_config(api_client, authenticated_user):
         assert profile.personalization_settings["manual_archetype"] == "cyberpunk_rebel"
         assert profile.personalization_settings["intensity_multiplier"] == 1.5
         assert profile.personalization_settings["features"]["font"] is False
+    finally:
+        container.core.synaptic_plasticity_simulator.reset_override()
+        container.core.archetype_drift_service.reset_override()

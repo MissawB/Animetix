@@ -121,7 +121,7 @@ def patched_catalog(mocker):
     catalog = MagicMock()
     catalog.load_data = MagicMock(return_value={"db": db})
     container = MagicMock()
-    container.catalog_service = catalog
+    container.core.catalog_service.return_value = catalog
     mocker.patch.object(cm, "get_container", return_value=container)
     return catalog
 
@@ -360,7 +360,7 @@ async def test_generate_grid_noop_when_catalog_too_small(mocker):
     catalog = MagicMock()
     catalog.load_data = MagicMock(return_value={"db": [{"title": "x"}]})
     container = MagicMock()
-    container.catalog_service = catalog
+    container.core.catalog_service.return_value = catalog
     mocker.patch.object(cm, "get_container", return_value=container)
     c = _make_consumer()
     room = _fresh_room()

@@ -5,18 +5,18 @@ Exercises the MLOps admin endpoints:
   - LatentSpaceAPIView (found / not found)          [DI: repository]
   - AIFeedbackAPIView (get history / post feedback)  [DI: feedback_adapter]
   - GoldDatasetViewSet (sync / validate ok+404)      [DI: gold_dataset_adapter]
-  - DPOCurationViewSet (list / create ok+invalid)    [get_container]
+  - DPOCurationViewSet (list / create ok+invalid)    [DI: dpo_feedback_loop]
   - DSPyOptimizerView (success / missing / error)    [DI: dspy_prompt_optimizer]
-  - SOTABenchmarkListView                            [get_container]
-  - DPOFeedbackLoopView (get / export / optimize)    [get_container]
-  - AdaptersView (get / set_primary / set_model)     [get_container]
+  - SOTABenchmarkListView                            [DI: sota_benchmark_service]
+  - DPOFeedbackLoopView (get / export / optimize)    [DI: dpo_feedback_loop]
+  - AdaptersView (get / set_primary / set_model)     [DI: inference_engine + unified]
 
-DI-injected views are overridden through the global ``container`` providers;
-``get_container``-based views are patched at ``animetix.api.mlops.get_container``.
-All collaborators are mocked; ORM uses the sqlite test DB.
+Every view is DI-injected; collaborators are overridden through the global
+``container`` providers. All collaborators are mocked; ORM uses the sqlite
+test DB.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from animetix.api import mlops as mlops_mod
@@ -240,10 +240,7 @@ def test_gold_validate_not_found(admin_client):
 def test_dpo_curation_list(admin_client):
     dpo_loop = MagicMock()
     dpo_loop.get_rejected_for_curation.return_value = [{"id": 1, "text": "x"}]
-    fake = MagicMock()
-    fake.core.dpo_feedback_loop.return_value = dpo_loop
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with container.core.dpo_feedback_loop.override(providers.Object(dpo_loop)):
         response = admin_client.get(reverse("api_dpo_curation"), {"limit": "10"})
 
     assert response.status_code == 200
@@ -255,10 +252,7 @@ def test_dpo_curation_list(admin_client):
 def test_dpo_curation_create_success(admin_client):
     dpo_loop = MagicMock()
     dpo_loop.curate_feedback.return_value = True
-    fake = MagicMock()
-    fake.core.dpo_feedback_loop.return_value = dpo_loop
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with container.core.dpo_feedback_loop.override(providers.Object(dpo_loop)):
         response = admin_client.post(
             reverse("api_dpo_curation"),
             {"feedback_id": 5, "chosen_text": "better answer"},
@@ -271,8 +265,7 @@ def test_dpo_curation_create_success(admin_client):
 
 @pytest.mark.django_db
 def test_dpo_curation_create_invalid(admin_client):
-    fake = MagicMock()
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with container.core.dpo_feedback_loop.override(providers.Object(MagicMock())):
         response = admin_client.post(
             reverse("api_dpo_curation"), {"chosen_text": "x"}, format="json"
         )
@@ -283,10 +276,7 @@ def test_dpo_curation_create_invalid(admin_client):
 def test_dpo_curation_create_failure(admin_client):
     dpo_loop = MagicMock()
     dpo_loop.curate_feedback.return_value = False
-    fake = MagicMock()
-    fake.core.dpo_feedback_loop.return_value = dpo_loop
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with container.core.dpo_feedback_loop.override(providers.Object(dpo_loop)):
         response = admin_client.post(
             reverse("api_dpo_curation"),
             {"feedback_id": 5, "chosen_text": "x"},
@@ -351,10 +341,7 @@ def test_sota_benchmarks(api_client):
     service.get_all_benchmarks.return_value = [{"model": "X"}]
     service.get_best_model.return_value = {"model": "X", "elo": 1500}
     service.get_open_source_best.return_value = [{"model": "OS"}]
-    fake = MagicMock()
-    fake.core.sota_benchmark_service.return_value = service
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with container.core.sota_benchmark_service.override(providers.Object(service)):
         # AllowAny -> no auth required
         response = api_client.get(reverse("api_sota_benchmarks"))
 
@@ -371,10 +358,7 @@ def test_sota_benchmarks_no_open_source(api_client):
     service.get_all_benchmarks.return_value = []
     service.get_best_model.return_value = None
     service.get_open_source_best.return_value = []
-    fake = MagicMock()
-    fake.core.sota_benchmark_service.return_value = service
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with container.core.sota_benchmark_service.override(providers.Object(service)):
         response = api_client.get(reverse("api_sota_benchmarks"))
 
     assert response.status_code == 200
@@ -388,10 +372,7 @@ def test_sota_benchmarks_no_open_source(api_client):
 def test_dpo_feedback_loop_get(admin_client):
     dpo_loop = MagicMock()
     dpo_loop.analyze_feedback_trends.return_value = {"trend": "up"}
-    fake = MagicMock()
-    fake.core.dpo_feedback_loop.return_value = dpo_loop
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with container.core.dpo_feedback_loop.override(providers.Object(dpo_loop)):
         response = admin_client.get(reverse("api_dpo_feedback_loop"))
 
     assert response.status_code == 200
@@ -403,10 +384,7 @@ def test_dpo_feedback_loop_get(admin_client):
 @pytest.mark.django_db
 def test_dpo_feedback_loop_export(admin_client):
     dpo_loop = MagicMock()
-    fake = MagicMock()
-    fake.core.dpo_feedback_loop.return_value = dpo_loop
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with container.core.dpo_feedback_loop.override(providers.Object(dpo_loop)):
         response = admin_client.post(
             reverse("api_dpo_feedback_loop"), {"action": "export"}, format="json"
         )
@@ -420,10 +398,7 @@ def test_dpo_feedback_loop_export(admin_client):
 def test_dpo_feedback_loop_optimize_success(admin_client):
     dpo_loop = MagicMock()
     dpo_loop.optimize_prompt_from_feedback.return_value = "NEW PROMPT"
-    fake = MagicMock()
-    fake.core.dpo_feedback_loop.return_value = dpo_loop
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with container.core.dpo_feedback_loop.override(providers.Object(dpo_loop)):
         response = admin_client.post(
             reverse("api_dpo_feedback_loop"),
             {"action": "optimize", "prompt_key": "rag_response"},
@@ -438,10 +413,7 @@ def test_dpo_feedback_loop_optimize_success(admin_client):
 def test_dpo_feedback_loop_optimize_failure(admin_client):
     dpo_loop = MagicMock()
     dpo_loop.optimize_prompt_from_feedback.return_value = None
-    fake = MagicMock()
-    fake.core.dpo_feedback_loop.return_value = dpo_loop
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with container.core.dpo_feedback_loop.override(providers.Object(dpo_loop)):
         response = admin_client.post(
             reverse("api_dpo_feedback_loop"), {"action": "optimize"}, format="json"
         )
@@ -452,10 +424,7 @@ def test_dpo_feedback_loop_optimize_failure(admin_client):
 @pytest.mark.django_db
 def test_dpo_feedback_loop_invalid_action(admin_client):
     dpo_loop = MagicMock()
-    fake = MagicMock()
-    fake.core.dpo_feedback_loop.return_value = dpo_loop
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with container.core.dpo_feedback_loop.override(providers.Object(dpo_loop)):
         response = admin_client.post(
             reverse("api_dpo_feedback_loop"), {"action": "bogus"}, format="json"
         )
@@ -471,10 +440,12 @@ def test_dpo_feedback_loop_invalid_action(admin_client):
 def test_adapters_get_health(admin_client):
     engine = MagicMock()
     engine.health_check.return_value = {"ok": True}
-    fake = MagicMock()
-    fake.inference.inference_engine.return_value = engine
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with (
+        container.inference.inference_engine.override(providers.Object(engine)),
+        container.inference.unified_inference_adapter.override(
+            providers.Object(MagicMock())
+        ),
+    ):
         response = admin_client.get(reverse("api_mlops_adapters"))
 
     assert response.status_code == 200
@@ -487,10 +458,12 @@ def test_adapters_get_health(admin_client):
 def test_adapters_set_primary_success(admin_client):
     engine = MagicMock()
     engine.set_primary_adapter.return_value = True
-    fake = MagicMock()
-    fake.inference.inference_engine.return_value = engine
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with (
+        container.inference.inference_engine.override(providers.Object(engine)),
+        container.inference.unified_inference_adapter.override(
+            providers.Object(MagicMock())
+        ),
+    ):
         response = admin_client.post(
             reverse("api_mlops_adapters"),
             {"action": "set_primary", "index": 1},
@@ -505,10 +478,12 @@ def test_adapters_set_primary_success(admin_client):
 def test_adapters_set_primary_invalid_index(admin_client):
     engine = MagicMock()
     engine.set_primary_adapter.return_value = False
-    fake = MagicMock()
-    fake.inference.inference_engine.return_value = engine
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with (
+        container.inference.inference_engine.override(providers.Object(engine)),
+        container.inference.unified_inference_adapter.override(
+            providers.Object(MagicMock())
+        ),
+    ):
         response = admin_client.post(
             reverse("api_mlops_adapters"),
             {"action": "set_primary", "index": 99},
@@ -523,11 +498,12 @@ def test_adapters_set_primary_invalid_index(admin_client):
 def test_adapters_set_model_success(admin_client):
     engine = MagicMock()
     unified = MagicMock()
-    fake = MagicMock()
-    fake.inference.inference_engine.return_value = engine
-    fake.inference.unified_inference_adapter.return_value = unified
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with (
+        container.inference.inference_engine.override(providers.Object(engine)),
+        container.inference.unified_inference_adapter.override(
+            providers.Object(unified)
+        ),
+    ):
         response = admin_client.post(
             reverse("api_mlops_adapters"),
             {"action": "set_model", "model_name": "llama3"},
@@ -541,10 +517,12 @@ def test_adapters_set_model_success(admin_client):
 @pytest.mark.django_db
 def test_adapters_set_model_missing_name(admin_client):
     engine = MagicMock()
-    fake = MagicMock()
-    fake.inference.inference_engine.return_value = engine
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with (
+        container.inference.inference_engine.override(providers.Object(engine)),
+        container.inference.unified_inference_adapter.override(
+            providers.Object(MagicMock())
+        ),
+    ):
         response = admin_client.post(
             reverse("api_mlops_adapters"),
             {"action": "set_model"},
@@ -558,10 +536,12 @@ def test_adapters_set_model_missing_name(admin_client):
 @pytest.mark.django_db
 def test_adapters_invalid_action(admin_client):
     engine = MagicMock()
-    fake = MagicMock()
-    fake.inference.inference_engine.return_value = engine
-
-    with patch.object(mlops_mod, "get_container", return_value=fake):
+    with (
+        container.inference.inference_engine.override(providers.Object(engine)),
+        container.inference.unified_inference_adapter.override(
+            providers.Object(MagicMock())
+        ),
+    ):
         response = admin_client.post(
             reverse("api_mlops_adapters"), {"action": "nope"}, format="json"
         )

@@ -1,4 +1,4 @@
-"""Coverage for animetix.creative_tasks — Celery task bodies.
+﻿"""Coverage for animetix.creative_tasks — Celery task bodies.
 
 These are not HTTP views: each is a registered task function. They are called
 directly with a mocked dependency-injection container. Each task does:
@@ -27,11 +27,11 @@ PAYLOAD = base64.b64encode(b"raw-binary-data").decode()
 
 
 def _container_with(service_attr, method_name, return_value):
-    """Build a mock container whose ``service_attr()`` exposes ``method_name``."""
+    """Build a mock container whose ``core.service_attr()`` exposes ``method_name``."""
     container = MagicMock()
     service = MagicMock()
     getattr(service, method_name).return_value = return_value
-    getattr(container, service_attr).return_value = service
+    getattr(container.core, service_attr).return_value = service
     return container, service
 
 
@@ -186,7 +186,7 @@ def test_process_gcs_upload_dev_success():
     manga.translate_manga_page.return_value = (
         "data:image/jpeg;base64," + base64.b64encode(b"out").decode()
     )
-    container.manga_flow_service.return_value = manga
+    container.core.manga_flow_service.return_value = manga
 
     with patch("animetix.containers.get_container", return_value=container):
         result = ct.process_gcs_upload_task("bucket", "raw-manga/page.jpg")
@@ -208,7 +208,7 @@ def test_process_gcs_upload_dev_processed_name_fallback():
     manga.translate_manga_page.return_value = (
         "data:image/png;base64," + base64.b64encode(b"out").decode()
     )
-    container.manga_flow_service.return_value = manga
+    container.core.manga_flow_service.return_value = manga
 
     with patch("animetix.containers.get_container", return_value=container):
         result = ct.process_gcs_upload_task("bucket", "manga/cover.png")
@@ -221,7 +221,7 @@ def test_process_gcs_upload_invalid_output_format():
     container = MagicMock()
     manga = MagicMock()
     manga.translate_manga_page.return_value = "not-a-data-uri"
-    container.manga_flow_service.return_value = manga
+    container.core.manga_flow_service.return_value = manga
 
     with patch("animetix.containers.get_container", return_value=container):
         with pytest.raises(ValueError, match="Invalid output format"):
@@ -238,7 +238,7 @@ def test_process_gcs_upload_prod_success():
     manga.translate_manga_page.return_value = (
         "data:image/jpeg;base64," + base64.b64encode(b"processed").decode()
     )
-    container.manga_flow_service.return_value = manga
+    container.core.manga_flow_service.return_value = manga
 
     storage = MagicMock()
     opened = MagicMock()
@@ -263,7 +263,7 @@ def test_process_gcs_upload_prod_success():
 @override_settings(IS_PRODUCTION=True)
 def test_process_gcs_upload_prod_download_failure():
     container = MagicMock()
-    container.manga_flow_service.return_value = MagicMock()
+    container.core.manga_flow_service.return_value = MagicMock()
     storage = MagicMock()
     storage.open.side_effect = OSError("not found")
 
@@ -280,7 +280,7 @@ def test_process_gcs_upload_prod_translate_failure():
     container = MagicMock()
     manga = MagicMock()
     manga.translate_manga_page.side_effect = RuntimeError("model down")
-    container.manga_flow_service.return_value = manga
+    container.core.manga_flow_service.return_value = manga
 
     storage = MagicMock()
     opened = MagicMock()
@@ -302,7 +302,7 @@ def test_process_gcs_upload_prod_upload_failure():
     manga.translate_manga_page.return_value = (
         "data:image/jpeg;base64," + base64.b64encode(b"x").decode()
     )
-    container.manga_flow_service.return_value = manga
+    container.core.manga_flow_service.return_value = manga
 
     storage = MagicMock()
     opened = MagicMock()

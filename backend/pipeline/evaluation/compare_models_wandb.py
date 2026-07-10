@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import logging
 import os
 
@@ -113,7 +113,9 @@ async def evaluate_model(engine_name: str, config: Dict):
         logger.info(f"✅ Q: {q} | Latency: {latency:.2f}s")
 
     # Setup custom LLM Judge Service
-    eval_service = RagasEvalService(judge_engine=get_container().inference_engine())
+    eval_service = RagasEvalService(
+        judge_engine=get_container().inference.inference_engine()
+    )
 
     faith_scores = []
     relevance_scores = []

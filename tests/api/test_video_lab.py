@@ -1,7 +1,8 @@
-﻿from unittest.mock import MagicMock, patch
+﻿from unittest.mock import MagicMock
 
 import pytest
 from animetix.api.labs import VideoFateZeroLabView, VideoLabDataView
+from animetix.containers import get_container
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 
@@ -37,21 +38,21 @@ def test_video_fatezero_lab_view(dummy_video):
     )
     force_authenticate(request, user=user)
 
-    with patch("animetix.api.labs.video.get_container") as mock_get_container:
-        mock_container = MagicMock()
-        mock_service = MagicMock()
-        mock_service.transform_video_to_anime_sota.return_value = (
-            "http://storage.com/result.mp4"
-        )
-        mock_container.core.studio_transform_service.return_value = mock_service
-        mock_get_container.return_value = mock_container
-
+    mock_service = MagicMock()
+    mock_service.transform_video_to_anime_sota.return_value = (
+        "http://storage.com/result.mp4"
+    )
+    container = get_container()
+    container.core.studio_transform_service.override(mock_service)
+    try:
         view = VideoFateZeroLabView.as_view()
         response = view(request)
+    finally:
+        container.core.studio_transform_service.reset_override()
 
-        assert response.status_code == 200
-        assert response.data["status"] == "success"
-        assert response.data["video_url"] == "http://storage.com/result.mp4"
-        mock_service.transform_video_to_anime_sota.assert_called_once_with(
-            b"video_content", "Ghibli"
-        )
+    assert response.status_code == 200
+    assert response.data["status"] == "success"
+    assert response.data["video_url"] == "http://storage.com/result.mp4"
+    mock_service.transform_video_to_anime_sota.assert_called_once_with(
+        b"video_content", "Ghibli"
+    )

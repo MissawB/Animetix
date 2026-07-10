@@ -1,4 +1,4 @@
-import argparse
+﻿import argparse
 import logging
 import os
 import sys
@@ -62,7 +62,7 @@ def process_video_for_combat_lore(media_id: str, video_path: str):
     logger.info(f"🚀 Processing video for Media {media_id}: {video_path}")
 
     container = get_container()
-    video_service = container.video_quest_service
+    video_service = container.core.video_quest_service()
 
     try:
         with open(video_path, "rb") as f:

@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import os
 import sys
 from typing import List
@@ -78,7 +78,7 @@ class DataIntelligence:
         # Utilisation du service de vision centralisé
         from animetix.containers import get_container  # noqa: E402
 
-        vision_service = get_container().vision_service()
+        vision_service = get_container().core.vision_service()
         return vision_service.detect_visual_attributes(image_data)
 
     def build_relation_graph(self, media_data, media_type):

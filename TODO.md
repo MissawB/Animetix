@@ -15,8 +15,6 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Backend — service locator au lieu d'injection** _(audit dette 2026-07-05)_
-  - 169 appels directs `container.x.y()` dans les vues + monkey-patch `ProviderDelegate` ([containers/\_\_init\_\_.py:40-54](backend/api/animetix/containers/__init__.py#L40-L54)) pour contourner le wiring de `dependency_injector`. Couplage global difficile à tester ; lié au bug DI contourné dans [tests/api/games/conftest.py](tests/api/games/conftest.py).
 - [ ] **Backend — exceptions avalées à grande échelle** _(audit dette 2026-07-05)_
   - 168 `except Exception` log-et-continue + 77 `pass` silencieux, dont un consumer WebSocket ([undercover.py:148-149](backend/api/animetix/consumers/undercover.py#L148-L149)), [labs.py:87,215,237,243](backend/api/animetix/api/labs.py#L87), [reachability_health_mixin.py:59-60](backend/adapters/inference/reachability_health_mixin.py#L59-L60). Remplacer par du log/handling explicite, au moins sur les chemins runtime.
 - [ ] **Backend — module mort `brain_api.py` (539 lignes)** _(audit dette 2026-07-05)_
