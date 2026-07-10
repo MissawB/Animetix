@@ -3,15 +3,15 @@ import { getAuthUser } from '../api';
 import { User } from '../types';
 import { useNotificationStore } from './notificationStore';
 import { auth } from '../utils/firebase';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
   OAuthProvider,
-  TwitterAuthProvider
+  TwitterAuthProvider,
 } from 'firebase/auth';
 
 interface AuthState {
@@ -40,13 +40,22 @@ export const useAuthStore = create<AuthState>((set) => ({
       const user = await getAuthUser();
       set({ user, isAuthenticated: true });
     } catch (error) {
-      console.error("Failed to refetch user data:", error);
+      console.error('Failed to refetch user data:', error);
     }
   },
   checkAuth: async () => {
     if (authListenerInitialized) return;
     authListenerInitialized = true;
-    
+
+    // `auth` est null quand la config Firebase manque au build (voir
+    // utils/firebase). Sans ce garde, onAuthStateChanged(null) throw et
+    // isLoading reste true pour toujours : tous les boutons d'auth restent
+    // gelés sur « Chargement... » (vécu en prod le 2026-07-10).
+    if (!auth) {
+      set({ user: null, isAuthenticated: false, isLoading: false });
+      return;
+    }
+
     onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {

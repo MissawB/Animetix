@@ -3,6 +3,18 @@
 substitutions:
   _TAG: latest
   _BUILD_TARGET: all
+  # Config web Firebase — PUBLIQUE par design (elle est servie dans le bundle JS
+  # à chaque visiteur ; la sécurité repose sur les domaines autorisés et les
+  # règles Firebase, pas sur son secret). Elle vivait dans frontend/.env, exclu
+  # du build depuis la remédiation secrets → sans ces substitutions, le bundle
+  # prod sort sans config et toute l'authentification est gelée.
+  _VITE_FIREBASE_API_KEY: "AIzaSyAKd1ysR9xyeMzoQnd_N9Yd2Rp1FWP-gPE"
+  _VITE_FIREBASE_AUTH_DOMAIN: "animetix.firebaseapp.com"
+  _VITE_FIREBASE_PROJECT_ID: "animetix"
+  _VITE_FIREBASE_STORAGE_BUCKET: "animetix.firebasestorage.app"
+  _VITE_FIREBASE_MESSAGING_SENDER_ID: "836616987676"
+  _VITE_FIREBASE_APP_ID: "1:836616987676:web:f8933f68d908fa4b3b6bd9"
+  _VITE_FIREBASE_MEASUREMENT_ID: "G-57H6132RP8"
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -19,6 +31,13 @@ steps:
           docker pull europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest || true
           docker build --pull \
             --cache-from europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest \
+            --build-arg VITE_FIREBASE_API_KEY="${_VITE_FIREBASE_API_KEY}" \
+            --build-arg VITE_FIREBASE_AUTH_DOMAIN="${_VITE_FIREBASE_AUTH_DOMAIN}" \
+            --build-arg VITE_FIREBASE_PROJECT_ID="${_VITE_FIREBASE_PROJECT_ID}" \
+            --build-arg VITE_FIREBASE_STORAGE_BUCKET="${_VITE_FIREBASE_STORAGE_BUCKET}" \
+            --build-arg VITE_FIREBASE_MESSAGING_SENDER_ID="${_VITE_FIREBASE_MESSAGING_SENDER_ID}" \
+            --build-arg VITE_FIREBASE_APP_ID="${_VITE_FIREBASE_APP_ID}" \
+            --build-arg VITE_FIREBASE_MEASUREMENT_ID="${_VITE_FIREBASE_MEASUREMENT_ID}" \
             -t europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest \
             -t europe-west9-docker.pkg.dev/animetix/animetix-repo/web:${_TAG} \
             -f deploy/Dockerfile .

@@ -87,7 +87,7 @@ describe('useAuthStore', () => {
     mockSignIn.mockRejectedValue(new Error('bad credentials'));
 
     await expect(
-      useAuthStore.getState().login({ email: 'a@b.com', password: 'wrong' })
+      useAuthStore.getState().login({ email: 'a@b.com', password: 'wrong' }),
     ).rejects.toThrow('bad credentials');
 
     expect(useAuthStore.getState().isLoading).toBe(false);
@@ -101,7 +101,7 @@ describe('useAuthStore', () => {
 
     mockCreateUser.mockRejectedValue(new Error('email in use'));
     await expect(
-      useAuthStore.getState().register({ email: 'dup@b.com', password: 'pw' })
+      useAuthStore.getState().register({ email: 'dup@b.com', password: 'pw' }),
     ).rejects.toThrow('email in use');
     expect(useAuthStore.getState().isLoading).toBe(false);
   });
@@ -231,6 +231,26 @@ describe('useAuthStore', () => {
     expect(state.user).toBeNull();
     expect(state.isAuthenticated).toBe(false);
     expect(state.isLoading).toBe(false);
+  });
+
+  it('checkAuth: auth null (config Firebase absente au build) => isLoading false, aucun listener', async () => {
+    // Régression prod 2026-07-10 : bundle construit sans VITE_FIREBASE_* →
+    // auth null → onAuthStateChanged(null) throwait et isLoading restait true
+    // pour toujours (tous les boutons d'auth gelés sur « Chargement... »).
+    vi.resetModules();
+    vi.doMock('../../utils/firebase', () => ({ auth: null }));
+    const { useAuthStore } = await import('../authStore');
+
+    await useAuthStore.getState().checkAuth();
+
+    const state = useAuthStore.getState();
+    expect(state.isLoading).toBe(false);
+    expect(state.isAuthenticated).toBe(false);
+    expect(state.user).toBeNull();
+    expect(mockOnAuthStateChanged).not.toHaveBeenCalled();
+    // Ré-enregistre le mock nominal (doUnmock rendrait le VRAI module aux
+    // imports suivants, dont l'init échoue en test → auth null partout).
+    vi.doMock('../../utils/firebase', () => ({ auth: fakeAuth }));
   });
 
   it('checkAuth: second invocation is a no-op (listener wired at most once)', async () => {
