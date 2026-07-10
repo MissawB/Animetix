@@ -38,11 +38,10 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>,
     );
 
-    expect(screen.getByText('CRITICAL FAILURE')).toBeInTheDocument();
+    // Fallback restylé sur l'univers des pages d'erreur : « CRASH / Erreur critique ».
+    expect(screen.getByText('CRASH')).toBeInTheDocument();
     expect(screen.getByText('kaboom-from-child')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'REDÉMARRER LE SYSTÈME' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Redémarrer le système/i })).toBeInTheDocument();
 
     // componentDidCatch should have reported to Sentry.
     expect(captureExceptionMock).toHaveBeenCalledTimes(1);
