@@ -32,9 +32,11 @@ dans l'admin Django (« Configuration du site »), ajout/suppression désactivé
 
 La route existait déjà (`ConfigView`, consommée par `getAppConfig()` côté
 frontend) mais ne renvoyait ni `version` ni `maintenance_mode` : elle est
-**étendue** plutôt que dupliquée. `AllowAny`, `throttle_classes=[]` (elle est
-pollée pendant la maintenance : elle ne doit jamais consommer le day-cap
-anonyme). Répond le type `AppConfig` déjà déclaré côté frontend :
+**étendue** plutôt que dupliquée. `AllowAny`, throttle `CpuGameThrottle`
+(60/min, minute-seulement : elle est pollée pendant la maintenance et ne doit
+jamais consommer le day-cap anonyme ; `[]` est banni par la politique
+throttles du repo et refusé par mypy). Répond le type `AppConfig` déjà
+déclaré côté frontend :
 
 ```json
 {

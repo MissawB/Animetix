@@ -7,6 +7,8 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from animetix.api.throttles import CpuGameThrottle
+
 from ...containers import get_container
 
 logger = get_logger("animetix.api")
@@ -27,13 +29,13 @@ class ConfigView(APIView):
     """Configuration publique de l'app (type frontend ``AppConfig``).
 
     Porte aussi le mode maintenance : le frontend polle cet endpoint pendant
-    la maintenance pour détecter la sortie, d'où l'absence de throttle (le
-    day-cap anonyme couperait le poll) et son exemption dans
+    la maintenance pour détecter la sortie, d'où le throttle minute-seulement
+    (le day-cap anonyme par défaut couperait le poll) et son exemption dans
     ``MaintenanceModeMiddleware``.
     """
 
     permission_classes = [permissions.AllowAny]
-    throttle_classes = []
+    throttle_classes = [CpuGameThrottle]  # 60/min, jamais le cap journalier
 
     def get(self, request):
         from ...models import SiteConfiguration  # noqa: E402
