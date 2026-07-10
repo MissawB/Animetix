@@ -49,26 +49,26 @@ const ForgePage: React.FC = () => {
       {
         id: 'Cyberpunk',
         name: t('games.forge.styles.cyberpunk_name', 'Cyberpunk'),
-        desc: t('games.forge.styles.cyberpunk_desc', 'Néons et technologie futuriste'),
-        image: '/static/img/forge/styles/cyberpunk.jpg',
+        desc: t('games.forge.styles.cyberpunk_desc', 'NÃ©ons et technologie futuriste'),
+        image: '/static/img/forge/styles/cyberpunk.png',
       },
       {
         id: 'Ukiyo-e',
         name: t('games.forge.styles.ukiyoe_name', 'Ukiyo-e'),
         desc: t('games.forge.styles.ukiyoe_desc', 'Estampe traditionnelle japonaise'),
-        image: '/static/img/forge/styles/ukiyo-e.jpg',
+        image: '/static/img/forge/styles/ukiyo-e.png',
       },
       {
         id: 'Noir & Blanc',
         name: t('games.forge.styles.manga_noir_name', 'Manga Noir'),
-        desc: t('games.forge.styles.manga_noir_desc', 'Contraste élevé, trames classiques'),
-        image: '/static/img/forge/styles/manga-noir.jpg',
+        desc: t('games.forge.styles.manga_noir_desc', 'Contraste Ã©levÃ©, trames classiques'),
+        image: '/static/img/forge/styles/manga-noir.png',
       },
       {
         id: 'Vaporwave',
         name: t('games.forge.styles.vaporwave_name', 'Vaporwave'),
-        desc: t('games.forge.styles.vaporwave_desc', 'Esthétique rétro 80s, couleurs pastel'),
-        image: '/static/img/forge/styles/vaporwave.jpg',
+        desc: t('games.forge.styles.vaporwave_desc', 'EsthÃ©tique rÃ©tro 80s, couleurs pastel'),
+        image: '/static/img/forge/styles/vaporwave.png',
       },
       {
         id: 'Steampunk',
@@ -85,8 +85,8 @@ const ForgePage: React.FC = () => {
       {
         id: 'Pixel Art',
         name: t('games.forge.styles.pixel_art_name', 'Pixel Art'),
-        desc: t('games.forge.styles.pixel_art_desc', 'Rétro 8-bit, pixels et arcade'),
-        image: '/static/img/forge/styles/pixel-art.jpg',
+        desc: t('games.forge.styles.pixel_art_desc', 'RÃ©tro 8-bit, pixels et arcade'),
+        image: '/static/img/forge/styles/pixel-art.png',
       },
       {
         id: 'Gothique',
@@ -97,15 +97,15 @@ const ForgePage: React.FC = () => {
       {
         id: 'Mecha',
         name: t('games.forge.styles.mecha_name', 'Mecha'),
-        desc: t('games.forge.styles.mecha_desc', 'Robots géants et science-fiction'),
-        image: '/static/img/forge/styles/mecha.jpg',
+        desc: t('games.forge.styles.mecha_desc', 'Robots gÃ©ants et science-fiction'),
+        image: '/static/img/forge/styles/mecha.png',
       },
       {
         id: '',
         name: t('games.forge.styles.brut_name', 'Brut'),
         desc: t(
           'games.forge.styles.brut_desc',
-          'Aucune esthétique imposée — fusion la plus fidèle',
+          'Aucune esthÃ©tique imposÃ©e â€” fusion la plus fidÃ¨le',
         ),
         image: '',
       },
@@ -238,7 +238,7 @@ const ForgePage: React.FC = () => {
         <div className="flex items-center justify-center gap-4 mb-4">
           <div className="h-px w-12 bg-black/10 dark:bg-white/10" />
           <p className="text-xs sm:text-sm font-black opacity-50 uppercase tracking-[0.25em] text-center">
-            {t('games.forge.tagline', 'Fusionnez deux univers en une œuvre inédite')}
+            {t('games.forge.tagline', 'Fusionnez deux univers en une Å“uvre inÃ©dite')}
           </p>
           <div className="h-px w-12 bg-black/10 dark:bg-white/10" />
         </div>
@@ -249,7 +249,7 @@ const ForgePage: React.FC = () => {
           <CyberTerminalPanel>
             <h3 className="text-xl font-black italic manga-font mb-6 flex items-center gap-3">
               <Zap className="w-5 h-5 text-yellow-400" />{' '}
-              {t('games.forge.universe_selector', "Sélecteur d'Univers")}
+              {t('games.forge.universe_selector', "SÃ©lecteur d'Univers")}
             </h3>
             <ForgeItemSelector
               itemA={itemA}
@@ -262,7 +262,7 @@ const ForgePage: React.FC = () => {
           <CyberTerminalPanel>
             <h3 className="text-xl font-black italic manga-font mb-6 flex items-center gap-3">
               <ImageIcon className="w-5 h-5 text-blue-400" />{' '}
-              {t('games.forge.visual_aesthetic', 'Esthétique Visuelle')}
+              {t('games.forge.visual_aesthetic', 'EsthÃ©tique Visuelle')}
             </h3>
             {(() => {
               const len = ART_STYLES.length;
@@ -299,7 +299,7 @@ const ForgePage: React.FC = () => {
                     <button
                       onClick={() => cycleStyle(-1)}
                       aria-label={t('games.forge.aria_prev_style_named', {
-                        defaultValue: 'Style précédent : {{name}}',
+                        defaultValue: 'Style prÃ©cÃ©dent : {{name}}',
                         name: prev.name,
                       })}
                       style={{ transform: 'translate(-50%, -50%) translateX(-148px) scale(0.78)' }}
@@ -323,7 +323,7 @@ const ForgePage: React.FC = () => {
                       <div className="absolute inset-0 bg-black/40" />
                     </button>
 
-                    {/* Featured (current) — swipeable */}
+                    {/* Featured (current) â€” swipeable */}
                     <AnimatePresence initial={false} custom={styleDir} mode="popLayout">
                       <motion.div
                         key={current.id || 'brut'}
@@ -364,7 +364,7 @@ const ForgePage: React.FC = () => {
                     {/* Arrows on top */}
                     <button
                       onClick={() => cycleStyle(-1)}
-                      aria-label={t('games.forge.aria_prev_style', 'Style précédent')}
+                      aria-label={t('games.forge.aria_prev_style', 'Style prÃ©cÃ©dent')}
                       className="absolute left-1 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/60 backdrop-blur text-white hover:bg-yellow-400 hover:text-black flex items-center justify-center transition-all active:scale-90 shadow-lg"
                     >
                       <ChevronLeft className="w-6 h-6" />
@@ -402,7 +402,7 @@ const ForgePage: React.FC = () => {
           <CyberTerminalPanel className="sticky top-24">
             <h3 className="text-xl font-black italic manga-font mb-10 flex items-center gap-3">
               <Flame className="w-5 h-5 text-red-500" />{' '}
-              {t('games.forge.reactor_settings', 'Paramètres du Réacteur')}
+              {t('games.forge.reactor_settings', 'ParamÃ¨tres du RÃ©acteur')}
             </h3>
             <ForgeReactorPanel
               itemA={itemA}
@@ -425,7 +425,7 @@ const ForgePage: React.FC = () => {
       {/* Footer Info */}
       <div className="text-center opacity-40 mt-12 mb-8">
         <p className="text-[10px] font-black tracking-[0.3em] uppercase">
-          {t('games.forge.powered_by', "Propulsé par le moteur génératif d'Animetix")}
+          {t('games.forge.powered_by', "PropulsÃ© par le moteur gÃ©nÃ©ratif d'Animetix")}
         </p>
       </div>
     </div>
