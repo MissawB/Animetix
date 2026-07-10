@@ -2,6 +2,7 @@ import logging
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -15,11 +16,28 @@ from .models import (
     GoldDatasetEntry,
     MediaItem,
     Notification,
+    Profile,
 )
 
 logger = logging.getLogger("animetix.signals")
 
-# ... [existing signal handlers are unmodified] ...
+
+@receiver(post_save, sender=User)
+def ensure_user_profile(sender, instance, created, **kwargs):
+    """Create the profile with the user; lazily heal legacy/bulk-created users.
+
+    Consolidates the historical ``create_user_profile``/``save_user_profile``
+    pair from ``models.py``: the second receiver rewrote the whole profile row
+    on EVERY ``User.save()`` (one extra UPDATE per login) and raised
+    ``RelatedObjectDoesNotExist`` when the profile was missing (``bulk_create``
+    skips signals). A user without a profile now gets one on their next save
+    instead of crashing; an existing profile is never touched.
+    """
+    if created:
+        Profile.objects.create(user=instance)
+    elif not Profile.objects.filter(user=instance).exists():
+        logger.info("Healing missing profile for user %s", instance.pk)
+        Profile.objects.create(user=instance)
 
 
 @receiver(post_save, sender=Notification)

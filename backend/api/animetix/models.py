@@ -1,8 +1,6 @@
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 
 # --- RELATIONAL CATALOG ---
@@ -545,15 +543,8 @@ class WalletTransaction(models.Model):
 # --- ACHIEVEMENTS & FEEDBACK ---
 
 
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+# NOTE: the User→Profile creation signal lives in signals.py (single home for
+# all receivers), wired by AnimetixConfig.ready().
 
 
 class LatentSpacePoint(models.Model):

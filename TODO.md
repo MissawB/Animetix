@@ -15,8 +15,6 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Backend — signaux dispersés + write amplification** _(audit dette 2026-07-05)_
-  - Signaux dans [models.py:549-557](backend/api/animetix/models.py#L549-L557) ET [signals.py](backend/api/animetix/signals.py) ; `save_user_profile` ré-écrit le profil à **chaque** save de User et lève `RelatedObjectDoesNotExist` si le profil manque (users bulk/legacy). Consolider et garder.
 - [ ] **Backend — squash des migrations : purge des originales** _(audit dette 2026-07-05 ; squash livrée le 2026-07-08, archivée dans [docs/HISTORY.md](docs/HISTORY.md))_
   - ⏳ La squash `0001_squashed_0049` existe (commit `68fec496`). Reste : une fois la squash enregistrée comme appliquée partout (prod Neon comprise), supprimer les 49 migrations d'origine et retirer l'attribut `replaces` (procédure Django standard).
 - [ ] **Backend — noms de modèles hardcodés + mismatch de version** _(revue archi 2026-06-22 ; Phases 1/2a livrées, archivées dans [docs/HISTORY.md](docs/HISTORY.md))_
