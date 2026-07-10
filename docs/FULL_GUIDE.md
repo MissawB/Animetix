@@ -17,6 +17,7 @@ The domain layer (`backend/core/domain/`) encapsulates the application's core in
 ### B. Infrastructure (Adapters)
 - **Persistence:** Concrete adapters implementing database interfaces (Vertex AI, pgvector, Neo4j, Django DB).
 - **Inference:** Implementations for cloud services (Google GenAI, BrainAPI) and local endpoints (Ollama, local Transformers). Uses lazy imports to prevent overhead at startup.
+- **Wiring:** Every collaborator is declared in the `dependency_injector` containers and **constructor-injected** into views and services (`@inject` + `Provide[...]`); tests substitute dependencies through provider overrides rather than patching module globals.
 
 ---
 
@@ -71,7 +72,7 @@ The graph database maps structural relationships:
 *   **Engine:** Proximal Policy Optimization (PPO).
 *   **Workflow:** The agent has been trained in a simulated Gym environment (`AkinetixRLService`) to select questions that maximize information gain (entropy), guessing the player's character in minimal turns.
 
-### 3. La Forge (Multimedia Generation)
+### 3. The Forge (Multimedia Generation)
 *   **Engine:** Stable Diffusion XL + IP-Adapter + ControlNet.
 *   **Workflow:** Fuses two creative IPs. The LLM generates a hybrid synopsis, while the diffusion pipeline generates posters preserving character features and postures.
 
@@ -119,7 +120,8 @@ Animetix employs an **LLM-as-a-Judge** evaluation loop:
 1.  **Declarative Manifest**: Define environment variables, scaling thresholds, WAF rules, and Secrets references in [deployments.yaml](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/deploy/deployments.yaml).
 2.  **Staging**: Deploy using Docker Stack (Postgres, Redis, Neo4j, Ollama).
 3.  **Pre-Flight**: Execute `python backend/api/manage.py check_db_status` and `python scripts/verify/pre_flight_check.py` to validate environment bindings.
-4.  **Production**: Enable Daphne ASGI server for SSE streaming and WebSockets.
+4.  **Production**: Enable the ASGI server (Daphne/uvicorn workers) for SSE streaming and WebSockets.
+5.  **Ship**: Production deploys are **manual-only** — `gh workflow run ci.yml -f deploy_to_prod=true` builds and rolls out to Cloud Run (`europe-west9`), served publicly at **https://animetix.xyz** through the Cloudflare Worker proxy.
 
 ---
 *End of Technical Document - Animetix - July 2026*

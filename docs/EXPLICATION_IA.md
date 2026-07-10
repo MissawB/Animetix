@@ -1,4 +1,4 @@
-# How the Animetix AI Engine Works: End-to-End Guide
+﻿# How the Animetix AI Engine Works: End-to-End Guide
 
 Welcome to the comprehensive guide to the **Animetix** (Anime Archetype Engine) Artificial Intelligence ecosystem. This document explains the complete data lifecycle and the inner workings of our AI algorithms, from raw ingestion to real-time multimodal user interactions.
 
@@ -38,7 +38,7 @@ flowchart TD
     subgraph Phase 5: Interactive & Multimodal Playgrounds
         D3 --> E1[Akinetix RL - PPO]
         D3 --> E2[Paradox Quest - Z3 Solver]
-        D3 --> E3[La Forge - SDXL & Voice Cloning]
+        D3 --> E3[The Forge - SDXL & Voice Cloning]
     end
 
     subgraph Phase 6: MLOps & Continuous Improvement
@@ -71,7 +71,7 @@ Once ingested, the data is persisted across four complementary storage engines t
 *   **Relational Base (PostgreSQL / SQLite):** Manages relational integrity for user sessions, accounts, profile variables, and transactional metadata.
 *   **JSON Reference Files (`clean_root_animes/mangas.json`):** Versions the cleaned dataset directly in the repository, acting as a reliable, offline baseline for local fallbacks.
 *   **Knowledge Graph (Neo4j):** Models topological relationships. Entities (`Media`, `Studio`, `Creator`, `Character`) are nodes connected by directed, typed edges (`PRODUCED_BY`, `FEATURES`, `INFLUENCED_BY`).
-*   **Vector Search DB (Vertex AI / pgvector):** Stores high-dimensional mathematical embeddings of plots and tropes to execute sub-second semantic lookups.
+*   **Vector Search DB (pgvector, optional Vertex AI):** Stores high-dimensional mathematical embeddings of plots and tropes to execute sub-second semantic lookups.
 
 ---
 
@@ -118,7 +118,7 @@ The user must identify a thematic "intruder" among three titles.
 - **Symbolic Layer:** These facts are compiled into logic predicates and solved via the **Z3 Theorem Prover** (SAT solver). Z3 mathematically proves which title violates the logical properties and constitutes the intruder.
 - The LLM then translates the cold logical proof back into a playful riddle.
 
-### C. La Forge (Creative Multimedia Fusion)
+### C. The Forge (Creative Multimedia Fusion)
 Allows users to merge two media styles (e.g., *Dragon Ball* drawn in the art style of *Studio Ghibli*).
 - Uses **Stable Diffusion XL** along with **IP-Adapter** (to maintain character features) and **ControlNet** (to guide posture and frame composition).
 - Runs **XTTS-v2** to clone the voice of the characters for interactive zero-shot speech.

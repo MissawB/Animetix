@@ -14,10 +14,15 @@ All modifications must strictly respect the separation of layers:
     - *Entities:* Use `Pydantic` for structure validation (`ai_schemas.py`).
     - *Services:* High-level logic. Do not use `print()`, use the standard `logging` module.
 - **Ports (Interfaces):** `backend/core/ports/`. Abstract boundary definitions for external capabilities.
-- **Adapters (Infrastructure):` `backend/adapters/`. Concrete infrastructure implementations.
-    - *Persistence:* `UnifiedRepositoryAdapter` (Vertex AI Vector Search / pgvector).
+- **Adapters (Infrastructure):** `backend/adapters/`. Concrete infrastructure implementations.
+    - *Persistence:* `UnifiedRepositoryAdapter` (pgvector in production / optional Vertex AI Vector Search).
     - *Inference:* `FallbackInferenceAdapter` (LLM Resilience + Streaming).
-- **Presentation (Driving):** `backend/api/`. Headless Django API. Input validation via `Django Forms` is mandatory for user inputs.
+- **Presentation (Driving):** `backend/api/`. Headless Django API, split into domain packages (`animetix/api/core/`, `animetix/api/labs/`, `animetix/api/games/`). Input validation via `Django Forms`/DRF serializers is mandatory for user inputs.
+
+## 💉 Dependency Injection (mandatory)
+- **Never call `get_container()` from a view.** Services are constructor-injected: `@inject def __init__(self, svc=Provide[Container.<sub>.<service>], **kwargs)` and the consuming module must be listed in `container.wire()` inside `apps.py`.
+- The root container has **no flat attributes** — always go through the sub-containers (`core`, `agentic`, `inference`, `infrastructure`, `persistence`).
+- **In tests**, substitute collaborators with real-container provider overrides (`container.core.x.override(mock)` + provider-level `reset_override()` in `finally`), or pass mocks as constructor kwargs for directly-instantiated views. Never `container.reset_override()` at container level (it detaches sub-containers).
 
 ## 📝 Code & AI Standards
 - **Typing:** Python 3.10+. Strict type annotations are mandatory on all functions.
@@ -93,10 +98,11 @@ When addressing tasks or issues, follow this structured workflow:
 4.  **Validation & Verification:**
     *   **Objective:** Confirm the changes work as expected and do not introduce new issues.
     *   **Tools:**
-        *   Run `pytest` with relevant flags:
-            *   **Unit Tests:** `pytest tests/unit/`
-            *   **Integration Tests:** `pytest tests/integration/` (or `pytest tests/integration --mark=slow` for marked tests)
-            *   **End-to-End Tests:** `pytest tests/e2e/`
+        *   Run `pytest` scoped to the layer you touched (one home per layer):
+            *   **API views:** `pytest tests/api/`
+            *   **Core domain:** `pytest tests/core/`
+            *   **Adapters / pipeline / backend glue:** `pytest tests/adapters/ tests/pipeline/ tests/backend/`
+            *   **End-to-End (frontend):** `cd frontend && npm run test:e2e` (Playwright, mocked API)
         *   Verify layer boundaries and architectural compliance by reviewing code changes and running relevant system checks.
         *   Utilize `verification-before-completion` skill to ensure all checks pass.
     *   **Criteria:** Ensure all tests pass, linting checks are clean, and the solution adheres to performance and security standards.

@@ -47,13 +47,13 @@ The backend code is organized under `backend/`:
 - **`adapters/`**: Concrete infrastructure implementations.
   - `adapters/persistence/`: Handles data multi-sources (Vertex AI, pgvector, Neo4j, Django DB).
   - `adapters/inference/`: Adapter implementations for Google GenAI, BrainAPI, Ollama (Unified), and local Transformers.
-- **`api/`**: Headless Django configuration. Dependencies are declared and injected via `containers/` (Dependency-Injector).
+- **`api/`**: Headless Django presentation layer, split by domain (`animetix/api/core/`, `animetix/api/labs/`, `animetix/api/games/`, SSE stream views). Dependencies are declared in `containers/` (Dependency-Injector) and **constructor-injected** into every view (`@inject __init__` with `Provide[...]` defaults) — there is no service-locator access left in the view layer; tests override the container providers.
 
 ---
 
 ## 3. Storage & Persistence
 
-The project utilizes **Vertex AI Vector Search (Collections)** in production and **pgvector (PostgreSQL)** / **NumPy (SQLite)** as local fallbacks for semantic vector searches. Data access is unified under the `UnifiedRepositoryAdapter`. Additionally, **Neo4j** acts as the graph database mapping complex, topological creator-studio-character relations.
+The project utilizes **PostgreSQL + pgvector** (serverless Neon) in production and **NumPy (SQLite)** as the zero-configuration local fallback for semantic vector searches; a **Vertex AI Vector Search (Collections)** adapter exists as an optional managed alternative. Data access is unified under the `UnifiedRepositoryAdapter`. Additionally, **Neo4j** (Aura in production) acts as the graph database mapping complex, topological creator-studio-character relations.
 
 ---
 
@@ -69,7 +69,8 @@ The codebase is **synchronous by default**, with `async` deliberately confined t
 
 - **Core domain & DRF views are SYNC.** Domain services (`core/domain/services/`) expose synchronous public APIs (e.g. `ReasoningAgentService.solve_complex_query`, the RAG services, game logic). DRF request handling is sync. Inference adapters are sync.
 - **Async edge #1 — ASGI / Channels consumers** (`api/animetix/consumers/`): WebSocket consumers are `async` because they run on the ASGI event loop (real-time duel, codemanga, notifications, Gemini Live…). This is the *only* place async is the default.
-- **Async edge #2 — Multi-agent bus subsystem** (`multi_agent_bus`, `orchestrator_agent_service.execute_workflow`, `reasoning_agent_service._on_bus_message`): Redis pub/sub over `asyncio`. Its `async` methods run **only inside an async context** (the bus loop / a consumer). Note: this subsystem is currently *not wired to any HTTP/WS endpoint* (experimental) — its services expose sync entry points (`solve_complex_query`) for normal use, and the async methods are bus-internal.
+- **Async edge #2 — Native async SSE stream views** (`api/animetix/api/streams.py`): the five Server-Sent-Events views (Animinator, Emoji, Paradox, Tree-of-Thoughts, Agentic RAG) are plain async Django views (outside DRF) consuming the adapters' native `astream_generate` — the worker thread is freed for the whole duration of a stream. Session/ORM access goes through `sync_to_async`.
+- **Async edge #3 — Multi-agent bus subsystem** (`multi_agent_bus`, `orchestrator_agent_service.execute_workflow`, `reasoning_agent_service._on_bus_message`): Redis pub/sub over `asyncio`. Its `async` methods run **only inside an async context** (the bus loop / a consumer). Note: this subsystem is currently *not wired to any HTTP/WS endpoint* (experimental) — its services expose sync entry points (`solve_complex_query`) for normal use, and the async methods are bus-internal.
 
 **Boundary rules (to keep it coherent):**
 1. Never call an `async` method directly from sync request code. If a sync view ever needs the bus, wrap with `asgiref.sync.async_to_sync` — do not spin up `asyncio.run()` per request (it breaks the running loop under ASGI). *(Current count of boundary crossings: zero — the edges don't leak into the core.)*
@@ -85,7 +86,7 @@ For SSRF-safe HTTP, both sync (`safe_http_request`) and async (`safe_http_reques
 Adapters implement the abstract ports. Any method not implemented by a specific adapter raises an `InferenceNotImplementedError`. Extending the platform follows a strict pattern:
 1. Extend the abstract **Port** definition.
 2. Implement the concrete logic in the corresponding **Adapter**.
-3. Register or bind the new implementation inside `containers.py`.
+3. Register or bind the new implementation inside the `containers/` package (and add the consuming module to the `container.wire()` list in `apps.py` if it uses `@inject`).
 
 ---
 
@@ -117,7 +118,7 @@ graph TD
     end
     
     subgraph External_APIs [Tier 3: Pay-Per-Token (Last Resort)]
-        Gemini["GoogleGenAIAdapter (Gemini 1.5)"]
+        Gemini["GoogleGenAIAdapter (Gemini, google-genai SDK)"]
     end
     
     FallbackAdapter --> Ollama
@@ -135,7 +136,7 @@ Animetix operates on a **Rewarded Economy** where all advanced AI features are 1
 ### 8.1. Tokens: The Berrix (Bx)
 - **Passive Mining**: Users earn +20 Bx every 3 minutes of gameplay (Blindtest, Akinetix, etc.).
 - **Active Injection**: Users can watch 30s sponsored videos ("Rewarded Ads") for +250 Bx.
-- **Micro-Transactions**: Direct purchase of Berrix packs via Stripe for power-users.
+- **No purchases**: Berrix cannot be bought — the Stripe payment stack was removed entirely (2026-07-07). Earned Bx (play + rewarded ads) is the only currency; the `tier` concept (free/pro) only gates the developer API.
 
 ### 8.2. Token Consumption & Protection
 Business logic services (`InferencePort`, `Forge`) call the atomic `deduct_berrix` function. If the user's `wallet_balance` is insufficient, the API returns an **HTTP 402 Payment Required** error, which the frontend intercepts to redirect the user to the **Power Station**.
@@ -239,9 +240,12 @@ Containers package the entire infrastructure stack, serving the pre-built React 
   - URL: `http://localhost:8080`
   - Command: `docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.staging.yml up`
 
-### C. Production Environment (Hugging Face)
-Animetix is optimized for container deployments on **Hugging Face Spaces**.
+### C. Production Environment (Google Cloud Run)
+Production runs on **Cloud Run** (region `europe-west9`), behind the custom domain **https://animetix.xyz** (proxied by a Cloudflare Worker, since europe-west9 has no native domain mapping).
 
-- **URL**: `https://huggingface.co/spaces/MissawB/Animetix`
-- **Internal Port**: Container exposes port `7860`.
-- **Pipeline**: Automated deployments triggered via GitHub Actions (`deploy_to_hf.yml`).
+- **Services**: `animetix-web` (Django ASGI + built SPA) and a scale-to-zero GPU "brain" service for heavy inference, plus 8 scheduled Cloud Run Jobs (catalog sync, drift baselines, MLOps loops).
+- **Secrets**: every credential is mounted from **Secret Manager** (`secretKeyRef`) — no secrets ship in images or env files.
+- **Pipeline**: deploys are **manual-only** via `gh workflow run ci.yml -f deploy_to_prod=true` (a push never deploys). All deployment parameters live in the declarative [deploy/deployments.yaml](../deploy/deployments.yaml).
+
+### D. Mirror Deployment (Hugging Face Spaces)
+A container mirror can be published to **Hugging Face Spaces** (`https://huggingface.co/spaces/MissawB/Animetix`, internal port `7860`) via `deploy_to_hf.yml` / `scripts/deploy/huggingface/hf_deploy.py`.

@@ -29,10 +29,10 @@ graph LR
 
     %% Data Infrastructure
     subgraph Infrastructure ["Persistence & Cache"]
-        PostgreSQL[(PostgreSQL / pgvector)]
+        PostgreSQL[(PostgreSQL / pgvector - prod)]
         Redis[(Redis)]
         Neo4j[(Neo4j - Graph DB)]
-        VertexAI[(Vertex AI Vector Search)]
+        VertexAI[(Vertex AI Vector Search - optional)]
     end
 
     %% AI Infrastructure
@@ -68,7 +68,7 @@ This diagram details the "Backend" component from the previous overview. It high
 graph TD
     subgraph Adapters ["Adapters (Infrastructure - External)"]
         DjangoWeb[Django Views / DRF]
-        VectorAdapter[UnifiedRepositoryAdapter (Vertex AI / pgvector)]
+        VectorAdapter[UnifiedRepositoryAdapter (pgvector / optional Vertex AI)]
         LLMAdapter[FallbackInferenceAdapter]
     end
 
@@ -110,8 +110,9 @@ graph TD
     Port --> Fallback[FallbackInferenceAdapter]
     
     subgraph Text_Moteurs [Text Generation & Reranking]
-        BrainAPI(Brain API Cloud - Primary)
-        Ollama(Ollama Local - Fallback)
+        Ollama(Ollama Local - Tier 1, priority)
+        BrainAPI(Brain API Cloud - Tier 2)
+        Gemini(Google GenAI - Tier 3, last resort)
     end
     
     subgraph Multimodal [Vision & Audio]
@@ -120,14 +121,15 @@ graph TD
         Audio(XTTS / Moshi Audio)
     end
 
-    Fallback -->|1. Try Cloud| BrainAPI
-    Fallback -->|2. Fallback to Local| Ollama
+    Fallback -->|1. Try local first| Ollama
+    Fallback -->|2. Fallback to managed| BrainAPI
+    Fallback -->|3. Pay-per-token last| Gemini
     
     Fallback -.-> Multimodal
 ```
 
 **Explanation:**
-When the business layer requests an AI generation (e.g. Chat, Image synthesis, voice generation, or document reranking), it calls the `FallbackInferenceAdapter`. This adapter evaluates active engines. For text, it will try the cloud-based Brain API or Vertex AI first. If that request fails, it automatically fallbacks to a local Ollama instance without disrupting the user journey.
+When the business layer requests an AI generation (e.g. Chat, Image synthesis, voice generation, or document reranking), it calls the `FallbackInferenceAdapter`. This adapter evaluates active engines with a **local-first priority** to minimize costs: free local compute (Ollama / local Transformers) is tried first, then the managed Brain API, and only as a last resort the pay-per-token Google GenAI — without disrupting the user journey.
 
 ---
 
@@ -139,7 +141,7 @@ The data persistence layers support semantic search (RAG - Retrieval-Augmented G
 sequenceDiagram
     participant Pipeline as Ingestion Pipeline (ETL)
     participant Json as JSON Files (raw/processed)
-    participant Db as Vector DB (Vertex AI / pgvector) / Neo4j
+    participant Db as Vector DB (pgvector) / Neo4j
     participant RAG as AgenticRAGService
     participant LLM as InferenceAdapter
 
@@ -156,7 +158,7 @@ sequenceDiagram
 
 **Explanation:**
 1. Upstream, scheduled ETL scripts clean raw files and generate semantic embeddings.
-2. These vectors are indexed in Vertex AI Vector Search / pgvector and relations are mapped in Neo4j.
+2. These vectors are indexed in pgvector (optionally Vertex AI Vector Search) and relations are mapped in Neo4j.
 3. When a user queries the system (RAG Service), the databases identify the most semantically close metadata.
 4. This retrieved context is injected into the prompt sent to the LLM, ensuring factual accuracy and mitigating hallucinations.
 
