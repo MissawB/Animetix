@@ -2,9 +2,27 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  X, Home, Zap, Trophy, Shield, Sparkles, Gamepad2, Search, Compass,
-  Users, UserPlus, FlaskConical, BrainCircuit, Eye, LogIn, Microscope,
-  Database, Share2, Download, BookOpen, type LucideIcon
+  X,
+  Home,
+  Zap,
+  Trophy,
+  Shield,
+  Sparkles,
+  Gamepad2,
+  Search,
+  Compass,
+  Users,
+  UserPlus,
+  FlaskConical,
+  BrainCircuit,
+  Eye,
+  LogIn,
+  Microscope,
+  Database,
+  Share2,
+  Download,
+  BookOpen,
+  type LucideIcon,
 } from 'lucide-react';
 import { AdSlot } from '../../features/billing/components/AdSlot';
 import { User } from '../../types';
@@ -35,7 +53,11 @@ const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   </div>
 );
 
-const NavItem: React.FC<{ item: NavDef; active: boolean; onClick: () => void }> = ({ item, active, onClick }) => {
+const NavItem: React.FC<{ item: NavDef; active: boolean; onClick: () => void }> = ({
+  item,
+  active,
+  onClick,
+}) => {
   const { icon: Icon, to, label, color } = item;
   return (
     <Link
@@ -48,60 +70,140 @@ const NavItem: React.FC<{ item: NavDef; active: boolean; onClick: () => void }> 
           : 'text-gray-600 dark:text-gray-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] hover:translate-x-0.5'
       }`}
     >
-      {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-r-full bg-black" />}
+      {active && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-r-full bg-black" />
+      )}
       <span
         className={`grid place-items-center w-8 h-8 rounded-lg shrink-0 transition-colors ${
-          active ? 'bg-black/10' : 'bg-black/[0.04] dark:bg-white/5 group-hover:bg-black/[0.07] dark:group-hover:bg-white/10'
+          active
+            ? 'bg-black/10'
+            : 'bg-black/[0.04] dark:bg-white/5 group-hover:bg-black/[0.07] dark:group-hover:bg-white/10'
         }`}
       >
         <Icon className={`w-[18px] h-[18px] ${active ? 'text-black' : color}`} />
       </span>
-      <span className={`text-sm tracking-tight truncate ${active ? 'font-black' : 'font-bold'}`}>{label}</span>
+      <span className={`text-sm tracking-tight truncate ${active ? 'font-black' : 'font-bold'}`}>
+        {label}
+      </span>
     </Link>
   );
 };
 
 const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
-  isSidebarOpen, isAuthenticated, user, pathname, toggleSidebar
+  isSidebarOpen,
+  isAuthenticated,
+  user,
+  pathname,
+  toggleSidebar,
 }) => {
   const { t } = useTranslation();
   const close = () => toggleSidebar(true);
 
   const mainLinks: NavDef[] = [
-    { to: '/', icon: Home, label: t('nav.home', 'Accueil'), color: 'text-gray-500 dark:text-gray-400' },
-    { to: '/daily-challenge/', icon: Zap, label: t('nav.daily', 'Défi Quotidien'), color: 'text-yellow-400' },
+    {
+      to: '/',
+      icon: Home,
+      label: t('nav.home', 'Accueil'),
+      color: 'text-gray-500 dark:text-gray-400',
+    },
+    {
+      to: '/daily-challenge/',
+      icon: Zap,
+      label: t('nav.daily', 'Défi Quotidien'),
+      color: 'text-yellow-400',
+    },
     { to: '/games/hub/', icon: Gamepad2, label: t('nav.games', 'Jeux'), color: 'text-violet-400' },
   ];
 
   const exploreLinks: NavDef[] = [
     { to: '/search/', icon: Search, label: t('nav.search', 'Recherche'), color: 'text-cyan-400' },
-    { to: '/explore/', icon: Compass, label: t('nav.explore', 'Explorer'), color: 'text-emerald-400' },
-    { to: '/media/manga/library/', icon: BookOpen, label: t('nav.library', 'Ma Bibliothèque'), color: 'text-pink-400' },
-    { to: '/media/manga/offline/', icon: Download, label: t('nav.offline_manga', 'Manga Hors-ligne'), color: 'text-orange-400' },
+    {
+      to: '/explore/',
+      icon: Compass,
+      label: t('nav.explore', 'Explorer'),
+      color: 'text-emerald-400',
+    },
+    {
+      to: '/media/manga/library/',
+      icon: BookOpen,
+      label: t('nav.library', 'Ma Bibliothèque'),
+      color: 'text-pink-400',
+    },
+    {
+      to: '/media/manga/offline/',
+      icon: Download,
+      label: t('nav.offline_manga', 'Manga Hors-ligne'),
+      color: 'text-orange-400',
+    },
   ];
 
   const communityLinks: NavDef[] = [
-    { to: '/social/dashboard/', icon: Users, label: t('nav.community', 'Communauté'), color: 'text-orange-400' },
+    {
+      to: '/social/dashboard/',
+      icon: Users,
+      label: t('nav.community', 'Communauté'),
+      color: 'text-orange-400',
+    },
     ...(isAuthenticated
       ? [
-          { to: '/social/friends/', icon: UserPlus, label: t('nav.friends', 'Amis'), color: 'text-pink-400' },
-          { to: '/social/sync/', icon: Database, label: t('nav.offline_sync', 'Sync Hors-ligne'), color: 'text-yellow-400' },
+          {
+            to: '/social/friends/',
+            icon: UserPlus,
+            label: t('nav.friends', 'Amis'),
+            color: 'text-pink-400',
+          },
+          {
+            to: '/social/sync/',
+            icon: Database,
+            label: t('nav.offline_sync', 'Sync Hors-ligne'),
+            color: 'text-yellow-400',
+          },
         ]
       : []),
-    { to: '/leaderboard/', icon: Trophy, label: t('nav.leaderboard', 'Classement'), color: 'text-yellow-500' },
+    {
+      to: '/leaderboard/',
+      icon: Trophy,
+      label: t('nav.leaderboard', 'Classement'),
+      color: 'text-yellow-500',
+    },
   ];
 
   // Labs is a hub (/lab/) that links to every experimental tool, so a single entry is enough.
   const creationLinks: NavDef[] = [
-    { to: '/lab/forge-hub/', icon: Sparkles, label: t('nav.forge', 'Forge Créative'), color: 'text-purple-400' },
+    {
+      to: '/lab/forge-hub/',
+      icon: Sparkles,
+      label: t('nav.forge', 'Forge Créative'),
+      color: 'text-purple-400',
+    },
     { to: '/lab/', icon: FlaskConical, label: t('nav.labs_hub', 'Labs'), color: 'text-green-400' },
-    { to: '/research/papers/', icon: Microscope, label: t('nav.research', 'Recherche IA'), color: 'text-cyan-500' },
+    {
+      to: '/research/papers/',
+      icon: Microscope,
+      label: t('nav.research', 'Recherche IA'),
+      color: 'text-cyan-500',
+    },
   ];
 
   const systemLinks: NavDef[] = [
-    { to: '/social/nexus/', icon: BrainCircuit, label: t('nav.nexus', 'Nexus Pro'), color: 'text-fuchsia-400' },
-    { to: '/social/transparency/', icon: Eye, label: t('navbar.transparency', 'Transparence'), color: 'text-slate-400' },
-    { to: '/social/open-data/', icon: Share2, label: t('nav.open_data', 'Portail Open Data'), color: 'text-teal-400' },
+    {
+      to: '/social/nexus/',
+      icon: BrainCircuit,
+      label: t('nav.nexus', 'Nexus Pro'),
+      color: 'text-fuchsia-400',
+    },
+    {
+      to: '/social/transparency/',
+      icon: Eye,
+      label: t('navbar.transparency', 'transparence'),
+      color: 'text-slate-400',
+    },
+    {
+      to: '/social/open-data/',
+      icon: Share2,
+      label: t('nav.open_data', 'Portail Open Data'),
+      color: 'text-teal-400',
+    },
   ];
 
   const xp = user?.xp ?? 0;
@@ -149,9 +251,14 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
                 {user.username?.[0]?.toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="manga-font text-base m-0 text-black dark:text-white truncate">{user.username}</p>
+                <p className="manga-font text-base m-0 text-black dark:text-white truncate">
+                  {user.username}
+                </p>
                 <p className="text-[10px] font-black text-yellow-600 dark:text-yellow-400 uppercase tracking-widest m-0">
-                  {user.tier === 'premium' ? t('nav.tier_boosted', 'Boosté') : t('nav.tier_standard', 'Standard')} · {t('nav.level_abbrev', { defaultValue: 'Niv. {{level}}', level })}
+                  {user.tier === 'premium'
+                    ? t('nav.tier_boosted', 'Boosté')
+                    : t('nav.tier_standard', 'Standard')}{' '}
+                  · {t('nav.level_abbrev', { defaultValue: 'Niv. {{level}}', level })}
                 </p>
               </div>
             </div>
@@ -163,7 +270,13 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
             </div>
             <div className="flex justify-between mt-2 font-black text-[10px] text-black/40 dark:text-white/40">
               <span>{t('nav.xp_amount', { defaultValue: '{{xp}} XP', xp })}</span>
-              <span>{t('nav.xp_to_next', { defaultValue: '{{xp}} XP → NIV. {{level}}', xp: 500 - (xp % 500), level: level + 1 })}</span>
+              <span>
+                {t('nav.xp_to_next', {
+                  defaultValue: '{{xp}} XP → NIV. {{level}}',
+                  xp: 500 - (xp % 500),
+                  level: level + 1,
+                })}
+              </span>
             </div>
           </Link>
         )}
@@ -171,25 +284,53 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
         {/* Navigation */}
         <nav className="space-y-0.5">
           <SectionLabel>{t('nav.main', 'Principal')}</SectionLabel>
-          {mainLinks.map((it) => <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />)}
+          {mainLinks.map((it) => (
+            <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />
+          ))}
 
           <SectionLabel>{t('nav.exploration', 'Exploration')}</SectionLabel>
-          {exploreLinks.map((it) => <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />)}
+          {exploreLinks.map((it) => (
+            <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />
+          ))}
 
           <SectionLabel>{t('nav.community_section', 'Communauté')}</SectionLabel>
-          {communityLinks.map((it) => <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />)}
+          {communityLinks.map((it) => (
+            <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />
+          ))}
 
           <SectionLabel>{t('nav.labs', 'Labs & Création')}</SectionLabel>
-          {creationLinks.map((it) => <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />)}
+          {creationLinks.map((it) => (
+            <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />
+          ))}
 
           <SectionLabel>{t('nav.system', 'Système')}</SectionLabel>
-          {systemLinks.map((it) => <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />)}
+          {systemLinks.map((it) => (
+            <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />
+          ))}
 
           {!isAuthenticated && (
             <>
               <SectionLabel>{t('nav.account', 'Compte')}</SectionLabel>
-              <NavItem item={{ to: '/auth/login/', icon: LogIn, label: t('auth.login.link', 'Connexion'), color: 'text-blue-500' }} active={pathname === '/auth/login/'} onClick={close} />
-              <NavItem item={{ to: '/auth/register/', icon: UserPlus, label: t('auth.register.link', "S'inscrire"), color: 'text-green-500' }} active={pathname === '/auth/register/'} onClick={close} />
+              <NavItem
+                item={{
+                  to: '/auth/login/',
+                  icon: LogIn,
+                  label: t('auth.login.link', 'Connexion'),
+                  color: 'text-blue-500',
+                }}
+                active={pathname === '/auth/login/'}
+                onClick={close}
+              />
+              <NavItem
+                item={{
+                  to: '/auth/register/',
+                  icon: UserPlus,
+                  label: t('auth.register.link', "S'inscrire"),
+                  color: 'text-green-500',
+                }}
+                active={pathname === '/auth/register/'}
+                onClick={close}
+              />
             </>
           )}
         </nav>

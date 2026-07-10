@@ -54,7 +54,7 @@ const Footer: React.FC = () => {
       links: [
         { to: '/social/dashboard/', label: t('nav.community', 'Communauté') },
         { to: '/social/nexus/', label: t('nav.nexus', 'Nexus Pro') },
-        { to: '/social/transparency/', label: t('navbar.transparency', 'Transparence') },
+        { to: '/social/transparency/', label: t('navbar.transparency', 'transparence') },
         { to: '/social/open-data/', label: t('nav.open_data', 'Portail Open Data') },
       ],
     },
