@@ -2,6 +2,16 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-11] Session: Prod deploy gets a smoke test — and a design where rollback is never needed
+
+Closure of the 🟠 audit item "aucun smoke-test ni rollback". Rather than the audit's suggested deploy→check→rollback (which leaves a bad-revision window), the deploy job now uses Cloud Run's no-traffic pattern — **traffic never moves to an unverified revision, so there is nothing to roll back**:
+
+1. `gcloud run deploy --no-traffic --tag candidate`: the new revision boots without serving, reachable only via the tagged URL (which also bypasses the Cloudflare custom-domain worker).
+2. Smoke test: up to 30×10s retries on `<candidate-url>/healthz/` (first hit cold-starts the container, which runs migrate + collectstatic before gunicorn — a broken migration or missing secret fails right here). On failure the job dumps the revision logs and exits; **the previous revision keeps serving**.
+3. Only on green: `update-traffic --to-latest`.
+
+New endpoint [healthz](../backend/api/animetix_project/health.py) (`/healthz/`): a plain Django view — deliberately not DRF (the anon throttle must never 429 the deploy gate, locked by a 30-hits test), registered **outside** `i18n_patterns` (an unknown path 302s to `/fr/...` via the locale catch-all — caught by the RED test). TDD: both tests watched fail (302) before the route existed. The flow itself gets its first real exercise at the next manual prod deploy (`gh workflow run ci.yml -f deploy_to_prod=true`).
+
 ## [2026-07-11] Session: Monolithic lockfile split — one lock per Docker image, CUDA out of the web image
 
 Closure of the 🟠 audit item "splitter le lockfile monolithique (image web obèse)". Investigation corrected two audit assumptions before designing the split: the 8 Cloud Run jobs all run the **web** image and genuinely import torch/transformers/sentence-transformers/peft/trl **in-process** (train_vibe_*, continuous_pretraining, train_expert_model) and shell out to the **dbt** CLI (rlhf_pipeline) — so the training stack must stay on web; and **five pinned packages are imported nowhere repo-wide** (ultralytics, manga-ocr, onnxruntime, opencv-python-headless, torchvision — `cv2` has zero imports), whose removal also retired the GUI-vs-headless opencv uninstall dance in all three Dockerfiles.

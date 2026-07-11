@@ -33,7 +33,12 @@ from drf_spectacular.views import (  # noqa: E402
     SpectacularSwaggerView,
 )
 
+from animetix_project.health import healthz  # noqa: E402
+
 urlpatterns = [
+    # Outside i18n_patterns: the deploy smoke test must hit it without a
+    # locale redirect (an unknown path 302s to /fr/... via the i18n catch-all).
+    path("healthz/", healthz, name="healthz"),
     path("admin/", admin.site.urls),
     path("favicon.ico", RedirectView.as_view(url="/static/animetix/img/logo/logo.png")),
     path(

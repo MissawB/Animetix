@@ -11,8 +11,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Deploy prod — aucun smoke-test ni rollback** _(audit dette 2026-07-11)_
-  - [ci.yml:377-393](.github/workflows/ci.yml#L377-L393) : `gcloud run deploy` puis simple echo de l'URL. Une révision qui démarre mais échoue au runtime (migration, secret manquant) reste servie. **Reco** : healthcheck curl post-deploy + `gcloud run services update-traffic` vers la révision précédente en cas d'échec.
 - [ ] **Backend — exceptions avalées dans les adapters d'inférence, dont le guardrail (fail-open)** _(audit dette 2026-07-11)_
   - ~14 blocs `except: pass` dans [google_genai_adapter.py](backend/adapters/inference/google_genai_adapter.py), idem `brain_api_adapter`, `moondream_adapter`, `manga_ocr_adapter`, `diffusers_adapter`, `vision_transformers_adapter` (~4 chacun) — un échec d'inférence disparaît sans trace. Cas sensible : **6 avalages dans `guardrail_service.py`** = fail-open potentiel d'un service de sécurité. **Reco** : logger en `warning` a minima (pattern existant : [vs_battle_service.py:141](backend/core/domain/services/creative/vs_battle_service.py#L141)).
 - [ ] **CI — topologie fragile : docker-build bloque les tests, perf-test paie des API réelles** _(audit dette 2026-07-11)_

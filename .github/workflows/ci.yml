@@ -374,18 +374,63 @@ jobs:
           --config cloudbuild.yaml \
           --substitutions=_TAG=${{ github.sha }},_BUILD_TARGET=web \
           .
-    - name: Deploy to Cloud Run (animetix-web)
+    - name: Deploy candidate revision (no traffic)
       # Minimal update: only the image changes. The service keeps its existing
       # env vars, secrets, VPC connector, scaling and port. Pinned to the SHA tag.
       # DJANGO_DB_USE_IAM=false: animetix-db authenticates the built-in `postgres`
       # user via the password in DATABASE_URL (no Cloud SQL IAM DB user exists), so
       # the prod default (IAM auth) must be disabled or every DB connect FATALs.
+      #
+      # --no-traffic + --tag: the new revision starts WITHOUT serving traffic,
+      # reachable only through the `candidate` tag URL. Prod keeps serving the
+      # previous revision until the smoke test below passes — a revision that
+      # boots but fails at runtime (broken migration, missing secret) never
+      # takes traffic, so there is nothing to roll back.
       run: |
         gcloud run deploy "$PROD_SERVICE" \
           --project "$GCP_PROJECT" \
           --region "$GCP_REGION" \
           --image "$PROD_IMAGE:${{ github.sha }}" \
-          --update-env-vars=DJANGO_DB_USE_IAM=false
+          --update-env-vars=DJANGO_DB_USE_IAM=false \
+          --no-traffic \
+          --tag candidate
+    - name: Smoke-test the candidate revision
+      # Hits /healthz/ on the tagged revision URL (bypasses the Cloudflare
+      # custom-domain worker). First request cold-starts the container, which
+      # runs migrate + collectstatic before gunicorn: allow up to 5 minutes.
+      run: |
+        CANDIDATE_URL=$(gcloud run services describe "$PROD_SERVICE" \
+          --project "$GCP_PROJECT" --region "$GCP_REGION" --format=json \
+          | jq -r '.status.traffic[] | select(.tag=="candidate") | .url')
+        if [ -z "$CANDIDATE_URL" ]; then
+          echo "::error::candidate tag URL not found on $PROD_SERVICE"
+          exit 1
+        fi
+        echo "Smoke-testing $CANDIDATE_URL/healthz/"
+        for i in $(seq 1 30); do
+          body=$(curl -sS --max-time 15 "$CANDIDATE_URL/healthz/" || true)
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$CANDIDATE_URL/healthz/" || echo 000)
+          if [ "$code" = "200" ]; then
+            echo "Candidate healthy after $i attempt(s): $body"
+            exit 0
+          fi
+          echo "Attempt $i/30: HTTP $code — retrying in 10s"
+          sleep 10
+        done
+        echo "::error::candidate revision never became healthy — traffic was NOT switched, previous revision still serves prod"
+        exit 1
+    - name: Dump candidate logs (smoke test failed)
+      if: failure()
+      run: |
+        gcloud logging read \
+          "resource.type=cloud_run_revision AND resource.labels.service_name=$PROD_SERVICE" \
+          --project "$GCP_PROJECT" --limit 80 --freshness=30m \
+          --format="value(timestamp, severity, textPayload)" || true
+    - name: Promote candidate to 100% traffic
+      run: |
+        gcloud run services update-traffic "$PROD_SERVICE" \
+          --project "$GCP_PROJECT" --region "$GCP_REGION" \
+          --to-latest
     - name: Show prod service URL
       run: |
         gcloud run services describe "$PROD_SERVICE" \
