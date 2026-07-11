@@ -11,8 +11,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Tests — métier critique quasi non testé sous un gate à 1,45 pt de marge** _(audit dette 2026-07-11)_
-  - Global 76,45 % vs `--cov-fail-under=75` ([ci.yml:135](.github/workflows/ci.yml#L135)) : toute petite régression casse le deploy. Le global masque : **`stripe_billing.py` 20 % (paiement)**, `alert_service.py` **0 %**, `validation_gate.py` **0 %**, consumers `undercover` 38 %, `quiz_who.py` 23 %, `animinator.py` 26 %, `semantic_cache_service.py` 31 %. **Reco** : tester Stripe billing en priorité, puis re-calibrer le gate.
 
 ## 🟡 Moyens
 

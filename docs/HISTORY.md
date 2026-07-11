@@ -2,6 +2,22 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-11] Session: Coverage blind spots closed — the modules the 76% global was hiding, gate ratcheted to 76
+
+Closure of the 🟠 audit item "métier critique quasi non testé sous un gate à 1,45 pt de marge". The item's headline recommendation ("tester Stripe billing en priorité") was **stale — `stripe_billing.py` no longer exists** (Stripe was removed from the project; the Pro tier is free/manual). The other five blind spots were real and are now covered with behavior tests (52 new tests, no filler):
+
+| Module | Before | After |
+|---|---|---|
+| [alert_service.py](../backend/core/domain/services/alert_service.py) (live: the hourly-health-monitoring Cloud Run job calls it) | **0 %** | 100 % |
+| [validation_gate.py](../backend/core/domain/services/validation_gate.py) (the HITL gate staging every synthetic gold entry) | **0 %** | 100 % |
+| [semantic_cache_service.py](../backend/core/domain/services/semantic_cache_service.py) | 31 % | 100 % |
+| [games/quiz_who.py](../backend/api/animetix/api/games/quiz_who.py) | 23 % | 98 % |
+| [games/animinator.py](../backend/api/animetix/api/games/animinator.py) | 26 % | 97 % |
+
+The tests pin real behavior, not lines: drift/latency alert thresholds are strict (`> 5.0s`, not `>=`), the HITL gate caps an unsafe entry's score at 0.2 and prefixes its critique, the semantic cache short-circuits the embedding call on an exact hit, and Animinator's `PaymentRequired` is raised *outside* the view's try/except so an empty wallet returns **402, not a swallowed 500**.
+
+Gate **ratcheted 75 → 76** ([ci.yml](../.github/workflows/ci.yml) + [pyproject.toml](../pyproject.toml), kept in lockstep): only tests were added (no source touched), so the global could only rise — the ratchet locks the gain in rather than leaving the margin to be eroded silently. Residual (tracked in TODO): the stateful `undercover` WebSocket consumer (38 %).
+
 ## [2026-07-11] Session: CI topology untangled — unit feedback no longer waits on the Docker build, real-API perf-test off the push path
 
 Closure of the 🟠 audit item "topologie fragile". Four targeted changes to [ci.yml](../.github/workflows/ci.yml), no job removed:

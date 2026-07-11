@@ -73,6 +73,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-fail_under = 75
+# Kept in lockstep with --cov-fail-under in .github/workflows/ci.yml (ratchet).
+fail_under = 76
 show_missing = true
 

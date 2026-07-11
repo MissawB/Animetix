@@ -131,11 +131,12 @@ jobs:
       # Exclude integration tests that need services absent from this job
       # (live LLM/ollama, a running app server, subprocess-based commands).
       # --durations surfaces the slowest tests so we can keep an eye on runtime.
-      # --cov-fail-under=75 is a HARD gate: the job (and thus the prod deploy)
-      # fails below 75% line coverage. Coverage now sits at ~75.3% (cleared by the
-      # coverage-consolidation work, cf. docs/HISTORY.md), so the gate is live and
-      # passing — it now guards against regressions rather than tracking a backlog.
-      run: python -m pytest -m "not integration" --durations=25 --cov=backend --cov-report=term-missing --cov-report=xml --cov-fail-under=75
+      # --cov-fail-under is a HARD gate: the job (and thus the prod deploy) fails
+      # below it. Ratcheted 75 -> 76 on 2026-07-11 after covering the critical
+      # blind spots the global was masking (alert_service and validation_gate were
+      # at 0%, quiz_who 23%, animinator 26% — cf. docs/HISTORY.md). Raise it again
+      # as coverage grows; never lower it to make a red build green.
+      run: python -m pytest -m "not integration" --durations=25 --cov=backend --cov-report=term-missing --cov-report=xml --cov-fail-under=76
     - name: Upload coverage to Codecov
       # Runs even when the coverage gate fails so the report is always published.
       # Non-blocking: never fails the job on upload/token issues.
