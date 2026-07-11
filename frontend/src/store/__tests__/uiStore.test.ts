@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock SoundManager so no Howler/audio is constructed and we can assert clicks.
+// Mock SoundManager so no audio is synthesized and we can assert clicks.
 const playMock = vi.fn();
 vi.mock('../../utils/SoundManager', () => ({
   default: { play: (...args: unknown[]) => playMock(...args) },

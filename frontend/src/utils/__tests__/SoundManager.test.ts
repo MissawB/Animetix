@@ -1,17 +1,50 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// SoundManager wraps `howler`'s Howl. Mock it so no real audio loads and we can
-// assert play() is invoked. `play` resolves to mimic the real (async) call.
-const playSpy = vi.fn().mockResolvedValue(undefined);
-// `Howl` is invoked with `new`, so the mock must be a real (non-arrow)
-// constructable function returning the instance shape we assert on.
-const HowlMock = vi.fn(function HowlCtor(this: { play: typeof playSpy }) {
-  this.play = playSpy;
+/**
+ * SoundManager synthesizes its blips with the Web Audio API (it used to hotlink
+ * MP3s from mixkit.co, which now answers 403). jsdom has no AudioContext, so we
+ * stub one and assert on the oscillators it wires up.
+ */
+
+const started: { type: string; freq: number }[] = [];
+
+const makeOscillator = () => {
+  const osc = {
+    type: 'sine',
+    frequency: {
+      value: 0,
+      setValueAtTime: vi.fn(function (this: unknown, v: number) {
+        osc.frequency.value = v;
+      }),
+      exponentialRampToValueAtTime: vi.fn(),
+    },
+    connect: vi.fn(() => ({ connect: vi.fn() })),
+    start: vi.fn(() => started.push({ type: osc.type, freq: osc.frequency.value })),
+    stop: vi.fn(),
+  };
+  return osc;
+};
+
+const makeGain = () => ({
+  gain: {
+    setValueAtTime: vi.fn(),
+    linearRampToValueAtTime: vi.fn(),
+    exponentialRampToValueAtTime: vi.fn(),
+  },
+  connect: vi.fn(() => ({ connect: vi.fn() })),
 });
 
-vi.mock('howler', () => ({
-  Howl: HowlMock,
-}));
+const resume = vi.fn();
+const ctxState = { value: 'running' as AudioContextState };
+
+const AudioContextMock = vi.fn(function AudioContextCtor(this: Record<string, unknown>) {
+  this.currentTime = 0;
+  Object.defineProperty(this, 'state', { get: () => ctxState.value });
+  this.destination = {};
+  this.resume = resume;
+  this.createOscillator = makeOscillator;
+  this.createGain = makeGain;
+});
 
 const importSoundManager = async () => {
   vi.resetModules();
@@ -22,32 +55,80 @@ const importSoundManager = async () => {
 describe('SoundManager', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    started.length = 0;
+    ctxState.value = 'running';
     localStorage.clear();
+    vi.stubGlobal('AudioContext', AudioContextMock);
   });
 
-  it('constructs one Howl instance per sound type', async () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('does not open an AudioContext before the first play', async () => {
     await importSoundManager();
-    // click, win, loss, unlock, reveal, error
-    expect(HowlMock).toHaveBeenCalledTimes(6);
+    // Browsers refuse (and warn) when a context is created without a user gesture.
+    expect(AudioContextMock).not.toHaveBeenCalled();
   });
 
-  it('plays the requested sound when not muted', async () => {
+  it('synthesizes the requested sound when not muted', async () => {
     const sm = await importSoundManager();
     sm.play('click');
-    expect(playSpy).toHaveBeenCalledTimes(1);
+
+    expect(AudioContextMock).toHaveBeenCalledTimes(1);
+    expect(started).toHaveLength(1);
+    expect(started[0].freq).toBeGreaterThan(0);
+  });
+
+  it('plays the win fanfare as a rising sequence', async () => {
+    const sm = await importSoundManager();
+    sm.play('win');
+
+    const freqs = started.map((s) => s.freq);
+    expect(freqs.length).toBeGreaterThan(1);
+    // Each note is higher than the one before it — that is what makes it a reward.
+    expect([...freqs].sort((a, b) => a - b)).toEqual(freqs);
+  });
+
+  it('reuses a single AudioContext across plays', async () => {
+    const sm = await importSoundManager();
+    sm.play('click');
+    sm.play('reveal');
+    expect(AudioContextMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('resumes a suspended context (autoplay policy)', async () => {
+    ctxState.value = 'suspended';
+    const sm = await importSoundManager();
+    sm.play('click');
+    expect(resume).toHaveBeenCalled();
   });
 
   it('does not play when muted (persisted in localStorage)', async () => {
     localStorage.setItem('sound_muted', 'true');
     const sm = await importSoundManager();
     sm.play('win');
-    expect(playSpy).not.toHaveBeenCalled();
+    expect(AudioContextMock).not.toHaveBeenCalled();
+    expect(started).toHaveLength(0);
   });
 
-  it('tolerates play() rejections without throwing', async () => {
-    playSpy.mockRejectedValueOnce(new Error('autoplay blocked'));
+  it('stays silent instead of throwing when audio is unavailable', async () => {
+    // No AudioContext at all (old browser, hardened environment): a missing blip
+    // must never take a game down.
+    vi.stubGlobal('AudioContext', undefined);
     const sm = await importSoundManager();
     expect(() => sm.play('error')).not.toThrow();
+  });
+
+  it('stays silent instead of throwing when the context refuses to start', async () => {
+    vi.stubGlobal(
+      'AudioContext',
+      vi.fn(() => {
+        throw new Error('audio hardware unavailable');
+      }),
+    );
+    const sm = await importSoundManager();
+    expect(() => sm.play('click')).not.toThrow();
   });
 
   it('toggle() flips mute state and persists it', async () => {
@@ -57,16 +138,15 @@ describe('SoundManager', () => {
     expect(muted).toBe(true);
     expect(localStorage.getItem('sound_muted')).toBe('true');
 
-    // While muted, play is suppressed.
     sm.play('click');
-    expect(playSpy).not.toHaveBeenCalled();
+    expect(started).toHaveLength(0);
 
     const unmuted = sm.toggle();
     expect(unmuted).toBe(false);
     expect(localStorage.getItem('sound_muted')).toBe('false');
 
     sm.play('click');
-    expect(playSpy).toHaveBeenCalledTimes(1);
+    expect(started).toHaveLength(1);
   });
 
   it('triggers vibration patterns for relevant sound types', async () => {
@@ -82,7 +162,5 @@ describe('SoundManager', () => {
 
     sm.play('click');
     expect(vibrate).toHaveBeenCalledWith(10);
-
-    vi.unstubAllGlobals();
   });
 });
