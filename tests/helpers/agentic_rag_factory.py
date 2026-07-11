@@ -22,6 +22,25 @@ from core.domain.services.xai_service import XaiDiagnosticService
 from core.ports.graph_persistence_port import GraphPersistencePort
 
 
+def _wire_mock_async_stream(mock_obj):
+    """Give a Mock a real ``astream_generate`` bridging its ``stream_generate``.
+
+    The RAG pipeline is async-only: real adapters inherit InferencePort's
+    default thread-bridge, but bare MagicMocks auto-answer ``__aiter__`` with
+    an empty stream, silently dropping the tokens tests configured on the sync
+    ``stream_generate``. The bridge reads ``stream_generate`` at call time, so
+    tests may configure it after building the service, exactly as before.
+    """
+    if not isinstance(mock_obj, Mock):
+        return
+
+    async def _astream(*args, **kwargs):
+        for chunk in mock_obj.stream_generate(*args, **kwargs):
+            yield chunk
+
+    mock_obj.astream_generate = _astream
+
+
 def _wire_mock_llm_fallback(llm_service, inference_engine):
     """Block A: give a mock llm_service sensible default generate behavior."""
     if not isinstance(llm_service, Mock):
@@ -172,6 +191,8 @@ def build_test_agentic_rag_service(**kwargs) -> AgenticRAGService:
     )
 
     _wire_mock_llm_fallback(llm_service, inference_engine)
+    _wire_mock_async_stream(llm_service)
+    _wire_mock_async_stream(inference_engine)
 
     if isinstance(kwargs["workflow_orchestrator"], Mock):
         kwargs["workflow_orchestrator"] = _build_real_orchestrator(

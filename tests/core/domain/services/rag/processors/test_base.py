@@ -4,6 +4,8 @@ import pytest
 from core.domain.entities.ai_schemas import RAGContext, RAGState
 from core.domain.services.rag.processors.base import StateProcessor
 
+from tests.helpers.async_stream import consume_aprocess
+
 
 def test_state_processor_is_abstract():
     # It should not be possible to instantiate StateProcessor directly
@@ -11,15 +13,19 @@ def test_state_processor_is_abstract():
         StateProcessor()
 
 
-def test_state_processor_enforces_process_method():
-    # A concrete subclass must implement process
+def test_state_processor_enforces_aprocess_method():
+    # A concrete subclass must implement aprocess (async generator that sets
+    # ctx.next_state — the sync `process` contract is retired).
     class ConcreteProcessor(StateProcessor):
-        def process(self, ctx: RAGContext) -> RAGState:
-            return RAGState.FINALIZE
+        async def aprocess(self, ctx: RAGContext, xai_collector=None):
+            ctx.next_state = RAGState.FINALIZE
+            for _ in []:
+                yield _
 
     processor = ConcreteProcessor()
     assert isinstance(processor, StateProcessor)
 
-    # Check if process is implemented
     ctx = MagicMock(spec=RAGContext)
-    assert processor.process(ctx) == RAGState.FINALIZE
+    next_state, steps = consume_aprocess(processor, ctx)
+    assert next_state == RAGState.FINALIZE
+    assert steps == []

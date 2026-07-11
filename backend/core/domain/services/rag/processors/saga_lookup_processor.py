@@ -1,5 +1,5 @@
+import asyncio
 import logging
-from typing import Generator
 
 from core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
 from core.domain.services.rag.processors.base import StateProcessor
@@ -11,15 +11,13 @@ class SagaLookupProcessor(StateProcessor):
     def __init__(self, saga_agent):
         self.saga_agent = saga_agent
 
-    def process(
-        self, ctx: RAGContext, xai_collector=None
-    ) -> Generator[dict, None, RAGState]:
+    async def aprocess(self, ctx: RAGContext, xai_collector=None):
         yield StreamStep(
             type="thought", content="[World-Brain] Analyse globale de la saga..."
         ).model_dump()
         logger.info("[World-Brain] Analyse globale de la saga...")
 
-        saga_name = self.saga_agent.lookup_saga(ctx.query)
+        saga_name = await asyncio.to_thread(self.saga_agent.lookup_saga, ctx.query)
         if saga_name:
             if xai_collector:
                 xai_collector.log_agent_thought(
@@ -30,7 +28,9 @@ class SagaLookupProcessor(StateProcessor):
                 f"[World-Brain] Saga détectée : {saga_name}. Récupération du résumé exécutif..."
             )
 
-            summary = self.saga_agent.get_saga_context(saga_name)
+            summary = await asyncio.to_thread(
+                self.saga_agent.get_saga_context, saga_name
+            )
             if summary:
                 ctx.truth_path += (
                     f"\n\n### RÉSUMÉ GLOBAL DE LA SAGA ({saga_name}) ###\n{summary}\n"
@@ -46,6 +46,6 @@ class SagaLookupProcessor(StateProcessor):
             )
 
         if ctx.plan and ctx.plan.requires_graph:
-            return RAGState.GRAPH_EXPLORE
+            ctx.next_state = RAGState.GRAPH_EXPLORE
         else:
-            return RAGState.RESEARCH
+            ctx.next_state = RAGState.RESEARCH

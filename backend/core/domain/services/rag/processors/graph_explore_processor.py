@@ -1,5 +1,5 @@
+import asyncio
 import logging
-from typing import Generator
 
 from core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
 from core.domain.exceptions import InfrastructureError
@@ -14,11 +14,10 @@ class GraphExploreProcessor(StateProcessor):
         self.graph_expert = graph_expert
         self.neo4j_manager = neo4j_manager
 
-    def process(
-        self, ctx: RAGContext, xai_collector=None
-    ) -> Generator[dict, None, RAGState]:
+    async def aprocess(self, ctx: RAGContext, xai_collector=None):
         if not ctx.plan:
-            return RAGState.PLAN
+            ctx.next_state = RAGState.PLAN
+            return
 
         yield StreamStep(
             type="thought",
@@ -26,7 +25,9 @@ class GraphExploreProcessor(StateProcessor):
         ).model_dump()
 
         logger.info("[GraphRAG] Recherche de communautés thématiques transversales...")
-        communities = self.community_partitioner.search_communities(ctx.query)
+        communities = await asyncio.to_thread(
+            self.community_partitioner.search_communities, ctx.query
+        )
         if communities:
             comm_ctx = "\n\n### CONTEXTE GRAPHRAG (COMMUNAUTÉS THÉMATIQUES) ###\n"
             for comm in communities:
@@ -42,13 +43,16 @@ class GraphExploreProcessor(StateProcessor):
             logger.info(
                 "[Graph-Agent] Neo4j non disponible pour l'exploration détaillée. Poursuite avec GraphRAG Communautaire..."
             )
-            return RAGState.RESEARCH
+            ctx.next_state = RAGState.RESEARCH
+            return
 
         yield StreamStep(
             type="thought", content="[Graph-Agent] Génération d'une requête Cypher..."
         ).model_dump()
         logger.info("[Graph-Agent] Génération d'une requête Cypher...")
-        cypher = self.graph_expert.generate_cypher(ctx.query, ctx.plan.reasoning)
+        cypher = await asyncio.to_thread(
+            self.graph_expert.generate_cypher, ctx.query, ctx.plan.reasoning
+        )
 
         if cypher:
             if xai_collector:
@@ -60,7 +64,9 @@ class GraphExploreProcessor(StateProcessor):
             ).model_dump()
             logger.info(f"[Graph-Agent] Exécution Cypher : {cypher}")
             try:
-                results = self.neo4j_manager.execute_read(cypher)
+                results = await asyncio.to_thread(
+                    self.neo4j_manager.execute_read, cypher
+                )
                 if results:
                     res_str = f"\n[Graph-Agent Results]:\n{results}\n"
                     if ctx.truth_path is None:
@@ -77,4 +83,4 @@ class GraphExploreProcessor(StateProcessor):
                 "[Graph-Agent] Impossible de générer une requête Cypher pertinente."
             )
 
-        return RAGState.RESEARCH
+        ctx.next_state = RAGState.RESEARCH

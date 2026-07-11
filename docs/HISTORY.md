@@ -2,6 +2,17 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-11] Session: Agentic RAG pipeline goes async-only — sync twin path deleted
+
+Closure of the last residual of "exposer le streaming async aux endpoints HTTP" **and** of the 2026-07-11 audit item "duplication sync/async dans `agentic_rag_service`" (the same root cause seen from two angles). The pipeline maintained two full orchestration paths: `plan_and_solve_stream` (~144 l.) / `aplan_and_solve_stream` (~162 l.) twins in the service, `run_workflow`/`arun_workflow` twins in the orchestrator, and sync+async twins inside `FallbackRagProcessor` and `SynthesizeProcessor` — a fix in one could silently miss the other. The async path is now the single implementation:
+
+- **The 8 one-shot processors** (Plan/Research/Judge/Acquire/Speculate/VlmRerank/GraphExplore/SagaLookup) are native `aprocess` async generators — each blocking collaborator call goes through `await asyncio.to_thread(...)`, and the elaborate per-processor queue/producer thread bridge in [base.py](../backend/core/domain/services/rag/processors/base.py) is gone (`aprocess` is the abstract contract; next state travels via `ctx.next_state`).
+- **Deleted**: `StateProcessor.process`, `RAGOrchestrator.run_workflow`, `AgenticRAGService.plan_and_solve_stream` (sync), and the sync halves of fallback/synthesize (~350 lines of duplicated orchestration). [arun_workflow](../backend/core/domain/services/rag_orchestrator.py) also resets `ctx.next_state` between hops so a forgetful processor falls back to FINALIZE instead of replaying the previous transition (locked by test).
+- **Sync consumers kept working through one facade**: every sync caller was one-shot (collects the whole stream, never streams incrementally) — `plan_and_solve` remains sync but now drives the async stream via `async_to_sync` (new public `aplan_and_solve` alongside); the B2B [DeveloperRAGView](../backend/api/animetix/api/developer.py) and `benchmark_quality_v2.py` drain `aplan_and_solve_stream` directly. The SSE views were already on the async path — WSGI and ASGI consumers now share one code path.
+- **Test migration (~20 files, ~100 call sites)**: new helpers [tests/helpers/async_stream.py](../tests/helpers/async_stream.py) (`collect_async`, `as_async_iter`, `consume_aprocess`) and an automatic factory shim ([agentic_rag_factory.py](../tests/helpers/agentic_rag_factory.py)) that gives MagicMock engines/llm a real `astream_generate` bridging their test-configured sync `stream_generate` at call time — most existing mocks kept working unchanged. TDD: the two new behaviors (sync facade drives async; developer view consumes the async stream) were locked RED-first with mocks that raise AttributeError on the retired sync attributes.
+
+Full suite green.
+
 ## [2026-07-11] Session: Inference-adapter dedup residual closed — `RerankMixin` retired, load semantics unified
 
 Closure of the last open sub-item of "duplication entre adapters d'inférence" (2026-06-22 architecture review). Investigation showed the residual had shrunk since the item was written: the June composition pilot had left **two verbatim copies of the rerank logic** ([RerankComponent](../backend/adapters/inference/components/rerank_component.py) used by `UnifiedInferenceAdapter`, plus the original `rerank_mixin.py` kept alive by a single consumer). Fixed by finishing the migration instead of patching the duplicate:

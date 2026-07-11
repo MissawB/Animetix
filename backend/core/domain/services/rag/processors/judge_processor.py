@@ -1,5 +1,5 @@
+import asyncio
 import logging
-from typing import Generator
 
 from core.domain.entities.ai_schemas import (
     JudgeAction,
@@ -16,13 +16,12 @@ class JudgeProcessor(StateProcessor):
     def __init__(self, debate_manager):
         self.debate_manager = debate_manager
 
-    def process(
-        self, ctx: RAGContext, xai_collector=None
-    ) -> Generator[dict, None, RAGState]:
+    async def aprocess(self, ctx: RAGContext, xai_collector=None):
         yield StreamStep(
             type="thought", content="[Swarm] Début du débat multi-agents..."
         ).model_dump()
-        outcome = self.debate_manager.conduct_debate(
+        outcome = await asyncio.to_thread(
+            self.debate_manager.conduct_debate,
             ctx.query,
             ctx.truth_path,
             ctx.full_answer,
@@ -49,23 +48,24 @@ class JudgeProcessor(StateProcessor):
                 type="thought",
                 content="[Swarm] Seuil de correction atteint. Livraison de la meilleure réponse actuelle.",
             ).model_dump()
-            return RAGState.FINALIZE
+            ctx.next_state = RAGState.FINALIZE
+            return
 
         if action == JudgeAction.APPROVE:
-            return RAGState.FINALIZE
+            ctx.next_state = RAGState.FINALIZE
         elif action == JudgeAction.REWRITE:
             ctx.correction_feedback = f"DÉFAUT DÉTECTÉ: {outcome.final_reasoning}. Corrige en restant fidèle au contexte."
-            return RAGState.SYNTHESIZE
+            ctx.next_state = RAGState.SYNTHESIZE
         elif action == JudgeAction.RESEARCH_MORE:
             if len(ctx.truth_path) < 200 and not ctx.knowledge_acquired:
                 yield StreamStep(
                     type="thought",
                     content="[Judge] Contexte local insuffisant. Bascule vers Librarian pour chercher des infos fraîches...",
                 ).model_dump()
-                return RAGState.ACQUIRE_KNOWLEDGE
+                ctx.next_state = RAGState.ACQUIRE_KNOWLEDGE
             else:
-                return RAGState.RESEARCH
+                ctx.next_state = RAGState.RESEARCH
         elif action == JudgeAction.REPLAN:
-            return RAGState.PLAN
+            ctx.next_state = RAGState.PLAN
         else:
-            return RAGState.FINALIZE
+            ctx.next_state = RAGState.FINALIZE

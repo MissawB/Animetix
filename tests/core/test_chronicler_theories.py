@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 from core.domain.entities.ai_schemas import RAGContext, SearchPlan
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
+from tests.helpers.async_stream import collect_async
 
 
 def test_chronicler_theories_integration():
@@ -46,7 +47,7 @@ def test_chronicler_theories_integration():
         optimized_query="Imu theory", entities=["Imu"], reasoning="Test planning"
     )
 
-    # Directly trigger ResearchProcessor.process
+    # Directly trigger ResearchProcessor.aprocess
     from core.domain.services.rag.processors.research_processor import (  # noqa: E402
         ResearchProcessor,
     )
@@ -60,9 +61,7 @@ def test_chronicler_theories_integration():
         scout=MagicMock(),
         neo4j_manager=mock_neo4j,
     )
-    gen = processor.process(ctx)
-
-    events = list(gen)
+    events = collect_async(processor.aprocess(ctx))
 
     # Assertions
     assert any("CONSENSUS DE FANS (THÉORIES)" in ctx.truth_path for _ in [0])

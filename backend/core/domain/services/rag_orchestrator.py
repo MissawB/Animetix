@@ -21,43 +21,8 @@ class RAGOrchestrator:
         if RAGState.GRAPH_EXPLORE in self.processors:
             self.processors[RAGState.GRAPH_EXPLORE].community_partitioner = value
 
-    def run_workflow(self, ctx: RAGContext, xai_collector=None):
-        while (
-            ctx.current_state not in [RAGState.FINALIZE, RAGState.FAILED]
-            and ctx.iteration < ctx.max_iterations
-        ):
-            ctx.iteration += 1
-
-            # Yield state transition for observability/UX
-            yield StreamStep(
-                type="thought", content=f"[State Machine] État: {ctx.current_state}"
-            ).model_dump()
-
-            processor = self.processors.get(ctx.current_state)
-            if not processor:
-                ctx.current_state = RAGState.FINALIZE
-                break
-            # Every processor is a generator: it yields StreamStep dicts and
-            # returns the next RAGState (delivered as the value of `yield from`).
-            try:
-                res = processor.process(ctx, xai_collector=xai_collector)
-                ctx.current_state = yield from res
-            except Exception as e:
-                if ctx.current_state == RAGState.FALLBACK_RAG:
-                    ctx.current_state = RAGState.FAILED
-                    yield StreamStep(
-                        type="thought",
-                        content=f"[Recovery] Échec critique du fallback : {str(e)}",
-                    ).model_dump()
-                else:
-                    yield StreamStep(
-                        type="thought",
-                        content=f"[Recovery] Erreur détectée dans l'état {ctx.current_state} : {str(e)}. Basculement en mode Fallback...",
-                    ).model_dump()
-                    ctx.current_state = RAGState.FALLBACK_RAG
-
     async def arun_workflow(self, ctx: RAGContext, xai_collector=None):
-        """Variante async de run_workflow (async generator sur aprocess)."""
+        """Drive the state machine (async generator over each processor's aprocess)."""
         while (
             ctx.current_state not in [RAGState.FINALIZE, RAGState.FAILED]
             and ctx.iteration < ctx.max_iterations
@@ -71,6 +36,10 @@ class RAGOrchestrator:
             if not processor:
                 ctx.current_state = RAGState.FINALIZE
                 break
+            # Reset before each hop so a processor that forgets to set
+            # ctx.next_state falls back to FINALIZE instead of silently
+            # replaying the previous processor's transition.
+            ctx.next_state = None
             try:
                 async for event in processor.aprocess(ctx, xai_collector=xai_collector):
                     yield event

@@ -14,6 +14,8 @@ from core.domain.services.rag.processors.fallback_rag_processor import (
 )
 from core.domain.services.rag.processors.synthesize_processor import SynthesizeProcessor
 
+from tests.helpers.async_stream import as_async_iter, collect_async
+
 
 def test_fallback_rag_processor_consumes_inferenceresponse():
     rag_service = MagicMock()
@@ -21,14 +23,14 @@ def test_fallback_rag_processor_consumes_inferenceresponse():
     proc = FallbackRagProcessor(
         rag_service=rag_service, inference_engine=MagicMock(), expert_facts=[]
     )
-    proc.inference_engine.stream_generate.return_value = iter(
+    proc.inference_engine.astream_generate.side_effect = as_async_iter(
         [InferenceResponse(text="ab"), InferenceResponse(text="cd")]
     )
     ctx = SimpleNamespace(
         query="q", media_type="Anime", language="Français", full_answer=""
     )
 
-    steps = list(proc.process(ctx))
+    steps = collect_async(proc.aprocess(ctx))
 
     tokens = [s for s in steps if s["type"] == "token"]
     assert "".join(s["content"] for s in tokens) == "abcd"
@@ -37,7 +39,7 @@ def test_fallback_rag_processor_consumes_inferenceresponse():
 
 def test_synthesize_processor_consumes_inferenceresponse():
     synthesizer = MagicMock()
-    synthesizer.synthesize_stream.return_value = iter(
+    synthesizer.asynthesize_stream.side_effect = as_async_iter(
         [InferenceResponse(text="Hello "), InferenceResponse(text="world")]
     )
     proc = SynthesizeProcessor(synthesizer=synthesizer, xai_service=MagicMock())
@@ -53,7 +55,7 @@ def test_synthesize_processor_consumes_inferenceresponse():
         knowledge_acquired=True,  # skip the measure_confidence branch
     )
 
-    steps = list(proc.process(ctx))
+    steps = collect_async(proc.aprocess(ctx))
 
     tokens = [s for s in steps if s["type"] == "token"]
     assert "".join(s["content"] for s in tokens) == "Hello world"

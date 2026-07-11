@@ -80,7 +80,12 @@ def run_targeted_quality_benchmark():
         states_visited = []
 
         try:
-            for event in rag.plan_and_solve_stream(q, "Anime"):
+            import asyncio
+
+            async def _collect(query):
+                return [e async for e in rag.aplan_and_solve_stream(query, "Anime")]
+
+            for event in asyncio.run(_collect(q)):
                 if event["type"] == "token":
                     answer += event["content"]
                 elif (

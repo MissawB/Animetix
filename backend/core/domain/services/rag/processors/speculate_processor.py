@@ -1,5 +1,5 @@
+import asyncio
 import logging
-from typing import Generator
 
 from core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
 from core.domain.services.rag.processors.base import StateProcessor
@@ -11,15 +11,15 @@ class SpeculateProcessor(StateProcessor):
     def __init__(self, forge):
         self.forge = forge
 
-    def process(
-        self, ctx: RAGContext, xai_collector=None
-    ) -> Generator[dict, None, RAGState]:
+    async def aprocess(self, ctx: RAGContext, xai_collector=None):
         yield StreamStep(
             type="thought",
             content="[The Forge] Lancement du moteur de spéculation logique...",
         ).model_dump()
         logger.info("[The Forge] Lancement du moteur de spéculation logique...")
-        res = self.forge.generate_hypothesis(ctx.query, ctx.truth_path)
+        res = await asyncio.to_thread(
+            self.forge.generate_hypothesis, ctx.query, ctx.truth_path
+        )
 
         if res and res.hypothesis:
             if xai_collector:
@@ -39,4 +39,4 @@ class SpeculateProcessor(StateProcessor):
         else:
             logger.info("[The Forge] Impossible de forger une hypothèse cohérente.")
 
-        return RAGState.SYNTHESIZE
+        ctx.next_state = RAGState.SYNTHESIZE

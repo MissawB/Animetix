@@ -10,6 +10,7 @@ from core.domain.entities.ai_schemas import (
 )
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
+from tests.helpers.async_stream import as_async_iter, collect_async
 
 # Drives the full agentic RAG / forge pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -106,7 +107,7 @@ def test_forge_speculation_e2e(
     Test end-to-end: Uncertainty triggers Librarian -> Librarian fails -> Forge speculates.
     """
     # 1. Setup Complexity and Planner
-    # In plan_and_solve_stream, _assess_complexity is called.
+    # In aplan_and_solve_stream, _assess_complexity is called.
     # But it uses self.llm_service which uses self.inference_engine.
     # We can mock _assess_complexity directly or mock the llm_service call.
     agentic_rag._assess_complexity = MagicMock(return_value=(0, 0))
@@ -139,16 +140,20 @@ def test_forge_speculation_e2e(
     )
 
     # 8. Setup Synthesizer (first pass, then second pass after speculation)
-    agentic_rag.synthesizer.synthesize_stream.side_effect = [
-        iter([InferenceResponse(text="First "), InferenceResponse(text="attempt.")]),
-        iter(
+    # Each element is one synthesis pass: as_async_iter(...)() builds the async
+    # stream the pipeline now consumes via asynthesize_stream.
+    agentic_rag.synthesizer.asynthesize_stream.side_effect = [
+        as_async_iter(
+            [InferenceResponse(text="First "), InferenceResponse(text="attempt.")]
+        )(),
+        as_async_iter(
             [
                 InferenceResponse(text="Final "),
                 InferenceResponse(text="answer "),
                 InferenceResponse(text="with "),
                 InferenceResponse(text="speculation."),
             ]
-        ),
+        )(),
     ]
 
     # 9. Setup Debate Manager (Approve final answer)
@@ -157,8 +162,8 @@ def test_forge_speculation_e2e(
     )
 
     # Execute
-    events = list(
-        agentic_rag.plan_and_solve_stream("Will GTA 6 be on PC at launch?", "Game")
+    events = collect_async(
+        agentic_rag.aplan_and_solve_stream("Will GTA 6 be on PC at launch?", "Game")
     )
 
     # Extract thought contents
@@ -187,8 +192,8 @@ def test_forge_speculation_e2e(
 
     # Verify that synthesizer was called with the hypothesis in context
     # It should be called twice: once before Librarian, once after Forge
-    assert agentic_rag.synthesizer.synthesize_stream.call_count == 2
-    last_call_args = agentic_rag.synthesizer.synthesize_stream.call_args_list[-1]
+    assert agentic_rag.synthesizer.asynthesize_stream.call_count == 2
+    last_call_args = agentic_rag.synthesizer.asynthesize_stream.call_args_list[-1]
     args, kwargs = last_call_args
     # Context is the second positional argument
     context = args[1]

@@ -2,6 +2,7 @@ import logging
 import secrets
 
 from adapters.persistence.django_usage_adapter import DjangoUsageAdapter
+from asgiref.sync import async_to_sync
 from dependency_injector.wiring import Provide, inject
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,6 +13,17 @@ from animetix.auth import DeveloperApiKeyAuthentication
 from ..containers import Container
 
 logger = logging.getLogger("animetix.api.developer")
+
+
+async def _collect_rag_events(agent, query: str, media_type: str, user_id: str):
+    """Drain the async RAG stream into a list (this endpoint is one-shot: it
+    only returns the final answer, so nothing is lost by not streaming)."""
+    return [
+        event
+        async for event in agent.aplan_and_solve_stream(
+            query, media_type, user_id=user_id
+        )
+    ]
 
 
 class DeveloperRAGView(APIView):
@@ -43,9 +55,9 @@ class DeveloperRAGView(APIView):
         try:
             agent = self.agentic_rag
 
-            # Run the agentic RAG stream internally
-            events = list(
-                agent.plan_and_solve_stream(query, media_type, user_id=user_id)
+            # Run the agentic RAG stream internally (single async implementation)
+            events = async_to_sync(_collect_rag_events)(
+                agent, query, media_type, user_id
             )
 
             # Find the final result event

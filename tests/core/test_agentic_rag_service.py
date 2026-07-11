@@ -9,6 +9,7 @@ from core.domain.entities.ai_schemas import (
 )
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
+from tests.helpers.async_stream import as_async_iter, collect_async
 
 # Drives the full agentic RAG pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -86,7 +87,7 @@ def test_plan_and_solve_local_path(agentic_rag, mock_engine, mock_rag):
     agentic_rag.debate_manager.conduct_debate.return_value = outcome
 
     # Synthesizer mock: yields InferenceResponse chunks (SynthesizeProcessor reads .text)
-    agentic_rag.synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+    agentic_rag.synthesizer.asynthesize_stream.side_effect = as_async_iter(
         [InferenceResponse(text="The "), InferenceResponse(text="answer.")]
     )
 
@@ -105,7 +106,7 @@ def test_plan_and_solve_web_path(agentic_rag, mock_engine, mock_web):
     )
     agentic_rag.debate_manager.conduct_debate.return_value = outcome
 
-    agentic_rag.synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+    agentic_rag.synthesizer.asynthesize_stream.side_effect = as_async_iter(
         [InferenceResponse(text="The "), InferenceResponse(text="answer.")]
     )
 
@@ -133,7 +134,7 @@ def test_plan_and_solve_with_reformulation(
     )
     agentic_rag.debate_manager.conduct_debate.side_effect = [outcome1, outcome2]
 
-    agentic_rag.synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+    agentic_rag.synthesizer.asynthesize_stream.side_effect = as_async_iter(
         [InferenceResponse(text="The "), InferenceResponse(text="answer.")]
     )
 
@@ -156,7 +157,7 @@ def test_vlm_rerank_path(agentic_rag, mock_engine, mock_rag):
     )
     agentic_rag.debate_manager.conduct_debate.return_value = outcome
 
-    agentic_rag.synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+    agentic_rag.synthesizer.asynthesize_stream.side_effect = as_async_iter(
         [InferenceResponse(text="The "), InferenceResponse(text="answer.")]
     )
 
@@ -172,7 +173,9 @@ def test_vlm_rerank_path(agentic_rag, mock_engine, mock_rag):
 
     # Run the stream and collect states
     states = []
-    for step in agentic_rag.plan_and_solve_stream("Visual query", "Anime"):
+    for step in collect_async(
+        agentic_rag.aplan_and_solve_stream("Visual query", "Anime")
+    ):
         if (
             isinstance(step, dict)
             and step["type"] == "thought"
@@ -186,7 +189,7 @@ def test_vlm_rerank_path(agentic_rag, mock_engine, mock_rag):
 def agent_rag_plan_and_solve(service, query, media):
     # Helper to consume the stream and return final dict
     res = {}
-    for step in service.plan_and_solve_stream(query, media):
+    for step in collect_async(service.aplan_and_solve_stream(query, media)):
         if isinstance(step, dict) and step.get("type") == "token":
             res["answer"] = res.get("answer", "") + step["content"]
     return res
@@ -208,7 +211,7 @@ def test_thinking_mode_streaming(agentic_rag, mock_engine):
     agentic_rag.debate_manager.conduct_debate.return_value = outcome
 
     # Synthesizer returns tokens including thought tags
-    agentic_rag.synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+    agentic_rag.synthesizer.asynthesize_stream.side_effect = as_async_iter(
         [
             InferenceResponse(text="<thought>"),
             InferenceResponse(text="Reasoning "),
@@ -219,7 +222,7 @@ def test_thinking_mode_streaming(agentic_rag, mock_engine):
         ]
     )
 
-    steps = list(agentic_rag.plan_and_solve_stream("Complex query", "Anime"))
+    steps = collect_async(agentic_rag.aplan_and_solve_stream("Complex query", "Anime"))
 
     # Check that thoughts are yielded as thoughts
     # Filter only thoughts from Synthesizer
@@ -251,7 +254,7 @@ def test_fallback_on_inference_error(agentic_rag, mock_engine, mock_rag):
     agentic_rag.planner.plan.side_effect = InferenceError("Inference failed!")
 
     # Fallback should trigger
-    steps = list(agentic_rag.plan_and_solve_stream("Query", "Anime"))
+    steps = collect_async(agentic_rag.aplan_and_solve_stream("Query", "Anime"))
 
     # Verify fallback state was reached
     assert any(

@@ -4,6 +4,7 @@ import pytest
 from core.domain.entities.ai_schemas import InferenceResponse, JudgeAction, SearchPlan
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
+from tests.helpers.async_stream import collect_async
 
 # Drives the full agentic RAG pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -122,8 +123,8 @@ def test_vlm_reranking_end_to_end(mock_dependencies):
     )
 
     # Run the process
-    steps = list(
-        agentic_rag.plan_and_solve_stream("Who is the girl with blue hair?", "Anime")
+    steps = collect_async(
+        agentic_rag.aplan_and_solve_stream("Who is the girl with blue hair?", "Anime")
     )
 
     # Assertions

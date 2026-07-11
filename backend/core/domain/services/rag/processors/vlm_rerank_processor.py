@@ -1,5 +1,5 @@
+import asyncio
 import logging
-from typing import Generator
 
 from core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
 from core.domain.exceptions import InferenceError, InfrastructureError
@@ -13,9 +13,7 @@ class VlmRerankProcessor(StateProcessor):
         self.prompt_manager = prompt_manager
         self.inference_engine = inference_engine
 
-    def process(
-        self, ctx: RAGContext, xai_collector=None
-    ) -> Generator[dict, None, RAGState]:
+    async def aprocess(self, ctx: RAGContext, xai_collector=None):
         yield StreamStep(
             type="thought",
             content="[VLM-Reranker] Analyse visuelle des images candidates...",
@@ -38,14 +36,18 @@ class VlmRerankProcessor(StateProcessor):
                 type="thought",
                 content="[VLM-Reranker] Aucune image exploitable trouvée pour le reranking.",
             ).model_dump()
-            return RAGState.SYNTHESIZE
+            ctx.next_state = RAGState.SYNTHESIZE
+            return
 
         try:
             prompt_text, system_prompt = self.prompt_manager.get_prompt(
                 "vlm_reranker", query=ctx.query, num_images=len(image_urls)
             )
-            reranked = self.inference_engine.visual_rerank(
-                prompt_text, image_urls, system_prompt=system_prompt
+            reranked = await asyncio.to_thread(
+                self.inference_engine.visual_rerank,
+                prompt_text,
+                image_urls,
+                system_prompt=system_prompt,
             )
             for item in reranked:
                 idx = item.get("index")
@@ -84,4 +86,4 @@ class VlmRerankProcessor(StateProcessor):
                 content="[VLM-Reranker] Une erreur inattendue est survenue.",
             ).model_dump()
 
-        return RAGState.SYNTHESIZE
+        ctx.next_state = RAGState.SYNTHESIZE

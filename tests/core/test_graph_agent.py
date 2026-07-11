@@ -4,6 +4,7 @@ import pytest
 from core.domain.entities.ai_schemas import InferenceResponse, JudgeAction, SearchPlan
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
+from tests.helpers.async_stream import collect_async
 
 # Drives the full agentic RAG pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -41,9 +42,10 @@ def mock_prompt_manager():
 @pytest.fixture
 def mock_llm_service():
     llm = MagicMock()
-    # The synthesizer streams from LLMService.stream_generate (not the raw engine)
-    # and reads .text on each chunk; side_effect gives each synthesis pass a fresh
-    # iterator instead of one shared, exhaustible one.
+    # The synthesizer streams from LLMService.astream_generate (not the raw engine);
+    # the factory shim bridges it to this mocked stream_generate at call time.
+    # side_effect gives each synthesis pass a fresh iterator instead of one
+    # shared, exhaustible one.
     llm.stream_generate.side_effect = lambda *a, **k: iter(
         [
             InferenceResponse(text="Final "),
@@ -118,11 +120,15 @@ def test_graph_exploration_flow(agentic_rag, mock_llm_service, mock_neo4j):
 
     mock_llm_service.generate.side_effect = responses
 
+    events = collect_async(
+        agentic_rag.aplan_and_solve_stream(
+            "Voice actor for both Ghibli and MAPPA?", "Anime"
+        )
+    )
+
     steps = []
     tokens = []
-    for step in agentic_rag.plan_and_solve_stream(
-        "Voice actor for both Ghibli and MAPPA?", "Anime"
-    ):
+    for step in events:
         print(f"DEBUG STEP: {step}")
         steps.append(step)
         if step["type"] == "token":

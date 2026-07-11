@@ -27,6 +27,7 @@ from core.domain.services.rag.processors.vlm_rerank_processor import VlmRerankPr
 from core.domain.services.rag_orchestrator import RAGOrchestrator
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
+from tests.helpers.async_stream import collect_async
 
 # Exercises the RAG state machine end-to-end against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -53,11 +54,12 @@ def mock_deps():
     mock_graph_expert = MagicMock()
     mock_debate_manager = MagicMock()
 
-    # Mock the 'process' method of each processor to act as a generator
+    # Mock the 'aprocess' method of each processor to act as an async generator
+    # (next state is communicated via ctx.next_state, not returned).
     def mock_generator_factory(state_name, next_state):
-        def _generator_func(*args, **kwargs):
+        async def _generator_func(ctx, *args, **kwargs):
             yield StreamStep(type="thought", content=f"[State Machine] {state_name}")
-            return next_state
+            ctx.next_state = next_state
 
         return _generator_func
 
@@ -108,34 +110,34 @@ def mock_deps():
         ),
     }
 
-    mock_processors[RAGState.PLAN].process.side_effect = mock_generator_factory(
+    mock_processors[RAGState.PLAN].aprocess.side_effect = mock_generator_factory(
         RAGState.PLAN.name, RAGState.RESEARCH
     )
-    mock_processors[RAGState.RESEARCH].process.side_effect = mock_generator_factory(
+    mock_processors[RAGState.RESEARCH].aprocess.side_effect = mock_generator_factory(
         RAGState.RESEARCH.name, RAGState.SYNTHESIZE
     )
-    mock_processors[RAGState.SYNTHESIZE].process.side_effect = mock_generator_factory(
+    mock_processors[RAGState.SYNTHESIZE].aprocess.side_effect = mock_generator_factory(
         RAGState.SYNTHESIZE.name, RAGState.JUDGE
     )
-    # The JUDGE.process side_effect will be set in individual tests as it varies.
+    # The JUDGE.aprocess side_effect will be set in individual tests as it varies.
     # Placeholder for other processors:
-    mock_processors[RAGState.ACQUIRE_KNOWLEDGE].process.side_effect = (
+    mock_processors[RAGState.ACQUIRE_KNOWLEDGE].aprocess.side_effect = (
         mock_generator_factory(RAGState.ACQUIRE_KNOWLEDGE.name, RAGState.SPECULATE)
     )
-    mock_processors[RAGState.SPECULATE].process.side_effect = mock_generator_factory(
+    mock_processors[RAGState.SPECULATE].aprocess.side_effect = mock_generator_factory(
         RAGState.SPECULATE.name, RAGState.VLM_RERANK
     )
-    mock_processors[RAGState.VLM_RERANK].process.side_effect = mock_generator_factory(
+    mock_processors[RAGState.VLM_RERANK].aprocess.side_effect = mock_generator_factory(
         RAGState.VLM_RERANK.name, RAGState.SYNTHESIZE
     )
-    mock_processors[RAGState.SAGA_LOOKUP].process.side_effect = mock_generator_factory(
+    mock_processors[RAGState.SAGA_LOOKUP].aprocess.side_effect = mock_generator_factory(
         RAGState.SAGA_LOOKUP.name, RAGState.GRAPH_EXPLORE
     )
-    mock_processors[RAGState.GRAPH_EXPLORE].process.side_effect = (
+    mock_processors[RAGState.GRAPH_EXPLORE].aprocess.side_effect = (
         mock_generator_factory(RAGState.GRAPH_EXPLORE.name, RAGState.RESEARCH)
     )
-    mock_processors[RAGState.FALLBACK_RAG].process.side_effect = mock_generator_factory(
-        RAGState.FALLBACK_RAG.name, RAGState.FINALIZE
+    mock_processors[RAGState.FALLBACK_RAG].aprocess.side_effect = (
+        mock_generator_factory(RAGState.FALLBACK_RAG.name, RAGState.FINALIZE)
     )
 
     mock_orchestrator = RAGOrchestrator(processors=mock_processors)
@@ -168,7 +170,7 @@ def test_research_more_loop_integration(mock_deps):
         RAGState.JUDGE
     ].debate_manager.conduct_debate.side_effect = [outcome1, outcome2]
 
-    def judge_process_side_effect(ctx, xai_collector=None):
+    async def judge_process_side_effect(ctx, xai_collector=None):
         yield StreamStep(
             type="thought", content=f"[State Machine] {RAGState.JUDGE.name}"
         )
@@ -178,15 +180,15 @@ def test_research_more_loop_integration(mock_deps):
             .debate_manager.conduct_debate(ctx)
         )  # Call the mock here
         if outcome.consensus_action == JudgeAction.RESEARCH_MORE:
-            return RAGState.RESEARCH
+            ctx.next_state = RAGState.RESEARCH
         elif outcome.consensus_action == JudgeAction.REWRITE:
-            return RAGState.SYNTHESIZE
+            ctx.next_state = RAGState.SYNTHESIZE
         else:  # JudgeAction.APPROVE or others
-            return RAGState.FINALIZE
+            ctx.next_state = RAGState.FINALIZE
 
     mock_deps["workflow_orchestrator"].processors[
         RAGState.JUDGE
-    ].process.side_effect = judge_process_side_effect
+    ].aprocess.side_effect = judge_process_side_effect
 
     with patch("core.domain.services.agentic_rag_service.RAGContext") as MockContext:
 
@@ -196,7 +198,7 @@ def test_research_more_loop_integration(mock_deps):
 
         MockContext.side_effect = side_effect_ctx
 
-        events = list(service.plan_and_solve_stream("Query", "Anime"))
+        events = collect_async(service.aplan_and_solve_stream("Query", "Anime"))
 
     print("--- EVENTS ---")
     for e in events:
@@ -227,16 +229,18 @@ def test_research_more_loop_integration(mock_deps):
     assert RAGState.JUDGE.name in state_logs[6]
 
     # Check that plan, research, synthesize, judge processors were called
-    mock_deps["workflow_orchestrator"].processors[RAGState.PLAN].process.assert_called()
+    mock_deps["workflow_orchestrator"].processors[
+        RAGState.PLAN
+    ].aprocess.assert_called()
     mock_deps["workflow_orchestrator"].processors[
         RAGState.RESEARCH
-    ].process.assert_called()
+    ].aprocess.assert_called()
     mock_deps["workflow_orchestrator"].processors[
         RAGState.SYNTHESIZE
-    ].process.assert_called()
+    ].aprocess.assert_called()
     mock_deps["workflow_orchestrator"].processors[
         RAGState.JUDGE
-    ].process.assert_called()
+    ].aprocess.assert_called()
 
 
 def test_rewrite_loop(mock_deps):
@@ -252,7 +256,7 @@ def test_rewrite_loop(mock_deps):
         RAGState.JUDGE
     ].debate_manager.conduct_debate.side_effect = [outcome1, outcome2]
 
-    def judge_process_side_effect(ctx, xai_collector=None):
+    async def judge_process_side_effect(ctx, xai_collector=None):
         yield StreamStep(
             type="thought", content=f"[State Machine] {RAGState.JUDGE.name}"
         )
@@ -262,17 +266,17 @@ def test_rewrite_loop(mock_deps):
             .debate_manager.conduct_debate(ctx)
         )  # Call the mock here
         if outcome.consensus_action == JudgeAction.RESEARCH_MORE:
-            return RAGState.RESEARCH
+            ctx.next_state = RAGState.RESEARCH
         elif outcome.consensus_action == JudgeAction.REWRITE:
-            return RAGState.SYNTHESIZE
+            ctx.next_state = RAGState.SYNTHESIZE
         else:  # JudgeAction.APPROVE or others
-            return RAGState.FINALIZE
+            ctx.next_state = RAGState.FINALIZE
 
     mock_deps["workflow_orchestrator"].processors[
         RAGState.JUDGE
-    ].process.side_effect = judge_process_side_effect
+    ].aprocess.side_effect = judge_process_side_effect
 
-    events = list(service.plan_and_solve_stream("query", "Anime"))
+    events = collect_async(service.aplan_and_solve_stream("query", "Anime"))
 
     state_logs = []
     for e in events:
@@ -297,13 +301,15 @@ def test_rewrite_loop(mock_deps):
     assert RAGState.JUDGE.name in state_logs[5]
 
     # Check that plan, research, synthesize, judge processors were called
-    mock_deps["workflow_orchestrator"].processors[RAGState.PLAN].process.assert_called()
+    mock_deps["workflow_orchestrator"].processors[
+        RAGState.PLAN
+    ].aprocess.assert_called()
     mock_deps["workflow_orchestrator"].processors[
         RAGState.RESEARCH
-    ].process.assert_called()
+    ].aprocess.assert_called()
     mock_deps["workflow_orchestrator"].processors[
         RAGState.SYNTHESIZE
-    ].process.assert_called()
+    ].aprocess.assert_called()
     mock_deps["workflow_orchestrator"].processors[
         RAGState.JUDGE
-    ].process.assert_called()
+    ].aprocess.assert_called()

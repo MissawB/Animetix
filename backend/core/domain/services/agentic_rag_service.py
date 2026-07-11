@@ -254,158 +254,29 @@ class AgenticRAGService:
         user_id: Optional[str] = None,
         language: str = "Français",
     ) -> str:
-        """Wrapper non-streaming. Retourne uniquement la réponse finale."""
-        last_answer = ""
-        for event in self.plan_and_solve_stream(query, media_type, user_id, language):
-            if event["type"] == "token":
-                last_answer += event["content"]
-            elif event["type"] == "thought" and "[Synthesizer]" in event["content"]:
-                last_answer = ""
-        return last_answer
+        """Wrapper non-streaming (sync). Façade pour les consommateurs WSGI et
+        scripts au-dessus de l'unique implémentation async."""
+        from asgiref.sync import async_to_sync  # noqa: E402
 
-    def plan_and_solve_stream(
+        return async_to_sync(self.aplan_and_solve)(query, media_type, user_id, language)
+
+    async def aplan_and_solve(
         self,
         query: str,
         media_type: str,
         user_id: Optional[str] = None,
         language: str = "Français",
-    ) -> Generator[Dict, None, None]:
-        """Boucle principale orchestrée via RAGOrchestrator."""
-        start_time = time.time()
-
-        # 0. SÉCURITÉ ET GUARDRAILS (Anti-Jailbreak / Prompt Injection)
-        if self.guardrail_service:
-            guard_input = self.guardrail_service.validate_input(query)
-            if not guard_input.get("is_safe", True):
-                reason = guard_input.get(
-                    "reason",
-                    "Suspicion de tentative d'injection de prompt ou de contournement des règles.",
-                )
-                logger.warning(f"🛡️ [Guardrail] Query blocked: {reason}")
-                yield StreamStep(
-                    type="thought", content=f"[Guardrail] Requête bloquée : {reason}"
-                ).model_dump()
-                # Yield tokens for streaming compatibility
-                for token in reason.split(" "):
-                    yield StreamStep(type="token", content=token + " ").model_dump()
-                return
-
-        # 1. ROUTAGE SÉMANTIQUE INTELLIGENT (SOTA 2026)
-        routing_decision = self.semantic_router.classify(query)
-        if routing_decision == "SIMPLE":
-            yield StreamStep(
-                type="thought",
-                content="[Semantic Router] Requête simple détectée. Court-circuitage vers la recherche et synthèse directe en < 2 secondes...",
-            ).model_dump()
-            ctx = RAGContext(
-                query=query,
-                media_type=media_type,
-                user_id=user_id,
-                thinking_budget=0,
-                thinking_mode=False,
-                memories="",
-                current_state=RAGState.FALLBACK_RAG,  # Direct to Fallback
-                language=language,
-            )
-            yield from self.orchestrator.run_workflow(ctx)  # Run simple flow
-            if ctx.full_answer:
-                self._store_results(query, ctx.full_answer, user_id)
-
-            if self.obs_service:
-                self.obs_service.log_rag_latency(
-                    time.time() - start_time, query, user_id
-                )
-            return
-
-        # 2. ANALYSE COMPLEXITÉ ET INITIALISATION CONTEXTE
-        self._record_agent_trace("PLAN", {"query": query, "media_type": media_type})
-        thinking_budget, complexity = self._assess_complexity(query)
-        thinking_mode = complexity >= 2
-
-        if thinking_budget > 0 or thinking_mode:
-            yield StreamStep(
-                type="thought",
-                content=f"[TTC] Requête complexe (Score {complexity}). Budget: {thinking_budget} tokens. Mode Thinking: {thinking_mode}",
-            ).model_dump()
-
-        if cached := self._check_cache(query):
-            yield from self._stream_cached_response(cached)
-            if self.obs_service:
-                self.obs_service.log_rag_latency(
-                    time.time() - start_time, query, user_id
-                )
-            return
-
-        # Chargement de la mémoire utilisateur depuis le Graphe (Task 5.2),
-        # avec résilience : si le graphe est indisponible, on bascule sur la
-        # mémoire vectorielle (pgvector) et on signale l'état dégradé.
-        user_context, graph_degraded = self._load_user_preferences(user_id, query)
-        if graph_degraded:
-            yield StreamStep(
-                type="thought",
-                content="[Mode dégradé] Graphe de connaissances indisponible — bascule sur la mémoire vectorielle (pgvector) et la recherche web.",
-            ).model_dump()
-        elif user_context:
-            yield StreamStep(
-                type="thought",
-                content=f"[Graph User Memory] Profil utilisateur '{user_id}' chargé depuis le graphe sémantique.",
-            ).model_dump()
-
-        ctx = RAGContext(
-            query=query,
-            media_type=media_type,
-            user_id=user_id,
-            thinking_budget=thinking_budget,
-            thinking_mode=thinking_mode,
-            use_slm=complexity
-            in [1, 2],  # On utilise le SLM pour les niveaux 1 et 2 (déchargement)
-            memories=self._get_memories(user_id, query),
-            current_state=RAGState.PLAN,
-            graph_expert=(
-                getattr(
-                    self.orchestrator.processors[RAGState.GRAPH_EXPLORE],
-                    "graph_expert",
-                    None,
-                )
-                if self.orchestrator
-                and RAGState.GRAPH_EXPLORE in self.orchestrator.processors
-                else None
-            ),
-            truth_path=user_context,
-            language=language,
-        )
-
-        # 3. DÉLÉGATION À L'ORCHESTRATEUR
-        xai_collector = XaiCollector()
-        yield from self.orchestrator.run_workflow(ctx, xai_collector=xai_collector)
-
-        # 4. FINALISATION
-        if ctx.full_answer:
-            self._store_results(ctx.query, ctx.full_answer, ctx.user_id)
-
-            if self.xai_service:
-                try:
-                    response_obj = InferenceResponse(text=ctx.full_answer)
-                    report = self.xai_service.generate_advanced_report(
-                        query=ctx.query, response=response_obj, collector=xai_collector
-                    )
-                    yield StreamStep(
-                        type="xai_report", content=report
-                    ).model_dump()  # Yield StreamStep directly
-                except Exception as e:
-                    logger.error(f"Error generating XAI report: {e}", exc_info=True)
-            # Enregistrement asynchrone de l'interaction utilisateur dans Neo4j (Task 5.2)
-            if user_id and self.neo4j_manager:
-                import threading  # noqa: E402
-
-                threading.Thread(
-                    target=self.neo4j_manager.sync_user_interaction,
-                    args=(user_id, query, "SEARCH"),
-                    daemon=True,
-                ).start()
-
-        if self.obs_service:
-            self.obs_service.log_rag_latency(time.time() - start_time, query, user_id)
+    ) -> str:
+        """Wrapper non-streaming async. Retourne uniquement la réponse finale."""
+        last_answer = ""
+        async for event in self.aplan_and_solve_stream(
+            query, media_type, user_id, language
+        ):
+            if event["type"] == "token":
+                last_answer += event["content"]
+            elif event["type"] == "thought" and "[Synthesizer]" in event["content"]:
+                last_answer = ""
+        return last_answer
 
     async def aplan_and_solve_stream(
         self,
@@ -414,7 +285,8 @@ class AgenticRAGService:
         user_id: Optional[str] = None,
         language: str = "Français",
     ):
-        """Variante async de plan_and_solve_stream (orchestrateur async ; I/O off-loop)."""
+        """Boucle principale orchestrée via RAGOrchestrator (unique implémentation,
+        async ; I/O bloquante off-loop via asyncio.to_thread)."""
         import asyncio  # noqa: E402
 
         start_time = time.time()

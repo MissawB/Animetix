@@ -1,6 +1,6 @@
+import asyncio
 import logging
 import time
-from typing import Generator
 
 from core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
 from core.domain.services.rag.processors.base import StateProcessor
@@ -12,14 +12,13 @@ class PlanProcessor(StateProcessor):
     def __init__(self, planner):
         self.planner = planner
 
-    def process(
-        self, ctx: RAGContext, xai_collector=None
-    ) -> Generator[dict, None, RAGState]:
+    async def aprocess(self, ctx: RAGContext, xai_collector=None):
         yield StreamStep(
             type="thought", content="[Planner] Établissement du plan de recherche..."
         ).model_dump()
         start = time.time()
-        plan = self.planner.plan(
+        plan = await asyncio.to_thread(
+            self.planner.plan,
             ctx.query,
             ctx.memories,
             thinking_budget=ctx.thinking_budget // 2,
@@ -32,8 +31,8 @@ class PlanProcessor(StateProcessor):
         logger.info(f"PERF: Planner took {(time.time() - start) * 1000:.2f}ms")
 
         if plan.requires_saga:
-            return RAGState.SAGA_LOOKUP
+            ctx.next_state = RAGState.SAGA_LOOKUP
         elif plan.requires_graph:
-            return RAGState.GRAPH_EXPLORE
+            ctx.next_state = RAGState.GRAPH_EXPLORE
         else:
-            return RAGState.RESEARCH
+            ctx.next_state = RAGState.RESEARCH

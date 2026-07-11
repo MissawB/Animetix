@@ -10,6 +10,7 @@ from core.domain.entities.ai_schemas import (
 from core.domain.services.agentic_rag_service import AgenticRAGService
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
+from tests.helpers.async_stream import as_async_iter, collect_async
 
 # Drives the full agentic RAG pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -109,8 +110,8 @@ def test_world_brain_cascading_flow(mock_dependencies):
         )
 
         # 6. Mock Synthesizer (SynthesizeProcessor reads .text on each chunk)
-        service.synthesizer.synthesize_stream = MagicMock(
-            side_effect=lambda *a, **k: iter(
+        service.synthesizer.asynthesize_stream = MagicMock(
+            side_effect=as_async_iter(
                 [
                     InferenceResponse(text="L'objectif de Luffy "),
                     InferenceResponse(text="est devenu plus concret "),
@@ -132,7 +133,7 @@ def test_world_brain_cascading_flow(mock_dependencies):
 
         # Execution
         query = "Comment l'objectif de Luffy a évolué entre le début de la série et l'arc Egghead ?"
-        events = list(service.plan_and_solve_stream(query, "anime"))
+        events = collect_async(service.aplan_and_solve_stream(query, "anime"))
 
         # Assertions
         states_reached = [

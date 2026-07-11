@@ -32,14 +32,7 @@ from core.domain.services.rag.processors.vlm_rerank_processor import (
     VlmRerankProcessor,
 )
 
-
-def consume_generator(gen):
-    steps = []
-    try:
-        while True:
-            steps.append(next(gen))
-    except StopIteration as e:
-        return e.value, steps
+from tests.helpers.async_stream import as_async_iter, collect_async, consume_aprocess
 
 
 # 1. SagaLookupProcessor Tests
@@ -55,7 +48,7 @@ def test_saga_lookup_processor_success():
     ctx.plan = MagicMock(spec=SearchPlan)
     ctx.plan.requires_graph = False
 
-    next_state, steps = consume_generator(processor.process(ctx))
+    next_state, steps = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.RESEARCH
     assert ctx.saga_name == "One Piece"
@@ -75,7 +68,7 @@ def test_saga_lookup_processor_transitions_to_graph():
     ctx.plan = MagicMock(spec=SearchPlan)
     ctx.plan.requires_graph = True
 
-    next_state, _ = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
     assert next_state == RAGState.GRAPH_EXPLORE
 
 
@@ -85,7 +78,7 @@ def test_graph_explore_processor_no_plan():
     ctx = MagicMock(spec=RAGContext)
     ctx.plan = None
 
-    next_state, _ = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
     assert next_state == RAGState.PLAN
 
 
@@ -111,7 +104,7 @@ def test_graph_explore_processor_success():
     ctx.plan = MagicMock(spec=SearchPlan)
     ctx.plan.reasoning = "test reasoning"
 
-    next_state, _ = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.RESEARCH
     assert "### CONTEXTE GRAPHRAG (COMMUNAUTÉS THÉMATIQUES) ###" in ctx.truth_path
@@ -128,7 +121,7 @@ def test_research_processor_no_plan():
     ctx = MagicMock(spec=RAGContext)
     ctx.plan = None
 
-    next_state, _ = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
     assert next_state == RAGState.PLAN
 
 
@@ -165,7 +158,7 @@ def test_research_processor_web_search():
     ctx.plan.optimized_query = "optimized query"
     ctx.plan.entities = []
 
-    next_state, _ = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.SYNTHESIZE
     assert ctx.candidates == [
@@ -182,14 +175,16 @@ def test_research_processor_web_search():
 # 4. SynthesizeProcessor Tests
 def test_synthesize_processor_success():
     mock_synth = MagicMock()
-    mock_synth.synthesize_stream.return_value = [
-        InferenceResponse(text="<thought>"),
-        InferenceResponse(text="think"),
-        InferenceResponse(text="</thought>"),
-        InferenceResponse(text="Final"),
-        InferenceResponse(text=" "),
-        InferenceResponse(text="Answer"),
-    ]
+    mock_synth.asynthesize_stream.side_effect = as_async_iter(
+        [
+            InferenceResponse(text="<thought>"),
+            InferenceResponse(text="think"),
+            InferenceResponse(text="</thought>"),
+            InferenceResponse(text="Final"),
+            InferenceResponse(text=" "),
+            InferenceResponse(text="Answer"),
+        ]
+    )
     mock_xai = MagicMock()
     mock_xai.measure_confidence.return_value = {"confidence_score": 0.9}
 
@@ -204,7 +199,7 @@ def test_synthesize_processor_success():
     ctx.language = "Français"
     ctx.use_slm = False
 
-    next_state, steps = consume_generator(processor.process(ctx))
+    next_state, steps = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.JUDGE
     assert ctx.full_answer == "Final Answer"
@@ -230,7 +225,7 @@ def test_judge_processor_approve():
     ctx.thinking_mode = "fast"
     ctx.iteration = 1
 
-    next_state, _ = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.FINALIZE
     assert ctx.debate_outcome == outcome
@@ -243,11 +238,13 @@ def test_fallback_rag_processor():
         {"title": "Fallback Title", "description": "Fallback Description"}
     ]
     mock_inference = MagicMock()
-    mock_inference.stream_generate.return_value = [
-        InferenceResponse(text="Fallback"),
-        InferenceResponse(text=" "),
-        InferenceResponse(text="Result"),
-    ]
+    mock_inference.astream_generate.side_effect = as_async_iter(
+        [
+            InferenceResponse(text="Fallback"),
+            InferenceResponse(text=" "),
+            InferenceResponse(text="Result"),
+        ]
+    )
 
     processor = FallbackRagProcessor(
         mock_rag, mock_inference, [{"primary_keywords": ["test"], "fact": "Rule Fact"}]
@@ -257,12 +254,12 @@ def test_fallback_rag_processor():
     ctx.media_type = "Anime"
     ctx.language = "Français"
 
-    next_state, steps = consume_generator(processor.process(ctx))
+    next_state, steps = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.FINALIZE
     assert ctx.full_answer == "Fallback Result"
     mock_rag.hybrid_search.assert_called_once_with("test query", "Anime")
-    mock_inference.stream_generate.assert_called_once()
+    mock_inference.astream_generate.assert_called_once()
 
 
 # 7. VlmRerankProcessor Tests
@@ -271,7 +268,7 @@ def test_vlm_rerank_processor_no_images():
     ctx = MagicMock(spec=RAGContext)
     ctx.candidates = [{"title": "No Image candidate"}]
 
-    next_state, _ = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
     assert next_state == RAGState.SYNTHESIZE
 
 
@@ -287,7 +284,7 @@ def test_vlm_rerank_processor_success():
     ctx.truth_path = ""
     ctx.candidates = [{"title": "Candidate 1", "image": "http://img.com/1"}]
 
-    next_state, _ = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.SYNTHESIZE
     assert "Candidate 1 (Score Visuel: 0.85)" in ctx.truth_path
@@ -307,7 +304,7 @@ def test_acquire_knowledge_processor_gap_found():
     ctx.query = "query"
     ctx.truth_path = ""
 
-    next_state, _ = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.SYNTHESIZE
     assert ctx.knowledge_acquired is True
@@ -356,15 +353,20 @@ def test_agentic_rag_service_propagates_language(monkeypatch):
     service._check_cache = MagicMock(return_value=None)
     service._get_memories = MagicMock(return_value="")
 
-    # Intercept run_workflow to verify context language
-    def mock_run_workflow(ctx, xai_collector=None):
+    # Intercept arun_workflow to verify context language
+    async def mock_arun_workflow(ctx, xai_collector=None):
         assert ctx.language == "English"
-        yield from []
+        for _ in []:
+            yield _
 
-    mock_orch.run_workflow.side_effect = mock_run_workflow
+    service.orchestrator = MagicMock()
+    service.orchestrator.processors = {}
+    service.orchestrator.arun_workflow.side_effect = mock_arun_workflow
 
     # Run stream
-    list(service.plan_and_solve_stream("Who is Naruto?", "Anime", language="English"))
+    collect_async(
+        service.aplan_and_solve_stream("Who is Naruto?", "Anime", language="English")
+    )
 
 
 def test_response_synthesizer_respects_language():
@@ -401,14 +403,16 @@ def test_fallback_processor_english():
     mock_rag = MagicMock()
     mock_rag.hybrid_search.return_value = [{"title": "Title", "description": "Desc"}]
     mock_engine = MagicMock()
-    mock_engine.stream_generate.return_value = [InferenceResponse(text="Answer")]
+    mock_engine.astream_generate.side_effect = as_async_iter(
+        [InferenceResponse(text="Answer")]
+    )
 
     processor = FallbackRagProcessor(mock_rag, mock_engine, [])
     ctx = RAGContext(query="What is Naruto?", media_type="Anime", language="English")
 
-    list(processor.process(ctx))
+    collect_async(processor.aprocess(ctx))
 
-    mock_engine.stream_generate.assert_called_once()
-    args = mock_engine.stream_generate.call_args[0]
+    mock_engine.astream_generate.assert_called_once()
+    args = mock_engine.astream_generate.call_args[0]
     assert "Answer the following question" in args[0]
     assert "You are an expert assistant" in args[1]

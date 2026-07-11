@@ -3,13 +3,7 @@ from unittest.mock import MagicMock
 from core.domain.entities.ai_schemas import RAGContext, RAGState
 from core.domain.services.rag.processors.plan_processor import PlanProcessor
 
-
-def consume_generator(gen):
-    try:
-        while True:
-            next(gen)
-    except StopIteration as e:
-        return e.value
+from tests.helpers.async_stream import consume_aprocess
 
 
 def test_plan_processor_delegates_to_planner():
@@ -26,7 +20,7 @@ def test_plan_processor_delegates_to_planner():
     ctx.thinking_budget = 100
     ctx.thinking_mode = "fast"
 
-    next_state = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.RESEARCH
     mock_planner.plan.assert_called_once()
@@ -46,7 +40,7 @@ def test_plan_processor_transitions_to_saga():
     ctx.thinking_budget = 100
     ctx.thinking_mode = "fast"
 
-    next_state = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.SAGA_LOOKUP
 
@@ -65,6 +59,6 @@ def test_plan_processor_transitions_to_graph():
     ctx.thinking_budget = 100
     ctx.thinking_mode = "fast"
 
-    next_state = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.GRAPH_EXPLORE

@@ -9,6 +9,7 @@ from core.domain.entities.ai_schemas import (
 )
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
+from tests.helpers.async_stream import as_async_iter, collect_async
 
 # Drives the full agentic RAG pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -52,9 +53,9 @@ def test_librarian_loop_integration(mock_dependencies):
     )
 
     # Synthesizer mock: side_effect gives each synthesis pass (before/after Librarian)
-    # a fresh iterator of InferenceResponse chunks (SynthesizeProcessor reads .text).
+    # a fresh async stream of InferenceResponse chunks (SynthesizeProcessor reads .text).
     synthesizer = MagicMock()
-    synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+    synthesizer.asynthesize_stream.side_effect = as_async_iter(
         [InferenceResponse(text="C'est un anime.")]
     )
 
@@ -90,8 +91,8 @@ def test_librarian_loop_integration(mock_dependencies):
         service.scout.find_truth_path.return_value = "Distilled context"
 
         # Run the stream
-        events = list(
-            service.plan_and_solve_stream("Quand est sorti Naruto Ep 5 ?", "anime")
+        events = collect_async(
+            service.aplan_and_solve_stream("Quand est sorti Naruto Ep 5 ?", "anime")
         )
 
         # Verification
@@ -111,7 +112,7 @@ def test_librarian_loop_integration(mock_dependencies):
 
         # 2. Verify that the second synthesis starts (implied by the state machine flow)
         # Synthesizer is called twice: once before Librarian, once after.
-        assert synthesizer.synthesize_stream.call_count == 2
+        assert synthesizer.asynthesize_stream.call_count == 2
 
         # 3. Assert that truth_path (injected in fetch_data) is present
         # Since I can't easily access ctx from outside, I check if librarian.fetch_data was called

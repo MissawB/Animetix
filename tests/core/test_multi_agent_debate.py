@@ -14,6 +14,7 @@ from core.ports.inference_port import InferencePort  # noqa: E402
 from core.ports.web_search_port import WebSearchPort  # noqa: E402
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
+from tests.helpers.async_stream import as_async_iter, collect_async
 
 # Drives the full multi-agent debate / RAG pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -114,11 +115,12 @@ class TestMultiAgentDebateIntegration:
 
         # Mock Synthesizer
         synthesizer_mock = MagicMock()
-        # We need enough items for the number of iterations
-        synthesizer_mock.synthesize_stream.side_effect = [
-            iter([InferenceResponse(text="First attempt ")]),
-            iter([InferenceResponse(text="Second corrected attempt ")]),
-            iter([InferenceResponse(text="Third attempt ")]),
+        # We need enough items for the number of iterations; as_async_iter(...)()
+        # builds one async stream per synthesis pass (consumed via asynthesize_stream).
+        synthesizer_mock.asynthesize_stream.side_effect = [
+            as_async_iter([InferenceResponse(text="First attempt ")])(),
+            as_async_iter([InferenceResponse(text="Second corrected attempt ")])(),
+            as_async_iter([InferenceResponse(text="Third attempt ")])(),
         ]
 
         service = build_test_agentic_rag_service(
@@ -158,7 +160,7 @@ class TestMultiAgentDebateIntegration:
         mock_llm_service.generate.side_effect = mock_generate_dynamic
 
         # Run the stream ONCE with the dynamic mock
-        events = list(service.plan_and_solve_stream("Who is Goku?", "anime"))
+        events = collect_async(service.aplan_and_solve_stream("Who is Goku?", "anime"))
 
         # 2. Verifications
 
@@ -206,4 +208,4 @@ class TestMultiAgentDebateIntegration:
         assert second_eval["consensus_action"] == JudgeAction.APPROVE
 
         # Verify that synth was called twice
-        assert synthesizer_mock.synthesize_stream.call_count == 2
+        assert synthesizer_mock.asynthesize_stream.call_count == 2

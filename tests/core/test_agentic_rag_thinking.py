@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
+from tests.helpers.async_stream import as_async_iter
 
 # Drives the full agentic RAG pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -45,8 +46,8 @@ def test_agentic_rag_triggers_thinking_mode_on_complex_query(mock_dependencies):
     service.critic = MagicMock()
     service.synthesizer = MagicMock()
 
-    # Setup synthesizer mock to yield something (it's a generator)
-    service.synthesizer.synthesize_stream.return_value = iter(["Response"])
+    # Setup synthesizer mock to yield something (it's an async generator)
+    service.synthesizer.asynthesize_stream.side_effect = as_async_iter(["Response"])
 
     # Mock search and scouting to proceed to synthesis
     service.scout = MagicMock()
@@ -73,5 +74,5 @@ def test_agentic_rag_triggers_thinking_mode_on_complex_query(mock_dependencies):
     assert planner_kwargs["thinking_mode"] is True
 
     # Check synthesizer
-    syn_args, syn_kwargs = service.synthesizer.synthesize_stream.call_args
+    syn_args, syn_kwargs = service.synthesizer.asynthesize_stream.call_args
     assert syn_kwargs["thinking_mode"] is True

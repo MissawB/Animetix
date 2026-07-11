@@ -5,13 +5,7 @@ from core.domain.services.rag.processors.speculate_processor import (
     SpeculateProcessor,
 )
 
-
-def consume_generator(gen):
-    try:
-        while True:
-            next(gen)
-    except StopIteration as e:
-        return e.value
+from tests.helpers.async_stream import consume_aprocess
 
 
 def test_speculate_processor_generates_hypothesis():
@@ -26,7 +20,7 @@ def test_speculate_processor_generates_hypothesis():
     ctx.query = "test query"
     ctx.truth_path = "initial truth"
 
-    next_state = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.SYNTHESIZE
     assert "### HYPOTHÈSE LOGIQUE (DÉDUCTION) ###" in ctx.truth_path
@@ -45,7 +39,7 @@ def test_speculate_processor_handles_no_hypothesis():
     ctx.query = "test query"
     ctx.truth_path = "initial truth"
 
-    next_state = consume_generator(processor.process(ctx))
+    next_state, _ = consume_aprocess(processor, ctx)
 
     assert next_state == RAGState.SYNTHESIZE
     assert ctx.truth_path == "initial truth"

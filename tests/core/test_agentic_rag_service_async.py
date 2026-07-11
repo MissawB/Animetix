@@ -58,6 +58,24 @@ async def test_aplan_and_solve_stream_simple_routes_fallback():
     )
 
 
+def test_plan_and_solve_wrapper_drives_async_path():
+    # The sync wrapper is a facade over the single async implementation: the
+    # orchestrator mock only exposes arun_workflow — touching the retired sync
+    # run_workflow would raise AttributeError.
+    service = _build_service()
+
+    async def _run(ctx, xai_collector=None):
+        ctx.full_answer = "final"
+        yield StreamStep(type="thought", content="[Synthesizer] go").model_dump()
+        yield StreamStep(type="token", content="final").model_dump()
+
+    service.orchestrator = MagicMock(spec=["arun_workflow", "processors"])
+    service.orchestrator.processors = {}
+    service.orchestrator.arun_workflow.side_effect = _run
+
+    assert service.plan_and_solve("q", "Anime") == "final"
+
+
 @pytest.mark.asyncio
 async def test_aplan_and_solve_stream_guardrail_blocks():
     service = _build_service(guardrail_service=MagicMock())

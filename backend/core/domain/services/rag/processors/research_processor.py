@@ -1,5 +1,5 @@
+import asyncio
 import logging
-from typing import Generator
 
 from core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
 from core.domain.exceptions import InferenceError, InfrastructureError
@@ -27,11 +27,10 @@ class ResearchProcessor(StateProcessor):
         self.scout = scout
         self.neo4j_manager = neo4j_manager
 
-    def process(
-        self, ctx: RAGContext, xai_collector=None
-    ) -> Generator[dict, None, RAGState]:
+    async def aprocess(self, ctx: RAGContext, xai_collector=None):
         if not ctx.plan:
-            return RAGState.PLAN
+            ctx.next_state = RAGState.PLAN
+            return
 
         yield StreamStep(
             type="thought",
@@ -60,19 +59,23 @@ class ResearchProcessor(StateProcessor):
             """
 
             cypher_fallback = """
-            MATCH (t:FanTheory) 
-            WHERE any(entity IN $entities WHERE toLower(t.title) CONTAINS toLower(entity) OR toLower(t.description) CONTAINS toLower(entity)) 
-            RETURN t.title as title, t.description as desc, t.plausibility as plausibility 
+            MATCH (t:FanTheory)
+            WHERE any(entity IN $entities WHERE toLower(t.title) CONTAINS toLower(entity) OR toLower(t.description) CONTAINS toLower(entity))
+            RETURN t.title as title, t.description as desc, t.plausibility as plausibility
             LIMIT 3
             """
             try:
                 if ctx.plan.entities and self.neo4j_manager:
-                    theories = self.neo4j_manager.execute_read(
-                        cypher, parameters={"entities": ctx.plan.entities}
+                    theories = await asyncio.to_thread(
+                        self.neo4j_manager.execute_read,
+                        cypher,
+                        parameters={"entities": ctx.plan.entities},
                     )
                     if not theories:
-                        theories = self.neo4j_manager.execute_read(
-                            cypher_fallback, parameters={"entities": ctx.plan.entities}
+                        theories = await asyncio.to_thread(
+                            self.neo4j_manager.execute_read,
+                            cypher_fallback,
+                            parameters={"entities": ctx.plan.entities},
                         )
                     if theories:
                         theory_text = "### CONSENSUS DE FANS (THÉORIES) ###\n"
@@ -94,8 +97,8 @@ class ResearchProcessor(StateProcessor):
         raw_results = []
         if ctx.plan.requires_web:
             if self.web_search:
-                raw_results = self.web_search.search(
-                    ctx.plan.optimized_query or ctx.query
+                raw_results = await asyncio.to_thread(
+                    self.web_search.search, ctx.plan.optimized_query or ctx.query
                 )
             candidates = []
             raw_text_parts = []
@@ -111,8 +114,10 @@ class ResearchProcessor(StateProcessor):
                 raw_text_parts.append(f"Title: {r.get('title')}\nSnippet: {snippet}")
             raw_context = "\n\n".join(raw_text_parts)
         else:
-            raw_results = self.rag_service.hybrid_search(
-                ctx.plan.optimized_query or ctx.query, ctx.media_type
+            raw_results = await asyncio.to_thread(
+                self.rag_service.hybrid_search,
+                ctx.plan.optimized_query or ctx.query,
+                ctx.media_type,
             )
             candidates = raw_results
             raw_text_parts = []
@@ -126,12 +131,14 @@ class ResearchProcessor(StateProcessor):
         if xai_collector and candidates:
             xai_collector.log_retrieval(candidates)
 
-        distilled = self.scout.find_truth_path(ctx.query, ctx.plan, raw_context)
+        distilled = await asyncio.to_thread(
+            self.scout.find_truth_path, ctx.query, ctx.plan, raw_context
+        )
         if ctx.truth_path:
             ctx.truth_path += f"\n\n### CONTEXTE PRINCIPAL ###\n{distilled}"
         else:
             ctx.truth_path = f"### CONTEXTE PRINCIPAL ###\n{distilled}"
 
-        return (
+        ctx.next_state = (
             RAGState.SYNTHESIZE if not ctx.plan.is_visual_query else RAGState.VLM_RERANK
         )

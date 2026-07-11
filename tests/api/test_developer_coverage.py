@@ -31,6 +31,16 @@ def _override_agentic_rag(agent):
         real_container.agentic.agentic_rag.reset_last_overriding()
 
 
+def _astream(events):
+    """Async-generator factory mirroring aplan_and_solve_stream's signature."""
+
+    async def _gen(query, media_type, user_id=None):
+        for e in events:
+            yield e
+
+    return _gen
+
+
 @pytest.fixture
 def api_client():
     return APIClient()
@@ -63,7 +73,7 @@ def test_developer_rag_missing_query(auth_client):
 def test_developer_rag_success_result_event(auth_client):
     """Stream emits a 'result' event -> answer extracted from it."""
     agent = MagicMock()
-    agent.plan_and_solve_stream.return_value = iter(
+    agent.aplan_and_solve_stream.side_effect = _astream(
         [
             {"type": "status", "content": "thinking"},
             {"type": "result", "content": "Luffy is the captain."},
@@ -92,7 +102,7 @@ def test_developer_rag_success_result_event(auth_client):
 def test_developer_rag_fallback_to_last_non_status_event(auth_client):
     """No explicit 'result' event -> falls back to last non-error/status event."""
     agent = MagicMock()
-    agent.plan_and_solve_stream.return_value = iter(
+    agent.aplan_and_solve_stream.side_effect = _astream(
         [
             {"type": "status", "content": "thinking"},
             {"type": "token", "content": "partial answer"},
@@ -119,7 +129,7 @@ def test_developer_rag_fallback_to_last_non_status_event(auth_client):
 def test_developer_rag_exception_returns_500(auth_client):
     """Agent raising -> 500 with error message."""
     agent = MagicMock()
-    agent.plan_and_solve_stream.side_effect = RuntimeError("boom")
+    agent.aplan_and_solve_stream.side_effect = RuntimeError("boom")
 
     with _override_agentic_rag(agent):
         response = auth_client.post(
@@ -130,6 +140,32 @@ def test_developer_rag_exception_returns_500(auth_client):
 
     assert response.status_code == 500
     assert response.json()["error"] == "Internal server error"
+
+
+@pytest.mark.django_db
+def test_developer_rag_uses_async_stream(auth_client):
+    """The view consumes the single async stream — the agent mock exposes ONLY
+    aplan_and_solve_stream; touching the retired sync stream would raise."""
+    agent = MagicMock(spec=["aplan_and_solve_stream"])
+
+    async def _agen(query, media_type, user_id=None):
+        yield {"type": "status", "content": "thinking"}
+        yield {"type": "result", "content": "Async answer."}
+
+    agent.aplan_and_solve_stream.side_effect = _agen
+
+    with (
+        _override_agentic_rag(agent),
+        patch.object(developer_mod, "DjangoUsageAdapter"),
+    ):
+        response = auth_client.post(
+            reverse("developer_rag"),
+            {"query": "Who is Luffy?"},
+            format="json",
+        )
+
+    assert response.status_code == 200
+    assert response.json()["answer"] == "Async answer."
 
 
 # --------------------------------------------------------------------------- #
