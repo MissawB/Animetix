@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # CPU-only workers: pre-install torch from the PyTorch CPU index so the
 # lockfile's `torch==` pin is satisfied by the +cpu wheel (no CUDA wheels).
 COPY requirements-dataflow.txt ./
+# hadolint ignore=DL3013
 RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
     "$(grep -E '^torch==' requirements-dataflow.txt)" \
     && pip install --no-cache-dir -r requirements-dataflow.txt

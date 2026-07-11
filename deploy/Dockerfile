@@ -45,10 +45,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 # torch from the PyTorch CPU index so the lockfile's `torch==` pin is already
 # satisfied by the +cpu wheel — the multi-GB nvidia-* CUDA wheels are never
 # pulled. Same trick as CI (ci.yml "Install Dependencies").
-# DL3013: the version IS pinned — the command-substitution resolves to
-# `torch==<version>` from the lockfile; hadolint can't see through it.
-# hadolint ignore=DL3013
 COPY requirements-web.txt .
+# DL3013: the version IS pinned — the command-substitution resolves to
+# `torch==<version>` from the lockfile; hadolint can't see through it. The
+# ignore must sit on the line directly above the instruction it covers.
+# hadolint ignore=DL3013
 RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
     "$(grep -E '^torch==' requirements-web.txt)" \
     && pip install --no-cache-dir -r requirements-web.txt
