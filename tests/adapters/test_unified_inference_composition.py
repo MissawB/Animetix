@@ -39,11 +39,16 @@ def test_manga_delegates_to_component():
 
 
 def test_no_longer_inherits_pilot_mixins():
+    import importlib
+
+    import pytest
     from adapters.inference.manga_ocr import MangaOcrMixin
-    from adapters.inference.rerank_mixin import RerankMixin
 
     assert not issubclass(UnifiedInferenceAdapter, MangaOcrMixin)
-    assert not issubclass(UnifiedInferenceAdapter, RerankMixin)
+    # RerankMixin is fully retired: RerankComponent is the single rerank
+    # implementation (LocalRerankAdapter composes it too).
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("adapters.inference.rerank_mixin")
 
 
 def test_capability_detection_still_routes_to_unified():

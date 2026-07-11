@@ -31,6 +31,17 @@ class TestLocalTextAdapter(unittest.TestCase):
         self.adapter.get_text_embedding("Another text")
         self.assertEqual(mock_transformer_cls.call_count, 1)
 
+    @patch("sentence_transformers.SentenceTransformer")
+    def test_get_text_embedding_load_failure_raises_inference_error(self, mock_cls):
+        # Same error semantics as every other local model load: a broken
+        # SentenceTransformer load surfaces as InferenceError, not a raw
+        # RuntimeError leaking implementation details to callers.
+        from core.domain.exceptions import InferenceError
+
+        mock_cls.side_effect = RuntimeError("weights corrupted")
+        with self.assertRaises(InferenceError):
+            self.adapter.get_text_embedding("Hello")
+
     def test_health_check(self):
         # Initial state
         hc = self.adapter.health_check()

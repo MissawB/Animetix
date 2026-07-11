@@ -2,11 +2,16 @@ import logging
 import os
 from typing import Any, List, Optional
 
+from adapters.inference.lazy_load_mixin import LazyLoadMixin
 from adapters.inference.lazy_local_model_adapter import LazyLocalModelAdapter
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
 from core.utils.lazy_import import lazy_import
-from core.utils.local_models import DRAFT_TEXT_MODEL, LOCAL_TEXT_MODEL
+from core.utils.local_models import (
+    DRAFT_TEXT_MODEL,
+    LOCAL_EMBEDDING_MODEL,
+    LOCAL_TEXT_MODEL,
+)
 from core.utils.model_registry import resolve_trust_remote_code, trusted_revision
 
 torch = lazy_import("torch")
@@ -17,7 +22,7 @@ from core.ports.usage_port import UsagePort  # noqa: E402
 logger = logging.getLogger("animetix.inference.text")
 
 
-class LocalTextAdapter(LazyLocalModelAdapter):
+class LocalTextAdapter(LazyLoadMixin, LazyLocalModelAdapter):
     ENGINE_NAME = "local_text"
 
     def __init__(
@@ -189,17 +194,25 @@ class LocalTextAdapter(LazyLocalModelAdapter):
             prompt, system_prompt, thinking_budget, thinking_mode, include_logprobs
         )
 
+    def _load_embedding_model(self) -> None:
+        from sentence_transformers import SentenceTransformer  # noqa: E402
+
+        logger.info(f"🏗️ Loading Local Embedding Model: {LOCAL_EMBEDDING_MODEL}")
+        self._embedding_model = SentenceTransformer(LOCAL_EMBEDDING_MODEL)
+
     def get_text_embedding(self, text: str) -> List[float]:
         """Génère un embedding local via SentenceTransformer."""
-        if not self._embedding_model:
-            from sentence_transformers import SentenceTransformer  # noqa: E402
-
-            logger.info("🏗️ Loading Local Embedding Model: all-MiniLM-L6-v2")
-            self._embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
-
+        # on_error="raise": a broken load surfaces as InferenceError, aligned
+        # with every other local model load (there is no fallback here).
+        self._lazy_load(
+            "_embedding_model",
+            self._load_embedding_model,
+            label="Local Embedding",
+            on_error="raise",
+        )
         embedding = self._embedding_model.encode(text)
 
-        self._log_usage(engine="local:all-MiniLM-L6-v2", units=1)
+        self._log_usage(engine=f"local:{LOCAL_EMBEDDING_MODEL}", units=1)
 
         return embedding.tolist()
 

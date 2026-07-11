@@ -22,3 +22,7 @@ LOCAL_VIDEO_VLM_MODEL = os.getenv(
 )
 # Small student model for distillation and RL/DPO training runs.
 SMALL_TRAINABLE_MODEL = os.getenv("SMALL_TRAINABLE_MODEL_ID", "Qwen/Qwen3-0.6B")
+# Cross-encoder used by RerankComponent (revision pinned in model_registry).
+RERANKER_MODEL = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-12-v2")
+# SentenceTransformer used by LocalTextAdapter.get_text_embedding.
+LOCAL_EMBEDDING_MODEL = os.getenv("LOCAL_EMBEDDING_MODEL_ID", "all-MiniLM-L6-v2")

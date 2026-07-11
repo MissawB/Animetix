@@ -42,6 +42,29 @@ def test_local_cross_encoder_path(monkeypatch):
     assert ctx.log_usage.calls[-1] == {"engine": "local:rerank", "units": 2}
 
 
+def test_cross_encoder_load_pins_verified_revision(monkeypatch):
+    # Supply-chain pin: the CrossEncoder must load the SHA recorded in the
+    # model registry, not whatever HEAD of the hub repo happens to be.
+    monkeypatch.delenv("COHERE_API_KEY", raising=False)
+    fake_st = MagicMock()
+    fake_encoder = MagicMock()
+    fake_encoder.predict.return_value = [0.5]
+    fake_st.CrossEncoder.return_value = fake_encoder
+    monkeypatch.setattr(
+        "adapters.inference.components.rerank_component.lazy_import",
+        lambda name: fake_st,
+    )
+    from core.utils.model_registry import get_verified_revision
+
+    model_name = "cross-encoder/ms-marco-MiniLM-L-12-v2"
+    pinned = get_verified_revision(model_name)
+    assert pinned, "registry must know the reranker SHA for this test to mean anything"
+
+    comp = RerankComponent(_ctx())
+    comp.rerank_documents("q", ["a"])
+    fake_st.CrossEncoder.assert_called_once_with(model_name, revision=pinned)
+
+
 def test_prompt_fallback_returns_zeros_when_generate_non_string(monkeypatch):
     # Local path raises -> prompt fallback. generate returns a non-str (mirrors the
     # real adapter returning an InferenceResponse) -> re.search raises -> zeros.

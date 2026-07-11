@@ -5,25 +5,27 @@ import re
 from typing import Any, List
 
 from adapters.inference.components.context import InferenceComponentContext
+from adapters.inference.lazy_load_mixin import LazyLoadMixin
 from core.utils.lazy_import import lazy_import
+from core.utils.local_models import RERANKER_MODEL
+from core.utils.model_registry import get_verified_revision
 from core.utils.security import safe_http_request
 
 logger = logging.getLogger("animetix.inference.rerank_component")
 
-DEFAULT_RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-12-v2"
 
-
-class RerankComponent:
+class RerankComponent(LazyLoadMixin):
     """Document reranking (Cohere API or local CrossEncoder), composable.
 
-    Logic copied verbatim from RerankMixin; ``self._log_usage``/``self.generate``
+    The single rerank implementation: UnifiedInferenceAdapter and
+    LocalRerankAdapter both compose it. ``self._log_usage``/``self.generate``
     are replaced by the injected context. The lazy CrossEncoder cache lives here.
     """
 
     def __init__(
         self,
         ctx: InferenceComponentContext,
-        reranker_model_name: str = DEFAULT_RERANKER_MODEL,
+        reranker_model_name: str = RERANKER_MODEL,
     ):
         self._ctx = ctx
         self._reranker_model_name = reranker_model_name
@@ -32,6 +34,14 @@ class RerankComponent:
     @property
     def is_loaded(self) -> bool:
         return self._cross_encoder is not None
+
+    def _load_cross_encoder(self) -> None:
+        sentence_transformers = lazy_import("sentence_transformers")
+        logger.info(f"🏗️ Loading CrossEncoder: {self._reranker_model_name}")
+        self._cross_encoder = sentence_transformers.CrossEncoder(
+            self._reranker_model_name,
+            revision=get_verified_revision(self._reranker_model_name),
+        )
 
     def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
         if not documents:
@@ -71,12 +81,14 @@ class RerankComponent:
                 )
 
         try:
-            sentence_transformers = lazy_import("sentence_transformers")
-            if self._cross_encoder is None:
-                logger.info(f"🏗️ Loading CrossEncoder: {self._reranker_model_name}")
-                self._cross_encoder = sentence_transformers.CrossEncoder(
-                    self._reranker_model_name
-                )
+            # on_error="raise" normalizes a broken load to InferenceError, which
+            # this except turns into the prompt/zeros fallback chain.
+            self._lazy_load(
+                "_cross_encoder",
+                self._load_cross_encoder,
+                label="CrossEncoder",
+                on_error="raise",
+            )
             pairs = [[query, doc] for doc in documents]
             scores = self._cross_encoder.predict(pairs)
             self._ctx.log_usage(engine="local:rerank", units=len(documents))

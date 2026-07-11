@@ -38,7 +38,9 @@ def test_inference_not_implemented_error():
 
 def test_transformers_rerank_documents():
     adapter = LocalRerankAdapter()
-    with patch("adapters.inference.rerank_mixin.lazy_import") as mock_lazy:
+    with patch(
+        "adapters.inference.components.rerank_component.lazy_import"
+    ) as mock_lazy:
         mock_st = MagicMock()
         mock_ce = MagicMock()
         mock_ce.predict.return_value = [0.9, 0.1]
@@ -56,6 +58,18 @@ def test_transformers_rerank_documents():
 
         result = adapter.rerank_documents("query", ["doc1", "doc2"])
         assert result == [0.9, 0.1]
+
+
+def test_local_rerank_adapter_composes_rerank_component():
+    # Single rerank implementation: the adapter must delegate to the shared
+    # RerankComponent (RerankMixin was a verbatim duplicate and is gone).
+    from adapters.inference.components.rerank_component import RerankComponent
+
+    adapter = LocalRerankAdapter()
+    assert isinstance(adapter._rerank, RerankComponent)
+    # This adapter has no LLM: the prompt-based fallback must be disabled
+    # cleanly (ctx.generate=None), not discovered via a raising generate().
+    assert adapter._rerank._ctx.generate is None
 
 
 def test_transformers_rerank_empty():

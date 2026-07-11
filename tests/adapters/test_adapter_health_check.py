@@ -36,10 +36,10 @@ def test_audio_health_check_readiness():
 
 
 def test_local_rerank_health_check_readiness():
-    a = object.__new__(LocalRerankAdapter)
-    a._cross_encoder = None
+    # Readiness is delegated to the composed RerankComponent's lazy cache.
+    a = LocalRerankAdapter()
     assert a.health_check() == {"status": "offline", "engine": "local_rerank"}
-    a._cross_encoder = object()
+    a._rerank._cross_encoder = object()
     assert a.health_check()["status"] == "online"
 
 

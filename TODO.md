@@ -16,8 +16,6 @@ _Aucun item ouvert._
 
 ## 🟢 Faibles
 
-- [ ] **Backend — duplication entre adapters d'inférence** _(revue archi 2026-06-22 ; mixins de factorisation livrés, archivés dans [docs/HISTORY.md](docs/HISTORY.md))_
-  - ⏳ **Reste (résiduel, hors scope)** : `RerankMixin` et `LocalTextAdapter.get_text_embedding` (chargements inline aux sémantiques d'erreur différentes) ; `LocalGuardrailAdapter` (aucun modèle).
 - [ ] **Backend — exposer le streaming async aux endpoints HTTP** _(suite du streaming async natif — les 5 vues SSE sont désormais async natives, détail archivé dans [docs/HISTORY.md](docs/HISTORY.md))_
   - ⏳ **Reste** : les **8 processors one-shot** (Plan/Research/Judge/Acquire/Speculate/VlmRerank/GraphExplore/SagaLookup) restent sur le pont-thread par défaut (appels bloquants ponctuels → bénéfice marginal d'un `aprocess` natif, YAGNI) ; suppression du sync (`process`/`run_workflow`/`plan_and_solve_stream`) différée tant que les 8 dépendent du pont + voie WSGI.
 - [ ] **Couverture backend — orchestrateur `finetuning_dataset`**

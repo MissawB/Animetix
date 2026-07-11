@@ -1,33 +1,40 @@
 import logging
-import os
 from typing import List, Optional
 
+from adapters.inference.components.context import InferenceComponentContext
+from adapters.inference.components.rerank_component import RerankComponent
 from adapters.inference.lazy_local_model_adapter import (
     LazyLocalModelAdapter,  # noqa: E402
 )
-from adapters.inference.rerank_mixin import RerankMixin
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.ports.inference_port import InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
+from core.utils.local_models import RERANKER_MODEL
 
 logger = logging.getLogger("animetix.inference.rerank")
 
 
-class LocalRerankAdapter(RerankMixin, LazyLocalModelAdapter):
+class LocalRerankAdapter(LazyLocalModelAdapter):
     ENGINE_NAME = "local_rerank"
 
     def _is_ready(self) -> bool:
-        return bool(self._cross_encoder)
+        return self._rerank.is_loaded
 
     def __init__(
         self, model_name: Optional[str] = None, usage_port: Optional[UsagePort] = None
     ):
         super().__init__(usage_port=usage_port)
-        self.reranker_model_name = model_name or os.getenv(
-            "RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-12-v2"
-        )
+        self.reranker_model_name = model_name or RERANKER_MODEL
         self.model_name = self.reranker_model_name
-        self._cross_encoder = None
+        # No LLM on this adapter: generate=None disables the component's
+        # prompt-based fallback instead of tripping on a raising generate().
+        self._rerank = RerankComponent(
+            InferenceComponentContext(log_usage=self._log_usage, generate=None),
+            reranker_model_name=self.reranker_model_name,
+        )
+
+    def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
+        return self._rerank.rerank_documents(query, documents)
 
     def generate(
         self,

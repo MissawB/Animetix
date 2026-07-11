@@ -2,6 +2,18 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-11] Session: Inference-adapter dedup residual closed — `RerankMixin` retired, load semantics unified
+
+Closure of the last open sub-item of "duplication entre adapters d'inférence" (2026-06-22 architecture review). Investigation showed the residual had shrunk since the item was written: the June composition pilot had left **two verbatim copies of the rerank logic** ([RerankComponent](../backend/adapters/inference/components/rerank_component.py) used by `UnifiedInferenceAdapter`, plus the original `rerank_mixin.py` kept alive by a single consumer). Fixed by finishing the migration instead of patching the duplicate:
+
+- **`RerankMixin` deleted** — `RerankComponent` is now the single rerank implementation; [LocalRerankAdapter](../backend/adapters/inference/local_rerank_adapter.py) composes it like Unified does. Bonus correctness: this adapter has no LLM, so the component gets `generate=None` and the prompt-based fallback is disabled cleanly instead of being discovered through a raising `generate()`. A tombstone test asserts the module stays gone.
+- **CrossEncoder load unified on `LazyLoadMixin`** and its **revision pinned** via `get_verified_revision` (the SHA was already in the model registry but the loader ignored it — the last unpinned hub download in the adapters). `on_error="raise"` feeds the existing prompt/zeros fallback chain unchanged.
+- **`LocalTextAdapter.get_text_embedding`** moved to the same `_lazy_load(on_error="raise")` motif: a broken SentenceTransformer load now surfaces as `InferenceError` like every other local model load, instead of leaking a raw RuntimeError.
+- **Model names centralized**: `RERANKER_MODEL` and `LOCAL_EMBEDDING_MODEL` join [local_models.py](../backend/core/utils/local_models.py) (env-overridable), removing the last duplicated literals.
+- **`LocalGuardrailAdapter`** (no model, as the item noted): health payload aligned on the shared `_health_status` builder — cosmetic.
+
+TDD: 4 regression locks written first and watched fail (component composition, pinned revision, `InferenceError` semantics, module tombstone). Full suite green.
+
 ## [2026-07-11] Session: Settings hardening — Cloud Run tripwire, TLS-by-default Redis, consolidated GCP defaults
 
 Closure of the 🟢 item "défauts d'infra codés en dur" (2026-07-05 audit), with each concern addressed at its root:

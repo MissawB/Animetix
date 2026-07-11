@@ -1,6 +1,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 
+from adapters.inference.reachability_health_mixin import ReachabilityHealthCheckMixin
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 from pydantic import BaseModel, Field
@@ -22,7 +23,7 @@ class ModerationResult(BaseModel):
     )
 
 
-class LocalGuardrailAdapter(InferencePort):
+class LocalGuardrailAdapter(ReachabilityHealthCheckMixin, InferencePort):
     def __init__(self, inference_engine: Optional[Any] = None):
         super().__init__()
         self.inference_engine = inference_engine
@@ -71,4 +72,6 @@ class LocalGuardrailAdapter(InferencePort):
         return super().moderate_content(text, categories)
 
     def health_check(self) -> dict:
-        return {"status": "online", "engine": "local_guardrail"}
+        # No model to load and no remote to probe: always-online, but built
+        # through the shared payload helper like every other adapter.
+        return self._health_status("online", engine="local_guardrail")
