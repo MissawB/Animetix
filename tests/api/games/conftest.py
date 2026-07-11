@@ -58,7 +58,7 @@ def _rewire_game_modules():
     # the cached Singletons here -- ``reset()`` only drops the memoised instance, it
     # does NOT touch the sub-container wiring the way ``reset_override()`` does -- keeps
     # each test hermetic regardless of what ran before it.
-    for name in (
+    guarded = (
         "catalog_service",
         "game_service",
         "guardrail_service",
@@ -68,6 +68,33 @@ def _rewire_game_modules():
         "vision_service",
         "akinetix_service",
         "blind_test_service",
-    ):
+    )
+    for name in guarded:
         getattr(container.core, name).reset()
+
+    # Baseline: overrides already in place (e.g. session-scoped ones) are none of
+    # this test's business. What must never happen is a test ADDING an override
+    # and not removing it.
+    before = {name: len(getattr(container.core, name).overridden) for name in guarded}
+
     yield
+
+    # Tripwire: a game test that leaves a provider overridden poisons the whole
+    # session — a leaked MagicMock catalog_service reached tests/api/test_explore
+    # and hung CI forever (DRF's JSON encoder recurses on a MagicMock: it calls
+    # .tolist(), gets another MagicMock, and tries to encode that one too, so the
+    # job died on SIGTERM with no usable error). Fail HERE, on the test that
+    # actually leaked, instead of somewhere unrelated hundreds of tests later.
+    leaked = {}
+    for name in guarded:
+        provider = getattr(container.core, name)
+        extra = len(provider.overridden) - before[name]
+        if extra > 0:
+            leaked[name] = extra
+            # Unpoison the container so the *other* tests still run clean.
+            for _ in range(extra):
+                provider.reset_last_overriding()
+    assert not leaked, (
+        f"This test leaked container overrides: {leaked}. Scope every override "
+        "(a `with` block or a fixture teardown) so it is always reset."
+    )

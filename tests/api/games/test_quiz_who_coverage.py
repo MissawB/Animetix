@@ -14,6 +14,7 @@ Views are AllowAny (CPU game) so most tests run anonymously; the profile-win
 branch authenticates a real user.
 """
 
+from contextlib import contextmanager
 from unittest.mock import MagicMock
 
 import animetix.api.games.quiz_who as quiz_who_mod
@@ -94,11 +95,25 @@ def _ak_service():
     return ak
 
 
+@contextmanager
 def _overrides(cat, ak):
-    return (
-        container.core.catalog_service.override(providers.Object(cat)),
-        container.core.akinetix_service.override(providers.Object(ak)),
-    )
+    """Override both providers for the block, then restore BOTH.
+
+    This used to return the two OverridingContexts, and call sites did
+    ``with _overrides(...)[0], _overrides(...)[1]:`` — which calls the helper
+    twice (applying four overrides) while exiting only one context each. Two
+    MagicMocks leaked onto the container per test. A leaked ``catalog_service``
+    mock then reached unrelated suites (tests/api/test_explore.py), where DRF's
+    JSON encoder hangs forever on a MagicMock: it calls ``obj.tolist()``, gets
+    another MagicMock, and tries to encode that one too. CI died on it (SIGTERM).
+    """
+    container.core.catalog_service.override(providers.Object(cat))
+    container.core.akinetix_service.override(providers.Object(ak))
+    try:
+        yield
+    finally:
+        container.core.catalog_service.reset_last_overriding()
+        container.core.akinetix_service.reset_last_overriding()
 
 
 def _seed_game(
@@ -133,9 +148,8 @@ def _seed_game(
 @pytest.mark.django_db
 def test_start_catalog_not_found(api_client):
     cat = _cat_service(None)
-    with (o for o in ())._ignore if False else _overrides(cat, _ak_service())[0]:
-        with _overrides(cat, _ak_service())[1]:
-            resp = api_client.post(reverse("api_quiz_who_start"), {}, format="json")
+    with _overrides(cat, _ak_service()):
+        resp = api_client.post(reverse("api_quiz_who_start"), {}, format="json")
     assert resp.status_code == 404
     assert resp.json()["error"] == "Catalog not found"
 
@@ -149,7 +163,7 @@ def test_start_not_enough_candidates_with_images(api_client):
     ]
     cat = _cat_service(_catalog(db))
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(reverse("api_quiz_who_start"), {}, format="json")
     assert resp.status_code == 400
     assert "Not enough candidates" in resp.json()["error"]
@@ -159,7 +173,7 @@ def test_start_not_enough_candidates_with_images(api_client):
 def test_start_builds_board_and_stores_secret_in_session(api_client):
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(
             reverse("api_quiz_who_start"),
             {"media_type": "Manga", "difficulty": "Easy"},
@@ -186,7 +200,7 @@ def test_start_builds_board_and_stores_secret_in_session(api_client):
 def test_start_offers_only_discriminating_attributes(api_client):
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(reverse("api_quiz_who_start"), {}, format="json")
     assert resp.status_code == 200
     questions = resp.json()["questions"]
@@ -206,7 +220,7 @@ def test_start_offers_only_discriminating_attributes(api_client):
 def test_ask_without_game_in_progress(api_client):
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(
             reverse("api_quiz_who_ask"), {"attribute": "fille"}, format="json"
         )
@@ -219,7 +233,7 @@ def test_ask_missing_attribute(api_client):
     _seed_game(api_client)
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(reverse("api_quiz_who_ask"), {}, format="json")
     assert resp.status_code == 400
     assert resp.json()["error"] == "attribute is required"
@@ -230,7 +244,7 @@ def test_ask_catalog_not_found(api_client):
     _seed_game(api_client)
     cat = _cat_service(None)
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(
             reverse("api_quiz_who_ask"), {"attribute": "fille"}, format="json"
         )
@@ -244,7 +258,7 @@ def test_ask_secret_missing_from_catalog(api_client):
     _seed_game(api_client, secret="999")
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(
             reverse("api_quiz_who_ask"), {"attribute": "fille"}, format="json"
         )
@@ -258,7 +272,7 @@ def test_ask_oui_eliminates_non_matching_candidates(api_client):
     _seed_game(api_client, secret="0")
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(
             reverse("api_quiz_who_ask"), {"attribute": "fille"}, format="json"
         )
@@ -277,7 +291,7 @@ def test_ask_non_eliminates_matching_candidates(api_client):
     _seed_game(api_client, secret="1")
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(
             reverse("api_quiz_who_ask"), {"attribute": "magie"}, format="json"
         )
@@ -294,7 +308,7 @@ def test_ask_does_not_re_report_already_eliminated(api_client):
     _seed_game(api_client, secret="0", eliminated=["8"])
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(
             reverse("api_quiz_who_ask"), {"attribute": "fille"}, format="json"
         )
@@ -323,7 +337,7 @@ def test_guess_correct_ends_game_records_session_and_blocks_further_asks(api_cli
     _seed_game(api_client, secret="3", asked=["fille", "magie"])
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(
             reverse("api_quiz_who_guess"), {"guess_id": "3"}, format="json"
         )
@@ -354,7 +368,7 @@ def test_guess_correct_authenticated_records_profile_win(api_client):
     _seed_game(api_client, secret="3", asked=["fille"])
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(
             reverse("api_quiz_who_guess"), {"guess_id": "3"}, format="json"
         )
@@ -376,7 +390,7 @@ def test_guess_correct_add_win_error_is_handled(api_client):
     _seed_game(api_client, secret="3")
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(
             reverse("api_quiz_who_guess"), {"guess_id": "3"}, format="json"
         )
@@ -390,7 +404,7 @@ def test_guess_wrong_flips_tile_and_game_continues(api_client):
     _seed_game(api_client, secret="3")
     cat = _cat_service(_catalog())
     ak = _ak_service()
-    with _overrides(cat, ak)[0], _overrides(cat, ak)[1]:
+    with _overrides(cat, ak):
         resp = api_client.post(
             reverse("api_quiz_who_guess"), {"guess_id": "5"}, format="json"
         )
