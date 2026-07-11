@@ -75,7 +75,10 @@ jobs:
 
   test:
     name: Run Unit Tests
-    needs: [lint, docker-build]
+    # Deliberately NOT gated on docker-build: a slow or broken image build must
+    # not starve unit-test feedback. docker-build remains a hard gate for
+    # deploy-to-prod via its own `needs` entry.
+    needs: [lint]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -165,6 +168,15 @@ jobs:
     - name: Install Ollama
       run: |
         curl -fsSL https://ollama.com/install.sh | sh
+    # `ollama serve` runs as the runner user, so models live in ~/.ollama —
+    # cache it: the qwen2.5:0.5b pull (~400 MB from the ollama registry) was
+    # re-downloaded on every run. With a warm cache the pull below is a fast
+    # manifest check. Static key: model blobs are content-addressed.
+    - name: Cache Ollama models
+      uses: actions/cache@v4
+      with:
+        path: ~/.ollama
+        key: ollama-models-qwen2.5-0.5b
     - name: Start Ollama
       run: |
         ollama serve &
@@ -212,6 +224,11 @@ jobs:
   perf-test:
     name: RAG Performance Test
     needs: test
+    # Calls REAL Gemini/OpenAI APIs (cost + flakiness): only runs on manual
+    # workflow_dispatch runs. The prod deploy is dispatch-only, so its
+    # perf-test gate is preserved unchanged; push/PR runs skip this job (and
+    # deploy-to-prod skips with it, which it already did via its own `if`).
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -289,7 +306,8 @@ jobs:
 
   frontend-test:
     name: Frontend Accessibility & E2E
-    needs: docker-build
+    # No `needs`: this job never touches the Docker image (npm + Playwright
+    # only) — the old docker-build dependency just delayed e2e feedback.
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4

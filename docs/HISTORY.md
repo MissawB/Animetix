@@ -2,6 +2,17 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-11] Session: CI topology untangled — unit feedback no longer waits on the Docker build, real-API perf-test off the push path
+
+Closure of the 🟠 audit item "topologie fragile". Four targeted changes to [ci.yml](../.github/workflows/ci.yml), no job removed:
+
+- **`test` no longer needs `docker-build`** (a slow or broken image build starved all unit feedback); docker-build stays a hard deploy gate via `deploy-to-prod`'s own `needs`.
+- **`frontend-test` decoupled** from docker-build after verifying the claim: Playwright's `webServer` spawns `npm run dev` itself — the e2e job never touches the image.
+- **`perf-test` gated on `workflow_dispatch` only**: it hits real Gemini/OpenAI APIs, so it no longer costs money (or flakes) on every push/PR. The prod deploy is dispatch-only, so its perf-test gate is preserved unchanged — on push the skip cascades into deploy-to-prod, which was already skipped there.
+- **Ollama model cache**: `ollama serve` runs as the runner user, so `~/.ollama` is cacheable — the qwen2.5:0.5b blob (~400 MB) was re-downloaded from the ollama registry on every integration run; with a warm cache the pull is a manifest check (static cache key: blobs are content-addressed).
+
+Push/PR runs now fan out `test`/`integration-test` straight after lint and start both frontend jobs immediately. Effects measurable on the next push.
+
 ## [2026-07-11] Session: Guardrail fail-open made explicit and switchable — the "swallowed exceptions" half of the audit item was wrong
 
 Closure of the 🟠 audit item "exceptions avalées dans les adapters d'inférence, dont le guardrail (fail-open)" — by **correcting the audit on its first half and fixing the real risk in its second**:

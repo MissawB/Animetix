@@ -11,8 +11,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **CI — topologie fragile : docker-build bloque les tests, perf-test paie des API réelles** _(audit dette 2026-07-11)_
-  - `test` a `needs: [lint, docker-build]` ([ci.yml:78](.github/workflows/ci.yml#L78)) : build d'image lent/cassé = zéro feedback unitaire ; `frontend-test` dépend aussi de `docker-build` sans besoin réel ([ci.yml:292](.github/workflows/ci.yml#L292)). `perf-test` (bloquant deploy) appelle Gemini/OpenAI réels à chaque push ([ci.yml:251-253](.github/workflows/ci.yml#L251-L253)) → coût + flakiness. Ollama installé + `ollama pull qwen2.5:0.5b` à chaque run **sans cache** ([ci.yml:165-182](.github/workflows/ci.yml#L165-L182)). **Reco** : découpler `test` du build Docker, cacher ollama, passer perf-test en job planifié ou non-bloquant.
 - [ ] **Tests — métier critique quasi non testé sous un gate à 1,45 pt de marge** _(audit dette 2026-07-11)_
   - Global 76,45 % vs `--cov-fail-under=75` ([ci.yml:135](.github/workflows/ci.yml#L135)) : toute petite régression casse le deploy. Le global masque : **`stripe_billing.py` 20 % (paiement)**, `alert_service.py` **0 %**, `validation_gate.py` **0 %**, consumers `undercover` 38 %, `quiz_who.py` 23 %, `animinator.py` 26 %, `semantic_cache_service.py` 31 %. **Reco** : tester Stripe billing en priorité, puis re-calibrer le gate.
 
