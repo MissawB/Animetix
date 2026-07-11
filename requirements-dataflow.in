@@ -1,0 +1,17 @@
+# ==========================================================================
+# Image DATAFLOW (deploy/Dockerfile.dataflow) — Beam Flex Template workers.
+# ==========================================================================
+# The lore-ingestion DoFns boot the full Django app (django.setup() +
+# animetix.containers in GenerateEmbeddingsDoFn/WriteToVectorDBDoFn), so this
+# image needs the whole web stack plus Beam. CPU-only: the Dockerfile
+# pre-installs torch from the PyTorch CPU index like the web image.
+# Recompile: pip-compile --allow-unsafe --strip-extras --output-file=requirements-dataflow.txt requirements-dataflow.in
+-r requirements-web.in
+
+# Beam pinned in lockstep with the base image tag
+# (deploy/Dockerfile.dataflow: apache/beam_python3.12_sdk:2.74.0 — a mismatch
+# between the SDK in the image and this pin fails Dataflow job submission).
+# apache-beam 2.74.0 caps jsonpickle<4.0.0 → jsonpickle stays at 3.4.2
+# (CVE CWE-502, Snyk). Residual ACCEPTED: purely transitive, never imported by
+# our code, and the CVE requires deserializing untrusted input. See TODO.
+apache-beam==2.74.0

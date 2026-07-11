@@ -51,11 +51,19 @@ All modifications must strictly respect the separation of layers:
 ### Dependency Management
 - **Tooling:** Use `pip-compile` for Python dependency management.
 - **Virtual Environments:** Always work within a virtual environment.
-- **Two locks:** `requirements.in` → `requirements.txt` holds runtime/prod deps (shipped in the Docker images). `requirements-dev.in` → `requirements-dev.txt` holds dev/test-only tooling (pytest, Playwright, coloredlogs, watchdog) and is kept OUT of the images; it is constrained by the prod lock via `-c requirements.txt`.
+- **Layered locks (one per Docker image + union):**
+    - `requirements.in` → `requirements.txt`: the **union** lock — the single place where versions are pinned. This is what dev/CI installs; the images do NOT ship it anymore.
+    - `requirements-web.in` → `requirements-web.txt`: web image (Django service + the 8 Cloud Run jobs, CPU-only — torch comes from the PyTorch CPU index in the Dockerfile).
+    - `requirements-brain.in` → `requirements-brain.txt`: GPU brain image (FastAPI serving stack, CUDA torch, no Django).
+    - `requirements-dataflow.in` → `requirements-dataflow.txt`: Beam Flex Template image (`-r requirements-web.in` + `apache-beam` pinned in lockstep with the base-image SDK tag).
+    - `requirements-dev.in` → `requirements-dev.txt`: dev/test-only tooling, kept out of every image.
+    - The three image `.in` files list **unpinned names** constrained by `-c requirements.txt` — versions live only in `requirements.in`.
 - **Update Process:**
     1. Activate your virtual environment.
-    2. Modify the right source file: `requirements.in` for a runtime dep, `requirements-dev.in` for a dev/test-only tool.
-    3. Recompile the matching lock: `pip-compile --allow-unsafe --strip-extras requirements.in` and/or `pip-compile --allow-unsafe --strip-extras requirements-dev.in`.
+    2. Modify the right source file: `requirements.in` for a runtime dep version (then add the *name* to the image `.in` files that need it), `requirements-dev.in` for a dev/test-only tool.
+    3. Recompile the union first, then every affected image lock:
+       `pip-compile --allow-unsafe --strip-extras requirements.in`, then
+       `pip-compile --allow-unsafe --strip-extras --output-file=requirements-web.txt requirements-web.in` (idem brain/dataflow), and/or `pip-compile --allow-unsafe --strip-extras requirements-dev.in`.
     4. Install a full dev/test env with `pip install -r requirements.txt -r requirements-dev.txt` (runtime-only: drop the second file).
 
 ### Git Workflow & Version Control

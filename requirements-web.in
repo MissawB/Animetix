@@ -1,0 +1,89 @@
+# ==========================================================================
+# Image WEB (deploy/Dockerfile) — Django service + the 8 Cloud Run jobs.
+# ==========================================================================
+# Versions are NOT pinned here: they are inherited from the union lockfile via
+# the constraint below. Edit versions in requirements.in, recompile it, then
+# recompile this file:
+#   pip-compile --allow-unsafe --strip-extras --output-file=requirements-web.txt requirements-web.in
+#
+# Torch note: this image is CPU-only. The Dockerfile pre-installs torch from
+# the PyTorch CPU index (same trick as CI) BEFORE installing this lock, so the
+# `torch` pin below is satisfied by the +cpu wheel and the multi-GB nvidia-*
+# CUDA wheels are never pulled.
+#
+# Kept ML stack rationale: the 8 Cloud Run jobs run manage.py tasks that
+# import torch/transformers/sentence-transformers/peft/trl IN-PROCESS
+# (train_vibe_*, continuous_pretraining, train_expert_model, distillation,
+# evaluation_metrics) and rlhf_pipeline shells out to the dbt CLI — so the
+# training/dbt stack must stay, only CUDA and the GPU-only serving libs
+# (diffusers, coqui-tts) move to the brain image.
+-c requirements.txt
+
+# 1. Web Application & API Frameworks
+Django
+djangorestframework
+drf-spectacular
+channels
+channels-redis
+daphne
+django-cors-headers
+django-environ
+django-filter
+django-prometheus
+django-ratelimit
+django-csp
+django-storages
+gunicorn
+uvicorn
+whitenoise
+
+# 2. Databases, Vector Stores, Caches & ORM Clients
+django-redis
+neo4j
+psycopg2-binary
+redis
+
+# 3. ML/AI (CPU: embeddings, rerank fallback, in-process job training)
+bitsandbytes
+google-genai
+numba
+numpy
+peft
+sentence-transformers
+torch
+transformers
+trl
+imageio
+z3-solver
+accelerate
+
+# 4. GCP, Observability & Utilities
+google-cloud-aiplatform
+google-cloud-bigquery
+google-cloud-pubsub
+google-cloud-profiler
+google-cloud-workflows
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-gcp-trace
+sentry-sdk
+pydantic
+pydantic-settings
+dependency-injector
+supervisor
+setuptools
+
+# 5. Jobs tooling (rlhf_pipeline shells out to dbt) & misc
+# (apache-beam is deliberately absent: Beam runs only on the dataflow image —
+# see requirements-dataflow.in.)
+dbt-core
+dbt-sqlite
+dbt-bigquery
+beautifulsoup4
+orjson
+filetype
+bleach
+PyJWT
+pydub
+reportlab
+yt-dlp

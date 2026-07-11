@@ -1,0 +1,50 @@
+# ==========================================================================
+# Image BRAIN (deploy/Dockerfile.brain) — standalone GPU FastAPI service.
+# ==========================================================================
+# Versions inherited from the union lockfile via the constraint below.
+# Recompile: pip-compile --allow-unsafe --strip-extras --output-file=requirements-brain.txt requirements-brain.in
+#
+# Django-free by design (verified: nothing in the brain_service import closure
+# touches Django — it talks to the web side over HTTP only). CUDA torch is
+# intentional here: this is the only image that actually runs models on GPU.
+#
+# Known gap kept as-is: audio_mixin's Moshi speech-to-speech lazily imports a
+# `Moshi` class that does not exist in the real `moshi` package API (loaders/
+# LMGen) — the integration was never functional, so the package is deliberately
+# NOT added; see TODO. ColPali, on the other hand, matches the real
+# colpali-engine API and is now shipped (below).
+-c requirements.txt
+
+# Serving
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+
+# Security / IO helpers used by core.utils.security
+httpx
+filetype
+bleach
+orjson
+
+# GPU / ML serving stack
+torch
+transformers
+sentence-transformers
+colpali-engine
+diffusers
+accelerate
+bitsandbytes
+coqui-tts
+numpy
+scipy
+pillow
+imageio
+pydub
+
+# Observability (best-effort in brain_service lifespan/middleware)
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-gcp-trace
+google-cloud-profiler
+sentry-sdk

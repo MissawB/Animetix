@@ -41,17 +41,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-# ultralytics pins the GUI opencv-python (needs libGL, absent from this slim image)
-# alongside our opencv-python-headless; both own the same `cv2` files, so plainly
-# uninstalling one would delete the shared files. Remove both, then reinstall only
-# headless (version read from the lockfile) — smaller image, `import cv2` needs no libGL.
+# This image is CPU-only (Cloud Run web service + the 8 jobs): pre-install
+# torch from the PyTorch CPU index so the lockfile's `torch==` pin is already
+# satisfied by the +cpu wheel — the multi-GB nvidia-* CUDA wheels are never
+# pulled. Same trick as CI (ci.yml "Install Dependencies").
 # DL3013: the version IS pinned — the command-substitution resolves to
-# `opencv-python-headless==<version>` from the lockfile; hadolint can't see through it.
+# `torch==<version>` from the lockfile; hadolint can't see through it.
 # hadolint ignore=DL3013
-RUN pip uninstall -y opencv-python opencv-python-headless \
-    && pip install --no-cache-dir "$(grep -E '^opencv-python-headless==' requirements.txt)"
+COPY requirements-web.txt .
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
+    "$(grep -E '^torch==' requirements-web.txt)" \
+    && pip install --no-cache-dir -r requirements-web.txt
 
 # Stage 3: Runtime
 FROM python:3.12-slim-bookworm

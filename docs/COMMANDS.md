@@ -128,7 +128,7 @@ Maintenance scripts, database reconciliation, and background worker pools.
 
 | Command | Directory | Description |
 | :--- | :--- | :--- |
-| `pip install -r requirements.txt` | Root | Installs the runtime/prod Python libraries (what the Docker images ship). |
+| `pip install -r requirements.txt` | Root | Installs the **union** runtime lock (dev/CI). The Docker images ship their own subset locks: `requirements-web.txt` (web + Cloud Run jobs, CPU torch), `requirements-brain.txt` (GPU serving, no Django), `requirements-dataflow.txt` (web stack + Beam). |
 | `pip install -r requirements.txt -r requirements-dev.txt` | Root | Full dev/test env — adds pytest, the Playwright stack and other dev-only tooling (kept out of the prod lock). |
 | `python backend/api/manage.py reconcile_db` | Root | **(CRITICAL)** Analyzes and resolves sync discrepancies between PostgreSQL and Neo4j (bulk-loaded, no N+1). |
 | `python backend/api/manage.py check_db_status` | Root | Unified diagnostics: pgvector document counts, physical table statuses, and migration state on the target database. |

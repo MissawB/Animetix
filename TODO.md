@@ -11,8 +11,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Infra — splitter le lockfile monolithique (image web obèse)** _(audit dette 2026-07-11)_
-  - L'unique [requirements.txt](requirements.txt) (1044 lignes) est installé tel quel par les 3 images ([Dockerfile:44](deploy/Dockerfile#L44), [Dockerfile.brain:21](deploy/Dockerfile.brain#L21), [Dockerfile.dataflow:33](deploy/Dockerfile.dataflow#L33)). L'image **web** embarque torch 2.5.1 (+ wheels CUDA nvidia-*), torchvision, ultralytics, diffusers, coqui-tts, transformers, manga_ocr + outils batch (dbt ×3, apache-beam, z3-solver, yt-dlp) → image de plusieurs Go, cold-start Cloud Run lent, surface CVE inutile. La CI contourne déjà (torch CPU réinstallé, [ci.yml:112](.github/workflows/ci.yml#L112)). **Reco** : requirements séparés web / brain / dataflow (ou extras). Meilleur ratio effort/impact de l'audit.
 - [ ] **Deploy prod — aucun smoke-test ni rollback** _(audit dette 2026-07-11)_
   - [ci.yml:377-393](.github/workflows/ci.yml#L377-L393) : `gcloud run deploy` puis simple echo de l'URL. Une révision qui démarre mais échoue au runtime (migration, secret manquant) reste servie. **Reco** : healthcheck curl post-deploy + `gcloud run services update-traffic` vers la révision précédente en cas d'échec.
 - [ ] **Backend — exceptions avalées dans les adapters d'inférence, dont le guardrail (fail-open)** _(audit dette 2026-07-11)_
@@ -47,6 +45,8 @@ _Aucun item ouvert._
 
 ## 🟢 Faibles
 
+- [ ] **Brain — intégration Moshi (S2S local) chimérique : réécrire ou supprimer**
+  - [audio_mixin.py:105](backend/adapters/inference/audio_mixin.py#L105) importe `from moshi.models import Moshi` — cette classe **n'existe pas** dans le package réel (API : `loaders.get_mimi`/`get_moshi_lm` + boucle streaming `LMGen`). Le chemin S2S local n'a jamais fonctionné (le package n'a de plus jamais été dans un lockfile) et lève proprement `InferenceError` — le S2S passe par le brain/Gemini Live. **Décision à prendre** : réécrire l'intégration sur la vraie API (chantier GPU, ~24 Go VRAM pour moshiko-bf16, invérifiable localement) ou supprimer le chemin mort. Le package `moshi` n'est volontairement PAS ajouté aux locks (constat 2026-07-11, en réparant ColPali qui, lui, correspondait à la vraie API).
 - [ ] **Couverture backend — orchestrateur `finetuning_dataset`**
   - `run_generate_instruction_dataset` (433 lignes, 14 %). À traiter au cas par cas, sans gonfler la couverture.
 - [ ] **Frontend — `fetch()` brut : reliquat optionnel**

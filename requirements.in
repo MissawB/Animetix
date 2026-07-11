@@ -28,22 +28,26 @@ psycopg2-binary==2.9.12
 redis==7.4.0
 
 # 4. Heavy ML/AI, Deep Learning, NLP & Computer Vision
+# (ultralytics / manga-ocr / onnxruntime / opencv-python-headless / torchvision
+# were removed 2026-07-11: zero imports repo-wide — dropping ultralytics also
+# retired the opencv GUI-vs-headless uninstall dance in the Dockerfiles.)
 bitsandbytes==0.49.2
 diffusers==0.37.0
 google-genai==1.75.0
 numba==0.65.1
 numpy==1.26.4
-onnxruntime==1.24.4
-opencv-python-headless==4.9.0.80
-peft==0.13.2
+# peft 0.13.2 -> 0.17.1 (2026-07-11): forced by colpali-engine — no colpali
+# release satisfies both peft==0.13.2 and transformers==4.57.6. Validated by
+# the full test suite (multi_lora_manager + training pipelines).
+peft==0.17.1
+# ColPali late-interaction (brain clip_vision) — the lazy import was never in
+# any lockfile until 2026-07-11, so the path silently degraded at runtime.
+colpali-engine==0.3.13
 sentence-transformers==3.3.1
 torch==2.5.1
-torchvision==0.20.1
 transformers==4.57.6
 trl==0.12.1
 coqui-tts==0.27.5
-ultralytics==8.4.51
-manga_ocr==0.1.14
 imageio==2.37.3
 z3-solver==4.16.0.0
 

@@ -18,12 +18,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-# ultralytics pulls the GUI opencv-python (needs libGL) next to opencv-python-headless;
-# both own the same `cv2` files, so remove both then reinstall only headless.
-RUN pip uninstall -y opencv-python opencv-python-headless \
-    && pip install --no-cache-dir "$(grep -E '^opencv-python-headless==' requirements.txt)"
+# Brain-only lockfile: GPU serving stack (CUDA torch intended here), no Django.
+COPY requirements-brain.txt .
+RUN pip install --no-cache-dir -r requirements-brain.txt
 
 COPY . .
 

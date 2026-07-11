@@ -100,7 +100,7 @@ jobs:
       with:
         python-version: '3.12'
         # Cache pip's wheel cache (~/.cache/pip, untouched by Free Disk Space) so the
-        # heavy torch/torchvision CPU wheels + requirements.txt aren't re-downloaded
+        # heavy torch CPU wheel + requirements.txt aren't re-downloaded
         # every run. Shared across the test/integration/perf jobs via the same key.
         cache: 'pip'
         cache-dependency-path: |
@@ -109,7 +109,7 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+        pip install torch --index-url https://download.pytorch.org/whl/cpu
         # pytest + pytest-cov live in requirements-dev.txt (kept out of the prod lock).
         pip install -r requirements.txt -r requirements-dev.txt
     - name: Run Pytest
@@ -131,7 +131,7 @@ jobs:
       # --cov-fail-under=75 is a HARD gate: the job (and thus the prod deploy)
       # fails below 75% line coverage. Coverage now sits at ~75.3% (cleared by the
       # coverage-consolidation work, cf. docs/HISTORY.md), so the gate is live and
-      # passing — it now guards against regressions rather than tracking a backlog.
+      # passing â€” it now guards against regressions rather than tracking a backlog.
       run: python -m pytest -m "not integration" --durations=25 --cov=backend --cov-report=term-missing --cov-report=xml --cov-fail-under=75
     - name: Upload coverage to Codecov
       # Runs even when the coverage gate fails so the report is always published.
@@ -193,7 +193,7 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+        pip install torch --index-url https://download.pytorch.org/whl/cpu
         pip install -r requirements.txt -r requirements-dev.txt
     - name: Run integration tests
       env:
@@ -237,7 +237,7 @@ jobs:
           requirements-dev.txt
     - name: Install Dependencies
       run: |
-        pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+        pip install torch --index-url https://download.pytorch.org/whl/cpu
         pip install -r requirements.txt -r requirements-dev.txt
     - name: Run Regression Benchmark
       env:
@@ -274,7 +274,7 @@ jobs:
       run: cd frontend && npm run lint
     # Runs the jsdom unit project (the storybook/browser project is excluded via
     # --project unit, so no Playwright browser is needed here). The v8 coverage
-    # gate uses the ratchet thresholds in vite.config.ts — keep raising them.
+    # gate uses the ratchet thresholds in vite.config.ts â€” keep raising them.
     - name: Unit Tests + Coverage
       run: cd frontend && npm run test:coverage
     - name: Upload frontend coverage to Codecov
@@ -311,8 +311,8 @@ jobs:
       env:
         CI: true
     - name: Upload Playwright artifacts
-      # Toujours uploadé : le rapport HTML + (en cas d'échec) traces/screenshots/vidéos
-      # de test-results/, pour diagnostiquer les échecs e2e sans reproduire en local.
+      # Toujours uploadÃ© : le rapport HTML + (en cas d'Ã©chec) traces/screenshots/vidÃ©os
+      # de test-results/, pour diagnostiquer les Ã©checs e2e sans reproduire en local.
       if: always()
       uses: actions/upload-artifact@v4
       with:
@@ -364,7 +364,7 @@ jobs:
       # build's artifact, not the mutable :latest tag.
       # _BUILD_TARGET=web: this job only `gcloud run deploy`s animetix-web, so
       # build ONLY the web image. Building `all` also rebuilds the brain and the
-      # heavy Dataflow image — the latter overruns the Cloud Build step timeout
+      # heavy Dataflow image â€” the latter overruns the Cloud Build step timeout
       # (context deadline exceeded) and the >1h build outlives the Workload
       # Identity token (STS refresh then fails), so `all` never completes. Brain
       # and Dataflow have their own targeted builds when they actually change.
