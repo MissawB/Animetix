@@ -11,8 +11,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Backend — exceptions avalées dans les adapters d'inférence, dont le guardrail (fail-open)** _(audit dette 2026-07-11)_
-  - ~14 blocs `except: pass` dans [google_genai_adapter.py](backend/adapters/inference/google_genai_adapter.py), idem `brain_api_adapter`, `moondream_adapter`, `manga_ocr_adapter`, `diffusers_adapter`, `vision_transformers_adapter` (~4 chacun) — un échec d'inférence disparaît sans trace. Cas sensible : **6 avalages dans `guardrail_service.py`** = fail-open potentiel d'un service de sécurité. **Reco** : logger en `warning` a minima (pattern existant : [vs_battle_service.py:141](backend/core/domain/services/creative/vs_battle_service.py#L141)).
 - [ ] **CI — topologie fragile : docker-build bloque les tests, perf-test paie des API réelles** _(audit dette 2026-07-11)_
   - `test` a `needs: [lint, docker-build]` ([ci.yml:78](.github/workflows/ci.yml#L78)) : build d'image lent/cassé = zéro feedback unitaire ; `frontend-test` dépend aussi de `docker-build` sans besoin réel ([ci.yml:292](.github/workflows/ci.yml#L292)). `perf-test` (bloquant deploy) appelle Gemini/OpenAI réels à chaque push ([ci.yml:251-253](.github/workflows/ci.yml#L251-L253)) → coût + flakiness. Ollama installé + `ollama pull qwen2.5:0.5b` à chaque run **sans cache** ([ci.yml:165-182](.github/workflows/ci.yml#L165-L182)). **Reco** : découpler `test` du build Docker, cacher ollama, passer perf-test en job planifié ou non-bloquant.
 - [ ] **Tests — métier critique quasi non testé sous un gate à 1,45 pt de marge** _(audit dette 2026-07-11)_

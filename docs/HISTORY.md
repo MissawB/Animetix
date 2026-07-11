@@ -2,6 +2,13 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-11] Session: Guardrail fail-open made explicit and switchable — the "swallowed exceptions" half of the audit item was wrong
+
+Closure of the 🟠 audit item "exceptions avalées dans les adapters d'inférence, dont le guardrail (fail-open)" — by **correcting the audit on its first half and fixing the real risk in its second**:
+
+- **The "~14 + ~4×5 + 6 silent `except: pass`" count is false**: an AST sweep of the 7 named files found **zero silent handlers** — every one of the 63 handlers logs (google_genai 20/20, brain_api 34/34, guardrail 6/6, …). The 2026-07-10 observability pass had already covered them; the audit likely counted `except` blocks, not silent ones.
+- **The fail-open concern was real though**: on a moderation-engine outage, [guardrail_service.py](../backend/core/domain/services/guardrail_service.py) `validate_input`/`validate_output` returned `is_safe: True` with only a soft log — indistinguishable, for callers, from a genuine pass. The deterministic layers (jailbreak regex, base64 probing, system-leak fingerprinting) run before the engine call and stay active, so full fail-open never applied to known attack patterns — a defensible availability tradeoff, now made explicit: the failure response carries **`degraded: True`** and logs at ERROR ("FAIL-OPEN — only the deterministic checks covered this request"), and a new **`GUARDRAIL_FAIL_CLOSED`** flag ([settings.py](../backend/api/animetix_project/settings.py), env-gated, default off) flips the posture to blocking without a code change (string-parsed defensively since EnvConfig returns raw env strings — `"false"` stays falsy, locked by test). TDD: 4 locks watched fail (missing `degraded` key, `is_safe` not flipping) before the shared `_engine_failure_response` existed. Full suite green.
+
 ## [2026-07-11] Session: Prod deploy gets a smoke test — and a design where rollback is never needed
 
 Closure of the 🟠 audit item "aucun smoke-test ni rollback". Rather than the audit's suggested deploy→check→rollback (which leaves a bad-revision window), the deploy job now uses Cloud Run's no-traffic pattern — **traffic never moves to an unverified revision, so there is nothing to roll back**:

@@ -116,6 +116,94 @@ def test_guardrail_verification_raises_moderation_error_on_inference_failure():
     assert "Guardrail verification failed due to internal error" in str(excinfo.value)
 
 
+def _config_with(flags):
+    config = MagicMock()
+    config.get.side_effect = lambda key, default=None: flags.get(key, default)
+    return config
+
+
+def test_validate_input_engine_failure_fails_open_but_flags_degraded(
+    mock_engine, mock_prompt_manager
+):
+    # Default posture: moderation-engine outage fails OPEN (availability
+    # tradeoff — the deterministic jailbreak layer stays active upstream),
+    # but the response must carry an explicit degraded marker so callers and
+    # monitoring can see the control was skipped, not passed.
+    mock_engine.moderate_content.side_effect = RuntimeError("engine down")
+    service = GuardrailService(
+        inference_engine=mock_engine, prompt_manager=mock_prompt_manager
+    )
+
+    res = service.validate_input("innocuous question")
+
+    assert res["is_safe"] is True
+    assert res["degraded"] is True
+
+
+def test_validate_input_engine_failure_fail_closed_blocks(
+    mock_engine, mock_prompt_manager
+):
+    # GUARDRAIL_FAIL_CLOSED flips the posture: engine outage blocks the query.
+    mock_engine.moderate_content.side_effect = RuntimeError("engine down")
+    service = GuardrailService(
+        inference_engine=mock_engine,
+        prompt_manager=mock_prompt_manager,
+        config_port=_config_with({"GUARDRAIL_FAIL_CLOSED": "true"}),
+    )
+
+    res = service.validate_input("innocuous question")
+
+    assert res["is_safe"] is False
+    assert res["action"] == "block"
+    assert res["degraded"] is True
+
+
+def test_validate_output_engine_failure_fails_open_but_flags_degraded(
+    mock_engine, mock_prompt_manager
+):
+    mock_engine.moderate_content.side_effect = RuntimeError("engine down")
+    mock_engine.generate.side_effect = RuntimeError("engine down")
+    service = GuardrailService(
+        inference_engine=mock_engine, prompt_manager=mock_prompt_manager
+    )
+
+    res = service.validate_output("some AI response")
+
+    assert res["is_safe"] is True
+    assert res["degraded"] is True
+
+
+def test_validate_output_engine_failure_fail_closed_blocks(
+    mock_engine, mock_prompt_manager
+):
+    mock_engine.moderate_content.side_effect = RuntimeError("engine down")
+    mock_engine.generate.side_effect = RuntimeError("engine down")
+    service = GuardrailService(
+        inference_engine=mock_engine,
+        prompt_manager=mock_prompt_manager,
+        config_port=_config_with({"GUARDRAIL_FAIL_CLOSED": True}),  # bool form
+    )
+
+    res = service.validate_output("some AI response")
+
+    assert res["is_safe"] is False
+    assert res["action"] == "block"
+    assert res["degraded"] is True
+
+
+def test_fail_closed_env_string_false_keeps_fail_open(mock_engine, mock_prompt_manager):
+    # EnvConfig returns raw strings: "false" must NOT be treated as truthy.
+    mock_engine.moderate_content.side_effect = RuntimeError("engine down")
+    service = GuardrailService(
+        inference_engine=mock_engine,
+        prompt_manager=mock_prompt_manager,
+        config_port=_config_with({"GUARDRAIL_FAIL_CLOSED": "false"}),
+    )
+
+    res = service.validate_input("innocuous question")
+    assert res["is_safe"] is True
+
+
 def test_advanced_jailbreak_heuristics(guardrail_service):
     # Test encoded injection
     res = guardrail_service.validate_input(

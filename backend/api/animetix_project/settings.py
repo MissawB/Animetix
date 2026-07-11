@@ -670,6 +670,12 @@ VERTEX_AI_PIPELINE_ROOT = env(
     default="gs://animetix-vertex-pipelines-staging/",
 )
 
+# Guardrail failure posture when the moderation engine is unreachable:
+# fail-OPEN by default (the deterministic jailbreak/leak checks stay active and
+# the response carries degraded=True); set GUARDRAIL_FAIL_CLOSED=true to block
+# every request instead. Read by GuardrailService via ConfigPort.
+GUARDRAIL_FAIL_CLOSED = env.bool("GUARDRAIL_FAIL_CLOSED", default=False)
+
 # --- GEMINI ENTERPRISE AGENT PLATFORM ---
 VERTEX_AI_AGENT_GATEWAY_ACTIVE = env.bool(
     "VERTEX_AI_AGENT_GATEWAY_ACTIVE", default=False

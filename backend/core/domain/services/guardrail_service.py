@@ -51,6 +51,49 @@ class GuardrailService:
             "JAILBREAK_ATTEMPT",
         ]
 
+    def _fail_closed(self) -> bool:
+        """GUARDRAIL_FAIL_CLOSED posture flag. EnvConfig returns raw strings,
+        so parse them explicitly ("false" must not be truthy)."""
+        raw = self.config.get("GUARDRAIL_FAIL_CLOSED", False)
+        if isinstance(raw, str):
+            return raw.strip().lower() in ("1", "true", "yes", "on")
+        return bool(raw)
+
+    def _engine_failure_response(self, mode: str, error: Exception) -> Dict[str, Any]:
+        """Failure posture when the moderation engine itself is down.
+
+        Default is fail-OPEN (availability tradeoff: the deterministic layers —
+        jailbreak regex, system-leak fingerprinting — run before the engine and
+        stay active), flagged with ``degraded`` so callers and monitoring can
+        tell "control skipped" from "control passed". GUARDRAIL_FAIL_CLOSED
+        flips to blocking.
+        """
+        if self._fail_closed():
+            logger.error(
+                f"🚨 [Guardrail] {mode} moderation engine failed ({error}) and "
+                "GUARDRAIL_FAIL_CLOSED is set: blocking."
+            )
+            return {
+                "is_safe": False,
+                "detected_categories": [],
+                "action": "block",
+                "reasoning": "Moderation engine unavailable and the guardrail is configured fail-closed.",
+                "warning": "",
+                "degraded": True,
+            }
+        logger.error(
+            f"🚨 [Guardrail] {mode} moderation engine failed ({error}): "
+            "FAIL-OPEN — only the deterministic checks covered this request."
+        )
+        return {
+            "is_safe": True,
+            "detected_categories": [],
+            "action": "none",
+            "reasoning": "Fail-open: moderation engine unavailable (deterministic checks still ran).",
+            "warning": "",
+            "degraded": True,
+        }
+
     def _check_agent_gateway(
         self, text: str, mode: str = "input"
     ) -> Optional[Dict[str, Any]]:
@@ -117,16 +160,7 @@ class GuardrailService:
             # so guarantee a safe dict rather than returning None.
             return result or {"is_safe": True, "detected_categories": []}
         except Exception as e:
-            logger.warning(
-                f"⚠️ [Guardrail] Input validation failed due to error: {e}. Falling back to default safe validation."
-            )
-            return {
-                "is_safe": True,
-                "detected_categories": [],
-                "action": "none",
-                "reasoning": "Fallback safety verification due to offline engine.",
-                "warning": "",
-            }
+            return self._engine_failure_response("input", e)
 
     def validate_output(
         self, response_text: str, context: Optional[str] = None, query: str = ""
@@ -187,16 +221,7 @@ class GuardrailService:
 
             return result
         except Exception as e:
-            logger.warning(
-                f"⚠️ [Guardrail] Output validation failed due to error: {e}. Falling back to default safe response."
-            )
-            return {
-                "is_safe": True,
-                "detected_categories": [],
-                "action": "none",
-                "reasoning": "Fallback safety verification due to offline engine.",
-                "warning": "",
-            }
+            return self._engine_failure_response("output", e)
 
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
         """Expose le service de modération de contenu en utilisant le LLM."""
