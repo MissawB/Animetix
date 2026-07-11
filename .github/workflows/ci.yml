@@ -134,7 +134,7 @@ jobs:
       # --cov-fail-under=75 is a HARD gate: the job (and thus the prod deploy)
       # fails below 75% line coverage. Coverage now sits at ~75.3% (cleared by the
       # coverage-consolidation work, cf. docs/HISTORY.md), so the gate is live and
-      # passing â€” it now guards against regressions rather than tracking a backlog.
+      # passing — it now guards against regressions rather than tracking a backlog.
       run: python -m pytest -m "not integration" --durations=25 --cov=backend --cov-report=term-missing --cov-report=xml --cov-fail-under=75
     - name: Upload coverage to Codecov
       # Runs even when the coverage gate fails so the report is always published.
@@ -169,14 +169,14 @@ jobs:
       run: |
         curl -fsSL https://ollama.com/install.sh | sh
     # `ollama serve` runs as the runner user, so models live in ~/.ollama —
-    # cache it: the qwen2.5:0.5b pull (~400 MB from the ollama registry) was
+    # cache it: the qwen3:0.6b pull (~500 MB from the ollama registry) was
     # re-downloaded on every run. With a warm cache the pull below is a fast
     # manifest check. Static key: model blobs are content-addressed.
     - name: Cache Ollama models
       uses: actions/cache@v4
       with:
         path: ~/.ollama
-        key: ollama-models-qwen2.5-0.5b
+        key: ollama-models-qwen3-0.6b
     - name: Start Ollama
       run: |
         ollama serve &
@@ -191,7 +191,7 @@ jobs:
         done
     - name: Pull Ollama Model
       run: |
-        ollama pull qwen2.5:0.5b
+        ollama pull qwen3:0.6b
     - name: Start Services
       run: docker compose -f deploy/docker-compose.test.yml up -d
     - name: Set up Python
@@ -218,7 +218,7 @@ jobs:
         NEO4J_PASSWORD: password
         GEMINI_API_KEY: ci-dummy-key
         LLM_API_BASE: 'http://localhost:11434'
-        LLM_MODEL_NAME: 'qwen2.5:0.5b'
+        LLM_MODEL_NAME: 'qwen3:0.6b'
       run: python -m pytest -m integration --durations=25
 
   perf-test:
@@ -291,7 +291,7 @@ jobs:
       run: cd frontend && npm run lint
     # Runs the jsdom unit project (the storybook/browser project is excluded via
     # --project unit, so no Playwright browser is needed here). The v8 coverage
-    # gate uses the ratchet thresholds in vite.config.ts â€” keep raising them.
+    # gate uses the ratchet thresholds in vite.config.ts — keep raising them.
     - name: Unit Tests + Coverage
       run: cd frontend && npm run test:coverage
     - name: Upload frontend coverage to Codecov
@@ -329,8 +329,8 @@ jobs:
       env:
         CI: true
     - name: Upload Playwright artifacts
-      # Toujours uploadÃ© : le rapport HTML + (en cas d'Ã©chec) traces/screenshots/vidÃ©os
-      # de test-results/, pour diagnostiquer les Ã©checs e2e sans reproduire en local.
+      # Toujours uploadé : le rapport HTML + (en cas d'échec) traces/screenshots/vidéos
+      # de test-results/, pour diagnostiquer les échecs e2e sans reproduire en local.
       if: always()
       uses: actions/upload-artifact@v4
       with:
@@ -382,7 +382,7 @@ jobs:
       # build's artifact, not the mutable :latest tag.
       # _BUILD_TARGET=web: this job only `gcloud run deploy`s animetix-web, so
       # build ONLY the web image. Building `all` also rebuilds the brain and the
-      # heavy Dataflow image â€” the latter overruns the Cloud Build step timeout
+      # heavy Dataflow image — the latter overruns the Cloud Build step timeout
       # (context deadline exceeded) and the >1h build outlives the Workload
       # Identity token (STS refresh then fails), so `all` never completes. Brain
       # and Dataflow have their own targeted builds when they actually change.
