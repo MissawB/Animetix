@@ -143,7 +143,7 @@ const TransparencyPage: React.FC = () => {
           )}
           <h1 className="text-7xl font-black italic manga-font tracking-tighter uppercase mb-6 leading-tight">
             HUB DE{' '}
-            <span className="text-blue-500 lowercase">
+            <span className="text-blue-500">
               {t('social.transparency.title_accent', 'transparence')}
             </span>{' '}
             IA

@@ -195,7 +195,7 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
     {
       to: '/social/transparency/',
       icon: Eye,
-      label: t('navbar.transparency', 'transparence'),
+      label: t('navbar.transparency', 'Transparence'),
       color: 'text-slate-400',
     },
     {
