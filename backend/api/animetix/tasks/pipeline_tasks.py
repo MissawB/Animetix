@@ -273,6 +273,17 @@ def run_daily_maintenance_workflow():
     except Exception as e:
         logger.error(f"❌ Error in Regression Benchmark: {e}", exc_info=True)
 
+    # 8. Lore World Map (graph communities). Must be pre-computed here: the
+    # partitioning chains one LLM call per community and cannot fit inside an
+    # HTTP request — the /graph/map/ endpoint only reads this cache.
+    try:
+        from django.core.management import call_command  # noqa: E402
+
+        logger.info("Generating the Lore World Map...")
+        call_command("generate_world_map")
+    except Exception as e:
+        logger.error(f"❌ Error in World Map generation: {e}", exc_info=True)
+
     logger.info("🎉 Daily Maintenance Workflow Finished.")
     return "SUCCESS"
 

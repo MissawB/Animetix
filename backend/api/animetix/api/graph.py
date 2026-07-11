@@ -71,42 +71,33 @@ class GraphNeighborsView(APIView):
             )
 
 
+WORLD_MAP_CACHE_KEY = "graph:world_map:v1"
+
+
 class GraphWorldMapView(APIView):
     """
     Vue macroscopique du Knowledge Graph.
     Expose les communautés sémantiques (Leiden/Louvain) et leurs résumés.
+
+    **Lecture seule.** La carte se génère hors requête (commande
+    ``generate_world_map``, exécutée par le job MLOps) : le partitionnement
+    enchaîne un appel LLM par communauté et dépassait systématiquement le
+    timeout de requête (503 observé en prod), si bien que le cache n'était
+    jamais peuplé et que tous les appelants recevaient le 202 « generating ».
     """
 
     permission_classes = [permissions.AllowAny]
 
-    @inject
-    def __init__(
-        self, partitioner=Provide[Container.agentic.community_partitioner], **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.partitioner = partitioner
-
     def get(self, request):
         from django.core.cache import cache
 
-        cache_key = "graph:world_map:v1"
-        cached = cache.get(cache_key)
+        cached = cache.get(WORLD_MAP_CACHE_KEY)
         if cached is not None:
             return Response(cached)
 
-        # Anti-stampede : un seul hit génère ; les concurrents reçoivent 202 et
-        # le frontend re-tente. La carte est un artefact partagé (identique pour
-        # tous), donc on ne facture personne et on ne régénère qu'à l'expiration.
-        lock_key = "graph:world_map:v1:lock"
-        if not cache.add(lock_key, "1", timeout=120):
-            return Response({"status": "generating"}, status=202)
-
-        try:
-            communities = self.partitioner.run_partitioning()
-            cache.set(cache_key, communities, timeout=86400)  # 24 h
-            return Response(communities)
-        finally:
-            cache.delete(lock_key)
+        # Pas encore générée : le frontend affiche l'état « cartographie en
+        # cours » et repolle. On ne génère JAMAIS ici.
+        return Response({"status": "generating"}, status=202)
 
 
 class GraphDebuggerView(APIView):
