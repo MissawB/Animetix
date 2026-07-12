@@ -55,7 +55,7 @@ def test_limiter_break_doubles_but_does_not_keep_doubling():
 
 
 def test_ten_questions_in_limiter_break_is_a_feat_not_an_exploit():
-    assert 10 * LIMITER_DAMAGE / BOSS_TOTAL_HP == pytest.approx(0.41, abs=1e-2)
+    assert 10 * LIMITER_DAMAGE / BOSS_TOTAL_HP == pytest.approx(0.4096)
 
 
 def test_bands_map_to_tiers():
