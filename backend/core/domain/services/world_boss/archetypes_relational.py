@@ -126,10 +126,20 @@ def _same_work_character(ctx, rng):
         return None
     work = rng.choice(duos)
     known, answer = rng.sample(_cast(ctx, work), 2)
-    # Any character from any OTHER work is a legitimate wrong answer -- there is
-    # no need to also exclude characters whose own work happens to have a cast
-    # of two or more; only the current work's own cast must stay out.
-    elsewhere = [c["name"] for it in ctx.pool if it is not work for c in _cast(ctx, it)]
+    work_title = title_of(work)
+    # Two guards, not one object-identity check: `_cast` keys on the work's
+    # TITLE, so a duplicate-titled pool entry (a re-ingested season, a
+    # franchise reusing its title) resolves to the SAME cast and `it is not
+    # work` alone would let it back in as a "stranger". Restrict the pool by
+    # title, and also check the character's own `origin` field as a
+    # belt-and-suspenders pass.
+    elsewhere = [
+        c["name"]
+        for it in ctx.pool
+        if title_of(it) != work_title
+        for c in _cast(ctx, it)
+        if c.get("origin") != work_title
+    ]
     return make_question(
         rng,
         "same_work_character",
@@ -263,18 +273,26 @@ def _top_recommendation(ctx, rng):
         return None
     subject = rng.choice(subjects)
     recommended = subject["recommendations"]
-    picks = rng.sample(sorted(recommended), 4)
-    best = max(picks, key=lambda title: recommended[title])
-    # All four ARE recommended. Only their ranking separates them.
-    return make_question(
-        rng,
-        "top_recommendation",
-        f"Ces 4 œuvres sont recommandées aux fans de « {title_of(subject)} ». "
-        "Laquelle l'est le plus fortement ?",
-        best,
-        [p for p in picks if p != best],
-        subject=title_of(subject),
-    )
+    for _ in range(8):
+        picks = rng.sample(sorted(recommended), 4)
+        ranked = sorted(picks, key=lambda title: recommended[title], reverse=True)
+        # A clear winner, or two options would tie for "the most strongly
+        # recommended" while only one is marked correct -- the same guard
+        # `most_popular` (archetypes_core.py) uses for the same reason.
+        if recommended[ranked[0]] < recommended[ranked[1]] * 1.2:
+            continue
+        best = ranked[0]
+        # All four ARE recommended. Only their ranking separates them.
+        return make_question(
+            rng,
+            "top_recommendation",
+            f"Ces 4 œuvres sont recommandées aux fans de « {title_of(subject)} ». "
+            "Laquelle l'est le plus fortement ?",
+            best,
+            [p for p in picks if p != best],
+            subject=title_of(subject),
+        )
+    return None
 
 
 @archetype("rare_tag", {"D"})
@@ -327,10 +345,16 @@ def _character_sheet(ctx, rng):
     if not enrolled:
         return None
     work, character, organisation = rng.choice(enrolled)
+    # Exclude by the character's FULL organisation set, not by the row's own
+    # org: `enrolled` holds one row per (work, character, organisation), so a
+    # character in several organisations surfaces on several rows. Filtering
+    # on the row's org alone lets one of those other rows back in as a "wrong"
+    # answer for an organisation the character genuinely also belongs to.
     elsewhere = [
         c["name"]
         for it, c, org in enrolled
-        if org != organisation and c["name"] != character["name"]
+        if organisation not in ((c.get("entities") or {}).get("organizations") or [])
+        and c["name"] != character["name"]
     ]
     return make_question(
         rng,

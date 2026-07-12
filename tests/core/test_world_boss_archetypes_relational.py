@@ -132,9 +132,8 @@ RELATIONAL = [
 ]
 
 SHEETED = {
-    "Kimetsu no Yaiba": CHARACTERS["Kimetsu no Yaiba"],
-    "Cowboy Bebop": CHARACTERS["Cowboy Bebop"],
-    "Monster": CHARACTERS["Monster"],
+    name: [dict(c) for c in CHARACTERS[name]]
+    for name in ("Kimetsu no Yaiba", "Cowboy Bebop", "Monster")
 }
 for name, org in (
     ("Kimetsu no Yaiba", "Demon Slayer Corps"),
@@ -284,3 +283,119 @@ def test_not_recommended_answers_with_the_one_that_is_not():
                 assert option in subject["recommendations"]
         return
     pytest.fail("not_recommended never produced a question")
+
+
+def test_character_sheet_never_offers_a_dual_org_character_as_a_wrong_answer():
+    # D belongs to BOTH Org X and Org Z. `enrolled` flattens one row per
+    # (work, character, organisation), so D surfaces twice -- once per
+    # organisation it holds. A question about Org X must never offer D as a
+    # WRONG option: D genuinely belongs to Org X too, via its own other row.
+    dual_sheet = {
+        "Work W": [
+            {"name": "D", "entities": {"organizations": ["Org X", "Org Z"]}},
+            {"name": "F", "entities": {"organizations": ["Org X"]}},
+        ],
+        "Work Y": [
+            {"name": "G", "entities": {"organizations": ["Org Y"]}},
+            {"name": "H", "entities": {"organizations": ["Org Y"]}},
+        ],
+        "Work V": [
+            {"name": "I", "entities": {"organizations": ["Org Z"]}},
+        ],
+    }
+    pool = [{"title": "Work W"}, {"title": "Work Y"}, {"title": "Work V"}]
+    dual_ctx = QuizContext(
+        animes=pool,
+        pool=pool,
+        themes={},
+        episodes={},
+        characters_by_origin=dual_sheet,
+        closeness=1.0,
+    )
+    seen_org_x_question = False
+    for seed in range(60):
+        q = ARCHETYPES["character_sheet"].build(dual_ctx, random.Random(seed))
+        if not q or "Org X" not in q.prompt:
+            continue
+        seen_org_x_question = True
+        wrong = {o for i, o in enumerate(q.options) if i != q.correct_index}
+        assert "D" not in wrong, "D belongs to Org X too -- it cannot be a wrong answer"
+    assert seen_org_x_question, "character_sheet never asked about Org X"
+
+
+def test_same_work_character_never_pulls_a_distractor_from_a_duplicate_titled_work():
+    # Two pool entries share the title "Duplicate Show" (a re-ingested season,
+    # a franchise reusing its title). `_cast` keys on the TITLE, so both
+    # entries resolve to the identical cast. A distractor must never come from
+    # that same cast, no matter which of the two duplicate pool objects was
+    # picked as the subject.
+    cast = [
+        {"name": "Alpha", "origin": "Duplicate Show"},
+        {"name": "Beta", "origin": "Duplicate Show"},
+        {"name": "Charlie", "origin": "Duplicate Show"},
+    ]
+    characters = {
+        "Duplicate Show": cast,
+        "Other Show A": [
+            {"name": "Gamma", "origin": "Other Show A"},
+            {"name": "Delta", "origin": "Other Show A"},
+        ],
+        "Other Show B": [
+            {"name": "Epsilon", "origin": "Other Show B"},
+            {"name": "Zeta", "origin": "Other Show B"},
+        ],
+    }
+    pool = [
+        {"title": "Duplicate Show"},
+        {"title": "Duplicate Show"},
+        {"title": "Other Show A"},
+        {"title": "Other Show B"},
+    ]
+    dup_ctx = QuizContext(
+        animes=pool,
+        pool=pool,
+        themes={},
+        episodes={},
+        characters_by_origin=characters,
+        closeness=1.0,
+    )
+    cast_names = {c["name"] for c in cast}
+    seen_duplicate_subject = False
+    for seed in range(60):
+        q = ARCHETYPES["same_work_character"].build(dup_ctx, random.Random(seed))
+        if not q or q.subject != "Duplicate Show":
+            continue
+        seen_duplicate_subject = True
+        wrong = {o for i, o in enumerate(q.options) if i != q.correct_index}
+        assert not (
+            cast_names & wrong
+        ), "a distractor came from the subject's own (duplicate-titled) cast"
+    assert (
+        seen_duplicate_subject
+    ), "same_work_character never picked the duplicated work"
+
+
+def test_top_recommendation_declines_when_the_top_two_tie():
+    # Alpha and Beta are tied at 100 -- with only 4 recommendations total there
+    # is no way to sample around the tie, so every attempt must decline rather
+    # than arbitrarily crown one of the tied pair "the most strongly
+    # recommended" while marking the other one wrong.
+    subject = {
+        "title": "Tied Show",
+        "recommendations": {"Alpha": 100, "Beta": 100, "Gamma": 50, "Delta": 10},
+    }
+    pool = [subject]
+    tie_ctx = QuizContext(
+        animes=pool,
+        pool=pool,
+        themes={},
+        episodes={},
+        characters_by_origin={},
+        closeness=1.0,
+    )
+    for seed in range(60):
+        q = ARCHETYPES["top_recommendation"].build(tie_ctx, random.Random(seed))
+        assert q is None, (
+            "top_recommendation must decline on an unbreakable tie, not silently "
+            f"pick a winner (got {q!r})"
+        )
