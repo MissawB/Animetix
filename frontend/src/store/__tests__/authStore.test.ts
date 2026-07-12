@@ -49,6 +49,18 @@ vi.mock('../toastStore', () => ({
   },
 }));
 
+// --- Mock the app's i18n singleton (../../i18n/config) ---
+// By default this mirrors the old fallback-only behavior (return the
+// provided fallback verbatim, ignoring the key) so every existing test in
+// this file keeps observing the same French default strings baked into
+// authErrors.ts. The dedicated localization test below swaps this mock out
+// (via vi.doMock + vi.resetModules, same pattern as the "auth null" test)
+// to prove the store actually calls through the singleton instead of a
+// hardcoded-French shim.
+vi.mock('../../i18n/config', () => ({
+  default: { t: (key: string, fallback?: string) => fallback ?? key },
+}));
+
 import * as firebaseAuth from 'firebase/auth';
 import * as api from '../../api';
 
@@ -171,6 +183,24 @@ describe('useAuthStore', () => {
       await expect(useAuthStore.getState().loginWithGoogle()).rejects.toThrow();
       expect(mockSignInWithRedirect).not.toHaveBeenCalled();
     }
+  });
+
+  it('loginWithGoogle: a code-less error (e.g. an ad-blocker killing the popup pre-flight) still falls back to redirect', async () => {
+    // net::ERR_BLOCKED_BY_CLIENT and similar low-level rejections never carry
+    // a Firebase `.code` at all. This is exactly the case the fallback exists
+    // for, and unlike a deliberate cancellation (which always has one of the
+    // POPUP_USER_CANCELLED_CODES) it must NOT be treated as a user cancel.
+    const useAuthStore = await freshStore();
+    const blocked = new Error('blocked by client');
+    expect((blocked as unknown as { code?: string }).code).toBeUndefined();
+    mockSignInWithPopup.mockRejectedValue(blocked);
+    mockSignInWithRedirect.mockResolvedValue(undefined as never);
+
+    await useAuthStore.getState().loginWithGoogle();
+
+    expect(mockSignInWithPopup).toHaveBeenCalledTimes(1);
+    expect(mockSignInWithRedirect).toHaveBeenCalledTimes(1);
+    expect(mockSignInWithRedirect.mock.calls[0][1]).toBe(mockSignInWithPopup.mock.calls[0][1]);
   });
 
   it('loginWithDiscord / loginWithX / loginWithMyAnimeList: each opens a popup with auth, and each falls back to redirect on a blocked popup', async () => {
@@ -376,6 +406,47 @@ describe('useAuthStore', () => {
     expect(addToast.mock.calls[0][0]).toMatch(/liée à une autre méthode/i);
     // Still wires the listener afterwards — a redirect error must not brick auth.
     expect(mockOnAuthStateChanged).toHaveBeenCalledTimes(1);
+  });
+
+  it('checkAuth: an error on the redirect return leg is localized through the app i18n singleton (English), not hardcoded French', async () => {
+    // Regression guard: the toast used to come from a `fallbackT` shim that
+    // ignored the translation key entirely and always returned authErrors.ts's
+    // French fallback string — so an English-speaking visitor who hit an
+    // error on the redirect-return leg got a French toast, while the exact
+    // same error through the popup path (LoginPage/RegisterPage, which pass
+    // the real `t` from useTranslation()) rendered correctly in English.
+    //
+    // Simulate the real i18n singleton as it would be for an English visitor
+    // (translation.json's `auth.error.*` resources loaded) instead of the
+    // fallback-pass-through default mocked above for every other test here.
+    vi.resetModules();
+    const EN_OTHER_PROVIDER =
+      'This address is already linked to another sign-in method. Use the one you created the account with.';
+    vi.doMock('../../i18n/config', () => ({
+      default: {
+        t: (key: string, fallback?: string) =>
+          key === 'auth.error.other_provider' ? EN_OTHER_PROVIDER : (fallback ?? key),
+      },
+    }));
+    const { useAuthStore } = await import('../authStore');
+
+    const err = new Error('account exists');
+    (err as unknown as { code: string }).code = 'auth/account-exists-with-different-credential';
+    mockGetRedirectResult.mockRejectedValue(err);
+    mockOnAuthStateChanged.mockImplementation((() => vi.fn()) as never);
+
+    await useAuthStore.getState().checkAuth();
+
+    expect(addToast).toHaveBeenCalledTimes(1);
+    expect(addToast.mock.calls[0][0]).toBe(EN_OTHER_PROVIDER);
+    expect(addToast.mock.calls[0][0]).not.toMatch(/liée à une autre méthode/i);
+
+    // Restore the nominal fallback-pass-through mock for subsequent tests —
+    // doUnmock would hand the REAL i18n/config module to later imports,
+    // which eagerly calls i18n.init() and is unnecessary/unwanted here.
+    vi.doMock('../../i18n/config', () => ({
+      default: { t: (key: string, fallback?: string) => fallback ?? key },
+    }));
   });
 
   it('checkAuth: a user-cancelled error on the redirect return leg stays silent (no toast)', async () => {

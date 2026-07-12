@@ -6,6 +6,7 @@ import { useNotificationStore } from './notificationStore';
 import { useToastStore } from './toastStore';
 import { auth } from '../utils/firebase';
 import { authErrorMessage } from '../utils/authErrors';
+import i18n from '../i18n/config';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -36,13 +37,6 @@ const errorCodeOf = (error: unknown): string | undefined => {
   const code = (error as { code?: unknown } | null | undefined)?.code;
   return typeof code === 'string' ? code : undefined;
 };
-
-/**
- * Non-component code (this store) has no `useTranslation()` `t()` available.
- * Mirror the plain-French-fallback pattern already used by notificationStore's
- * toasts: no i18n lookup, just the French default text baked into authErrors.
- */
-const fallbackT = ((_key: string, fallback?: string) => fallback ?? _key) as TFunction;
 
 /**
  * Try the popup first — it's the better experience (no page reload, no lost
@@ -128,13 +122,19 @@ export const useAuthStore = create<AuthState>((set) => {
       // component. `null` is the normal case (this load isn't a redirect
       // return) and is a silent no-op; onAuthStateChanged below still fires
       // for it either way.
+      //
+      // Non-component code (this store) has no `useTranslation()` `t()`
+      // available, but the app's i18n singleton (src/i18n/config.ts) is
+      // already initialised before AuthProvider mounts, so it's used
+      // directly here — the same localized strings LoginPage/RegisterPage
+      // get via useTranslation(), not a hardcoded-French fallback.
       try {
         const redirectResult = await getRedirectResult(auth);
         if (redirectResult) {
           await applyFirebaseUser(redirectResult.user);
         }
       } catch (error) {
-        const message = authErrorMessage(error, fallbackT);
+        const message = authErrorMessage(error, i18n.t.bind(i18n) as TFunction);
         if (message) {
           useToastStore.getState().addToast(message, 'error');
         }
