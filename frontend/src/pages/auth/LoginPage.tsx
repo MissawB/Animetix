@@ -10,16 +10,18 @@ const LoginPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, loginWithGoogle, isLoading } = useAuthStore();
+  const { login, loginWithGoogle, resetPassword, isLoading } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setNotice('');
 
     if (!email || !password) {
       setError(t('auth.fieldsRequired', 'Veuillez remplir tous les champs.'));
@@ -36,6 +38,7 @@ const LoginPage: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     setError('');
+    setNotice('');
     try {
       await loginWithGoogle();
       navigate(from, { replace: true });
@@ -43,6 +46,35 @@ const LoginPage: React.FC = () => {
       // null = the user closed the Google popup themselves; that is not a failure.
       setError(authErrorMessage(err, t) ?? '');
     }
+  };
+
+  const handlePasswordReset = async () => {
+    setError('');
+    setNotice('');
+
+    if (!email) {
+      setError(t('auth.login.reset_needs_email', 'Saisissez votre adresse email, puis relancez.'));
+      return;
+    }
+
+    try {
+      await resetPassword(email);
+    } catch (err) {
+      // An unknown address must produce the SAME answer as a known one: otherwise
+      // this form becomes a way to discover which emails have an account here.
+      const code = (err as { code?: string })?.code;
+      if (code !== 'auth/user-not-found') {
+        setError(authErrorMessage(err, t) ?? '');
+        return;
+      }
+    }
+
+    setNotice(
+      t(
+        'auth.login.reset_sent',
+        'Si un compte existe pour cette adresse, un lien de réinitialisation vient de partir. Pensez à regarder vos spams.',
+      ),
+    );
   };
 
   const inputClass =
@@ -111,6 +143,15 @@ const LoginPage: React.FC = () => {
                 </div>
               )}
 
+              {notice && (
+                <div
+                  role="status"
+                  className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-600 dark:text-emerald-400 p-4 rounded-xl text-sm font-bold text-center"
+                >
+                  {notice}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label
                   htmlFor="email"
@@ -134,12 +175,21 @@ const LoginPage: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label
-                  htmlFor="password"
-                  className="block text-xs font-black uppercase opacity-60 tracking-widest text-black dark:text-white"
-                >
-                  {t('auth.password', 'Mot de passe')}
-                </label>
+                <div className="flex items-baseline justify-between gap-3">
+                  <label
+                    htmlFor="password"
+                    className="block text-xs font-black uppercase opacity-60 tracking-widest text-black dark:text-white"
+                  >
+                    {t('auth.password', 'Mot de passe')}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handlePasswordReset}
+                    className="text-xs font-black uppercase tracking-widest text-yellow-500 dark:text-yellow-400 hover:underline disabled:opacity-50"
+                  >
+                    {t('auth.login.forgot_password', 'Mot de passe oublié ?')}
+                  </button>
+                </div>
                 <div className="relative">
                   <Lock className={iconClass} />
                   <input

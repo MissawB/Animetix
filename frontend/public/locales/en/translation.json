@@ -375,7 +375,10 @@
       "submit": "LOG IN",
       "subtitle": "Log in to get back in the game.",
       "title_part1": "WELCOME",
-      "title_part2": "BACK"
+      "title_part2": "BACK",
+      "forgot_password": "Forgot password?",
+      "reset_needs_email": "Enter your email address, then try again.",
+      "reset_sent": "If an account exists for this address, a reset link is on its way. Check your spam folder."
     },
     "loginFailed": "Google sign-in failed.",
     "logout": "Log out",
@@ -466,7 +469,7 @@
       "missing_password": "Enter your password.",
       "email_in_use": "An account already uses this address. Sign in, or sign up with another address.",
       "weak_password": "Password too short: use at least 6 characters.",
-      "too_many_requests": "Too many attempts. Wait a few minutes before trying again.",
+      "too_many_requests": "Too many attempts. Wait a few minutes, or reset your password.",
       "network": "Can't reach the server. Check your internet connection, then try again.",
       "popup_blocked": "Your browser blocked the Google window. Allow pop-ups for this site, then try again.",
       "other_provider": "This address is already linked to another sign-in method. Use the one you created the account with.",

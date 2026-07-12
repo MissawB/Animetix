@@ -69,7 +69,8 @@ const MESSAGES: Record<string, { key: string; fallback: string }> = {
   },
   'auth/too-many-requests': {
     key: 'auth.error.too_many_requests',
-    fallback: 'Trop de tentatives. Patientez quelques minutes avant de réessayer.',
+    fallback:
+      'Trop de tentatives. Patientez quelques minutes, ou réinitialisez votre mot de passe.',
   },
   'auth/network-request-failed': {
     key: 'auth.error.network',

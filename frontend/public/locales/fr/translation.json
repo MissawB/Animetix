@@ -375,7 +375,10 @@
       "submit": "SE CONNECTER",
       "subtitle": "Connecte-toi pour reprendre la partie.",
       "title_part1": "CONTENT DE TE",
-      "title_part2": "REVOIR"
+      "title_part2": "REVOIR",
+      "forgot_password": "Mot de passe oublié ?",
+      "reset_needs_email": "Saisissez votre adresse email, puis relancez.",
+      "reset_sent": "Si un compte existe pour cette adresse, un lien de réinitialisation vient de partir. Pensez à regarder vos spams."
     },
     "loginFailed": "Connexion Google échouée.",
     "logout": "Déconnexion",
@@ -466,7 +469,7 @@
       "missing_password": "Saisissez votre mot de passe.",
       "email_in_use": "Un compte existe déjà avec cette adresse. Connectez-vous, ou inscrivez-vous avec une autre adresse.",
       "weak_password": "Mot de passe trop court : il en faut au moins 6 caractères.",
-      "too_many_requests": "Trop de tentatives. Patientez quelques minutes avant de réessayer.",
+      "too_many_requests": "Trop de tentatives. Patientez quelques minutes, ou réinitialisez votre mot de passe.",
       "network": "Serveur injoignable. Vérifiez votre connexion internet, puis réessayez.",
       "popup_blocked": "Votre navigateur a bloqué la fenêtre Google. Autorisez les pop-ups pour ce site, puis réessayez.",
       "other_provider": "Cette adresse est déjà liée à une autre méthode de connexion. Utilisez celle avec laquelle vous avez créé le compte.",

@@ -12,6 +12,7 @@ import {
   signInWithPopup,
   OAuthProvider,
   TwitterAuthProvider,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 
 interface AuthState {
@@ -26,6 +27,7 @@ interface AuthState {
   loginWithX: () => Promise<void>;
   loginWithMyAnimeList: () => Promise<void>;
   register: (data: Record<string, string>) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -130,6 +132,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ isLoading: false });
       throw error;
     }
+  },
+  resetPassword: async (email: string) => {
+    // Deliberately NOT wrapped in isLoading: the login form stays usable while
+    // the mail goes out. Callers swallow auth/user-not-found — see LoginPage.
+    await sendPasswordResetEmail(auth, email);
   },
   logout: async () => {
     set({ isLoading: true });
