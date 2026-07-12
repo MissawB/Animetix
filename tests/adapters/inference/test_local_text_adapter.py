@@ -47,8 +47,16 @@ class TestLocalTextAdapter(unittest.TestCase):
         hc = self.adapter.health_check()
         self.assertEqual(hc["status"], "offline")
 
-        # After "loading" embedding model (manually setting it to avoid heavy mock)
+        # An embedding model says NOTHING about generate(): it is a different,
+        # far smaller model. Letting it mark the adapter online is what made the
+        # fallback router prefer it over the managed remote engine, then load a
+        # multi-GB causal LM and OOM-kill the container (prod 503, 2026-07-12).
         self.adapter._embedding_model = MagicMock()
+        hc = self.adapter.health_check()
+        self.assertEqual(hc["status"], "offline")
+
+        # Only the generation model makes this adapter routable.
+        self.adapter.model = MagicMock()
         hc = self.adapter.health_check()
         self.assertEqual(hc["status"], "online")
 

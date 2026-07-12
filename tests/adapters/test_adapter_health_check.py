@@ -6,9 +6,27 @@ Instances are built with object.__new__ to avoid loading real models in __init__
 from adapters.inference.audio_transformers_adapter import AudioTransformersAdapter
 from adapters.inference.diffusers_adapter import DiffusersAdapter
 from adapters.inference.local_rerank_adapter import LocalRerankAdapter
+from adapters.inference.local_text_adapter import LocalTextAdapter
 from adapters.inference.manga_ocr_adapter import MangaOCRAdapter
 from adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
 from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
+
+
+def test_local_text_readiness_tracks_the_generation_model_only():
+    """A loaded EMBEDDING model used to vouch for the (unloaded) causal LM, so the
+    fallback router preferred this adapter over the managed remote one -- then
+    generate() pulled multi-GB weights in and OOM-killed the container (prod 503,
+    2026-07-12). Only the model that answers generate() may mark it online."""
+    a = object.__new__(LocalTextAdapter)
+    a.model = None
+    a._embedding_model = None
+    assert a.health_check()["status"] == "offline"
+
+    a._embedding_model = object()  # embedder loaded, LLM still absent
+    assert a.health_check()["status"] == "offline"
+
+    a.model = object()  # the generation model is what counts
+    assert a.health_check()["status"] == "online"
 
 
 def test_diffusers_health_check_readiness_and_fields():
