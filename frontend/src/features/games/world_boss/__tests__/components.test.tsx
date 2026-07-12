@@ -128,6 +128,20 @@ describe('QuestionCard', () => {
     expect(screen.getAllByRole('button')).toHaveLength(4);
   });
 
+  it('locks the options while an answer is in flight, even though there is no verdict yet', async () => {
+    // The page disables Start/Next during `phase === 'answering'` (the server
+    // round trip) — the options need the same treatment, otherwise a click on
+    // a different option during that window updates the locally highlighted
+    // "your pick" without it being the answer actually sent.
+    const onPick = vi.fn();
+    render(<QuestionCard question={QUESTION} verdict={null} onPick={onPick} locked />);
+
+    const button = screen.getByRole('button', { name: '1998' });
+    expect(button).toBeDisabled();
+    await userEvent.click(button);
+    expect(onPick).not.toHaveBeenCalled();
+  });
+
   it('marks the right answer once the verdict is in, and locks the buttons', async () => {
     const onPick = vi.fn();
     const verdict = {

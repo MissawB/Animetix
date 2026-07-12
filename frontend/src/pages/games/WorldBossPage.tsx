@@ -6,7 +6,10 @@ import { Skull, Trophy, Zap } from 'lucide-react';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { apiClient } from '../../utils/apiClient';
 import { useAuthStore } from '../../store/authStore';
-import { useWorldBossRun } from '../../features/games/world_boss/useWorldBossRun';
+import {
+  useWorldBossRun,
+  type BossQuestion,
+} from '../../features/games/world_boss/useWorldBossRun';
 import { TierLadder } from '../../features/games/world_boss/TierLadder';
 import { TimerRing } from '../../features/games/world_boss/TimerRing';
 import { QuestionCard } from '../../features/games/world_boss/QuestionCard';
@@ -18,6 +21,17 @@ interface LeaderboardRow {
   points_contributed: number;
   limiter_breaks: number;
 }
+
+// Exported for testing. `tier`/`band`/`archetype`/`prompt` are not enough to
+// name a question uniquely: `band` is a pure function of `tier`, and two
+// archetypes (`cover`, `most_popular`) reuse the exact same prompt text for
+// every subject they draw. The options are the one field that is always
+// subject-specific — so they are the only thing guaranteed to change between
+// two genuinely different questions, while staying byte-identical when the
+// backend re-issues the same pending question verbatim (same options, same
+// order).
+export const buildQuestionId = (question: BossQuestion | null): string =>
+  question ? question.options.join('|') : '';
 
 const WorldBossPage: React.FC = () => {
   const { t } = useTranslation();
@@ -66,9 +80,7 @@ const WorldBossPage: React.FC = () => {
   // verdict that lands the killing blow — a fresh /question/ would 404, so the
   // "next question" control has to give way to a closing message instead.
   const bossDefeated = verdict !== null && verdict.boss.is_active === false;
-  const questionId = question
-    ? `${question.tier}-${question.band}-${question.archetype}-${question.prompt}`
-    : '';
+  const questionId = buildQuestionId(question);
 
   return (
     <AnimatedPage>
@@ -99,10 +111,10 @@ const WorldBossPage: React.FC = () => {
           <div className="mx-auto mt-8 max-w-3xl">
             <div className="mb-2 flex items-end justify-between font-mono">
               <span className="text-3xl font-black italic">
-                {boss.current_hp.toLocaleString('fr-FR')}
+                {(boss.current_hp ?? 0).toLocaleString('fr-FR')}
                 <span className="text-lg font-normal text-gray-600">
                   {' '}
-                  / {boss.total_hp.toLocaleString('fr-FR')}
+                  / {(boss.total_hp ?? 0).toLocaleString('fr-FR')}
                 </span>
               </span>
               <span className="text-xl font-black text-red-500">{Math.round(hpPercent)}%</span>
@@ -174,7 +186,12 @@ const WorldBossPage: React.FC = () => {
                     />
                   </div>
 
-                  <QuestionCard question={question} verdict={verdict} onPick={answer} />
+                  <QuestionCard
+                    question={question}
+                    verdict={verdict}
+                    onPick={answer}
+                    locked={phase === 'answering' || verdict !== null}
+                  />
 
                   <AnimatePresence>
                     {verdict && (

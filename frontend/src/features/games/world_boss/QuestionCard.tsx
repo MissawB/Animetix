@@ -5,6 +5,13 @@ interface Props {
   question: BossQuestion;
   verdict: BossVerdict | null;
   onPick: (index: number) => void;
+  /**
+   * Set while the answer is in flight (the server round trip) so the page
+   * can freeze the options before the verdict is known — without it, a click
+   * on a different option during that window updates the locally highlighted
+   * "your pick" without it being the answer actually sent.
+   */
+  locked?: boolean;
 }
 
 type OptionState = 'open' | 'correct' | 'wrong-picked' | 'wrong-other';
@@ -20,8 +27,8 @@ const stateOf = (
   return 'wrong-other';
 };
 
-export const QuestionCard: React.FC<Props> = ({ question, verdict, onPick }) => {
-  const locked = verdict !== null;
+export const QuestionCard: React.FC<Props> = ({ question, verdict, onPick, locked = false }) => {
+  const disabled = locked || verdict !== null;
   const [picked, setPicked] = React.useState<number | null>(null);
   const [prevQuestion, setPrevQuestion] = React.useState(question);
 
@@ -59,7 +66,7 @@ export const QuestionCard: React.FC<Props> = ({ question, verdict, onPick }) => 
               key={option}
               type="button"
               data-state={state}
-              disabled={locked}
+              disabled={disabled}
               onClick={() => handlePick(index)}
               className={`rounded-2xl border-2 px-5 py-4 text-left font-bold transition-all ${
                 state === 'correct'
