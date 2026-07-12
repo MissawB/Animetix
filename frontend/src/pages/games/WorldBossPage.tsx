@@ -151,10 +151,14 @@ const WorldBossPage: React.FC = () => {
                       "Chaque bonne réponse double les dégâts du palier suivant : 1, 2, 4… jusqu'à 2 048. Une seule erreur et tu repars du palier 1 — mais les dégâts déjà infligés restent acquis à la communauté. Cinq bonnes réponses au palier 12 déclenchent le Brisage de Limiteur.",
                     )}
                   </p>
+                  {/* Cliquable hors connexion, le bouton n'offrait qu'un 401 en
+                      toast : la seule chose qu'il pouvait faire, c'est échouer.
+                      Un visiteur anonyme le voit désactivé, et la ligne
+                      ci-dessous lui dit pourquoi. */}
                   <button
                     type="button"
                     onClick={start}
-                    disabled={phase === 'answering'}
+                    disabled={phase === 'answering' || !isAuthenticated}
                     className="rounded-2xl bg-amber-500 px-10 py-4 font-black uppercase italic tracking-widest text-black transition hover:bg-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {t('games.world_boss.start', 'Commencer la montée')}

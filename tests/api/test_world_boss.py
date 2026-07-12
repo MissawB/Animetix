@@ -114,3 +114,56 @@ def test_leaderboard_empty_when_no_boss(api_client):
     assert resp.status_code == 200
     assert resp.data["boss_id"] is None
     assert resp.data["leaderboard"] == []
+
+
+# --------------------------------------------------------------------------- #
+# Le spawn hebdomadaire etait un read-then-create sans verrou ni unicite : deux
+# requetes concurrentes dans la fenetre vide (celle que la migration 0051 CREE au
+# deploiement, en expirant le boss legacy) invoquaient chacune leur raid de
+# 100 000 PV. Les participations sont liees au boss par FK : degats, classement et
+# XP se seraient scindes entre deux raids qui ne pouvaient plus mourir.
+# --------------------------------------------------------------------------- #
+@pytest.mark.django_db
+def test_two_spawns_in_the_same_week_yield_a_single_boss():
+    from animetix.api.games.world_boss import _spawn_weekly_boss
+
+    first = _spawn_weekly_boss()
+    second = _spawn_weekly_boss()
+
+    assert GlobalBoss.objects.count() == 1
+    assert first.id == second.id
+
+
+@pytest.mark.django_db
+def test_the_weekly_boss_is_keyed_by_its_iso_week():
+    from animetix.api.games.world_boss import _spawn_weekly_boss, _week_key
+
+    boss = _spawn_weekly_boss()
+
+    assert boss.week_key == _week_key()
+    assert boss.week_key == "{}-W{:02d}".format(*timezone.now().isocalendar()[:2])
+
+
+@pytest.mark.django_db
+def test_the_empty_window_after_the_legacy_raid_expires_spawns_exactly_one_boss(
+    api_client,
+):
+    """La fenetre vide du deploiement : la banniere d'accueil, la page et
+    POST /question/ frappent toutes en meme temps. Une seule doit invoquer."""
+    from animetix.api.games.world_boss import _active_boss
+
+    legacy = GlobalBoss.objects.create(
+        title="RAID LEGACY",
+        secret_title="Bleach",
+        media_type="Anime",
+        total_hp=10000,
+        current_hp=10000,
+        is_active=False,
+        end_date=timezone.now(),  # expire par la migration 0051
+    )
+
+    bosses = {_active_boss().id, _active_boss().id, _active_boss().id}
+    api_client.get(reverse("api_world_boss_active"))
+
+    assert len(bosses) == 1
+    assert GlobalBoss.objects.exclude(id=legacy.id).count() == 1

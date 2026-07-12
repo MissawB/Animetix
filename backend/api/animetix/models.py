@@ -244,6 +244,18 @@ class Friendship(models.Model):
 
 # --- GAME MODES ---
 class GlobalBoss(models.Model):
+    # L'identité de la semaine ISO ("2026-W28") — et le VERROU du spawn. Le raid
+    # hebdomadaire était un read-then-create sans unicité : deux requêtes tombant
+    # dans la fenêtre vide (celle que la migration 0051 ouvre au déploiement)
+    # invoquaient chacune leur boss de 100 000 PV, et la communauté se retrouvait
+    # scindée entre deux raids que personne ne pouvait plus achever (les
+    # participations sont liées au boss par FK). L'unicité tranche la course :
+    # `get_or_create(week_key=...)` fait converger les deux requêtes sur une ligne.
+    # Nullable : les raids d'avant (et ceux que les tests forgent à la main) n'ont
+    # pas de clé de semaine, et deux NULL ne s'entrechoquent pas.
+    week_key = models.CharField(
+        max_length=32, unique=True, null=True, blank=True, default=None
+    )
     title = models.CharField(max_length=255)
     secret_title = models.CharField(max_length=255)
     media_type = models.CharField(max_length=20)

@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import WorldBossPage, { buildQuestionId } from '../WorldBossPage';
 import { apiClient } from '../../../utils/apiClient';
+import { useAuthStore } from '../../../store/authStore';
 
 vi.mock('../../../utils/apiClient', () => ({ apiClient: vi.fn() }));
 const mockedApi = vi.mocked(apiClient);
@@ -58,6 +59,26 @@ describe('WorldBossPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedApi.mockImplementation((url: string) => route(url));
+    // Frapper le boss exige d'être connecté (le serveur le sait, la page aussi
+    // désormais) : sauf mention contraire, ces tests jouent un joueur connecté.
+    useAuthStore.setState({ isAuthenticated: true });
+  });
+
+  it('refuses to start the climb for a visitor who is not logged in', async () => {
+    // Cliquable hors connexion, le bouton ne produisait qu'un toast 401 : le jeu
+    // proposait une action qui ne pouvait que rater.
+    useAuthStore.setState({ isAuthenticated: false });
+    renderPage();
+
+    const start = await screen.findByRole('button', { name: /commencer la montée/i });
+    expect(start).toBeDisabled();
+    expect(screen.getByText(/connecte-toi pour frapper le boss/i)).toBeInTheDocument();
+
+    await userEvent.click(start);
+    expect(mockedApi).not.toHaveBeenCalledWith(
+      expect.stringContaining('/question/'),
+      expect.anything(),
+    );
   });
 
   it('shows the collective health bar and the ladder', async () => {

@@ -71,20 +71,43 @@ def _distribute_reward(boss: GlobalBoss) -> None:
     )
 
 
+def _week_key(now: Optional[datetime] = None) -> str:
+    """L'identité du raid : sa semaine ISO. « 2026-W28 »."""
+    iso = (now or timezone.now()).isocalendar()
+    return f"{iso[0]}-W{iso[1]:02d}"
+
+
 def _spawn_weekly_boss() -> GlobalBoss:
-    """Le raid de la semaine. Plus de titre secret : le boss n'est plus une devinette."""
+    """Le raid de la semaine — invoqué UNE fois, quoi qu'il arrive.
+
+    `get_or_create` sur `week_key` (unique en base) est le verrou : deux requêtes
+    concurrentes tombant dans la fenêtre vide — celle que la migration 0051 ouvre
+    au déploiement en expirant le boss legacy, et dans laquelle la bannière
+    d'accueil, la requête de la page et POST /question/ frappent toutes en même
+    temps — convergent sur la même ligne. Celle qui perd la course encaisse
+    l'IntegrityError en interne et relit la ligne gagnante.
+
+    Sans ce verrou : deux boss de 100 000 PV, des participations liées par FK à
+    l'un ou à l'autre, et un raid que la communauté ne peut plus achever.
+
+    Plus de titre secret : le boss n'est plus une devinette.
+    """
     now = timezone.now()
     iso = now.isocalendar()
-    boss = GlobalBoss.objects.create(
-        title=f"RAID OMEGA · S{iso[1]:02d}",
-        secret_title="",
-        media_type="Anime",
-        total_hp=rules.BOSS_TOTAL_HP,
-        current_hp=rules.BOSS_TOTAL_HP,
-        community_hints=[],
-        end_date=now + timedelta(days=BOSS_DURATION_DAYS),
+    boss, created = GlobalBoss.objects.get_or_create(
+        week_key=_week_key(now),
+        defaults={
+            "title": f"RAID OMEGA · S{iso[1]:02d}",
+            "secret_title": "",
+            "media_type": "Anime",
+            "total_hp": rules.BOSS_TOTAL_HP,
+            "current_hp": rules.BOSS_TOTAL_HP,
+            "community_hints": [],
+            "end_date": now + timedelta(days=BOSS_DURATION_DAYS),
+        },
     )
-    logger.info("World Boss de la semaine %s invoqué (id=%s).", iso[1], boss.id)
+    if created:
+        logger.info("World Boss de la semaine %s invoqué (id=%s).", iso[1], boss.id)
     return boss
 
 
