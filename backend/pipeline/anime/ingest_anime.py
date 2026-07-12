@@ -41,6 +41,16 @@ query ($page: Int, $perPage: Int) {
         year
       }
       popularity
+      source
+      episodes
+      studios {
+        edges {
+          node {
+            name
+            isAnimationStudio
+          }
+        }
+      }
       coverImage {
         large
       }
@@ -96,17 +106,35 @@ def fetch_page(page):
         return None
 
 
-def run_ingestion():
-    all_animes = []
-    existing_ids = set()
+def merge_page(all_animes, by_id, media_list):
+    """Merge a fetched page into the accumulated list.
 
+    Existing works are UPDATED in place, not skipped: a refetch is how new query
+    fields (studios, source, episodes) reach works ingested before they existed.
+    Returns the number of works that were genuinely new.
+    """
+    added = 0
+    for item in media_list:
+        known = by_id.get(item["id"])
+        if known is None:
+            all_animes.append(item)
+            by_id[item["id"]] = item
+            added += 1
+        else:
+            known.update(item)
+    return added
+
+
+def run_ingestion():
     # Charger les données existantes si elles existent
+    all_animes = []
+    by_id = {}
     if os.path.exists(OUTPUT_FILE):
         logger.info(f"📂 Loading existing data from {OUTPUT_FILE}...")
         try:
             with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
                 all_animes = json.load(f)
-                existing_ids = {a["id"] for a in all_animes}
+                by_id = {a["id"]: a for a in all_animes}
             logger.info(f"✅ Found {len(all_animes)} existing animes.")
         except Exception as e:
             logger.warning(f"⚠️ Could not load existing data: {e}")
@@ -126,14 +154,8 @@ def run_ingestion():
             page_data = data["data"]["Page"]
             media_list = page_data["media"]
 
-            added_this_page = 0
-            for item in media_list:
-                if item["id"] not in existing_ids:
-                    all_animes.append(item)
-                    existing_ids.add(item["id"])
-                    new_items_count += 1
-                    added_this_page += 1
-
+            added_this_page = merge_page(all_animes, by_id, media_list)
+            new_items_count += added_this_page
             logger.info(f"     -> Added {added_this_page} new animes this page.")
 
             # Optionnel: si on fetch par popularité décroissante, on peut décider d'arrêter
@@ -150,15 +172,12 @@ def run_ingestion():
         time.sleep(0.7)
 
     # Sauvegarde
-    if new_items_count > 0:
-        os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
-        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-            json.dump(all_animes, f, indent=2, ensure_ascii=False)
-        logger.info(
-            f"✅ Collection finished! Added {new_items_count} new animes. Total: {len(all_animes)}"
-        )
-    else:
-        logger.info("ℹ️ No new animes found. Database is up to date.")
+    os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        json.dump(all_animes, f, indent=2, ensure_ascii=False)
+    logger.info(
+        f"✅ Collection finished! Added {new_items_count} new animes. Total: {len(all_animes)}"
+    )
 
 
 if __name__ == "__main__":
