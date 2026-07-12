@@ -41,6 +41,54 @@ def clean_description(text):
     return re.sub(r"\s+", " ", text).strip()
 
 
+def build_clean_entry(anime, micro_tags):
+    """The pure per-work transform: raw AniList media -> catalogue entry.
+
+    `studios` used to be read from a key the GraphQL query never requested, so it
+    was silently [] for every work. It is real now — and the quiz's studio, source
+    and filiation archetypes read exactly these keys.
+    """
+    clean_tags = [t["name"] for t in anime.get("tags", []) if t.get("rank", 0) >= 70]
+
+    relations = {}
+    for edge in (anime.get("relations") or {}).get("edges", []):
+        node_title = (edge.get("node") or {}).get("title", {}).get("romaji")
+        if node_title:
+            relations.setdefault(edge["relationType"], []).append(node_title)
+
+    return {
+        "id": anime["id"],
+        "idMal": anime.get("idMal"),
+        "title": anime["title"]["romaji"],
+        "title_english": anime["title"]["english"],
+        "title_native": anime["title"]["native"],
+        "description": clean_description(anime.get("description")),
+        "genres": anime["genres"],
+        "tags": list(set(clean_tags + micro_tags)),
+        "micro_tags": micro_tags,
+        "popularity": anime["popularity"],
+        "year": anime["startDate"]["year"] if anime["startDate"] else None,
+        "image": anime["coverImage"]["large"] if anime["coverImage"] else None,
+        "studios": [
+            s["node"]["name"]
+            for s in (anime.get("studios") or {}).get("edges", [])
+            if s["node"].get("isAnimationStudio")
+        ],
+        "source": anime.get("source"),
+        "episode_count": anime.get("episodes"),
+        "relations": relations,
+        "recommendations": (
+            {
+                r["mediaRecommendation"]["title"]["romaji"]: r["rating"]
+                for r in anime["recommendations"]["nodes"]
+                if r.get("mediaRecommendation")
+            }
+            if anime.get("recommendations")
+            else {}
+        ),
+    }
+
+
 def run_refinement():
     if not os.path.exists(RAW_FILE):
         logger.error(f"❌ Error: {RAW_FILE} not found.")
@@ -75,8 +123,6 @@ def run_refinement():
 
     for anime_id, anime in animes_map.items():
         if anime_id not in non_root_ids:
-            clean_desc = clean_description(anime.get("description"))
-
             # --- DATA INTELLIGENCE (Top 200) ---
             micro_tags = []
             if processed_count < 200:
@@ -85,7 +131,9 @@ def run_refinement():
                         f"   🧠 Intelligence extraction [{processed_count + 1}/200]: {anime['title']['romaji']}..."
                     )
                     micro_tags = intelligence_service.extract_micro_tags(
-                        anime["title"]["romaji"], clean_desc, "Anime"
+                        anime["title"]["romaji"],
+                        clean_description(anime.get("description")),
+                        "Anime",
                     )
                 except Exception as e:
                     logger.warning(
@@ -93,38 +141,7 @@ def run_refinement():
                     )
                     micro_tags = []
 
-            clean_tags = [
-                t["name"] for t in anime.get("tags", []) if t.get("rank", 0) >= 70
-            ]
-
-            clean_data = {
-                "id": anime["id"],
-                "idMal": anime.get("idMal"),
-                "title": anime["title"]["romaji"],
-                "title_english": anime["title"]["english"],
-                "title_native": anime["title"]["native"],
-                "description": clean_desc,
-                "genres": anime["genres"],
-                "tags": list(set(clean_tags + micro_tags)),
-                "micro_tags": micro_tags,
-                "popularity": anime["popularity"],
-                "year": anime["startDate"]["year"] if anime["startDate"] else None,
-                "image": anime["coverImage"]["large"] if anime["coverImage"] else None,
-                "studios": [
-                    s["node"]["name"]
-                    for s in anime.get("studios", {}).get("edges", [])
-                    if s["node"]["isAnimationStudio"]
-                ],
-                "recommendations": (
-                    {
-                        r["mediaRecommendation"]["title"]["romaji"]: r["rating"]
-                        for r in anime["recommendations"]["nodes"]
-                        if r.get("mediaRecommendation")
-                    }
-                    if anime.get("recommendations")
-                    else {}
-                ),
-            }
+            clean_data = build_clean_entry(anime, micro_tags)
 
             # Construction des nœuds du graphe
             clean_data["graph_nodes"] = intelligence_service.build_relation_graph(
