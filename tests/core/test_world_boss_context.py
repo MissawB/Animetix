@@ -20,6 +20,20 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 THEMES_FILE = REPO_ROOT / "data" / "processed" / "anime_themes.json"
 ANIMES_FILE = REPO_ROOT / "data" / "processed" / "clean_root_animes.json"
 
+_LFS_POINTER = "version https://git-lfs"
+
+
+def _load_real_data_or_skip(path: Path):
+    """The catalogue files are tracked with Git LFS. CI checks out the pointers
+    without fetching the objects, so `path.exists()` is true while the content is
+    a 130-byte text stub -- json.load then dies on 'Expecting value: line 1'.
+    Skip on the stub instead of failing: this is a guard on the live data, and a
+    checkout that has no live data has nothing to guard."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if text.startswith(_LFS_POINTER):
+        pytest.skip(f"{path.name} is an unfetched Git LFS pointer")
+    return json.loads(text)
+
 
 def test_the_answer_is_not_always_in_the_same_slot():
     slots = {
@@ -236,10 +250,8 @@ def test_themes_of_never_mis_attributes_against_the_real_catalogue():
     if not THEMES_FILE.exists() or not ANIMES_FILE.exists():
         pytest.skip("real catalogue data files are not present in this checkout")
 
-    with open(THEMES_FILE, encoding="utf-8") as f:
-        themes = json.load(f)
-    with open(ANIMES_FILE, encoding="utf-8") as f:
-        animes = json.load(f)
+    themes = _load_real_data_or_skip(THEMES_FILE)
+    animes = _load_real_data_or_skip(ANIMES_FILE)
 
     resolved = 0
     misattributed = []
