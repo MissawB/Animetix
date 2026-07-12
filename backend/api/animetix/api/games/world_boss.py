@@ -14,9 +14,10 @@ CPU only (the questions are drawn from the catalogue, never generated) → no Be
 """
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 from typing import Optional
 
+from core.domain.exceptions import GameLogicError
 from core.domain.services.world_boss import rules
 from dependency_injector.wiring import Provide, inject
 from django.db.models import F
@@ -24,7 +25,6 @@ from django.db.models.functions import Greatest
 from django.utils import timezone
 from rest_framework import permissions, response, status, views
 
-from animetix.api.dependencies import get_session_service
 from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
@@ -35,12 +35,16 @@ logger = logging.getLogger("animetix.worldboss")
 
 BOSS_DURATION_DAYS = 7
 LEADERBOARD_SIZE = 20
-SK = "wboss_"  # session-key prefix
 
 
 def _now() -> float:
     """The server clock. Patched in tests; never read from the client."""
     return timezone.now().timestamp()
+
+
+def _now_dt() -> datetime:
+    """The same clock, as a datetime — so `issued_at` and the deadline agree."""
+    return datetime.fromtimestamp(_now(), tz=dt_timezone.utc)
 
 
 def _distribute_reward(boss: GlobalBoss) -> None:
@@ -93,13 +97,57 @@ def _active_boss() -> Optional[GlobalBoss]:
     return boss
 
 
-def _reset_run(port, boss_id: int) -> None:
-    port.set(SK + "boss_id", boss_id)
-    port.set(SK + "tier", 1)
-    port.set(SK + "streak", 0)
-    port.set(SK + "limiter_break", False)
-    port.set(SK + "run_damage", 0)
-    port.set(SK + "correct_index", None)
+PENDING_FIELDS = (
+    "pending_index",
+    "pending_label",
+    "pending_subject",
+    "pending_options",
+    "pending_prompt",
+    "pending_archetype",
+    "pending_image",
+    "issued_at",
+)
+
+CLEARED_PENDING = {
+    "pending_index": None,
+    "pending_label": "",
+    "pending_subject": "",
+    "pending_options": [],
+    "pending_prompt": "",
+    "pending_archetype": "",
+    "pending_image": None,
+    "issued_at": None,
+}
+
+
+def _deadline(participation: BossParticipation) -> float:
+    """When the pending question expires, on the server clock."""
+    return (
+        participation.issued_at.timestamp()
+        + rules.timer_for(participation.tier, participation.limiter_break)
+        + rules.GRACE_SECONDS
+    )
+
+
+def _question_payload(participation: BossParticipation) -> dict:
+    """The public view of the pending question. `pending_index` never appears here,
+    and neither does `pending_subject`: the reveal comes with the answer."""
+    tier = participation.tier
+    limiter_break = participation.limiter_break
+    return {
+        "tier": tier,
+        "band": rules.band_for(tier, limiter_break),
+        "timer": rules.timer_for(tier, limiter_break),
+        "damage": rules.damage_for(tier, limiter_break),
+        "limiter_break": limiter_break,
+        "streak": participation.streak,
+        "run_damage": participation.run_damage,
+        "best_tier": participation.best_tier,
+        "archetype": participation.pending_archetype,
+        "prompt": participation.pending_prompt,
+        "options": participation.pending_options,
+        "image": participation.pending_image,
+    }
 
 
 class ActiveWorldBossView(views.APIView):
@@ -134,39 +182,56 @@ class WorldBossQuestionView(views.APIView):
                 {"detail": "Boss already defeated."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        port = get_session_service(request).port
-        if port.get(SK + "boss_id") != boss.id:
-            _reset_run(port, boss.id)  # a new raid always starts a new run
-
-        tier = port.get(SK + "tier", 1)
-        limiter_break = bool(port.get(SK + "limiter_break", False))
-        question = quiz_service.build_question(tier, limiter_break)
-
-        port.set(SK + "correct_index", question.correct_index)
-        port.set(SK + "correct_label", question.options[question.correct_index])
-        port.set(SK + "subject", question.subject)
-        port.set(SK + "issued_at", _now())
-
-        participation = BossParticipation.objects.filter(
+        # La participation est la course : par (joueur, boss), côté serveur. Un
+        # nouveau raid = une nouvelle ligne = une nouvelle course, gratuitement.
+        participation, _ = BossParticipation.objects.get_or_create(
             user=request.user, boss=boss
-        ).first()
-
-        return response.Response(
-            {
-                "tier": tier,
-                "band": rules.band_for(tier, limiter_break),
-                "timer": rules.timer_for(tier, limiter_break),
-                "damage": rules.damage_for(tier, limiter_break),
-                "limiter_break": limiter_break,
-                "streak": port.get(SK + "streak", 0),
-                "run_damage": port.get(SK + "run_damage", 0),
-                "best_tier": participation.best_tier if participation else 0,
-                "archetype": question.archetype,
-                "prompt": question.prompt,
-                "options": question.options,
-                "image": question.image,
-            }
         )
+
+        if participation.pending_index is not None and participation.issued_at:
+            if _now() <= _deadline(participation):
+                # Re-tirer la question serait un re-roll gratuit : le joueur
+                # redemanderait jusqu'à tomber sur l'archétype qu'il sait traiter.
+                # On ré-émet la MÊME question, sans re-tamponner l'horloge.
+                return response.Response(_question_payload(participation))
+
+            # Le délai est écoulé : c'est un raté. Fermer l'onglet ne doit ni
+            # bloquer le joueur, ni lui faire échapper à la sanction.
+            participation.tier = 1
+            participation.streak = 0
+            participation.limiter_break = False
+            participation.run_damage = 0
+            for field, value in CLEARED_PENDING.items():
+                setattr(participation, field, value)
+            participation.save(
+                update_fields=["tier", "streak", "limiter_break", "run_damage"]
+                + list(PENDING_FIELDS)
+            )
+
+        tier = participation.tier
+        limiter_break = participation.limiter_break
+        try:
+            question = quiz_service.build_question(tier, limiter_break)
+        except GameLogicError:
+            # Catalogue trop pauvre pour composer une question : c'est une panne de
+            # service, pas un bug — 503 plutôt qu'un 500 opaque.
+            logger.warning("World Boss: no question available at tier %s.", tier)
+            return response.Response(
+                {"detail": "No question available right now."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        participation.pending_index = question.correct_index
+        participation.pending_label = question.options[question.correct_index]
+        participation.pending_subject = question.subject
+        participation.pending_options = list(question.options)
+        participation.pending_prompt = question.prompt
+        participation.pending_archetype = question.archetype
+        participation.pending_image = question.image
+        participation.issued_at = _now_dt()
+        participation.save(update_fields=list(PENDING_FIELDS))
+
+        return response.Response(_question_payload(participation))
 
 
 class WorldBossAnswerView(views.APIView):
@@ -176,43 +241,68 @@ class WorldBossAnswerView(views.APIView):
     throttle_classes = [CpuGameThrottle]
 
     def post(self, request):
-        port = get_session_service(request).port
-        correct_index = port.get(SK + "correct_index")
-        if correct_index is None:
-            return response.Response(
-                {"detail": "No question in progress."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        # Consume the question BEFORE scoring it: a replayed request must not be able
-        # to cash the same answer twice.
-        port.set(SK + "correct_index", None)
-
         boss = _active_boss()
         if not boss or boss.current_hp <= 0:
             return response.Response(
                 {"detail": "Boss already defeated."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        tier = port.get(SK + "tier", 1)
-        limiter_break = bool(port.get(SK + "limiter_break", False))
-        streak = port.get(SK + "streak", 0)
-        run_damage = port.get(SK + "run_damage", 0)
-        correct_label = port.get(SK + "correct_label", "")
+        # La participation est résolue depuis le boss ACTIF. Une question tirée pour
+        # le raid précédent vit sur la ligne du raid précédent : elle n'existe donc
+        # tout simplement pas ici, et ne peut pas frapper le boss frais.
+        participation = BossParticipation.objects.filter(
+            user=request.user, boss=boss
+        ).first()
+        if participation is None or participation.pending_index is None:
+            return response.Response(
+                {"detail": "No question in progress."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        elapsed = _now() - (port.get(SK + "issued_at") or 0)
-        late = elapsed > rules.timer_for(tier, limiter_break) + rules.GRACE_SECONDS
+        # On lit la question AVANT de la consommer : c'est ce que fait aussi la
+        # requête concurrente. Le départage vient ensuite, et de la base seule.
+        correct_index = participation.pending_index
+        correct_label = participation.pending_label
+        subject = participation.pending_subject
+        tier = participation.tier
+        limiter_break = participation.limiter_break
+        streak = participation.streak
+        run_damage = participation.run_damage
+        deadline = _deadline(participation)
+        now = _now()
+
+        # Le verrou, c'est le rowcount : deux requêtes simultanées ont lu le même
+        # `pending_index`, une seule remporte l'UPDATE conditionnel. L'autre repart
+        # avec un 400 — et surtout, sans infliger le moindre dégât.
+        claimed = BossParticipation.objects.filter(
+            pk=participation.pk, pending_index__isnull=False
+        ).update(pending_index=None)
+        if not claimed:
+            return response.Response(
+                {"detail": "No question in progress."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        late = now > deadline
         chosen = request.data.get("index")
         correct = (not late) and isinstance(chosen, int) and chosen == correct_index
 
         damage = 0
+        dealt = 0
         broke_limiter = False
         if correct:
             damage = rules.damage_for(tier, limiter_break)
-            run_damage += damage
 
+            boss.refresh_from_db(fields=["current_hp"])
+            hp_before = boss.current_hp
             GlobalBoss.objects.filter(id=boss.id).update(
                 current_hp=Greatest(F("current_hp") - damage, 0)
             )
+            # L'overkill ne compte pas : 4096 sur un boss à 1 PV, c'est 1 point de
+            # dégâts infligé — pas 4096 crédités au classement.
+            dealt = min(damage, max(hp_before, 0))
+            run_damage += dealt
+
             boss.refresh_from_db()
             boss._phase_changed = boss.update_phase()
             if boss.current_hp <= 0:
@@ -231,34 +321,38 @@ class WorldBossAnswerView(views.APIView):
             # Mort subite : on retombe au palier 1. Les dégâts déjà infligés restent.
             next_tier, streak, limiter_break, run_damage = 1, 0, False, 0
 
-        participation, _ = BossParticipation.objects.get_or_create(
-            user=request.user, boss=boss
+        best_tier = max(participation.best_tier, tier if correct else 0)
+        updates = dict(
+            CLEARED_PENDING,
+            tier=next_tier,
+            streak=streak,
+            limiter_break=limiter_break,
+            run_damage=run_damage,
+            best_tier=best_tier,
+            last_participation=timezone.now(),  # auto_now ne s'applique pas à update()
+            # F(): deux réponses du même joueur en parallèle ne doivent pas se
+            # marcher dessus (un read-modify-write en perdrait une).
+            points_contributed=F("points_contributed") + dealt,
         )
-        participation.points_contributed += damage
-        participation.best_tier = max(participation.best_tier, tier if correct else 0)
         if broke_limiter:
-            participation.limiter_breaks += 1
-        participation.save()
+            updates["limiter_breaks"] = F("limiter_breaks") + 1
+        BossParticipation.objects.filter(pk=participation.pk).update(**updates)
+        participation.refresh_from_db()
 
         if correct and boss.current_hp <= 0:
             _distribute_reward(boss)
-
-        port.set(SK + "tier", next_tier)
-        port.set(SK + "streak", streak)
-        port.set(SK + "limiter_break", limiter_break)
-        port.set(SK + "run_damage", run_damage)
 
         return response.Response(
             {
                 "correct": correct,
                 "late": late,
-                "damage_dealt": damage,
+                "damage_dealt": dealt,
                 "correct_index": correct_index,
                 "correct_label": correct_label,
-                "subject": port.get(SK + "subject", ""),
+                "subject": subject,
                 "tier": next_tier,
                 "run_damage": run_damage,
-                "best_tier": participation.best_tier,
+                "best_tier": best_tier,
                 "limiter_break": limiter_break,
                 "streak": streak,
                 "boss": {

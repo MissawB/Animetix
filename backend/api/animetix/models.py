@@ -271,6 +271,18 @@ class GlobalBoss(models.Model):
 
 
 class BossParticipation(models.Model):
+    """L'état de la course d'un joueur sur CE boss — et la question en cours.
+
+    Tout ceci vivait dans la session Django. Or la session est lue en début de
+    requête et écrite en fin de requête : « consommer » la question en y écrivant
+    ``None`` n'est donc pas atomique entre deux requêtes concurrentes, et K
+    requêtes simultanées encaissaient K fois la même réponse. L'état est ici, dans
+    la table, où un UPDATE conditionnel (dont le rowcount fait office de verrou)
+    tranche la course. La participation étant liée au boss (FK), une question tirée
+    pour le raid de la semaine dernière ne peut structurellement pas frapper celui
+    de cette semaine.
+    """
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     boss = models.ForeignKey(GlobalBoss, on_delete=models.CASCADE)
     points_contributed = models.IntegerField(default=0)
@@ -279,6 +291,25 @@ class BossParticipation(models.Model):
     best_tier = models.IntegerField(default=0)
     limiter_breaks = models.IntegerField(default=0)
     last_participation = models.DateTimeField(auto_now=True)
+
+    # --- L'état de la course (jamais lu depuis le client) ---
+    tier = models.IntegerField(default=1)
+    streak = models.IntegerField(default=0)
+    limiter_break = models.BooleanField(default=False)
+    run_damage = models.IntegerField(default=0)
+
+    # --- La question en cours. `pending_index` est la réponse : elle ne doit
+    # JAMAIS être sérialisée vers un client avant qu'il ait répondu. ---
+    pending_index = models.IntegerField(null=True, blank=True)
+    pending_label = models.CharField(max_length=255, blank=True, default="")
+    pending_subject = models.CharField(max_length=255, blank=True, default="")
+    pending_options = models.JSONField(default=list, blank=True)
+    # Ré-émettre la question à l'identique (et non en retirer une autre) impose de
+    # conserver aussi son énoncé : sans cela, le re-roll gratuit resterait ouvert.
+    pending_prompt = models.TextField(blank=True, default="")
+    pending_archetype = models.CharField(max_length=64, blank=True, default="")
+    pending_image = models.TextField(blank=True, null=True)
+    issued_at = models.DateTimeField(null=True, blank=True)
 
 
 class DuelRoom(models.Model):

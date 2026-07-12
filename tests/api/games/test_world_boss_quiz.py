@@ -284,6 +284,233 @@ def test_a_phase_change_survives_a_channel_layer_outage(client):
 
 
 @pytest.mark.django_db
+def test_a_phase_that_does_not_change_raises_no_global_alert(client, boss):
+    """Le marqueur ``_phase_changed`` est la seule chose qui autorise l'alerte
+    mondiale : sans lui, chaque coup porté spammerait toute la communauté."""
+    with patch("animetix.signals.get_channel_layer") as layer:
+        with _quiz(QUESTION):
+            _ask(client)
+            response = _answer(client, 1)  # 100000 -> 99999 : toujours phase 1
+
+    assert response.status_code == 200
+    assert response.json()["boss"]["current_phase"] == 1
+    layer.assert_not_called()  # aucune alerte : la phase n'a pas bougé
+
+
+@pytest.mark.django_db
+def test_no_xp_is_distributed_while_the_boss_is_alive(client, boss):
+    with _quiz(QUESTION):
+        _ask(client)
+        _answer(client, 1)
+
+    boss.refresh_from_db()
+    assert boss.current_hp == 99999
+    assert boss.reward_distributed is False
+    finisher = User.objects.get(username="kenji")
+    finisher.profile.refresh_from_db()
+    assert finisher.profile.xp == 0  # la récompense n'arrive qu'à la mise à mort
+
+
+# --------------------------------------------------------------------------- #
+# Security: the run state and the pending question live on BossParticipation, not
+# in the session. Everything below is an attack the session-backed version lost.
+# --------------------------------------------------------------------------- #
+@pytest.mark.django_db
+def test_two_racing_answers_cash_the_question_only_once(client, boss):
+    """The race the sequential replay test cannot see.
+
+    Both requests read ``pending_index`` while it is still set (that is what makes
+    it a race); the atomic conditional UPDATE decides who cashes it. We reproduce
+    the interleaving deterministically by firing the second request from inside the
+    first, at the exact point where it has already snapshotted the pending question
+    but has not yet claimed it.
+    """
+    import animetix.api.games.world_boss as world_boss_mod
+
+    with _quiz(QUESTION):
+        _ask(client)
+
+        real_now = world_boss_mod._now
+        fired = []
+
+        def _now_and_race():
+            if not fired:
+                fired.append(True)
+                # The competing request runs to completion here — same session,
+                # same participation row, same pending question.
+                inner = _answer(client, 1)
+                assert inner.json()["damage_dealt"] == 1
+            return real_now()
+
+        with patch.object(world_boss_mod, "_now", _now_and_race):
+            outer = _answer(client, 1)
+
+    assert fired, "the interleaving never happened — the test proves nothing"
+    assert outer.status_code == 400  # the claim lost: no second payout
+    boss.refresh_from_db()
+    assert boss.current_hp == 99999  # ONE point of damage, not two
+    participation = BossParticipation.objects.get(user__username="kenji", boss=boss)
+    assert participation.points_contributed == 1
+
+
+@pytest.mark.django_db
+def test_the_pending_question_cannot_be_re_rolled(client, boss):
+    other = Question(
+        archetype="studio",
+        prompt="Quel studio a produit « Akira » ?",
+        options=["Madhouse", "Bones", "TMS", "Sunrise"],
+        correct_index=2,
+        subject="Akira",
+    )
+    with _quiz(QUESTION) as service:
+        first = _ask(client).json()
+        again = _ask(client).json()
+        assert service.build_question.call_count == 1  # no second draw
+
+    issued_at = BossParticipation.objects.get(user__username="kenji").issued_at
+
+    # Even with a service that would happily hand out a different question, the
+    # pending one is re-issued verbatim: asking again buys the player nothing.
+    with _quiz(other):
+        third = _ask(client).json()
+
+    participation = BossParticipation.objects.get(user__username="kenji")
+    assert again["prompt"] == first["prompt"]
+    assert again["options"] == first["options"]  # same options, same ORDER
+    assert third["prompt"] == QUESTION.prompt
+    assert third["options"] == QUESTION.options
+    assert participation.issued_at == issued_at  # the clock was NOT restamped
+
+
+@pytest.mark.django_db
+def test_an_abandoned_question_counts_as_a_miss(client, boss, monkeypatch):
+    import animetix.api.games.world_boss as world_boss_mod
+
+    with _quiz(QUESTION):
+        _ask(client)
+        _answer(client, 1)  # tier 1 cleared -> tier 2
+        assert _ask(client).json()["tier"] == 2
+
+        # The player closes the tab. 40 s later (20 s timer + 2 s grace), they come back.
+        monkeypatch.setattr(
+            world_boss_mod, "_now", lambda: timezone.now().timestamp() + 40
+        )
+        back = _ask(client).json()
+
+    assert back["tier"] == 1  # the abandoned question is a miss, not a free pass
+    assert back["run_damage"] == 0
+    assert back["streak"] == 0
+    participation = BossParticipation.objects.get(user__username="kenji")
+    assert participation.tier == 1
+    assert participation.pending_index is not None  # a fresh question was drawn
+
+
+@pytest.mark.django_db
+def test_a_question_drawn_for_a_dead_boss_cannot_hit_the_next_one(client, boss):
+    with _quiz(QUESTION):
+        _ask(client)  # question issued for THIS week's boss
+
+    boss.is_active = False  # the weekly rollover
+    boss.save()
+    fresh = GlobalBoss.objects.create(
+        title="RAID OMEGA · S29",
+        secret_title="",
+        media_type="Anime",
+        total_hp=100000,
+        current_hp=100000,
+        end_date=timezone.now() + timezone.timedelta(days=7),
+    )
+
+    with _quiz(QUESTION):
+        held = _answer(client, 1)
+
+    assert held.status_code == 400  # no question in progress on the new boss
+    fresh.refresh_from_db()
+    boss.refresh_from_db()
+    assert fresh.current_hp == 100000
+    assert boss.current_hp == 100000
+
+
+@pytest.mark.django_db
+def test_the_client_cannot_forge_its_own_tier_damage_or_clock(client, boss):
+    with _quiz(QUESTION):
+        _ask(client)
+        response = client.post(
+            "/api/v1/game/world-boss/answer/",
+            {
+                "index": 1,
+                "tier": 12,
+                "damage": 4096,
+                "limiter_break": True,
+                "issued_at": timezone.now().timestamp(),
+                "run_damage": 99999,
+            },
+            format="json",
+        )
+
+    body = response.json()
+    assert body["correct"] is True
+    assert body["damage_dealt"] == 1  # tier 1, whatever the payload claimed
+    assert body["tier"] == 2
+    assert body["limiter_break"] is False
+    assert body["run_damage"] == 1
+    boss.refresh_from_db()
+    assert boss.current_hp == 99999
+
+
+@pytest.mark.django_db
+def test_answering_anonymously_is_refused(boss):
+    anonymous = APIClient()
+    assert anonymous.post(
+        "/api/v1/game/world-boss/answer/", {"index": 1}, format="json"
+    ).status_code in (401, 403)
+
+
+@pytest.mark.django_db
+def test_overkill_does_not_inflate_the_leaderboard(client):
+    """A boss with 1 HP left takes 1 point of damage, not 4096 — and the
+    contributor is credited with what they actually dealt."""
+    GlobalBoss.objects.create(
+        title="RAID AGONIE",
+        secret_title="",
+        media_type="Anime",
+        total_hp=100000,
+        current_hp=1,
+        end_date=timezone.now() + timezone.timedelta(days=1),
+    )
+    participation_boss = GlobalBoss.objects.get(title="RAID AGONIE")
+    BossParticipation.objects.create(
+        user=User.objects.get(username="kenji"),
+        boss=participation_boss,
+        tier=12,
+        limiter_break=True,
+    )
+
+    with _quiz(QUESTION):
+        _ask(client)
+        body = _answer(client, 1).json()
+
+    assert body["damage_dealt"] == 1  # not 4096
+    participation = BossParticipation.objects.get(user__username="kenji")
+    assert participation.points_contributed == 1
+
+
+@pytest.mark.django_db
+def test_a_starved_catalogue_returns_503_not_500(client, boss):
+    from core.domain.exceptions import GameLogicError
+
+    service = MagicMock()
+    service.build_question.side_effect = GameLogicError("no question available")
+    container.core.world_boss_quiz_service.override(providers.Object(service))
+    try:
+        response = _ask(client)
+    finally:
+        container.core.world_boss_quiz_service.reset_last_overriding()
+
+    assert response.status_code == 503
+
+
+@pytest.mark.django_db
 def test_the_leaderboard_ranks_by_the_deepest_climb(client, boss):
     grinder = User.objects.create_user("grinder")
     climber = User.objects.create_user("climber")
@@ -297,3 +524,7 @@ def test_the_leaderboard_ranks_by_the_deepest_climb(client, boss):
     rows = APIClient().get("/api/v1/game/world-boss/leaderboard/").json()["leaderboard"]
 
     assert [r["username"] for r in rows] == ["climber", "grinder"]
+    # The pending question now lives on this very row: the public leaderboard must
+    # not serialise it, or it would hand out every player's answer.
+    assert "pending_index" not in rows[0]
+    assert "pending_label" not in rows[0]
