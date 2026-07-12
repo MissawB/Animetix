@@ -158,6 +158,11 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         engine=akinetix_engine,
     )
 
+    world_boss_quiz_service = providers.Singleton(
+        LazyClass("core.domain.services.world_boss.service", "WorldBossQuizService"),
+        catalog_service=catalog_service,
+    )
+
     game_service = providers.Singleton(
         LazyClass("core.domain.services.game_service", "GameService"),
         repository=persistence.repository,
