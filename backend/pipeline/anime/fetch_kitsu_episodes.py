@@ -20,12 +20,17 @@ logger = logging.getLogger("animetix." + __name__)
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(os.path.join(BASE_DIR, "backend"))
+# backend/pipeline/anime/<ce fichier> : trois dirname remontent à backend/, pas à la
+# racine. `core` s'importe depuis backend/ ; les données vivent à la racine du dépôt.
+BACKEND_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
+PROJECT_ROOT = os.path.dirname(BACKEND_DIR)
+sys.path.append(BACKEND_DIR)
 from core.utils.security import safe_http_request  # noqa: E402
 
-CATALOG_FILE = os.path.join(BASE_DIR, "data", "processed", "clean_root_animes.json")
-OUTPUT_FILE = os.path.join(BASE_DIR, "data", "processed", "anime_episodes.json")
+CATALOG_FILE = os.path.join(PROJECT_ROOT, "data", "processed", "clean_root_animes.json")
+OUTPUT_FILE = os.path.join(PROJECT_ROOT, "data", "processed", "anime_episodes.json")
 
 KITSU = "https://kitsu.io/api/edge"
 HEADERS = {"Accept": "application/vnd.api+json"}

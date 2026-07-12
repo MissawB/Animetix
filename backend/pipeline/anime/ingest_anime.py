@@ -11,12 +11,16 @@ logger = logging.getLogger("animetix." + __name__)
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-# Détection robuste de la racine du projet
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(os.path.join(BASE_DIR, "backend"))
+# backend/pipeline/anime/<ce fichier> : trois dirname remontent à backend/, pas à la
+# racine. `core` s'importe depuis backend/ ; les données vivent à la racine du dépôt.
+BACKEND_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
+PROJECT_ROOT = os.path.dirname(BACKEND_DIR)
+sys.path.append(BACKEND_DIR)
 from core.utils.security import safe_http_request  # noqa: E402
 
-OUTPUT_FILE = os.path.join(BASE_DIR, "data", "raw", "raw_anilist_db.json")
+OUTPUT_FILE = os.path.join(PROJECT_ROOT, "data", "raw", "raw_anilist_db.json")
 
 url = "https://graphql.anilist.co"
 

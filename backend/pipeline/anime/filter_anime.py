@@ -11,13 +11,18 @@ logger = logging.getLogger("animetix." + __name__)
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-# Détection robuste de la racine du projet
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(os.path.join(BASE_DIR, "pipeline"))
+# backend/pipeline/anime/<ce fichier> : trois dirname remontent à backend/, pas à la
+# racine. Les modules du pipeline s'importent depuis backend/pipeline ; les données
+# vivent à la racine du dépôt.
+BACKEND_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
+PROJECT_ROOT = os.path.dirname(BACKEND_DIR)
+sys.path.append(os.path.join(BACKEND_DIR, "pipeline"))
 from data_intelligence import intelligence_service  # noqa: E402
 
-RAW_FILE = os.path.join(BASE_DIR, "data", "raw", "raw_anilist_db.json")
-OUTPUT_FILE = os.path.join(BASE_DIR, "data", "processed", "clean_root_animes.json")
+RAW_FILE = os.path.join(PROJECT_ROOT, "data", "raw", "raw_anilist_db.json")
+OUTPUT_FILE = os.path.join(PROJECT_ROOT, "data", "processed", "clean_root_animes.json")
 
 
 def clean_description(text):
