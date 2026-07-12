@@ -153,6 +153,24 @@ class Command(BaseCommand):
                 for f in fields_to_pop:
                     metadata.pop(f, None)
 
+                # Les ids ne sont PAS des doublons : ce sont deux espaces de noms
+                # distincts, et les données annexes n'y sont pas indexées pareil.
+                # `anime_themes.json` est indexé par id AniList, `anime_episodes.json`
+                # par id MAL. Les jeter ici rendait les 5 archétypes opening/épisode
+                # du World Boss définitivement muets en production (silencieusement :
+                # l'archétype rendait None et le moteur en tirait un autre).
+                #
+                # On les remet sous des clés stables, que `_to_dict` ré-expose via
+                # `data.update(item.metadata)`. Surtout PAS sous `id` : cette clé est
+                # déjà tenue par `external_id`, et l'écraser casserait
+                # `id_to_full_data` (indexé sur `str(item["id"])`) et tous ses
+                # consommateurs — Akinetix, Quiz Who, Covertest, le blind test.
+                mal_id = item.get("idMal") or item.get("mal_id")
+                if mal_id:
+                    metadata["idMal"] = str(mal_id)
+                if item.get("id"):
+                    metadata["anilist_id"] = str(item["id"])
+
                 # Strip garbage LLM-error tags so they never reach the DB.
                 for tag_field in _TAG_FIELDS:
                     if tag_field in metadata:

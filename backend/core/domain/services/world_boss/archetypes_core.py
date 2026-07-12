@@ -33,6 +33,19 @@ def _others(ctx: QuizContext, subject: Dict[str, Any]) -> List[Dict[str, Any]]:
     return [it for it in ctx.pool if it is not subject]
 
 
+def _favourites(character: Dict[str, Any]) -> float:
+    """La popularité d'un personnage est un dict {"favourites", "rank"} — sauf
+    quand elle n'en est pas un : servi par la base, c'est la colonne `popularity`
+    (un float) qui remonte quand les métadonnées ne portent pas le dict."""
+    value = character.get("popularity")
+    if isinstance(value, dict):
+        value = value.get("favourites")
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _year_race(
     ctx: QuizContext,
     rng: random.Random,
@@ -196,11 +209,13 @@ def _character_origin(ctx, rng):
         return None
     subject = rng.choice(subjects)
     cast = ctx.characters_by_origin[title_of(subject)]
-    star = max(cast, key=lambda c: (c.get("popularity") or {}).get("favourites", 0))
+    star = max(cast, key=_favourites)
     return make_question(
         rng,
         "character_origin",
-        f"Dans quelle œuvre apparaît {star['name']} ?",
+        # `title_of` et jamais `c["name"]` : servi par la base, un personnage porte
+        # son nom sous `title` — `_to_dict` n'expose PAS de clé `name`.
+        f"Dans quelle œuvre apparaît {title_of(star)} ?",
         title_of(subject),
         [title_of(it) for it in _others(ctx, subject)],
         subject=title_of(subject),

@@ -9,17 +9,29 @@ really holds.
 
 from typing import Any, Dict, List, Tuple
 
-from .context import QuizContext, make_question, mask_title, title_of
+from .context import (
+    QuizContext,
+    episodes_of,
+    make_question,
+    mask_title,
+    themes_of,
+    title_of,
+)
 from .registry import archetype
 
 SECONDARY_RANK = 200  # a character nobody puts on a poster
 
 
 def _themed(ctx: QuizContext) -> List[Tuple[Dict[str, Any], Dict[str, Any]]]:
-    """(work, theme) for every work of the pool that has an opening on file."""
+    """(work, theme) for every work of the pool that has an opening on file.
+
+    The lookup goes through `themes_of`: the JSON catalogue keys a work by its
+    AniList id, the relational one by its MAL id, and neither archetype here has
+    any business knowing which one it was handed.
+    """
     pairs = []
     for work in ctx.pool:
-        entry = ctx.themes.get(str(work.get("id")))
+        entry = themes_of(ctx, work)
         for theme in (entry or {}).get("themes", []):
             if theme.get("song_title"):
                 pairs.append((work, theme))
@@ -27,18 +39,24 @@ def _themed(ctx: QuizContext) -> List[Tuple[Dict[str, Any], Dict[str, Any]]]:
 
 
 def _all_themes(ctx: QuizContext) -> List[Dict[str, Any]]:
-    return [
-        t
-        for e in ctx.themes.values()
-        for t in e.get("themes", [])
-        if t.get("song_title")
-    ]
+    # `ctx.themes` is indexed under SEVERAL keys per entry (AniList id and MAL id)
+    # so a work can be resolved whichever id it carries. Walking `.values()` would
+    # therefore see the same entry twice and double-weight its artists in the
+    # distractor pool -- dedupe on identity.
+    seen = set()
+    songs = []
+    for entry in ctx.themes.values():
+        if id(entry) in seen:
+            continue
+        seen.add(id(entry))
+        songs.extend(t for t in entry.get("themes", []) if t.get("song_title"))
+    return songs
 
 
 def _episoded(ctx: QuizContext) -> List[Tuple[Dict[str, Any], Dict[str, Any]]]:
     pairs = []
     for work in ctx.pool:
-        for episode in ctx.episodes.get(str(work.get("idMal")), []):
+        for episode in episodes_of(ctx, work):
             pairs.append((work, episode))
     return pairs
 
@@ -134,7 +152,7 @@ def _same_work_character(ctx, rng):
     # title, and also check the character's own `origin` field as a
     # belt-and-suspenders pass.
     elsewhere = [
-        c["name"]
+        title_of(c)
         for it in ctx.pool
         if title_of(it) != work_title
         for c in _cast(ctx, it)
@@ -143,8 +161,10 @@ def _same_work_character(ctx, rng):
     return make_question(
         rng,
         "same_work_character",
-        f"Quel personnage vient de la même œuvre que {known['name']} ?",
-        answer["name"],
+        # `title_of`, jamais `c["name"]` : servi par la base, un personnage porte
+        # son nom sous `title` et n'a aucune clé `name` (cf. `_to_dict`).
+        f"Quel personnage vient de la même œuvre que {title_of(known)} ?",
+        title_of(answer),
         elsewhere,
         subject=title_of(work),
     )
@@ -166,7 +186,7 @@ def _secondary_character(ctx, rng):
     # title, and also check the character's own `origin` field as a
     # belt-and-suspenders pass.
     elsewhere = [
-        c["name"]
+        title_of(c)
         for it in ctx.pool
         if title_of(it) != work_title
         for c in _cast(ctx, it)
@@ -176,7 +196,7 @@ def _secondary_character(ctx, rng):
         rng,
         "secondary_character",
         f"Quel personnage secondaire apparaît dans « {title_of(work)} » ?",
-        character["name"],
+        title_of(character),
         elsewhere,
         subject=title_of(work),
     )
@@ -386,16 +406,16 @@ def _character_sheet(ctx, rng):
     # on the row's org alone lets one of those other rows back in as a "wrong"
     # answer for an organisation the character genuinely also belongs to.
     elsewhere = [
-        c["name"]
+        title_of(c)
         for it, c, org in enrolled
         if organisation not in ((c.get("entities") or {}).get("organizations") or [])
-        and c["name"] != character["name"]
+        and title_of(c) != title_of(character)
     ]
     return make_question(
         rng,
         "character_sheet",
         f"Quel personnage appartient à « {organisation} » ?",
-        character["name"],
+        title_of(character),
         elsewhere,
         subject=title_of(work),
     )

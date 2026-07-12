@@ -667,3 +667,65 @@ def test_answering_a_half_set_participation_is_refused_not_a_crash(client, boss)
     response = _answer(client, 1)
 
     assert response.status_code == 400
+
+
+# --------------------------------------------------------------------------- #
+# Un archetype qui LEVE est un bug -- et jusqu'ici, un 500 pour le joueur :
+# `build_question` ne gardait pas `.build()` et la vue ne rattrape que
+# `GameLogicError`. Quatre archetypes levaient un `KeyError: 'name'` des que le
+# catalogue venait de la base (le nom d'un personnage y est sous `title`).
+# La montee du joueur ne doit plus jamais mourir sur un bug d'archetype.
+# --------------------------------------------------------------------------- #
+def _real_quiz_service():
+    """Le VRAI service de quiz, sur un vrai catalogue -- pas un MagicMock : c'est
+    justement la traversee service -> archetype que ce test doit exercer."""
+    from core.domain.services.world_boss.service import WorldBossQuizService
+
+    from tests.core.test_world_boss_archetypes_core import ANIMES
+
+    catalog = MagicMock()
+    catalog.load_data.side_effect = lambda media_type: {
+        "Anime": {"db": list(ANIMES)},
+        "Character": {"db": []},
+    }.get(media_type)
+    catalog.repository.load_themes.return_value = {}
+    catalog.get_anime_episodes.return_value = {}
+    return WorldBossQuizService(catalog_service=catalog)
+
+
+@contextmanager
+def _quiz_service(service):
+    container.core.world_boss_quiz_service.override(providers.Object(service))
+    try:
+        yield service
+    finally:
+        container.core.world_boss_quiz_service.reset_last_overriding()
+
+
+@pytest.mark.django_db
+def test_an_archetype_that_raises_does_not_500_the_player(client, boss, monkeypatch):
+    from core.domain.services.world_boss import registry, service as service_mod
+
+    def _boom(ctx, rng):
+        raise KeyError("name")
+
+    # Toute la bande A explose, sauf `cover`. La vue doit servir `cover`.
+    for name in ("year", "genre", "most_popular", "oldest"):
+        monkeypatch.setitem(
+            registry.ARCHETYPES,
+            name,
+            registry.Archetype(
+                name=name, bands=registry.ARCHETYPES[name].bands, build=_boom
+            ),
+        )
+    # Le tirage est aleatoire (graine non devinable, par construction) : assez
+    # d'essais pour que « tomber sur `cover` » ne soit pas une question de chance.
+    monkeypatch.setattr(service_mod, "ATTEMPTS", 200)
+
+    with _quiz_service(_real_quiz_service()):
+        response = _ask(client)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["archetype"] == "cover"
+    assert len(body["options"]) == 4

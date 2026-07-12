@@ -38,6 +38,46 @@ def title_of(item: Dict[str, Any]) -> str:
     return item.get("title") or item.get("name") or ""
 
 
+# Une œuvre n'a pas le même identifiant selon l'adaptateur qui la sert :
+#   * le JSON traité porte `id` = id AniList et `idMal` = id MAL ;
+#   * la base relationnelle expose `id` = external_id = l'id MAL, plus (depuis
+#     `sync_catalog`) `idMal` et `anilist_id` en métadonnées.
+# Les openings sont indexés par id AniList, les épisodes par id MAL : on essaie
+# donc les clés de la plus spécifique à la plus probable, sans jamais forcer un
+# archétype à connaître la forme du catalogue qu'on lui a tendu.
+THEME_ID_KEYS = ("anilist_id", "id", "idMal", "mal_id")
+EPISODE_ID_KEYS = ("idMal", "mal_id", "id", "anilist_id")
+
+
+def candidate_ids(item: Dict[str, Any], keys: Sequence[str]) -> List[str]:
+    ids: List[str] = []
+    for key in keys:
+        value = item.get(key)
+        if value is None or value == "":
+            continue
+        text = str(value)
+        if text not in ids:
+            ids.append(text)
+    return ids
+
+
+def themes_of(ctx: "QuizContext", work: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """L'entrée d'openings de cette œuvre, par quelque id qu'elle se présente."""
+    for key in candidate_ids(work, THEME_ID_KEYS):
+        entry = ctx.themes.get(key)
+        if entry:
+            return entry
+    return None
+
+
+def episodes_of(ctx: "QuizContext", work: Dict[str, Any]) -> List[Dict[str, Any]]:
+    for key in candidate_ids(work, EPISODE_ID_KEYS):
+        episodes = ctx.episodes.get(key)
+        if episodes:
+            return episodes
+    return []
+
+
 def make_question(
     rng: random.Random,
     archetype: str,
