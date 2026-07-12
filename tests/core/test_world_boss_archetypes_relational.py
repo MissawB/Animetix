@@ -430,6 +430,129 @@ def test_secondary_character_never_pulls_a_distractor_from_a_duplicate_titled_wo
     ), "secondary_character never picked the duplicated work"
 
 
+def test_opening_artist_never_offers_a_co_performer_of_the_correct_song_as_a_wrong_answer():
+    # "Together Now" is a duet: "Artist One" and "Artist Two" both genuinely
+    # perform it -- the themes data carries `artists: [...]` straight from
+    # AnimeThemes.moe, which credits every performer of a song. `_all_themes`
+    # walks every theme, including the correct one, and the old filter only
+    # dropped `artists[0]`, so the second credited artist survived into
+    # "elsewhere" and could be offered as a WRONG answer to "who performs
+    # « Together Now »?" while genuinely performing it. In a community raid,
+    # a correct answer damages the shared HP pool -- that is a real exploit.
+    themes = {
+        "10": {
+            "title": "Duet Anime",
+            "themes": [
+                {
+                    "type": "OP",
+                    "song_title": "Together Now",
+                    "artists": ["Artist One", "Artist Two"],
+                    "entries": [{"version": 1, "episodes": "1-12"}],
+                }
+            ],
+        },
+        "11": {
+            "title": "Anime B",
+            "themes": [
+                {
+                    "type": "OP",
+                    "song_title": "Solo Song B",
+                    "artists": ["Artist Three"],
+                    "entries": [{"version": 1, "episodes": "1-12"}],
+                }
+            ],
+        },
+        "12": {
+            "title": "Anime C",
+            "themes": [
+                {
+                    "type": "OP",
+                    "song_title": "Solo Song C",
+                    "artists": ["Artist Four"],
+                    "entries": [{"version": 1, "episodes": "1-12"}],
+                }
+            ],
+        },
+        "13": {
+            "title": "Anime D",
+            "themes": [
+                {
+                    "type": "OP",
+                    "song_title": "Solo Song D",
+                    "artists": ["Artist Five"],
+                    "entries": [{"version": 1, "episodes": "1-12"}],
+                }
+            ],
+        },
+    }
+    pool = [
+        {"id": 10, "title": "Duet Anime"},
+        {"id": 11, "title": "Anime B"},
+        {"id": 12, "title": "Anime C"},
+        {"id": 13, "title": "Anime D"},
+    ]
+    duet_ctx = QuizContext(
+        animes=pool,
+        pool=pool,
+        themes=themes,
+        episodes={},
+        characters_by_origin={},
+        closeness=1.0,
+    )
+    seen_duet = False
+    for seed in range(60):
+        q = ARCHETYPES["opening_artist"].build(duet_ctx, random.Random(seed))
+        if not q or q.subject != "Duet Anime":
+            continue
+        seen_duet = True
+        wrong = {o for i, o in enumerate(q.options) if i != q.correct_index}
+        assert "Artist Two" not in wrong, (
+            "Artist Two co-performs the correct song -- it cannot be offered "
+            "as a wrong answer"
+        )
+    assert seen_duet, "opening_artist never picked the duet theme"
+
+
+def test_sequel_never_offers_one_of_the_subjects_own_sequels_as_a_wrong_answer():
+    # Same exploit `same_work_character`/`secondary_character` were fixed for:
+    # two pool entries share the title "Duplicate Show" (a re-ingested season,
+    # a franchise reusing its title) and carry the SAME multi-entry
+    # `relations.SEQUEL` list. `others` used to exclude the chosen subject
+    # only by object IDENTITY, so the duplicate-titled twin sailed through and
+    # contributed the subject's OWN other sequel as a "wrong" answer -- except
+    # every entry in `relations.SEQUEL` is a genuine direct sequel of the
+    # subject, so that "wrong" answer is also correct. Unlike the
+    # title-emitting character archetypes, a sequel title does not collide
+    # textually with whichever sequel was drawn as the correct answer, so
+    # `make_question`'s casefold dedupe does not catch it.
+    pool = [
+        {"title": "Duplicate Show", "relations": {"SEQUEL": ["Seq A", "Seq B"]}},
+        {"title": "Duplicate Show", "relations": {"SEQUEL": ["Seq A", "Seq B"]}},
+        {"title": "Other Show A", "relations": {"SEQUEL": ["Other A1", "Other A2"]}},
+        {"title": "Other Show B", "relations": {"SEQUEL": ["Other B1"]}},
+    ]
+    dup_ctx = QuizContext(
+        animes=pool,
+        pool=pool,
+        themes={},
+        episodes={},
+        characters_by_origin={},
+        closeness=1.0,
+    )
+    own_sequels = {"Seq A", "Seq B"}
+    seen_duplicate_subject = False
+    for seed in range(60):
+        q = ARCHETYPES["sequel"].build(dup_ctx, random.Random(seed))
+        if not q or q.subject != "Duplicate Show":
+            continue
+        seen_duplicate_subject = True
+        wrong = {o for i, o in enumerate(q.options) if i != q.correct_index}
+        assert not (
+            own_sequels & wrong
+        ), "a wrong answer was one of the subject's own (genuine) sequels"
+    assert seen_duplicate_subject, "sequel never picked the duplicated work"
+
+
 def test_top_recommendation_declines_when_the_top_two_tie():
     # Alpha and Beta are tied at 100 -- with only 4 recommendations total there
     # is no way to sample around the tie, so every attempt must decline rather

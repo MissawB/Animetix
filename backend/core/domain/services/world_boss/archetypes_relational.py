@@ -204,8 +204,18 @@ def _sequel(ctx, rng):
     if len(with_sequel) < 4:
         return None
     subject = rng.choice(with_sequel)
+    subject_title = title_of(subject)
+    # Same exploit `same_work_character` / `secondary_character` were fixed
+    # for: a duplicate-titled twin of `subject` (a re-ingested season, a
+    # franchise reusing its title) can carry the identical multi-entry
+    # `relations.SEQUEL` list. Excluding `subject` by object identity alone
+    # would let that twin's entries -- which are the subject's OWN other
+    # sequels -- leak in as "wrong" answers. Restrict by title instead.
     others = [
-        s for it in with_sequel if it is not subject for s in it["relations"]["SEQUEL"]
+        s
+        for it in with_sequel
+        if title_of(it) != subject_title
+        for s in it["relations"]["SEQUEL"]
     ]
     return make_question(
         rng,
@@ -248,8 +258,20 @@ def _opening_artist(ctx, rng):
         return None
     work, theme = rng.choice(pairs)
     performer = theme["artists"][0]
+    # A song can have several credited performers (the themes data carries
+    # `artists: [...]` straight from AnimeThemes.moe, which credits every
+    # performer of a duet). `_all_themes` walks every theme, including this
+    # one, so filtering out only `performer` would let a co-performer of the
+    # CORRECT song survive as a "wrong" answer while they genuinely perform
+    # it too. Exclude the whole theme's own artist list, not just the one
+    # named `correct`.
+    own_artists = set(theme.get("artists") or [])
     elsewhere = [
-        a for t in _all_themes(ctx) for a in t.get("artists") or [] if a != performer
+        a
+        for t in _all_themes(ctx)
+        if t is not theme
+        for a in t.get("artists") or []
+        if a not in own_artists
     ]
     return make_question(
         rng,
