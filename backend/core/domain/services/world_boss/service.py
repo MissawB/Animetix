@@ -13,7 +13,7 @@ from .rules import band_for, closeness_for, pool_size_for
 
 logger = logging.getLogger("animetix.worldboss")
 
-ATTEMPTS = 20  # an archetype declines when its data is missing; try another
+ATTEMPTS = 12  # an archetype declines when its data is missing; try another
 
 
 class WorldBossQuizService:
@@ -78,17 +78,25 @@ class WorldBossQuizService:
         pre-compute the ladder.
         """
         rng = rng or random.Random(secrets.randbits(64))
+        band = band_for(tier, limiter_break)
         ctx = self._context(tier, limiter_break)
-        candidates = archetypes_for(band_for(tier, limiter_break))
+        candidates = archetypes_for(band)
 
         for _ in range(ATTEMPTS):
             question = rng.choice(candidates).build(ctx, rng)
             if question:
                 return question
 
-        # Every band drew a blank: fall back on the one fact the catalogue always has.
-        fallback = ARCHETYPES["year"].build(ctx, rng)
+        # Every archetype in the band drew a blank: fall back on the one fact the
+        # catalogue always has. In bands C/D (and Limiter Break) the fallback must
+        # still be asked at the band's own difficulty -- handing out `year` (Band A)
+        # here would let a data-starved catalogue collect Limiter Break's 4096
+        # damage for the easiest question in the game. `exact_year` rests on the
+        # same guaranteed `year` field, just with tighter (+/-1/+/-2) distractors.
+        hard_band = band in ("C", "D") or limiter_break
+        fallback_name = "exact_year" if hard_band else "year"
+        fallback = ARCHETYPES[fallback_name].build(ctx, rng)
         if fallback is None:
             raise GameLogicError("World Boss: the catalogue cannot field a question.")
-        logger.warning("World Boss: tier %s fell back to `year`.", tier)
+        logger.warning("World Boss: tier %s fell back to `%s`.", tier, fallback_name)
         return fallback

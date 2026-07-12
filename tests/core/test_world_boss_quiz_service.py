@@ -88,3 +88,31 @@ def test_an_empty_catalogue_raises_rather_than_shipping_a_broken_quiz():
 
     with pytest.raises(GameLogicError):
         _service(animes=[]).build_question(1)
+
+
+class _NeverDrawsExactYear(random.Random):
+    """Forces the attempts loop to only ever pick from Band D archetypes OTHER
+    than `exact_year` -- so a catalogue that can only answer `exact_year` is
+    guaranteed to exhaust its attempt budget and hit the fallback branch."""
+
+    def choice(self, seq):
+        pool = [item for item in seq if getattr(item, "name", None) != "exact_year"]
+        return super().choice(pool or seq)
+
+
+def test_limiter_break_fallback_is_exact_year_not_year():
+    # One work, one field: a year and nothing else. Every Band D archetype but
+    # `exact_year` needs openings, episodes, recommendations, rare tags or a
+    # character sheet -- all absent here -- so they all decline. `exact_year`
+    # rests on the same "year" field `year` (Band A) does, so it is the one
+    # archetype this thin a catalogue can still answer.
+    service = _service([{"title": "Solo Work", "year": 2000}])
+
+    question = service.build_question(
+        1, limiter_break=True, rng=_NeverDrawsExactYear(0)
+    )
+
+    # The fallback must be difficulty-appropriate: `exact_year` (Band D), not
+    # `year` (Band A) -- which would hand Limiter Break's 4096 damage for the
+    # easiest question in the game.
+    assert question.archetype == "exact_year"
