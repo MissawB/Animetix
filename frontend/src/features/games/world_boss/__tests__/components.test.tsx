@@ -27,7 +27,7 @@ describe('TimerRing', () => {
 
   it('counts down and fires once at zero', () => {
     const onExpire = vi.fn();
-    render(<TimerRing seconds={3} onExpire={onExpire} paused={false} />);
+    render(<TimerRing questionId="q1" seconds={3} onExpire={onExpire} paused={false} />);
 
     expect(screen.getByText('3')).toBeInTheDocument();
     act(() => {
@@ -39,9 +39,65 @@ describe('TimerRing', () => {
 
   it('does not fire while paused', () => {
     const onExpire = vi.fn();
-    render(<TimerRing seconds={1} onExpire={onExpire} paused />);
+    render(<TimerRing questionId="q1" seconds={1} onExpire={onExpire} paused />);
     vi.advanceTimersByTime(5000);
     expect(onExpire).not.toHaveBeenCalled();
+  });
+
+  it('restarts the countdown for a new question even when the band timer (seconds) is unchanged', () => {
+    // Regression: band A is 20s for every tier in the band, so two consecutive
+    // questions in the same band share `seconds`. Without a question-keyed
+    // reset the ring stays frozen at 0 after the first question expires.
+    const onExpire = vi.fn();
+    const { rerender } = render(
+      <TimerRing questionId="q1" seconds={3} onExpire={onExpire} paused={false} />,
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
+    expect(onExpire).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('0')).toBeInTheDocument();
+
+    // A new question lands, same band, same `seconds` budget, different question.
+    rerender(<TimerRing questionId="q2" seconds={3} onExpire={onExpire} paused={false} />);
+    expect(screen.getByText('3')).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
+    expect(onExpire).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not restart when the same pending question is re-issued verbatim', () => {
+    // The backend re-issues the SAME pending question if asked again inside its
+    // own timer. That must not reset the ring the player is already watching.
+    const onExpire = vi.fn();
+    const { rerender } = render(
+      <TimerRing questionId="q1" seconds={5} onExpire={onExpire} paused={false} />,
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(screen.getByText('3')).toBeInTheDocument();
+
+    // Same question, same timer budget, re-rendered (e.g. a parent re-render).
+    rerender(<TimerRing questionId="q1" seconds={5} onExpire={onExpire} paused={false} />);
+    expect(screen.getByText('3')).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(onExpire).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides the visible numeral from assistive tech so the live region only announces once', () => {
+    const onExpire = vi.fn();
+    render(<TimerRing questionId="q1" seconds={3} onExpire={onExpire} paused={false} />);
+
+    expect(screen.getByText('3')).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByText(/3 s/)).not.toHaveAttribute('aria-hidden');
   });
 });
 
@@ -93,5 +149,81 @@ describe('QuestionCard', () => {
     expect(screen.getByRole('button', { name: '1998' })).toHaveAttribute('data-state', 'correct');
     await userEvent.click(screen.getByRole('button', { name: '2004' }));
     expect(onPick).not.toHaveBeenCalled();
+  });
+
+  it("marks the player's own wrong pick distinctly from both the correct answer and the untouched options", async () => {
+    const onPick = vi.fn();
+    const verdict = {
+      correct: false,
+      late: false,
+      damage_dealt: 0,
+      correct_index: 1,
+      correct_label: '1998',
+      subject: 'Cowboy Bebop',
+      tier: 1,
+      run_damage: 0,
+      best_tier: 2,
+      limiter_break: false,
+      streak: 0,
+      boss: { current_hp: 9, total_hp: 10, current_phase: 1, is_active: true },
+    };
+    const { rerender } = render(
+      <QuestionCard question={QUESTION} verdict={null} onPick={onPick} />,
+    );
+
+    // The player picks the wrong option ('2004', index 3) — not the same wrong
+    // option as another player might pick ('2001', index 2).
+    await userEvent.click(screen.getByRole('button', { name: '2004' }));
+    rerender(<QuestionCard question={QUESTION} verdict={verdict} onPick={onPick} />);
+
+    expect(screen.getByRole('button', { name: '1998' })).toHaveAttribute('data-state', 'correct');
+    expect(screen.getByRole('button', { name: '2004' })).toHaveAttribute(
+      'data-state',
+      'wrong-picked',
+    );
+    expect(screen.getByRole('button', { name: '2001' })).toHaveAttribute(
+      'data-state',
+      'wrong-other',
+    );
+    expect(screen.getByRole('button', { name: '1996' })).toHaveAttribute(
+      'data-state',
+      'wrong-other',
+    );
+  });
+
+  it('forgets the previous pick once a new question is handed to it', async () => {
+    const onPick = vi.fn();
+    const verdict = {
+      correct: true,
+      late: false,
+      damage_dealt: 4,
+      correct_index: 2,
+      correct_label: '2001',
+      subject: 'Next question',
+      tier: 4,
+      run_damage: 7,
+      best_tier: 4,
+      limiter_break: false,
+      streak: 1,
+      boss: { current_hp: 8, total_hp: 10, current_phase: 1, is_active: true },
+    };
+    const NEXT_QUESTION = { ...QUESTION, prompt: 'Another one entirely' };
+
+    const { rerender } = render(
+      <QuestionCard question={QUESTION} verdict={null} onPick={onPick} />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: '2004' }));
+
+    // A brand-new question arrives before any verdict on the old one lands.
+    rerender(<QuestionCard question={NEXT_QUESTION} verdict={null} onPick={onPick} />);
+    // ...and its own verdict comes back marking a *different* index correct.
+    rerender(<QuestionCard question={NEXT_QUESTION} verdict={verdict} onPick={onPick} />);
+
+    // The stale pick from the previous question must not resurface as
+    // "wrong-picked" on an option that was never clicked for this question.
+    expect(screen.getByRole('button', { name: '2004' })).toHaveAttribute(
+      'data-state',
+      'wrong-other',
+    );
   });
 });

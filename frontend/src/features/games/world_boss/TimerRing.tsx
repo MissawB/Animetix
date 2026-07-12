@@ -5,6 +5,16 @@ interface Props {
   seconds: number;
   onExpire: () => void;
   paused: boolean;
+  /**
+   * Identifies the question this timer is running for. The backend's
+   * `timer_for()` is keyed on band, not on the individual question, so two
+   * consecutive questions in the same band (or two Limiter Break questions)
+   * carry the SAME `seconds` budget — `seconds` changing is not a reliable
+   * "new question" signal. `questionId` is: it must change for every new
+   * question and stay the same when the backend re-issues the identical
+   * pending question verbatim (asked again inside its own timer).
+   */
+  questionId: string;
 }
 
 const CIRCUMFERENCE = 2 * Math.PI * 44;
@@ -13,27 +23,32 @@ const CIRCUMFERENCE = 2 * Math.PI * 44;
  * The clock, as a ring that closes in. It is decor: the server decides whether an
  * answer was late. What it must do is make the last three seconds feel like three.
  */
-export const TimerRing: React.FC<Props> = ({ seconds, onExpire, paused }) => {
+export const TimerRing: React.FC<Props> = ({ seconds, onExpire, paused, questionId }) => {
   const { t } = useTranslation();
   const [left, setLeft] = React.useState(seconds);
   const [prevSeconds, setPrevSeconds] = React.useState(seconds);
+  const [prevQuestionId, setPrevQuestionId] = React.useState(questionId);
   const fired = React.useRef(false);
 
   // A fresh question hands us a fresh `seconds` budget — reset the countdown
-  // to match. Adjusted during render (React's supported pattern for deriving
-  // state from a changed prop, see react.dev/learn/you-might-not-need-an-effect)
-  // rather than in an effect body, so it lands in the same render instead of
-  // flashing the old value for a tick, and so the lint gate (no synchronous
-  // setState in an effect) stays clean. `fired` is a ref, not state — refs
-  // can't be touched during render, so its reset lives in the effect below.
-  if (seconds !== prevSeconds) {
+  // to match. Keyed on `questionId` too (not just `seconds`): same-band
+  // questions share a `seconds` value, so `seconds` alone under-fires and the
+  // ring freezes at 0 on the second question of a band. Adjusted during
+  // render (React's supported pattern for deriving state from a changed prop,
+  // see react.dev/learn/you-might-not-need-an-effect) rather than in an
+  // effect body, so it lands in the same render instead of flashing the old
+  // value for a tick, and so the lint gate (no synchronous setState in an
+  // effect) stays clean. `fired` is a ref, not state — refs can't be touched
+  // during render, so its reset lives in the effect below.
+  if (seconds !== prevSeconds || questionId !== prevQuestionId) {
     setPrevSeconds(seconds);
+    setPrevQuestionId(questionId);
     setLeft(seconds);
   }
 
   React.useEffect(() => {
     fired.current = false;
-  }, [seconds]);
+  }, [seconds, questionId]);
 
   React.useEffect(() => {
     if (paused) return undefined;
@@ -70,12 +85,15 @@ export const TimerRing: React.FC<Props> = ({ seconds, onExpire, paused }) => {
         />
       </svg>
       <span
+        aria-hidden="true"
         className={`absolute inset-0 grid place-items-center font-mono font-black text-2xl ${
           urgent ? 'text-red-500' : 'text-white'
         }`}
       >
         {left}
       </span>
+      {/* The only text the live region should announce — the visible numeral
+          above is aria-hidden so the two don't double-announce every second. */}
       <span className="sr-only">{t('games.world_boss.seconds_left', '{{n}} s', { n: left })}</span>
     </div>
   );
