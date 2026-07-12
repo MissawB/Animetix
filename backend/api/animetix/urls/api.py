@@ -689,9 +689,14 @@ urlpatterns = [
         name="api_world_boss_active",
     ),
     path(
-        "game/world-boss/attack/",
-        api_views.WorldBossAttackView.as_view(),
-        name="api_world_boss_attack",
+        "game/world-boss/question/",
+        api_views.WorldBossQuestionView.as_view(),
+        name="api_world_boss_question",
+    ),
+    path(
+        "game/world-boss/answer/",
+        api_views.WorldBossAnswerView.as_view(),
+        name="api_world_boss_answer",
     ),
     path(
         "game/world-boss/leaderboard/",

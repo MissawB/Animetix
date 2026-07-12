@@ -35,6 +35,7 @@ def _rewire_game_modules():
     import animetix.api.games.emoji as emoji_mod
     import animetix.api.games.paradox as paradox_mod
     import animetix.api.games.vision as vision_mod
+    import animetix.api.games.world_boss as world_boss_mod
     from animetix.containers import container
 
     container.wire(
@@ -48,6 +49,7 @@ def _rewire_game_modules():
             vision_mod,
             akinetix_mod,
             blindtest_mod,
+            world_boss_mod,
         ]
     )
 
@@ -68,6 +70,7 @@ def _rewire_game_modules():
         "vision_service",
         "akinetix_service",
         "blind_test_service",
+        "world_boss_quiz_service",
     )
     for name in guarded:
         getattr(container.core, name).reset()
