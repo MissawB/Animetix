@@ -459,6 +459,20 @@
       "subtitle": "Real-time tracking of your neural consumption and semantic budget.",
       "title_part1": "AI",
       "title_part2": "QUOTAS"
+    },
+    "error": {
+      "invalid_credential": "Wrong email or password. Check your details and try again.",
+      "invalid_email": "That email address isn't valid. Example: kenji@animetix.com",
+      "missing_password": "Enter your password.",
+      "email_in_use": "An account already uses this address. Sign in, or sign up with another address.",
+      "weak_password": "Password too short: use at least 6 characters.",
+      "too_many_requests": "Too many attempts. Wait a few minutes before trying again.",
+      "network": "Can't reach the server. Check your internet connection, then try again.",
+      "popup_blocked": "Your browser blocked the Google window. Allow pop-ups for this site, then try again.",
+      "other_provider": "This address is already linked to another sign-in method. Use the one you created the account with.",
+      "user_disabled": "This account is disabled. Contact us to reactivate it.",
+      "operation_not_allowed": "This sign-in method isn't enabled right now.",
+      "unknown": "Sign-in failed. Try again in a moment."
     }
   },
   "billing": {

@@ -57,14 +57,40 @@ describe('RegisterPage', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/'));
   });
 
-  it('surfaces a Google failure instead of navigating', async () => {
-    loginWithGoogle.mockRejectedValue(new Error('popup fermée'));
+  it('explains a blocked Google popup instead of navigating', async () => {
+    loginWithGoogle.mockRejectedValue({ code: 'auth/popup-blocked' });
     renderPage();
 
     await userEvent.click(screen.getByRole('button', { name: /s'inscrire avec google/i }));
 
-    expect(await screen.findByText(/popup fermée/i)).toBeInTheDocument();
+    // The user gets an actionable sentence, not "Firebase: Error (auth/...)".
+    expect(await screen.findByText(/pop-ups/i)).toBeInTheDocument();
+    expect(screen.queryByText(/firebase/i)).not.toBeInTheDocument();
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('says the address is taken when the account already exists', async () => {
+    register.mockRejectedValue({ code: 'auth/email-already-in-use' });
+    renderPage();
+
+    await userEvent.type(screen.getByLabelText(/pseudo/i), 'kenji');
+    await userEvent.type(screen.getByLabelText(/adresse email/i), 'kenji@animetix.com');
+    await userEvent.type(screen.getByLabelText(/mot de passe/i), 'hunter2!');
+    await userEvent.click(screen.getByRole('button', { name: /s'inscrire$/i }));
+
+    expect(await screen.findByText(/compte existe déjà/i)).toBeInTheDocument();
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('shows nothing when the user closes the Google popup themselves', async () => {
+    loginWithGoogle.mockRejectedValue({ code: 'auth/popup-closed-by-user' });
+    renderPage();
+
+    await userEvent.click(screen.getByRole('button', { name: /s'inscrire avec google/i }));
+
+    // Backing out on purpose is not a failure: no error banner at all.
+    await waitFor(() => expect(loginWithGoogle).toHaveBeenCalled());
+    expect(screen.queryByText(/échou|incorrect|erreur/i)).not.toBeInTheDocument();
   });
 
   it('still registers with email and password', async () => {

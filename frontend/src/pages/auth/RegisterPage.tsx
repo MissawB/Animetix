@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useTranslation } from 'react-i18next';
 import { UserPlus, ArrowLeft, User, Mail, Lock } from 'lucide-react';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { authErrorMessage } from '../../utils/authErrors';
 
 const RegisterPage: React.FC = () => {
   const { t } = useTranslation();
@@ -27,8 +28,7 @@ const RegisterPage: React.FC = () => {
       await register({ username, email, password });
       navigate('/');
     } catch (err) {
-      const error = err as Error;
-      setError(error.message || t('auth.registerFailed', "Erreur lors de l'inscription."));
+      setError(authErrorMessage(err, t) ?? '');
     }
   };
 
@@ -40,8 +40,8 @@ const RegisterPage: React.FC = () => {
       await loginWithGoogle();
       navigate('/');
     } catch (err) {
-      const error = err as Error;
-      setError(error.message || t('auth.registerFailed', 'Inscription Google échouée.'));
+      // null = the user closed the Google popup themselves; that is not a failure.
+      setError(authErrorMessage(err, t) ?? '');
     }
   };
 

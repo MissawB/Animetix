@@ -459,6 +459,20 @@
       "subtitle": "Suivi en temps réel de votre consommation neuronale et budget sémantique.",
       "title_part1": "QUOTAS",
       "title_part2": "IA"
+    },
+    "error": {
+      "invalid_credential": "Email ou mot de passe incorrect. Vérifiez vos identifiants et réessayez.",
+      "invalid_email": "Cette adresse email n'est pas valide. Exemple : kenji@animetix.com",
+      "missing_password": "Saisissez votre mot de passe.",
+      "email_in_use": "Un compte existe déjà avec cette adresse. Connectez-vous, ou inscrivez-vous avec une autre adresse.",
+      "weak_password": "Mot de passe trop court : il en faut au moins 6 caractères.",
+      "too_many_requests": "Trop de tentatives. Patientez quelques minutes avant de réessayer.",
+      "network": "Serveur injoignable. Vérifiez votre connexion internet, puis réessayez.",
+      "popup_blocked": "Votre navigateur a bloqué la fenêtre Google. Autorisez les pop-ups pour ce site, puis réessayez.",
+      "other_provider": "Cette adresse est déjà liée à une autre méthode de connexion. Utilisez celle avec laquelle vous avez créé le compte.",
+      "user_disabled": "Ce compte est désactivé. Contactez-nous pour le réactiver.",
+      "operation_not_allowed": "Cette méthode de connexion n'est pas activée pour le moment.",
+      "unknown": "La connexion a échoué. Réessayez dans un instant."
     }
   },
   "billing": {
