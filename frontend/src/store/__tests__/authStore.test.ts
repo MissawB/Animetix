@@ -16,6 +16,8 @@ vi.mock('firebase/auth', () => ({
   signOut: vi.fn(),
   onAuthStateChanged: vi.fn(),
   signInWithPopup: vi.fn(),
+  signInWithRedirect: vi.fn(),
+  getRedirectResult: vi.fn(),
   GoogleAuthProvider: vi.fn(function GoogleAuthProvider() {}),
   OAuthProvider: vi.fn(function OAuthProvider() {
     return { addScope: vi.fn() };
@@ -37,6 +39,16 @@ vi.mock('../notificationStore', () => ({
   },
 }));
 
+// --- Mock the toast store (redirect-result errors surface as a toast: the
+// user can land back on any route, so there is no login-page error banner
+// to render into) ---
+const addToast = vi.fn();
+vi.mock('../toastStore', () => ({
+  useToastStore: {
+    getState: () => ({ addToast }),
+  },
+}));
+
 import * as firebaseAuth from 'firebase/auth';
 import * as api from '../../api';
 
@@ -46,6 +58,8 @@ const mockCreateUser = vi.mocked(firebaseAuth.createUserWithEmailAndPassword);
 const mockSignOut = vi.mocked(firebaseAuth.signOut);
 const mockOnAuthStateChanged = vi.mocked(firebaseAuth.onAuthStateChanged);
 const mockSignInWithPopup = vi.mocked(firebaseAuth.signInWithPopup);
+const mockSignInWithRedirect = vi.mocked(firebaseAuth.signInWithRedirect);
+const mockGetRedirectResult = vi.mocked(firebaseAuth.getRedirectResult);
 
 const sampleUser = { id: 1, username: 'kira', email: 'kira@example.com' } as unknown as User;
 
@@ -64,6 +78,10 @@ describe('useAuthStore', () => {
     vi.clearAllMocks();
     connect.mockReset();
     disconnect.mockReset();
+    addToast.mockReset();
+    // Default: no pending redirect on boot (the overwhelmingly common case —
+    // most page loads are not the return leg of a signInWithRedirect trip).
+    mockGetRedirectResult.mockResolvedValue(null);
   });
 
   it('login: sets isLoading true, calls firebase with auth+creds, resolves leaving isLoading true', async () => {
@@ -113,12 +131,49 @@ describe('useAuthStore', () => {
     expect(mockSignInWithPopup).toHaveBeenCalledTimes(1);
     expect(mockSignInWithPopup.mock.calls[0][0]).toBe(fakeAuth);
 
-    mockSignInWithPopup.mockRejectedValue(new Error('popup closed'));
+    // A deliberate cancel (user closed the popup): must reject as before and
+    // must NOT fall back to a redirect — see the dedicated test below.
+    const cancelled = new Error('popup closed');
+    (cancelled as unknown as { code: string }).code = 'auth/cancelled-popup-request';
+    mockSignInWithPopup.mockRejectedValue(cancelled);
     await expect(useAuthStore.getState().loginWithGoogle()).rejects.toThrow('popup closed');
     expect(useAuthStore.getState().isLoading).toBe(false);
+    expect(mockSignInWithRedirect).not.toHaveBeenCalled();
   });
 
-  it('loginWithDiscord / loginWithX / loginWithMyAnimeList: each opens a popup with auth', async () => {
+  it('loginWithGoogle: popup blocked falls back to signInWithRedirect (same provider, same auth)', async () => {
+    const useAuthStore = await freshStore();
+    const blocked = new Error('blocked');
+    (blocked as unknown as { code: string }).code = 'auth/popup-blocked';
+    mockSignInWithPopup.mockRejectedValue(blocked);
+    mockSignInWithRedirect.mockResolvedValue(undefined as never);
+
+    await useAuthStore.getState().loginWithGoogle();
+
+    expect(mockSignInWithPopup).toHaveBeenCalledTimes(1);
+    expect(mockSignInWithRedirect).toHaveBeenCalledTimes(1);
+    expect(mockSignInWithRedirect.mock.calls[0][0]).toBe(fakeAuth);
+    // Same provider instance that was handed to signInWithPopup.
+    expect(mockSignInWithRedirect.mock.calls[0][1]).toBe(mockSignInWithPopup.mock.calls[0][1]);
+  });
+
+  it('loginWithGoogle: user-cancelled popup errors never fall back to redirect', async () => {
+    const useAuthStore = await freshStore();
+    for (const code of [
+      'auth/popup-closed-by-user',
+      'auth/cancelled-popup-request',
+      'auth/user-cancelled',
+    ]) {
+      const err = new Error(code);
+      (err as unknown as { code: string }).code = code;
+      mockSignInWithPopup.mockRejectedValue(err);
+
+      await expect(useAuthStore.getState().loginWithGoogle()).rejects.toThrow();
+      expect(mockSignInWithRedirect).not.toHaveBeenCalled();
+    }
+  });
+
+  it('loginWithDiscord / loginWithX / loginWithMyAnimeList: each opens a popup with auth, and each falls back to redirect on a blocked popup', async () => {
     const useAuthStore = await freshStore();
     mockSignInWithPopup.mockResolvedValue({} as never);
 
@@ -130,6 +185,17 @@ describe('useAuthStore', () => {
     for (const call of mockSignInWithPopup.mock.calls) {
       expect(call[0]).toBe(fakeAuth);
     }
+
+    const blocked = new Error('blocked');
+    (blocked as unknown as { code: string }).code = 'auth/popup-blocked';
+    mockSignInWithPopup.mockRejectedValue(blocked);
+    mockSignInWithRedirect.mockResolvedValue(undefined as never);
+
+    await useAuthStore.getState().loginWithDiscord();
+    await useAuthStore.getState().loginWithX();
+    await useAuthStore.getState().loginWithMyAnimeList();
+
+    expect(mockSignInWithRedirect).toHaveBeenCalledTimes(3);
   });
 
   it('logout: calls signOut with auth; on error resets isLoading and re-throws', async () => {
@@ -260,6 +326,68 @@ describe('useAuthStore', () => {
     await useAuthStore.getState().checkAuth();
     await useAuthStore.getState().checkAuth();
 
+    expect(mockOnAuthStateChanged).toHaveBeenCalledTimes(1);
+  });
+
+  // ── Redirect-fallback return leg ──────────────────────────────────────────
+  // getRedirectResult(auth) must be called once on boot so a user coming back
+  // from the signInWithRedirect fallback actually ends up signed in, no
+  // matter which route the browser lands them on.
+
+  it('checkAuth: getRedirectResult resolving null on boot is a silent no-op', async () => {
+    const useAuthStore = await freshStore();
+    mockGetRedirectResult.mockResolvedValue(null);
+    mockOnAuthStateChanged.mockImplementation((() => vi.fn()) as never);
+
+    await useAuthStore.getState().checkAuth();
+
+    expect(mockGetRedirectResult).toHaveBeenCalledTimes(1);
+    expect(mockGetRedirectResult.mock.calls[0][0]).toBe(fakeAuth);
+    expect(addToast).not.toHaveBeenCalled();
+    // Still falls through to wiring the normal auth-state listener.
+    expect(mockOnAuthStateChanged).toHaveBeenCalledTimes(1);
+  });
+
+  it('checkAuth: a successful redirect result signs the user in', async () => {
+    const useAuthStore = await freshStore();
+    mockGetAuthUser.mockResolvedValue(sampleUser);
+    mockGetRedirectResult.mockResolvedValue({ user: { uid: 'abc' } } as never);
+    mockOnAuthStateChanged.mockImplementation((() => vi.fn()) as never);
+
+    await useAuthStore.getState().checkAuth();
+
+    const state = useAuthStore.getState();
+    expect(state.user).toEqual(sampleUser);
+    expect(state.isAuthenticated).toBe(true);
+    expect(state.isLoading).toBe(false);
+    expect(connect).toHaveBeenCalledTimes(1);
+  });
+
+  it('checkAuth: an error on the redirect return leg surfaces via authErrorMessage as a toast', async () => {
+    const useAuthStore = await freshStore();
+    const err = new Error('account exists');
+    (err as unknown as { code: string }).code = 'auth/account-exists-with-different-credential';
+    mockGetRedirectResult.mockRejectedValue(err);
+    mockOnAuthStateChanged.mockImplementation((() => vi.fn()) as never);
+
+    await useAuthStore.getState().checkAuth();
+
+    expect(addToast).toHaveBeenCalledTimes(1);
+    expect(addToast.mock.calls[0][0]).toMatch(/liée à une autre méthode/i);
+    // Still wires the listener afterwards — a redirect error must not brick auth.
+    expect(mockOnAuthStateChanged).toHaveBeenCalledTimes(1);
+  });
+
+  it('checkAuth: a user-cancelled error on the redirect return leg stays silent (no toast)', async () => {
+    const useAuthStore = await freshStore();
+    const err = new Error('cancelled');
+    (err as unknown as { code: string }).code = 'auth/user-cancelled';
+    mockGetRedirectResult.mockRejectedValue(err);
+    mockOnAuthStateChanged.mockImplementation((() => vi.fn()) as never);
+
+    await useAuthStore.getState().checkAuth();
+
+    expect(addToast).not.toHaveBeenCalled();
     expect(mockOnAuthStateChanged).toHaveBeenCalledTimes(1);
   });
 });
