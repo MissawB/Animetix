@@ -20,6 +20,17 @@ _GARBAGE_TAG_SIGNATURES = (
 _TAG_FIELDS = ("tags", "micro_tags", "traits")
 
 
+def popularity_of(item) -> float:
+    """Anime/manga carry an int; characters carry {"favourites": n, "rank": n}."""
+    value = item.get("popularity")
+    if isinstance(value, dict):
+        value = value.get("favourites")
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _clean_tag_list(values):
     """Drop LLM-error-message entries from a tag list; leave real tags untouched."""
     if not isinstance(values, list):
@@ -158,6 +169,7 @@ class Command(BaseCommand):
                         "image_url": img,
                         "release_year": int(year) if year else None,
                         "rating": float(rating) if rating else None,
+                        "popularity": popularity_of(item),
                         "metadata": metadata,
                     },
                 )
