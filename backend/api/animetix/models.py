@@ -311,6 +311,20 @@ class BossParticipation(models.Model):
     pending_image = models.TextField(blank=True, null=True)
     issued_at = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        # The lock in world_boss.py rests entirely on there being exactly ONE
+        # row per (user, boss): the atomic conditional UPDATE that consumes
+        # pending_index only tranches the race if get_or_create() is atomic at
+        # the DB level. Without this, two concurrent POST /question/ on a
+        # brand-new pair both miss the get() half, both INSERT, and every later
+        # get_or_create() raises MultipleObjectsReturned -- a 500 for that user,
+        # permanently, for the rest of the week.
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "boss"], name="unique_bossparticipation_user_boss"
+            )
+        ]
+
 
 class DuelRoom(models.Model):
     room_code = models.CharField(max_length=10, unique=True)

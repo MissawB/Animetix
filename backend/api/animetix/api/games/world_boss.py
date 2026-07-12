@@ -20,7 +20,7 @@ from typing import Optional
 from core.domain.exceptions import GameLogicError
 from core.domain.services.world_boss import rules
 from dependency_injector.wiring import Provide, inject
-from django.db.models import F
+from django.db.models import F, Value
 from django.db.models.functions import Greatest
 from django.utils import timezone
 from rest_framework import permissions, response, status, views
@@ -253,7 +253,15 @@ class WorldBossAnswerView(views.APIView):
         participation = BossParticipation.objects.filter(
             user=request.user, boss=boss
         ).first()
-        if participation is None or participation.pending_index is None:
+        # Same guard as the /question/ path: `_deadline()` reads `issued_at`
+        # unguarded, so a half-set row (pending_index set, issued_at not --
+        # or vice versa) must be treated as "no question in progress" here
+        # too, instead of reaching _deadline() and raising on None.timestamp().
+        if (
+            participation is None
+            or participation.pending_index is None
+            or participation.issued_at is None
+        ):
             return response.Response(
                 {"detail": "No question in progress."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -321,18 +329,17 @@ class WorldBossAnswerView(views.APIView):
             # Mort subite : on retombe au palier 1. Les dégâts déjà infligés restent.
             next_tier, streak, limiter_break, run_damage = 1, 0, False, 0
 
-        best_tier = max(participation.best_tier, tier if correct else 0)
         updates = dict(
             CLEARED_PENDING,
             tier=next_tier,
             streak=streak,
             limiter_break=limiter_break,
             run_damage=run_damage,
-            best_tier=best_tier,
             last_participation=timezone.now(),  # auto_now ne s'applique pas à update()
-            # F(): deux réponses du même joueur en parallèle ne doivent pas se
-            # marcher dessus (un read-modify-write en perdrait une).
+            # F() / Greatest(): deux réponses du même joueur en parallèle ne
+            # doivent pas se marcher dessus (un read-modify-write en perdrait une).
             points_contributed=F("points_contributed") + dealt,
+            best_tier=Greatest(F("best_tier"), Value(tier if correct else 0)),
         )
         if broke_limiter:
             updates["limiter_breaks"] = F("limiter_breaks") + 1
@@ -352,7 +359,7 @@ class WorldBossAnswerView(views.APIView):
                 "subject": subject,
                 "tier": next_tier,
                 "run_damage": run_damage,
-                "best_tier": best_tier,
+                "best_tier": participation.best_tier,
                 "limiter_break": limiter_break,
                 "streak": streak,
                 "boss": {

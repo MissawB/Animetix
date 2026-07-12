@@ -4,6 +4,8 @@ Two properties carry the whole game: the answer never leaves the server, and the
 clock is the server's. Everything else is arithmetic.
 """
 
+import importlib
+import types
 from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
@@ -13,8 +15,13 @@ from animetix.models import BossParticipation, GlobalBoss
 from core.domain.services.world_boss.context import Question
 from dependency_injector import providers
 from django.contrib.auth.models import User
+from django.db import IntegrityError, connection
 from django.utils import timezone
 from rest_framework.test import APIClient
+
+_dedup_migration = importlib.import_module(
+    "animetix.migrations.0053_bossparticipation_unique_user_boss"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -528,3 +535,135 @@ def test_the_leaderboard_ranks_by_the_deepest_climb(client, boss):
     # not serialise it, or it would hand out every player's answer.
     assert "pending_index" not in rows[0]
     assert "pending_label" not in rows[0]
+
+
+# --------------------------------------------------------------------------- #
+# The lock ("the rowcount is the lock") only holds if there is exactly ONE
+# BossParticipation row per (user, boss). Two concurrent POST /question/ on a
+# brand-new pair both missing the get() half of get_or_create used to leave two
+# rows behind, and every later get_or_create() would raise MultipleObjectsReturned
+# -- a 500 for that user, forever, for the rest of the week.
+# --------------------------------------------------------------------------- #
+@pytest.mark.django_db
+def test_a_second_participation_for_the_same_user_and_boss_is_rejected(boss):
+    user = User.objects.create_user("dup")
+    BossParticipation.objects.create(user=user, boss=boss)
+
+    with pytest.raises(IntegrityError):
+        BossParticipation.objects.create(user=user, boss=boss)
+
+
+@contextmanager
+def _unique_constraint_lifted():
+    """Simulate the pre-migration world where the constraint did not yet exist.
+
+    The dedup RunPython step runs *before* the AddConstraint operation, on a
+    database that may already hold duplicates -- exactly the state this
+    context manager recreates so the fold-and-delete logic can be exercised
+    against real duplicate rows.
+
+    On SQLite the constraint is baked into the table's CREATE TABLE statement
+    (a ``sqlite_autoindex_*``, not a droppable named index), so
+    ``schema_editor.remove_constraint()`` -- which rebuilds the table from
+    ``model._meta.constraints`` -- has to see that list emptied first, or the
+    rebuilt table just reinstates the same constraint. Rebuilding DDL is also
+    something SQLite refuses mid-transaction, hence ``transaction=True`` on the
+    two tests that use this.
+    """
+    original_constraints = BossParticipation._meta.constraints
+    BossParticipation._meta.constraints = []
+    with connection.schema_editor() as editor:
+        editor._remake_table(BossParticipation)
+    try:
+        yield
+    finally:
+        BossParticipation._meta.constraints = original_constraints
+        with connection.schema_editor() as editor:
+            editor._remake_table(BossParticipation)
+
+
+def _raid_boss():
+    return GlobalBoss.objects.create(
+        title="RAID OMEGA · S28",
+        secret_title="",
+        media_type="Anime",
+        total_hp=100000,
+        current_hp=100000,
+        end_date=timezone.now() + timezone.timedelta(days=7),
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_deduplication_folds_points_max_tier_and_summed_breaks():
+    raid_boss = _raid_boss()
+    user = User.objects.create_user("dup2")
+    apps = types.SimpleNamespace(get_model=lambda app, model: BossParticipation)
+
+    with _unique_constraint_lifted():
+        loser = BossParticipation.objects.create(
+            user=user,
+            boss=raid_boss,
+            points_contributed=50,
+            best_tier=3,
+            limiter_breaks=1,
+        )
+        keeper = BossParticipation.objects.create(
+            user=user,
+            boss=raid_boss,
+            points_contributed=200,
+            best_tier=9,
+            limiter_breaks=2,
+        )
+
+        _dedup_migration.deduplicate_boss_participations(apps, None)
+
+        remaining = list(BossParticipation.objects.filter(user=user, boss=raid_boss))
+        assert len(remaining) == 1
+        survivor = remaining[0]
+        assert survivor.pk == keeper.pk  # highest points_contributed kept
+        assert survivor.points_contributed == 250  # 200 + 50 folded in
+        assert survivor.best_tier == 9  # max of the two
+        assert survivor.limiter_breaks == 3  # summed
+        assert not BossParticipation.objects.filter(pk=loser.pk).exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_deduplication_ties_break_on_the_lowest_pk():
+    raid_boss = _raid_boss()
+    user = User.objects.create_user("dup3")
+    apps = types.SimpleNamespace(get_model=lambda app, model: BossParticipation)
+
+    with _unique_constraint_lifted():
+        first = BossParticipation.objects.create(
+            user=user, boss=raid_boss, points_contributed=10, best_tier=1
+        )
+        second = BossParticipation.objects.create(
+            user=user, boss=raid_boss, points_contributed=10, best_tier=2
+        )
+
+        _dedup_migration.deduplicate_boss_participations(apps, None)
+
+        survivor = BossParticipation.objects.get(user=user, boss=raid_boss)
+        assert survivor.pk == first.pk  # tie -> lowest pk wins
+        assert survivor.points_contributed == 20
+        assert survivor.best_tier == 2
+        assert not BossParticipation.objects.filter(pk=second.pk).exists()
+
+
+# --------------------------------------------------------------------------- #
+# `_deadline()` does `participation.issued_at.timestamp()` unguarded. The
+# /question/ path only reads a pending question when both `pending_index` and
+# `issued_at` are set; /answer/ must refuse the same half-set row instead of
+# crashing on it.
+# --------------------------------------------------------------------------- #
+@pytest.mark.django_db
+def test_answering_a_half_set_participation_is_refused_not_a_crash(client, boss):
+    BossParticipation.objects.create(
+        user=User.objects.get(username="kenji"),
+        boss=boss,
+        pending_index=1,  # issued_at intentionally left unset
+    )
+
+    response = _answer(client, 1)
+
+    assert response.status_code == 400
