@@ -554,7 +554,15 @@ class BossParticipationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BossParticipation
-        fields = ["id", "user", "username", "points_contributed", "last_participation"]
+        fields = [
+            "id",
+            "user",
+            "username",
+            "points_contributed",
+            "best_tier",
+            "limiter_breaks",
+            "last_participation",
+        ]
 
 
 class DataCurationTicketSerializer(serializers.ModelSerializer):

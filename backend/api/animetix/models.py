@@ -274,6 +274,10 @@ class BossParticipation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     boss = models.ForeignKey(GlobalBoss, on_delete=models.CASCADE)
     points_contributed = models.IntegerField(default=0)
+    # The deepest tier reached this week. It is what the leaderboard ranks on:
+    # damage follows the climb, so ranking on damage alone would reward grinding.
+    best_tier = models.IntegerField(default=0)
+    limiter_breaks = models.IntegerField(default=0)
     last_participation = models.DateTimeField(auto_now=True)
 
 
