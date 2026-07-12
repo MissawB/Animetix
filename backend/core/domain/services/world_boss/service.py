@@ -58,23 +58,20 @@ class WorldBossQuizService:
 
     @staticmethod
     def _index_themes(raw: Dict[str, Any]) -> Dict[str, Any]:
-        """Les openings, retrouvables par l'id AniList ET par l'id MAL.
+        """Les openings, indexés tels que le fichier les tient : par id AniList.
 
-        `anime_themes.json` est indexé par id AniList et chaque entrée porte son
-        `mal_id`. Or le catalogue relationnel n'a QUE l'id MAL (external_id) :
-        indexé sur la seule clé source, aucun de ses works ne se retrouvait, et
-        les 3 archétypes d'opening étaient muets en production.
-
-        Les clés sources gagnent sur les alias MAL (`setdefault`) : les deux
-        espaces d'ids sont numériques et peuvent se croiser, la clé explicite
-        doit donc primer.
+        Un correctif précédent ajoutait ici un alias par id MAL (`setdefault`)
+        pour que le catalogue relationnel (qui n'a que l'id MAL) puisse résoudre
+        ses openings. Mais les deux espaces d'id sont numériques et se
+        recoupent : une œuvre SANS entrée propre pouvait ainsi résoudre son id
+        MAL contre la clé AniList d'une œuvre totalement différente -- une
+        mauvaise réponse validée comme bonne (3 œuvres sur 2155 dans les
+        données réelles). `QuizContext` construit désormais son propre index
+        par id MAL à partir de `mal_id` (`themes_by_mal`), strictement disjoint
+        de celui-ci ; `themes_of` n'interroge chaque index qu'avec un id de son
+        propre espace.
         """
-        index: Dict[str, Any] = {str(key): entry for key, entry in raw.items()}
-        for entry in raw.values():
-            mal_id = (entry or {}).get("mal_id")
-            if mal_id:
-                index.setdefault(str(mal_id), entry)
-        return index
+        return {str(key): entry for key, entry in raw.items()}
 
     @staticmethod
     def _index_episodes(raw: Dict[str, Any], themes: Dict[str, Any]) -> Dict[str, Any]:

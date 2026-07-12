@@ -66,7 +66,14 @@ def _cast(ctx: QuizContext, work: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 def _rank(character: Dict[str, Any]) -> int:
-    return (character.get("popularity") or {}).get("rank") or 9999
+    """Comme `_favourites` (archetypes_core.py) : `popularity` est un dict
+    {"favourites", "rank"} -- sauf quand elle ne l'est pas, servie par la base,
+    où c'est la colonne `popularity` (un float) qui remonte quand les métadonnées
+    ne portent pas le dict. `.get("rank")` sur un float lève un AttributeError."""
+    value = character.get("popularity")
+    if not isinstance(value, dict):
+        return 9999
+    return value.get("rank") or 9999
 
 
 # ── Band C ────────────────────────────────────────────────────────────────────

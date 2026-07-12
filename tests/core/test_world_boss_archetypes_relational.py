@@ -175,6 +175,31 @@ def ctx(closeness=1.0):
     )
 
 
+def test_secondary_character_treats_a_float_popularity_as_unranked_not_a_crash():
+    # `_rank` read `(character.get("popularity") or {}).get("rank")` -- the
+    # identical latent bug `_favourites` (archetypes_core.py) was fixed for.
+    # Servi par la base, un personnage porte `popularity` comme un FLOAT (la
+    # colonne brute), jamais le dict {"favourites", "rank"} que le JSON fournit
+    # -- `.get("rank")` sur ce float lève un AttributeError.
+    characters = {
+        "Work A": [
+            {"name": "Star", "popularity": {"favourites": 1000, "rank": 1}},
+            {"name": "Obscure", "popularity": 42.0},
+        ],
+    }
+    pool = [{"title": "Work A"}]
+    float_ctx = QuizContext(
+        animes=pool,
+        pool=pool,
+        themes={},
+        episodes={},
+        characters_by_origin=characters,
+        closeness=1.0,
+    )
+    for seed in range(20):
+        ARCHETYPES["secondary_character"].build(float_ctx, random.Random(seed))
+
+
 @pytest.mark.parametrize("name", RELATIONAL)
 def test_every_relational_archetype_builds_a_four_option_question(name):
     questions = [

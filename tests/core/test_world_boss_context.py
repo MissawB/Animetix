@@ -2,14 +2,23 @@
 """A question is only as honest as its options: four distinct values, the right one
 placed at random, and never a plot summary that spells out its own answer."""
 
+import json
 import random
+from pathlib import Path
 
+import pytest
 from core.domain.services.world_boss.context import (
     MASK,
+    QuizContext,
     make_question,
     mask_title,
+    themes_of,
     title_of,
 )
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+THEMES_FILE = REPO_ROOT / "data" / "processed" / "anime_themes.json"
+ANIMES_FILE = REPO_ROOT / "data" / "processed" / "clean_root_animes.json"
 
 
 def test_the_answer_is_not_always_in_the_same_slot():
@@ -141,3 +150,131 @@ def test_mask_title_handles_regex_metacharacters_without_raising():
         assert MASK in masked
         for word in title.replace(";", " ").replace("/", " ").split():
             assert word.lower() not in masked.lower()
+
+
+# `themes_of` resolves a work's opening whichever catalogue shape served it:
+#   * the JSON file: `id` = id AniList, `idMal` = id MAL;
+#   * the relational DB adapter (post `sync_catalog` metadata fix): `id` = the
+#     external_id = id MAL, plus `anilist_id` and `idMal` in metadata.
+# `anime_themes.json` is keyed by id AniList and covers only a slice of the
+# catalogue: a work outside that slice has no entry of its own. The two id
+# spaces are both plain integers and numerically overlap -- nothing stops a
+# work's MAL id from equalling a DIFFERENT work's AniList id.
+
+
+def test_themes_of_never_lets_a_missing_works_mal_id_resolve_a_strangers_anilist_entry():
+    # Haikyuu!! has its own opening, keyed by ITS AniList id (20583). Rail
+    # Wars!'s real MAL id (23309) is a DIFFERENT number in real data, but here
+    # we pin the exact collision shape: Rail Wars!'s MAL id is numerically
+    # identical to Haikyuu!!'s AniList key. Rail Wars! has NO theme entry of
+    # its own -- resolving it must never borrow Haikyuu!!'s by that collision.
+    themes = {
+        "20583": {
+            "title": "Haikyuu!!",
+            "mal_id": 20464,  # Haikyuu!!'s OWN (different) MAL id
+            "themes": [
+                {"type": "OP", "song_title": "Imagination", "artists": ["SPYAIR"]}
+            ],
+        },
+    }
+    rail_wars_db_shape = {
+        "id": "20583",  # Rail Wars!'s external_id -- its MAL id, in DB shape
+        "idMal": "20583",
+        "anilist_id": "20488",  # Rail Wars!'s OWN, real, AniList id
+        "title": "Rail Wars!",
+    }
+    ctx = QuizContext(
+        animes=[rail_wars_db_shape],
+        pool=[rail_wars_db_shape],
+        themes=themes,
+        episodes={},
+        characters_by_origin={},
+        closeness=1.0,
+    )
+
+    assert themes_of(ctx, rail_wars_db_shape) is None
+
+
+def test_themes_of_still_resolves_a_works_own_theme_in_both_catalogue_shapes():
+    entry = {
+        "title": "Kimetsu no Yaiba",
+        "mal_id": 38000,
+        "themes": [{"type": "OP", "song_title": "Gurenge", "artists": ["LiSA"]}],
+    }
+    themes = {"101922": entry}
+
+    json_shape = {"id": 101922, "idMal": 38000, "title": "Kimetsu no Yaiba"}
+    db_shape = {
+        "id": "38000",
+        "idMal": "38000",
+        "anilist_id": "101922",
+        "title": "Kimetsu no Yaiba",
+    }
+    ctx = QuizContext(
+        animes=[json_shape, db_shape],
+        pool=[json_shape, db_shape],
+        themes=themes,
+        episodes={},
+        characters_by_origin={},
+        closeness=1.0,
+    )
+
+    assert themes_of(ctx, json_shape) is entry
+    assert themes_of(ctx, db_shape) is entry
+
+
+def test_themes_of_never_mis_attributes_against_the_real_catalogue():
+    """A guard on the live data, not just a hand-built fixture. 2155 works,
+    200 theme entries -- small enough to run on every test invocation.
+
+    For every work in `clean_root_animes.json`, whatever `themes_of` resolves
+    must genuinely be ITS OWN entry: keyed by its own AniList id, or carrying
+    its own MAL id as `mal_id`. Exercised in both catalogue shapes (JSON as
+    shipped, and the DB shape a synced work presents) so a regression in
+    either resolution path is caught here, not by a player losing their climb.
+    """
+    if not THEMES_FILE.exists() or not ANIMES_FILE.exists():
+        pytest.skip("real catalogue data files are not present in this checkout")
+
+    with open(THEMES_FILE, encoding="utf-8") as f:
+        themes = json.load(f)
+    with open(ANIMES_FILE, encoding="utf-8") as f:
+        animes = json.load(f)
+
+    resolved = 0
+    misattributed = []
+
+    for anime in animes:
+        anilist_id = anime.get("id")
+        mal_id = anime.get("idMal")
+
+        for work in (
+            {"id": anilist_id, "idMal": mal_id, "title": anime.get("title")},  # JSON
+            {
+                "id": str(mal_id),
+                "idMal": str(mal_id),
+                "anilist_id": str(anilist_id),
+                "title": anime.get("title"),
+            },  # DB, post `sync_catalog` metadata fix
+        ):
+            ctx = QuizContext(
+                animes=[work],
+                pool=[work],
+                themes=themes,
+                episodes={},
+                characters_by_origin={},
+                closeness=1.0,
+            )
+            entry = themes_of(ctx, work)
+            if entry is None:
+                continue
+            resolved += 1
+            entry_mal = entry.get("mal_id")
+            belongs = (
+                str(anilist_id) in themes and themes[str(anilist_id)] is entry
+            ) or (entry_mal is not None and str(entry_mal) == str(mal_id))
+            if not belongs:
+                misattributed.append((anime.get("title"), anilist_id, mal_id))
+
+    assert not misattributed, f"mis-attributed openings: {misattributed}"
+    assert resolved > 0, "the guard resolved nothing at all -- data files likely moved"
