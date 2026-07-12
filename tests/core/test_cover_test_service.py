@@ -1,4 +1,5 @@
 import datetime
+import random
 from unittest.mock import MagicMock
 
 import pytest
@@ -49,3 +50,108 @@ def test_empty_catalog(cover_test_service, mock_repository):
     mock_repository.load_covers.return_value = {}
     cover_test_service._covers = None  # reset cache
     assert cover_test_service.get_random_cover() is None
+
+
+def test_random_cover_draws_from_every_volume(mock_repository):
+    """Le tirage doit balayer tous les tomes, pas se figer sur le tome 1."""
+    mock_repository.load_covers.return_value = {
+        "1": {
+            "title": "Berserk",
+            "covers": {
+                "ja": [{"url": f"http://v{v}", "volume": str(v)} for v in range(1, 42)],
+                "fr": [],
+            },
+        }
+    }
+    service = CoverTestDomainService(repository=mock_repository)
+
+    seen = {service.get_random_cover(locale="ja")["volume"] for _ in range(300)}
+
+    assert len(seen) > 1, "un seul volume tiré sur 300 essais => biais tome 1"
+    assert seen - {str(v) for v in range(1, 42)} == set()
+
+
+def test_random_cover_picks_manga_uniformly_not_per_volume(mock_repository):
+    """Une série de 100 tomes ne doit pas sortir 100x plus qu'un one-shot."""
+    mock_repository.load_covers.return_value = {
+        "long": {
+            "title": "Long Series",
+            "covers": {
+                "ja": [{"url": f"http://l{v}", "volume": str(v)} for v in range(100)],
+                "fr": [],
+            },
+        },
+        "short": {
+            "title": "One Shot",
+            "covers": {"ja": [{"url": "http://s1", "volume": "1"}], "fr": []},
+        },
+    }
+    service = CoverTestDomainService(repository=mock_repository)
+
+    draws = [service.get_random_cover(locale="ja")["manga_id"] for _ in range(400)]
+
+    # Uniforme par manga => ~50/50. Un tirage à plat sur les volumes donnerait
+    # ~99 % de "long" et ce seuil sauterait.
+    assert draws.count("short") > 100
+
+
+def test_ignores_mangas_without_cover_in_requested_locale(mock_repository):
+    mock_repository.load_covers.return_value = {
+        "1": {
+            "title": "JA only",
+            "covers": {"ja": [{"url": "http://ja", "volume": "1"}], "fr": []},
+        },
+        "2": {
+            "title": "FR only",
+            "covers": {"ja": [], "fr": [{"url": "http://fr", "volume": "1"}]},
+        },
+    }
+    service = CoverTestDomainService(repository=mock_repository)
+
+    for _ in range(20):
+        cover = service.get_random_cover(locale="fr")
+        assert cover["manga_id"] == "2"
+
+
+def test_no_cover_in_requested_locale_returns_none(mock_repository):
+    mock_repository.load_covers.return_value = {
+        "1": {
+            "title": "JA only",
+            "covers": {"ja": [{"url": "http://ja", "volume": "1"}], "fr": []},
+        }
+    }
+    service = CoverTestDomainService(repository=mock_repository)
+
+    assert service.get_random_cover(locale="fr") is None
+
+
+def test_daily_cover_is_stable_for_a_given_day(mock_repository):
+    mock_repository.load_covers.return_value = {
+        str(i): {
+            "title": f"M{i}",
+            "covers": {
+                "ja": [{"url": f"http://{i}-{v}", "volume": str(v)} for v in range(5)],
+                "fr": [],
+            },
+        }
+        for i in range(30)
+    }
+    service = CoverTestDomainService(repository=mock_repository)
+    day = datetime.date(2026, 7, 12)
+
+    picks = {service.get_daily_cover(day)["cover_url"] for _ in range(10)}
+
+    assert len(picks) == 1  # même jour => même cover, volume compris
+    assert service.get_daily_cover(datetime.date(2026, 7, 13)) is not None
+
+
+def test_daily_cover_does_not_reseed_the_global_rng(cover_test_service):
+    """Le daily utilisait random.seed() global : sous daphne, deux requêtes
+    concurrentes se marchaient dessus."""
+    random.seed(1234)
+    expected = [random.random() for _ in range(3)]
+
+    random.seed(1234)
+    cover_test_service.get_daily_cover(datetime.date(2026, 7, 12))
+
+    assert [random.random() for _ in range(3)] == expected

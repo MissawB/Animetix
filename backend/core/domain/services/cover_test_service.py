@@ -1,19 +1,44 @@
 import hashlib
 import random
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 from ...ports.repository_port import RepositoryPort
+
+# Locales jouables, dans l'ordre où elles sont proposées quand aucune n'est imposée.
+PLAYABLE_LOCALES = ("ja", "fr")
 
 
 class CoverTestDomainService:
     def __init__(self, repository: RepositoryPort):
         self.repository = repository
         self._covers = None
+        self._candidates: Dict[Tuple[str, ...], List[str]] = {}
 
     def _get_covers(self):
         if self._covers is None:
             self._covers = self.repository.load_covers()
+            self._candidates.clear()  # l'index dérive des covers : il se recalcule avec
         return self._covers
+
+    def _variants(self, data: Dict, locales: Tuple[str, ...]) -> List[Tuple[str, Dict]]:
+        """(locale, cover) de chaque volume disponible dans les locales demandées."""
+        cover_map = data.get("covers") or {}
+        return [
+            (loc, variant)
+            for loc in locales
+            for variant in (cover_map.get(loc) or [])
+            if variant.get("url")
+        ]
+
+    def _eligible_manga_ids(self, locales: Tuple[str, ...]) -> List[str]:
+        """Mangas ayant au moins une cover dans ces locales. Mémoïsé, trié (déterminisme
+        du tirage quotidien)."""
+        if locales not in self._candidates:
+            covers = self._get_covers() or {}
+            self._candidates[locales] = sorted(
+                mid for mid, data in covers.items() if self._variants(data, locales)
+            )
+        return self._candidates[locales]
 
     def get_random_cover(self, locale: Optional[str] = None) -> Optional[Dict]:
         return self._pick_cover(locale)
@@ -72,41 +97,33 @@ class CoverTestDomainService:
     def _pick_cover(
         self, locale: Optional[str] = None, seed: Optional[int] = None
     ) -> Optional[Dict]:
+        """Tire une cover parmi **tous** les volumes disponibles.
+
+        Le manga est tiré uniformément (une série de 60 tomes ne doit pas sortir
+        60 fois plus souvent qu'un one-shot), puis le volume uniformément parmi
+        les siens. `seed` utilise un RNG local : le tirage quotidien reste
+        déterministe sans muter le RNG global partagé entre les threads ASGI.
+        """
         covers_data = self._get_covers()
         if not covers_data:
             return None
 
-        if seed:
-            random.seed(seed)
+        rng = random.Random(seed) if seed is not None else random
+        locales = (locale,) if locale else PLAYABLE_LOCALES
 
-        manga_ids = sorted(list(covers_data.keys()))
-        result = None
+        manga_ids = self._eligible_manga_ids(locales)
+        if not manga_ids:
+            return None
 
-        for _ in range(50):
-            manga_id = random.choice(manga_ids)
-            data = covers_data[manga_id]
-            locs = [locale] if locale else ["ja", "fr"]
-            random.shuffle(locs)
+        manga_id = rng.choice(manga_ids)
+        data = covers_data[manga_id]
+        loc, cover = rng.choice(self._variants(data, locales))
 
-            for loc in locs:
-                variant_list = data.get("covers", {}).get(loc, [])
-                if variant_list:
-                    cover = next(
-                        (v for v in variant_list if v.get("volume") == "1"),
-                        random.choice(variant_list),
-                    )
-                    result = {
-                        "manga_id": manga_id,
-                        "manga_title": data["title"],
-                        "cover_url": cover["url"],
-                        "locale": loc,
-                        "volume": cover.get("volume"),
-                        "author": data.get("author"),
-                    }
-                    break
-            if result:
-                break
-
-        if seed:
-            random.seed(None)
-        return result
+        return {
+            "manga_id": manga_id,
+            "manga_title": data["title"],
+            "cover_url": cover["url"],
+            "locale": loc,
+            "volume": cover.get("volume"),
+            "author": data.get("author"),
+        }

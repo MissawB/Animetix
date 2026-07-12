@@ -11,6 +11,10 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
+- [ ] **pgvector n'a jamais été alimenté — 0 embedding pour 44 763 items** _(constaté 2026-07-12 via `reconcile_db`)_
+  - `VectorRecord.objects.count() == 0`. Le seul mécanisme d'écriture était le signal `post_save` de `MediaItem` ([signals.py:126](backend/api/animetix/signals.py#L126)) → `enqueue_task("sync_media_item_task")`, qui n'a jamais rien persisté (et qui, hors prod, s'exécutait **en synchrone** : c'est ce qui faisait durer `sync_catalog` 2 h+ pour 44 798 items — la commande écrit désormais en masse, sans signaux, et la réconciliation est un travail séparé). `reconcile_db` **diagnostique seulement**, elle ne répare pas : il n'existe aucun chemin de reconstruction en masse. Avant de reconstruire (coût GPU/API réel), identifier **ce qui dépend réellement des vecteurs** : si ces fonctionnalités marchent en prod sur une base vectorielle vide, c'est qu'elles ont un repli silencieux — c'est ça le vrai sujet.
+- [ ] **URI Neo4j locale morte** _(constaté 2026-07-12)_
+  - `Failed to DNS resolve a654e145.databases.neo4j.io` — l'instance configurée en local n'existe plus (la prod tourne sur l'instance `1254b9b8`). `reconcile_db` saute donc toutes les vérifications de graphe en silence, et personne ne le voit.
 
 ## 🟡 Moyens
 
@@ -32,6 +36,8 @@ _Aucun item ouvert._
   - `Dockerfile.brain` : single-stage (build-essential/gcc conservés), **root** (aucune directive `USER`), base `python:3.11-slim` vs 3.12 ailleurs, pas de HEALTHCHECK. [Dockerfile.dataflow:19](deploy/Dockerfile.dataflow#L19) : `USER root` jamais redescendu, launcher `:latest` non épinglé (build non reproductible).
 - [ ] **Backend — config hardcodée à externaliser** _(audit dette 2026-07-11)_
   - URL de prod HF en dur [workflows_client.py:72](backend/adapters/inference/workflows_client.py#L72) (la même classe lit `BRAIN_API_URL` en env ligne 24 — incohérent) ; table de tiers ~85 l. dans [vs_battle_service.py:367](backend/core/domain/services/creative/vs_battle_service.py#L367) ; modèles en dur (`clip-ViT-B-32` ×3 dans `clip_vision.py`, `imagen-3.0-generate-001`, `jina-embeddings-v3`) ; [otaku_concepts.py](backend/pipeline/mlops/otaku_concepts.py) = 2459 lignes de dictionnaire de données → asset JSON/YAML.
+- [ ] **Covertest — sortir les covers du blob JSON** _(suite de l'ingestion complète 2026-07-12)_
+  - La base passe de 90 à ~4 000 mangas : [manga_covers.json](data/processed/manga_covers.json) grossit de 0,5 à ~25 Mo, chargé **intégralement en RAM** par le singleton ([pgvector_repository_adapter.py:199](backend/adapters/persistence/pgvector_repository_adapter.py#L199)) au premier appel, et `list_entries()` sérialise tout le référentiel vers le front à chaque partie. À cette taille ça doit passer en Postgres (ou au minimum : un index allégé `{id, title, aliases}` pour l'autocomplétion + les covers servies à la demande). Blob LFS lu au cold start Cloud Run = mauvais compromis au-delà de quelques Mo.
 - [ ] **Tests — hygiène : fixtures dupliquées, snapshot `sys.modules`, env forcé à l'import** _(audit dette 2026-07-11)_
   - `api_client` défini **38×**, `mock_prompt_manager` et `mock_engine` **22×** chacun (2 conftest seulement) → factoriser. Fixture autouse [tests/conftest.py:107-139](tests/conftest.py#L107-L139) snapshot/restore `sys.modules` entier à chaque test pour compenser les mocks fuyants (`test_diffusers_adapter.py:25`). `BRAIN_API_URL` forcé au niveau import ([tests/conftest.py:12](tests/conftest.py#L12)) masque les tests d'absence de config.
 
