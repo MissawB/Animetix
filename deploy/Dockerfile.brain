@@ -26,11 +26,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
     ca-certificates \
+    zstd \
     && rm -rf /var/lib/apt/lists/*
 
 # The brain is the only host with a GPU and the RAM budget for local weights --
 # that is the whole point of splitting it out of the 4 GiB web container.
 # Ollama ships its own CUDA runners, so no CUDA toolchain is needed here.
+# (Its installer unpacks a zstd tarball -- hence zstd in the apt list above,
+# without which it dies with "This version requires zstd for extraction".)
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
 # Bake the weights into the image: the service scales to zero, and pulling 6.6 GB
