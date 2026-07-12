@@ -130,6 +130,8 @@ frontend/lint_*.json
 # Scratch pipeline outputs (re-excluded after the data/processed/*.json allow above)
 data/processed/temp_test_*.json
 data/processed/failed_attempts.json
+# Cache négatif du fetch de covers : optimisation locale de re-run, pas une donnée produit
+data/processed/manga_covers_failures.json
 # Stray npm install at repo root (real frontend deps live in frontend/)
 /package.json
 /package-lock.json
