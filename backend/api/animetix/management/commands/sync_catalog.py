@@ -1,3 +1,20 @@
+"""Pousse les fichiers JSON traités vers le catalogue relationnel Django.
+
+Écriture en masse, volontairement : la version précédente appelait
+``update_or_create`` item par item — 44 700 allers-retours vers une base Neon
+distante, dans une transaction unique restée ouverte plus de deux heures sans
+jamais committer. Pire, chaque ``save()`` déclenchait le signal ``post_save`` de
+MediaItem, qui synchronise Neo4j et pgvector — et hors production
+``enqueue_task`` s'exécute **en synchrone**. Une synchro du catalogue relançait
+donc 44 700 synchros de graphe et de vecteurs, en ligne.
+
+``bulk_create`` / ``bulk_update`` ne déclenchent pas les signaux, et c'est le
+comportement voulu : la réconciliation Neo4j / pgvector est le travail d'une
+commande dédiée (``reconcile_db``), à lancer après celle-ci quand le catalogue
+a réellement changé. Ce n'est pas une régression silencieuse — c'est la
+séparation qui manquait.
+"""
+
 import hashlib
 import json
 import os
