@@ -87,7 +87,40 @@ describe('useWorldBossRun', () => {
     });
 
     await waitFor(() => expect(result.current.phase).toBe('revealed'));
-    expect(mockedApi.mock.calls.filter(([url]) => url.endsWith('/answer/'))).toHaveLength(1);
+    const answerCalls = mockedApi.mock.calls.filter(([url]) => url.endsWith('/answer/'));
+    expect(answerCalls).toHaveLength(1);
+    const [, options] = answerCalls[0];
+    expect(JSON.parse(options!.body as string)).toEqual({ index: 0 });
+  });
+
+  it('next() while an answer is in flight is a no-op — no ghost verdict on the new question', async () => {
+    mockedApi.mockResolvedValueOnce(QUESTION);
+    const { result } = renderHook(() => useWorldBossRun(), { wrapper });
+    act(() => result.current.start());
+    await waitFor(() => expect(result.current.question).not.toBeNull());
+
+    let resolveAnswer!: (value: unknown) => void;
+    const pendingAnswer = new Promise((resolve) => {
+      resolveAnswer = resolve;
+    });
+    mockedApi.mockReturnValueOnce(pendingAnswer);
+
+    act(() => result.current.answer(0));
+    expect(result.current.phase).toBe('answering');
+
+    // A `next()`/`start()` racing an in-flight answer must not ask for a new
+    // question — otherwise the stale answer's verdict lands on top of it later.
+    act(() => result.current.next());
+    expect(mockedApi.mock.calls.filter(([url]) => url.endsWith('/question/'))).toHaveLength(1);
+    expect(result.current.phase).toBe('answering');
+
+    await act(async () => {
+      resolveAnswer(VERDICT);
+      await pendingAnswer;
+    });
+
+    await waitFor(() => expect(result.current.phase).toBe('revealed'));
+    expect(result.current.verdict?.correct_label).toBe(VERDICT.correct_label);
   });
 });
 

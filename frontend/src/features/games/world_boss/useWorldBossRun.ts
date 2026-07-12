@@ -94,7 +94,14 @@ export const useWorldBossRun = () => {
     [phase, send],
   );
 
-  const start = useCallback(() => ask.mutate(), [ask]);
+  const start = useCallback(() => {
+    // An in-flight /answer/ can resolve after the new question lands and stomp
+    // its state (stale verdict + phase flipped back to 'revealed'). Guard on
+    // the ref, not `phase` — React can batch both state updates into one
+    // render, leaving `phase` stale for this same synchronous tick.
+    if (answeringRef.current) return;
+    ask.mutate();
+  }, [ask]);
 
   return {
     question,
