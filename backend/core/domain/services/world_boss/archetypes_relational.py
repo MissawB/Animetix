@@ -158,7 +158,20 @@ def _secondary_character(ctx, rng):
     if not candidates:
         return None
     work, character = rng.choice(candidates)
-    elsewhere = [c["name"] for it in ctx.pool if it is not work for c in _cast(ctx, it)]
+    work_title = title_of(work)
+    # Same exploit `same_work_character` was fixed for: `_cast` keys on the
+    # work's TITLE, so a duplicate-titled pool entry (a re-ingested season, a
+    # franchise reusing its title) resolves to the SAME cast and `it is not
+    # work` alone would let it back in as a "stranger". Restrict the pool by
+    # title, and also check the character's own `origin` field as a
+    # belt-and-suspenders pass.
+    elsewhere = [
+        c["name"]
+        for it in ctx.pool
+        if title_of(it) != work_title
+        for c in _cast(ctx, it)
+        if c.get("origin") != work_title
+    ]
     return make_question(
         rng,
         "secondary_character",

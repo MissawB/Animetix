@@ -375,6 +375,61 @@ def test_same_work_character_never_pulls_a_distractor_from_a_duplicate_titled_wo
     ), "same_work_character never picked the duplicated work"
 
 
+def test_secondary_character_never_pulls_a_distractor_from_a_duplicate_titled_work():
+    # Same exploit as same_work_character, on secondary_character's own distractor
+    # pool: two pool entries share the title "Duplicate Show", so `_cast` (keyed on
+    # TITLE) resolves both to the SAME cast list. `it is not work` only excludes the
+    # exact object picked as the subject -- the OTHER "Duplicate Show" pool entry
+    # sails through the identity check and leaks the subject's own castmates into
+    # "elsewhere" as if they were strangers. The question asks "which secondary
+    # character appears in «work»?", so a castmate offered as a wrong answer is, in
+    # fact, also correct.
+    cast = [
+        {"name": "Alpha", "origin": "Duplicate Show"},
+        {"name": "Beta", "origin": "Duplicate Show"},
+        {"name": "Charlie", "origin": "Duplicate Show"},
+    ]
+    characters = {
+        "Duplicate Show": cast,
+        "Other Show A": [
+            {"name": "Gamma", "origin": "Other Show A"},
+            {"name": "Delta", "origin": "Other Show A"},
+        ],
+        "Other Show B": [
+            {"name": "Epsilon", "origin": "Other Show B"},
+            {"name": "Zeta", "origin": "Other Show B"},
+        ],
+    }
+    pool = [
+        {"title": "Duplicate Show"},
+        {"title": "Duplicate Show"},
+        {"title": "Other Show A"},
+        {"title": "Other Show B"},
+    ]
+    dup_ctx = QuizContext(
+        animes=pool,
+        pool=pool,
+        themes={},
+        episodes={},
+        characters_by_origin=characters,
+        closeness=1.0,
+    )
+    cast_names = {c["name"] for c in cast}
+    seen_duplicate_subject = False
+    for seed in range(60):
+        q = ARCHETYPES["secondary_character"].build(dup_ctx, random.Random(seed))
+        if not q or q.subject != "Duplicate Show":
+            continue
+        seen_duplicate_subject = True
+        wrong = {o for i, o in enumerate(q.options) if i != q.correct_index}
+        assert not (
+            cast_names & wrong
+        ), "a distractor came from the subject's own (duplicate-titled) cast"
+    assert (
+        seen_duplicate_subject
+    ), "secondary_character never picked the duplicated work"
+
+
 def test_top_recommendation_declines_when_the_top_two_tie():
     # Alpha and Beta are tied at 100 -- with only 4 recommendations total there
     # is no way to sample around the tie, so every attempt must decline rather
