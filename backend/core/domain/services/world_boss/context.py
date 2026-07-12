@@ -60,7 +60,9 @@ def make_question(
     seen = {correct.casefold()}
     usable: List[str] = []
     for value in distractors:
-        text = str(value or "").strip()
+        if value is None:
+            continue
+        text = str(value).strip()
         key = text.casefold()
         if not text or key in seen:
             continue
@@ -87,10 +89,27 @@ def mask_title(text: str, title: str) -> str:
 
     Kitsu synopses routinely open with the title. Without this, the hardest
     archetype in the game would be the easiest one.
+
+    Words of length >= 4 are masked individually so ordinary prose (short common
+    words the title happens to share, e.g. "no") stays readable. If NONE of the
+    title's words reach that floor -- e.g. "K-On!" splits into "K" and "On" --
+    that guard would make the whole function a no-op and leak the answer, so we
+    fall back to masking every word of the title however short. The full title
+    is also masked as a single phrase (tolerating punctuation/whitespace between
+    its words) as a belt-and-suspenders pass for runs the word-by-word loop
+    could miss.
     """
     masked = text
-    for word in re.split(r"[^\w]+", title):
-        if len(word) < 4:
-            continue
+    words = [word for word in re.split(r"[^\w]+", title) if word]
+    long_words = [word for word in words if len(word) >= 4]
+
+    # Over-masking a short-titled work's synopsis is acceptable; leaking its
+    # answer is not -- so when no word clears the floor, mask them all anyway.
+    for word in long_words or words:
         masked = re.sub(rf"\b{re.escape(word)}\w*", MASK, masked, flags=re.IGNORECASE)
+
+    if words:
+        phrase = r"[^\w]*".join(re.escape(word) for word in words)
+        masked = re.sub(phrase, MASK, masked, flags=re.IGNORECASE)
+
     return masked

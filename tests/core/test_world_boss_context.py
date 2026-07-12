@@ -5,22 +5,11 @@ placed at random, and never a plot summary that spells out its own answer."""
 import random
 
 from core.domain.services.world_boss.context import (
-    QuizContext,
+    MASK,
     make_question,
     mask_title,
     title_of,
 )
-
-
-def _ctx(closeness=0.0):
-    return QuizContext(
-        animes=[],
-        pool=[],
-        themes={},
-        episodes={},
-        characters_by_origin={},
-        closeness=closeness,
-    )
 
 
 def test_the_answer_is_not_always_in_the_same_slot():
@@ -87,6 +76,34 @@ def test_a_distractor_equal_to_the_answer_is_dropped():
     )
 
 
+def test_a_falsy_but_valid_distractor_is_kept():
+    # 0 (an episode number, a count...) must not be treated as empty.
+    q = make_question(
+        random.Random(3),
+        "episode_count",
+        "Combien ?",
+        "5",
+        [0, 1, 2],
+        subject="X",
+    )
+    assert q is not None
+    assert "0" in q.options
+
+
+def test_a_distractor_differing_only_in_case_is_dropped_as_duplicate():
+    q = make_question(
+        random.Random(3),
+        "character",
+        "Qui ?",
+        "Naruto",
+        ["naruto", "Sasuke", "Sakura", "Kakashi"],
+        subject="X",
+    )
+    assert q is not None
+    assert sorted(q.options) == sorted(["Naruto", "Sasuke", "Sakura", "Kakashi"])
+    assert "naruto" not in q.options
+
+
 def test_a_plot_summary_never_spells_out_its_own_answer():
     masked = mask_title(
         "Tanjiro Kamado joins the Demon Slayer Corps after his family is killed.",
@@ -101,3 +118,26 @@ def test_title_of_falls_back_to_name():
     assert title_of({"title": "Berserk"}) == "Berserk"
     assert title_of({"name": "Levi"}) == "Levi"
     assert title_of({}) == ""
+
+
+def test_mask_title_masks_a_title_whose_words_are_all_below_the_length_floor():
+    # "K-On!" -> words "K" and "On", both shorter than the length-4 floor. Without
+    # a fallback, the guard that keeps ordinary short prose intact also skips the
+    # title itself, and the synopsis ships with its own answer spelled out.
+    text = "K-On! follows a group of girls in the light music club."
+    masked = mask_title(text, "K-On!")
+    assert masked != text
+    assert MASK in masked
+    assert "k-on" not in masked.lower()
+
+
+def test_mask_title_handles_regex_metacharacters_without_raising():
+    cases = {
+        "Steins;Gate": "Steins;Gate follows a lab member who alters the past by text messages.",
+        "Fate/Zero": "Fate/Zero depicts a war between mages and their servants.",
+    }
+    for title, text in cases.items():
+        masked = mask_title(text, title)
+        assert MASK in masked
+        for word in title.replace(";", " ").replace("/", " ").split():
+            assert word.lower() not in masked.lower()
