@@ -1,10 +1,19 @@
-﻿FROM python:3.11-slim
+FROM python:3.11-slim
 
+# OLLAMA_HOST must agree with the LLM_API_BASE the service is deployed with:
+# brain_service builds its engine as an OpenAI-compatible client against
+# LLM_API_BASE, and the model server answering there is the Ollama installed
+# below. It used to point at localhost:11434 with nothing listening on it --
+# the L4 GPU sat idle and every text generation failed, so /health reported
+# {"status":"offline"} and the web router wrote the whole brain off.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH="/app/backend:${PYTHONPATH}" \
     TORCH_HOME="/app/data/models/torch" \
-    HF_HOME="/app/data/models/huggingface"
+    HF_HOME="/app/data/models/huggingface" \
+    OLLAMA_HOST=127.0.0.1:11434 \
+    OLLAMA_MODELS=/opt/ollama/models \
+    OLLAMA_KEEP_ALIVE=24h
 
 WORKDIR /app
 
@@ -16,9 +25,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsndfile1 \
     ffmpeg \
     curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Brain-only lockfile: GPU serving stack (CUDA torch intended here), no Django.
+# The brain is the only host with a GPU and the RAM budget for local weights --
+# that is the whole point of splitting it out of the 4 GiB web container.
+# Ollama ships its own CUDA runners, so no CUDA toolchain is needed here.
+RUN curl -fsSL https://ollama.com/install.sh | sh
+
+# Bake the weights into the image: the service scales to zero, and pulling 6.6 GB
+# on every cold start would blow the request deadline. Kept ahead of the source
+# COPY so a code change does not invalidate this (large, slow) layer.
+ARG OLLAMA_MODEL=qwen3.5:9b
+ENV OLLAMA_MODEL=${OLLAMA_MODEL}
+RUN ollama serve & \
+    OLLAMA_PID=$!; \
+    for _ in $(seq 1 30); do ollama list >/dev/null 2>&1 && break; sleep 1; done; \
+    ollama pull "$OLLAMA_MODEL" && \
+    ollama list && \
+    kill "$OLLAMA_PID"
+
+# Brain-only lockfile: GPU serving stack (CUDA torch backs the vision / rerank /
+# OCR components), no Django.
 COPY requirements-brain.txt .
 RUN pip install --no-cache-dir -r requirements-brain.txt
 
@@ -28,4 +56,7 @@ RUN mkdir -p data/models/torch data/models/huggingface
 
 EXPOSE 7861
 
-CMD ["sh", "-c", "uvicorn adapters.inference.brain_service:app --host 0.0.0.0 --port ${PORT:-7861}"]
+# Ollama first, then the API -- and wait for the model server to answer before
+# uvicorn takes traffic, otherwise /health says "offline" for the first seconds
+# of a cold start and the router writes the brain off for the whole TTL window.
+CMD ["sh", "-c", "ollama serve & for _ in $(seq 1 60); do curl -fs http://127.0.0.1:11434/api/tags >/dev/null 2>&1 && break; sleep 1; done; exec uvicorn adapters.inference.brain_service:app --host 0.0.0.0 --port ${PORT:-7861}"]
