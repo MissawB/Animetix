@@ -217,4 +217,13 @@ class LocalTextAdapter(LazyLoadMixin, LazyLocalModelAdapter):
         return embedding.tolist()
 
     def _is_ready(self) -> bool:
-        return self.model is not None or self._embedding_model is not None
+        """Readiness of the TEXT-GENERATION model -- the only thing the fallback
+        router uses this signal for.
+
+        Counting ``_embedding_model`` here made a loaded embedder (small) vouch
+        for a causal LM (multi-GB) that was not loaded at all: the router picked
+        this adapter over the managed remote one, then ``generate()`` pulled the
+        weights in and OOM-killed the container. Two different models; only one
+        answers ``generate()``.
+        """
+        return self.model is not None

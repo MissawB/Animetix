@@ -53,6 +53,25 @@ def check_google_genai_config(api_key: Optional[str]) -> Optional[str]:
     return None
 
 
+def local_inference_enabled(is_production: bool) -> bool:
+    """Whether adapters that load model weights INTO THIS PROCESS may be used.
+
+    The Cloud Run web container has a 4 GiB limit. A local text adapter pulls a
+    3B causal LM through ``from_pretrained`` on the first ``generate()``, blows
+    past the limit and gets the instance OOM-killed mid-request -- which Cloud
+    Run surfaces to the client as a 503. Local weights therefore belong to
+    development (and to the Brain service, which is sized for them), never to
+    the web container.
+
+    ``ENABLE_LOCAL_INFERENCE`` forces the answer either way, for a
+    production-like host that does have the RAM/GPU budget.
+    """
+    override = os.getenv("ENABLE_LOCAL_INFERENCE")
+    if not _is_blank(override):
+        return override.strip().lower() in ("1", "true", "yes", "on")  # type: ignore[union-attr]
+    return not is_production
+
+
 def validate_inference_config() -> None:
     """Validate all inference env vars at once and raise a single aggregated
     ConfigurationError listing every problem (better DX than failing on the

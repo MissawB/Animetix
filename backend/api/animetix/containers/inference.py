@@ -2,7 +2,10 @@ import os
 import sys
 
 from core.utils.gemini_models import GEMINI_FLASH
-from core.utils.inference_config import validate_inference_config
+from core.utils.inference_config import (
+    local_inference_enabled,
+    validate_inference_config,
+)
 from core.utils.local_models import (
     COMPACT_REASONING_MODEL,
     LLM_OLLAMA_MODEL,
@@ -29,6 +32,39 @@ is_collectstatic = "collectstatic" in sys.argv
 
 if not is_testing and not is_collectstatic:
     validate_inference_config()
+
+LOCAL_INFERENCE_ENABLED = local_inference_enabled(
+    getattr(settings, "IS_PRODUCTION", False)
+)
+
+
+def build_inference_chain(
+    *,
+    local_enabled: bool,
+    unified,
+    compact_reasoning,
+    local_text,
+    brain_api,
+    google_genai,
+    local_guardrail,
+):
+    """Order the fallback chain for the host we are actually running on.
+
+    In the web container the three local adapters cannot work -- there is no
+    Ollama on localhost, and loading transformers weights OOM-kills the 4 GiB
+    instance -- yet they sit AHEAD of the managed Brain API, so the process died
+    before ever reaching a backend that works. Off-host, the chain is remote-only.
+    """
+    if not local_enabled:
+        return [brain_api, google_genai]
+    return [
+        unified,  # 1. Local Ollama (FREE)
+        compact_reasoning,  # 2. Compact Reasoning Core (3B optimized)
+        local_text,  # 3. Local Transformers (FREE fallback)
+        brain_api,  # 4. Central Brain API (MANAGED)
+        google_genai,  # 5. External Gemini (LAST RESORT)
+        local_guardrail,
+    ]
 
 
 class InferenceContainer(containers.DeclarativeContainer):
@@ -90,12 +126,15 @@ class InferenceContainer(containers.DeclarativeContainer):
     inference_engine = providers.Singleton(
         LazyClass("adapters.inference.fallback_adapter", "FallbackInferenceAdapter"),
         adapters=providers.List(
-            unified_inference_adapter,  # 1. Local Ollama (FREE)
-            compact_reasoning_adapter,  # 2. Compact Reasoning Core (NEW - 3B optimized)
-            local_text_adapter,  # 3. Local Transformers (FREE fallback)
-            brain_api_adapter,  # 4. Central Brain API (MANAGED)
-            google_genai_adapter,  # 5. External Gemini (LAST RESORT)
-            local_guardrail_adapter,
+            *build_inference_chain(
+                local_enabled=LOCAL_INFERENCE_ENABLED,
+                unified=unified_inference_adapter,
+                compact_reasoning=compact_reasoning_adapter,
+                local_text=local_text_adapter,
+                brain_api=brain_api_adapter,
+                google_genai=google_genai_adapter,
+                local_guardrail=local_guardrail_adapter,
+            )
         ),
         obs_service=infrastructure.obs_service,
     )
