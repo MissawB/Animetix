@@ -105,6 +105,16 @@ CHARACTERS = [
         "popularity": {"favourites": 300, "rank": 700},
         "entities": {"organizations": ["Tokyo Jujutsu High"]},
     },
+    {
+        # `secondary_character` needs a work with >= 3 known characters (the
+        # rest of this fixture tops out at 2 per work): give Jujutsu Kaisen a
+        # third castmate, less loved than both Gojo and Nobara.
+        "id": 1008,
+        "name": "Yuji Itadori",
+        "origin": "Jujutsu Kaisen",
+        "popularity": {"favourites": 250, "rank": 2},
+        "entities": {"organizations": ["Tokyo Jujutsu High"]},
+    },
 ]
 
 # Les openings sont livrés par AnimeThemes.moe : la clé est l'id AniList, et

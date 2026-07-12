@@ -9,6 +9,7 @@ really holds.
 
 from typing import Any, Dict, List, Tuple
 
+from .archetypes_core import _favourites
 from .context import (
     QuizContext,
     episodes_of,
@@ -18,8 +19,6 @@ from .context import (
     title_of,
 )
 from .registry import archetype
-
-SECONDARY_RANK = 200  # a character nobody puts on a poster
 
 
 def _themed(ctx: QuizContext) -> List[Tuple[Dict[str, Any], Dict[str, Any]]]:
@@ -65,15 +64,22 @@ def _cast(ctx: QuizContext, work: Dict[str, Any]) -> List[Dict[str, Any]]:
     return ctx.characters_by_origin.get(title_of(work), [])
 
 
-def _rank(character: Dict[str, Any]) -> int:
-    """Comme `_favourites` (archetypes_core.py) : `popularity` est un dict
-    {"favourites", "rank"} -- sauf quand elle ne l'est pas, servie par la base,
-    où c'est la colonne `popularity` (un float) qui remonte quand les métadonnées
-    ne portent pas le dict. `.get("rank")` sur un float lève un AttributeError."""
-    value = character.get("popularity")
-    if not isinstance(value, dict):
-        return 9999
-    return value.get("rank") or 9999
+def _secondary_cast(ctx: QuizContext, work: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """This work's cast beyond its two most-loved characters.
+
+    `character["popularity"]["rank"]` looked like the natural signal for
+    "secondary" -- until the real catalogue showed it is not a global fame
+    rank at all: it is a small per-work integer (Dororo's own cast comes back
+    ranked 1 and 2), so a threshold like `rank > 200` never fires. "Secondary"
+    has to be derived from the work's OWN cast instead: sort by `favourites`
+    (descending) and call everyone outside the top two "secondary". A work
+    needs at least 3 known characters for that split to mean anything --
+    fewer than that and there is no "rest of the cast" to ask about.
+    """
+    cast = _cast(ctx, work)
+    if len(cast) < 3:
+        return []
+    return sorted(cast, key=_favourites, reverse=True)[2:]
 
 
 # ── Band C ────────────────────────────────────────────────────────────────────
@@ -179,9 +185,7 @@ def _same_work_character(ctx, rng):
 
 @archetype("secondary_character", {"C"})
 def _secondary_character(ctx, rng):
-    candidates = [
-        (it, c) for it in ctx.pool for c in _cast(ctx, it) if _rank(c) > SECONDARY_RANK
-    ]
+    candidates = [(it, c) for it in ctx.pool for c in _secondary_cast(ctx, it)]
     if not candidates:
         return None
     work, character = rng.choice(candidates)

@@ -143,6 +143,18 @@ for name, org in (
     for char in SHEETED[name]:
         char["entities"] = {"organizations": [org]}
 
+# `secondary_character` needs a work with >= 3 known characters (the base
+# fixture tops out at 2 per work): give Kimetsu no Yaiba a third castmate, less
+# loved than both Tanjiro and Zenitsu, so it has a genuine "rest of the cast".
+SHEETED["Kimetsu no Yaiba"].append(
+    {
+        "name": "Inosuke",
+        "origin": "Kimetsu no Yaiba",
+        "popularity": {"favourites": 90, "rank": 950},
+        "entities": {"organizations": ["Demon Slayer Corps"]},
+    }
+)
+
 # A tag that exists on exactly one work, so `rare_tag` has something to find.
 ANIMES_WITH_SEQUEL = [dict(a) for a in ANIMES]
 ANIMES_WITH_SEQUEL[1]["relations"] = {"SEQUEL": ["Shibuya Incident"]}
@@ -198,6 +210,114 @@ def test_secondary_character_treats_a_float_popularity_as_unranked_not_a_crash()
     )
     for seed in range(20):
         ARCHETYPES["secondary_character"].build(float_ctx, random.Random(seed))
+
+
+def test_secondary_character_fires_on_the_real_datas_small_per_work_ranks():
+    # The bug this whole rewrite exists for: in `data/processed/filtered_
+    # characters.json`, `rank` is a SMALL PER-WORK integer, not a global
+    # popularity rank -- Dororo's own cast comes back ranked 1 and 2. The old
+    # `_rank(c) > 200` threshold was therefore never true and the archetype
+    # fired 0/50 on the real catalogue. "Secondary" must come from the work's
+    # OWN cast ordering (by `favourites`), which this fixture reproduces:
+    # every rank is small (1, 2, 3), exactly the real shape.
+    characters = {
+        "Dororo": [
+            {
+                "name": "Hyakkimaru",
+                "origin": "Dororo",
+                "popularity": {"favourites": 5000, "rank": 1},
+            },
+            {
+                "name": "Mio",
+                "origin": "Dororo",
+                "popularity": {"favourites": 3000, "rank": 2},
+            },
+            {
+                "name": "Tahomaru",
+                "origin": "Dororo",
+                "popularity": {"favourites": 800, "rank": 3},
+            },
+        ],
+        "Other Show": [
+            {
+                "name": "Gamma",
+                "origin": "Other Show",
+                "popularity": {"favourites": 500, "rank": 1},
+            },
+            {
+                "name": "Delta",
+                "origin": "Other Show",
+                "popularity": {"favourites": 400, "rank": 2},
+            },
+        ],
+        "Third Show": [
+            {
+                "name": "Epsilon",
+                "origin": "Third Show",
+                "popularity": {"favourites": 300, "rank": 1},
+            },
+            {
+                "name": "Zeta",
+                "origin": "Third Show",
+                "popularity": {"favourites": 200, "rank": 2},
+            },
+        ],
+    }
+    pool = [{"title": "Dororo"}, {"title": "Other Show"}, {"title": "Third Show"}]
+    real_ctx = QuizContext(
+        animes=pool,
+        pool=pool,
+        themes={},
+        episodes={},
+        characters_by_origin=characters,
+        closeness=1.0,
+    )
+    seen_dororo = False
+    for seed in range(60):
+        q = ARCHETYPES["secondary_character"].build(real_ctx, random.Random(seed))
+        if not q or q.subject != "Dororo":
+            continue
+        seen_dororo = True
+        answer = q.options[q.correct_index]
+        # Hyakkimaru and Mio are Dororo's two most-loved characters (by
+        # `favourites`) -- the answer must be the one left outside that top 2.
+        assert answer == "Tahomaru"
+        assert answer not in {"Hyakkimaru", "Mio"}
+    assert seen_dororo, "secondary_character never fired on the real-data rank shape"
+
+
+def test_secondary_character_declines_when_a_work_has_fewer_than_three_known_characters():
+    # Below 3 known characters there is no "rest of the cast" beyond the top 2
+    # to ask about -- the archetype must decline (None), not compose a broken
+    # question, and it must never raise while trying.
+    characters = {
+        "Two Cast Show": [
+            {
+                "name": "Alpha",
+                "origin": "Two Cast Show",
+                "popularity": {"favourites": 100, "rank": 1},
+            },
+            {
+                "name": "Beta",
+                "origin": "Two Cast Show",
+                "popularity": {"favourites": 50, "rank": 2},
+            },
+        ],
+    }
+    pool = [{"title": "Two Cast Show"}]
+    thin_ctx = QuizContext(
+        animes=pool,
+        pool=pool,
+        themes={},
+        episodes={},
+        characters_by_origin=characters,
+        closeness=1.0,
+    )
+    for seed in range(60):
+        assert (
+            ARCHETYPES["secondary_character"].build(thin_ctx, random.Random(seed))
+            is None
+        )
 
 
 @pytest.mark.parametrize("name", RELATIONAL)
