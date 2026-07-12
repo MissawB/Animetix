@@ -42,8 +42,8 @@ def _all_themes(ctx: QuizContext) -> List[Dict[str, Any]]:
     # so a work can be resolved whichever id it carries. Walking `.values()` would
     # therefore see the same entry twice and double-weight its artists in the
     # distractor pool -- dedupe on identity.
-    seen = set()
-    songs = []
+    seen: set = set()
+    songs: List[Dict[str, Any]] = []
     for entry in ctx.themes.values():
         if id(entry) in seen:
             continue

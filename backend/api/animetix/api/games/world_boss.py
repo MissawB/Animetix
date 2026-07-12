@@ -14,8 +14,11 @@ CPU only (the questions are drawn from the catalogue, never generated) → no Be
 """
 
 import logging
-from datetime import datetime, timedelta, timezone as dt_timezone
-from typing import Optional
+
+# `datetime` is imported under an alias: games/__init__.py star-imports every game
+# module, and blindtest/covertest export the datetime *module* under that same name.
+from datetime import datetime as DateTime, timedelta, timezone as dt_timezone
+from typing import Any, Optional
 
 from core.domain.exceptions import GameLogicError
 from core.domain.services.world_boss import rules
@@ -42,9 +45,9 @@ def _now() -> float:
     return timezone.now().timestamp()
 
 
-def _now_dt() -> datetime:
+def _now_dt() -> DateTime:
     """The same clock, as a datetime — so `issued_at` and the deadline agree."""
-    return datetime.fromtimestamp(_now(), tz=dt_timezone.utc)
+    return DateTime.fromtimestamp(_now(), tz=dt_timezone.utc)
 
 
 def _distribute_reward(boss: GlobalBoss) -> None:
@@ -71,7 +74,7 @@ def _distribute_reward(boss: GlobalBoss) -> None:
     )
 
 
-def _week_key(now: Optional[datetime] = None) -> str:
+def _week_key(now: Optional[DateTime] = None) -> str:
     """L'identité du raid : sa semaine ISO. « 2026-W28 »."""
     iso = (now or timezone.now()).isocalendar()
     return f"{iso[0]}-W{iso[1]:02d}"
@@ -131,7 +134,7 @@ PENDING_FIELDS = (
     "issued_at",
 )
 
-CLEARED_PENDING = {
+CLEARED_PENDING: dict[str, Any] = {
     "pending_index": None,
     "pending_label": "",
     "pending_subject": "",
