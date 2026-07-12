@@ -99,7 +99,11 @@ def run_vectorization(vector_res=None, neo4j_res=None, limit=None):
 
         # --- PHASE 3 : UPSERT & SYNC ---
         for idx, item in enumerate(batch):
-            ext_id = str(item["id"])
+            # L'id doit être celui sous lequel le catalogue sert l'œuvre, sinon
+            # personne ne retrouvera le vecteur. sync_catalog résout l'external_id
+            # dans cet ordre (idMal d'abord) : un vecteur indexé sur l'id AniList
+            # serait introuvable depuis un catalogue servi par la base.
+            ext_id = str(item.get("idMal") or item.get("mal_id") or item["id"])
 
             # Upsert pgvector
             repo.upsert_items(
