@@ -56,15 +56,24 @@ def episodes_from_payload(payload):
     return sorted(episodes, key=lambda e: e["number"])
 
 
+class KitsuHTTPError(Exception):
+    """A Kitsu request came back non-200. Distinct from a legitimate empty
+    result (e.g. a work with no Kitsu mapping), which is not an error."""
+
+
 def _get(url, params):
     response = safe_http_request("GET", url, params=params, headers=HEADERS, timeout=20)
     if response.status_code != 200:
         logger.warning("Kitsu %s -> HTTP %s", url, response.status_code)
-        return None
+        raise KitsuHTTPError(f"{url} -> HTTP {response.status_code}")
     return response.json()
 
 
 def fetch_episodes(id_mal):
+    """Raises KitsuHTTPError if any request fails. A failed page must never be
+    mistaken for a short final page, so the caller (run()) must treat a failed
+    work as wholly unfetched this run -- not partially persisted -- and retry
+    it from scratch next time."""
     mapping = _get(
         f"{KITSU}/mappings",
         {
@@ -75,7 +84,9 @@ def fetch_episodes(id_mal):
     )
     kitsu_id = kitsu_id_from_mapping(mapping)
     if not kitsu_id:
-        return []
+        return []  # no Kitsu mapping for this work: a legitimate empty result
+
+    time.sleep(THROTTLE_SECONDS)  # close the gap before the first episodes request
 
     episodes, offset = [], 0
     while True:
@@ -85,7 +96,7 @@ def fetch_episodes(id_mal):
         )
         batch = episodes_from_payload(page)
         episodes.extend(batch)
-        if len(((page or {}).get("data")) or []) < PAGE_SIZE:
+        if len(page.get("data") or []) < PAGE_SIZE:
             break
         offset += PAGE_SIZE
         time.sleep(THROTTLE_SECONDS)
