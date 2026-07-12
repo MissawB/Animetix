@@ -40,6 +40,87 @@ def _clear_django_cache():
     cache.clear()
 
 
+# --- media-type -> collection-name resolution ---------------------------
+#
+# Bug: calculate_similarity/get_nearest_neighbors used to pass the media type
+# ("Anime") straight through as the pgvector collection name instead of
+# resolving it via ``coll_names`` (as load_catalog/search_media_items already
+# do). The collection "Anime" never exists -> silent 0.0 similarity in prod
+# for every guess. ``_resolve_collection`` centralizes the fix.
+
+
+@pytest.mark.parametrize(
+    "media_type, expected_collection",
+    [
+        ("Anime", "anime_thematic"),
+        ("Manga", "manga_thematic"),
+        ("Character", "character_vibe"),
+        ("Movie", "movie_thematic"),
+        ("Game", "game_thematic"),
+        ("Actor", "actor_vibe"),
+    ],
+)
+def test_resolve_collection_maps_every_media_type(
+    adapter, media_type, expected_collection
+):
+    assert adapter._resolve_collection(media_type) == expected_collection
+
+
+def test_resolve_collection_passes_through_unknown_names(adapter):
+    # A caller that already passes a real collection name (or anything not a
+    # known media-type key) must be left untouched.
+    assert adapter._resolve_collection("anime_thematic") == "anime_thematic"
+    assert adapter._resolve_collection("some_custom_collection") == (
+        "some_custom_collection"
+    )
+
+
+def test_calculate_similarity_resolves_media_type_to_collection(adapter):
+    vec = [1.0] * 300
+    adapter.manager.get_collection.return_value.get.return_value = {
+        "embeddings": [vec, vec]
+    }
+
+    score = adapter.calculate_similarity("Anime", "1", "2")
+
+    assert score == pytest.approx(1.0)
+    adapter.manager.get_collection.assert_called_once_with(name="anime_thematic")
+
+
+def test_calculate_similarity_keeps_working_with_real_collection_name(adapter):
+    vec = [1.0] * 300
+    adapter.manager.get_collection.return_value.get.return_value = {
+        "embeddings": [vec, vec]
+    }
+
+    score = adapter.calculate_similarity("anime_thematic", "1", "2")
+
+    assert score == pytest.approx(1.0)
+    adapter.manager.get_collection.assert_called_once_with(name="anime_thematic")
+
+
+def test_get_nearest_neighbors_resolves_media_type_to_collection(adapter):
+    coll = adapter.manager.get_collection.return_value
+    coll.get.return_value = {"embeddings": [[0.1, 0.2, 0.3]]}
+    coll.query.return_value = {"ids": [["7", "8"]]}
+
+    out = adapter.get_nearest_neighbors("Anime", 5, n_results=3)
+
+    adapter.manager.get_collection.assert_called_once_with(name="anime_thematic")
+    assert out == {"ids": [["7", "8"]]}
+
+
+def test_get_nearest_neighbors_keeps_working_with_real_collection_name(adapter):
+    coll = adapter.manager.get_collection.return_value
+    coll.get.return_value = {"embeddings": [[0.1, 0.2, 0.3]]}
+    coll.query.return_value = {"ids": [["7", "8"]]}
+
+    out = adapter.get_nearest_neighbors("anime_thematic", 5, n_results=3)
+
+    adapter.manager.get_collection.assert_called_once_with(name="anime_thematic")
+    assert out == {"ids": [["7", "8"]]}
+
+
 # --- get_nearest_neighbors ----------------------------------------------
 
 

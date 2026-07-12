@@ -64,9 +64,21 @@ class PGVectorRepositoryAdapter(RepositoryPort):
     def get_collection(self, collection_name: str):
         return self.manager.get_collection(collection_name)
 
+    def _resolve_collection(self, name: str) -> str:
+        """Resolve a media-type key (e.g. ``"Anime"``) to its pgvector collection
+        name (e.g. ``"anime_thematic"``).
+
+        Callers that already pass a real collection name (or any string that
+        isn't a known media-type key) are left untouched, so this is safe to
+        apply unconditionally to every ``collection_name``/``media_type``
+        argument that reaches the vector store.
+        """
+        return self.coll_names.get(name, name)
+
     def get_nearest_neighbors(
         self, collection_name: str, item_id: str, n_results: int = 5
     ) -> Optional[Dict]:
+        collection_name = self._resolve_collection(collection_name)
         try:
             coll = self.manager.get_collection(name=collection_name)
             item_data = coll.get(ids=[str(item_id)], include=["embeddings"])
@@ -81,6 +93,7 @@ class PGVectorRepositoryAdapter(RepositoryPort):
     def calculate_similarity(
         self, collection_name: str, item_a_id: str, item_b_id: str
     ) -> float:
+        collection_name = self._resolve_collection(collection_name)
         cache_key = f"sim_{collection_name}_{min(item_a_id, item_b_id)}_{max(item_a_id, item_b_id)}"
         cached_val = cache.get(cache_key)
         if cached_val is not None:
@@ -213,7 +226,7 @@ class PGVectorRepositoryAdapter(RepositoryPort):
         if not media_type:
             media_type = "Anime"
 
-        coll_name = self.coll_names.get(media_type, media_type)
+        coll_name = self._resolve_collection(media_type)
         if not coll_name:
             return []
 

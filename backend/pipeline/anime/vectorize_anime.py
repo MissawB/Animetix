@@ -1,3 +1,4 @@
+import argparse
 import json
 import logging
 import os
@@ -13,14 +14,18 @@ logger = logging.getLogger("animetix." + __name__)
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-# BASE_DIR est backend/ (3 dirname depuis backend/pipeline/anime/) ; on expose
-# les deux racines d'import (backend -> core/pipeline, backend/api -> animetix*).
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(BASE_DIR)
-sys.path.append(os.path.join(BASE_DIR, "api"))
+# backend/pipeline/anime/<ce fichier> : trois dirname remontent à backend/, pas à la
+# racine. `core`/`animetix` s'importent depuis backend/ et backend/api ; les données
+# vivent à la racine du dépôt (PROJECT_ROOT), un niveau au-dessus de BACKEND_DIR.
+BACKEND_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
+PROJECT_ROOT = os.path.dirname(BACKEND_DIR)
+sys.path.append(BACKEND_DIR)
+sys.path.append(os.path.join(BACKEND_DIR, "api"))
 from core.utils.security import safe_http_request  # noqa: E402
 
-INPUT_FILE = os.path.join(BASE_DIR, "data", "processed", "clean_root_animes.json")
+INPUT_FILE = os.path.join(PROJECT_ROOT, "data", "processed", "clean_root_animes.json")
 
 
 # Initialisation différée
@@ -40,9 +45,12 @@ def get_pipeline_resources():
 BATCH_SIZE = 32
 
 
-def run_vectorization(vector_res=None, neo4j_res=None):
+def run_vectorization(vector_res=None, neo4j_res=None, limit=None):
     """
     Pipeline de vectorisation Multimodale avec support Matryoshka (MRL).
+
+    ``limit`` caps the number of catalog items processed (e.g. for a quick
+    smoke run); ``None`` (the default) processes the entire catalog.
     """
     repo = get_repo()
     models_registry, neo4j_manager = get_pipeline_resources()
@@ -61,7 +69,7 @@ def run_vectorization(vector_res=None, neo4j_res=None):
     vision_model = models_registry.vision_model
 
     # On ne traite que les items non encore indexés (simulation simplifiée)
-    new_items = items[:100]  # On limite pour la démo
+    new_items = items if limit is None else items[:limit]
 
     for i in range(0, len(new_items), BATCH_SIZE):
         batch = new_items[i : i + BATCH_SIZE]
@@ -116,5 +124,19 @@ def run_vectorization(vector_res=None, neo4j_res=None):
     return True
 
 
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Vectorize the anime catalog into pgvector (thematic + visual)."
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Maximum number of catalog items to process (default: all items).",
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    run_vectorization()
+    args = _parse_args()
+    run_vectorization(limit=args.limit)
