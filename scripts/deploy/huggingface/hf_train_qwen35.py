@@ -134,6 +134,13 @@ config = SFTConfig(
     report_to="trackio",
     project="animetix-expert",
     run_name="qwen35-9b-otaku-sft" + ("-smoke" if SMOKE else ""),
+    # In current TRL these belong to the CONFIG, not to the trainer: passing
+    # model_init_kwargs= to SFTTrainer raises TypeError.
+    model_init_kwargs={
+        "quantization_config": bnb_config,
+        "dtype": torch.bfloat16,
+        "trust_remote_code": True,
+    },
 )
 
 peft_config = LoraConfig(
@@ -161,11 +168,6 @@ trainer = SFTTrainer(
     eval_dataset=None if SMOKE else eval_dataset,
     peft_config=peft_config,
     args=config,
-    model_init_kwargs={
-        "quantization_config": bnb_config,
-        "dtype": torch.bfloat16,
-        "trust_remote_code": True,
-    },
 )
 
 trainer.train()
