@@ -66,3 +66,31 @@ def test_caching_logic(catalog_service, mock_sql_repository):
     # Deuxième appel (doit utiliser le cache RAM interne)
     catalog_service.get_catalog("Anime")
     assert mock_sql_repository.get_catalog_by_type.call_count == 1
+
+
+def test_get_anime_episodes_reads_the_precomputed_file(tmp_path):
+    from unittest.mock import MagicMock
+
+    from core.domain.services.catalog_service import CatalogService
+
+    processed = tmp_path / "data" / "processed"
+    processed.mkdir(parents=True)
+    (processed / "anime_episodes.json").write_text(
+        '{"38000": [{"number": 1, "title": "Cruelty", "synopsis": "The family dies."}]}',
+        encoding="utf-8",
+    )
+    repository = MagicMock(project_root=str(tmp_path))
+
+    service = CatalogService(repository=repository)
+
+    assert service.get_anime_episodes()["38000"][0]["title"] == "Cruelty"
+
+
+def test_get_anime_episodes_is_empty_when_the_file_is_missing(tmp_path):
+    from unittest.mock import MagicMock
+
+    from core.domain.services.catalog_service import CatalogService
+
+    service = CatalogService(repository=MagicMock(project_root=str(tmp_path)))
+
+    assert service.get_anime_episodes() == {}

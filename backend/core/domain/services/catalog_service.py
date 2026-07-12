@@ -25,6 +25,7 @@ class CatalogService:
         self.cache = cache_service
         self._cached_catalogs: Dict[str, Any] = {}
         self._emoji_sequences: Optional[Dict] = None
+        self._anime_episodes: Optional[Dict] = None
 
     def load_data(self, media_type: str) -> Optional[Dict]:
         """Backward compatibility method for AnimetixService.load_data."""
@@ -155,6 +156,33 @@ class CatalogService:
             except Exception as e:
                 logger.error(f"Failed to load emoji sequences: {e}")
         self._emoji_sequences = data
+        return data
+
+    def get_anime_episodes(self) -> Dict:
+        """Episode titles and plot summaries, keyed by MAL id (string).
+
+        Produced by ``backend/pipeline/anime/fetch_kitsu_episodes.py``. Kept out of
+        MediaItem.metadata on purpose: several thousand synopses would ride along
+        with every catalogue load and land in the Redis cache entry.
+        """
+        import os  # noqa: E402
+
+        if self._anime_episodes is not None:
+            return self._anime_episodes
+        path = os.path.join(
+            getattr(self.repository, "project_root", ""),
+            "data",
+            "processed",
+            "anime_episodes.json",
+        )
+        data = {}
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception as e:
+                logger.error(f"Failed to load anime episodes: {e}")
+        self._anime_episodes = data
         return data
 
     def invalidate_cache(self, media_type: Optional[str] = None):
