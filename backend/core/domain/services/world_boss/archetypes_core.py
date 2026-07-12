@@ -72,6 +72,10 @@ def _year(ctx, rng):
         return None
     subject = rng.choice(dated)
     year = int(subject["year"])
+    # Distractors are generated as year +/- offset rather than lifted from other
+    # works' real years: only a generated value can guarantee the tight +/-2
+    # window tier 12 demands. Sibling works' actual years are whatever the
+    # catalogue happens to contain and cannot be relied on to cluster that close.
     # 12 years apart at tier 1, 2 at tier 12: the same question, four times harder.
     window = max(2, round(12 - 10 * ctx.closeness))
     offsets = rng.sample([o for o in range(-window, window + 1) if o], 3)
@@ -97,11 +101,7 @@ def _genre(ctx, rng):
         "genre",
         f"Quel genre correspond à « {title_of(subject)} » ?",
         rng.choice(subject["genres"]),
-        (
-            rng.sample(sorted(every - set(subject["genres"])), min(3, len(every)))
-            if len(every) > 3
-            else []
-        ),
+        sorted(every - set(subject["genres"])),
         subject=title_of(subject),
     )
 
@@ -247,6 +247,9 @@ def _source(ctx, rng):
         return None
     subject = rng.choice(subjects)
     correct = SOURCE_LABELS[subject["source"]]
+    # Distractors come from the closed SOURCE_LABELS vocabulary rather than from
+    # other works' fields -- every label names a real, legitimate source category,
+    # so any label other than the correct one is an honest wrong answer.
     return make_question(
         rng,
         "source",

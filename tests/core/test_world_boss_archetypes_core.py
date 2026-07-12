@@ -299,3 +299,31 @@ def test_not_genre_answers_with_the_odd_one_out():
                 assert (
                     genre in next(a for a in ANIMES if a["title"] == option)["genres"]
                 )
+
+
+def test_genre_declines_rather_than_crashing_on_a_genre_poor_catalogue():
+    """The catalogue owns 4 distinct genres in total, but the lone pool subject
+    already owns 2 of them -- only 2 remain outside its own set. The old guard
+    checked `len(every) > 3` (4, true) then sampled 3 distractors out of that
+    2-item remainder, raising ValueError. It must instead decline (None) or
+    build a genuinely valid 4-option question -- never raise."""
+    poor = {"title": "A", "genres": ["Action", "Adventure"]}
+    thin = QuizContext(
+        animes=[
+            poor,
+            {"title": "B", "genres": ["Drama"]},
+            {"title": "C", "genres": ["Comedy"]},
+        ],
+        pool=[poor],
+        themes={},
+        episodes={},
+        characters_by_origin={},
+        closeness=0.0,
+    )
+    for seed in range(20):
+        q = ARCHETYPES["genre"].build(thin, random.Random(seed))
+        if q is None:
+            continue
+        assert len(q.options) == 4
+        assert len(set(q.options)) == 4
+        assert q.options[q.correct_index]
