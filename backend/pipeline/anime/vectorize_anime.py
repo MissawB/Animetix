@@ -21,8 +21,11 @@ BACKEND_DIR = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 PROJECT_ROOT = os.path.dirname(BACKEND_DIR)
-sys.path.append(BACKEND_DIR)
-sys.path.append(os.path.join(BACKEND_DIR, "api"))
+# insert(0), pas append : un paquet tiers nommé `pipeline` est installé dans
+# site-packages et masque `backend/pipeline` si notre racine passe en queue de
+# sys.path -- `import pipeline.vector_client` échouait alors sur le mauvais paquet.
+sys.path.insert(0, os.path.join(BACKEND_DIR, "api"))
+sys.path.insert(0, BACKEND_DIR)
 from core.utils.security import safe_http_request  # noqa: E402
 
 INPUT_FILE = os.path.join(PROJECT_ROOT, "data", "processed", "clean_root_animes.json")
@@ -30,9 +33,12 @@ INPUT_FILE = os.path.join(PROJECT_ROOT, "data", "processed", "clean_root_animes.
 
 # Initialisation différée
 def get_repo():
+    # Le conteneur est imbriqué depuis un moment : le dépôt vit sous `persistence`,
+    # plus à la racine. Ce script demandait encore `container.repository` et mourait
+    # sur AttributeError — il n'avait donc jamais tourné depuis ce refactor.
     from animetix.containers import get_container  # noqa: E402
 
-    return get_container().repository
+    return get_container().persistence.repository()
 
 
 def get_pipeline_resources():
@@ -141,6 +147,17 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _bootstrap_django() -> None:
+    """Le script écrit dans le dépôt de vecteurs via le conteneur Django : sans
+    `django.setup()`, il meurt sur `ImproperlyConfigured` avant la première ligne
+    utile. Appelé ici seulement — importer le module reste sans effet de bord."""
+    import django  # noqa: E402
+
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
+    django.setup()
+
+
 if __name__ == "__main__":
     args = _parse_args()
+    _bootstrap_django()
     run_vectorization(limit=args.limit)
