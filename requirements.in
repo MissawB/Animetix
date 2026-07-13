@@ -47,6 +47,16 @@ colpali-engine==0.3.13
 # (e.g. dudcjs2779/anime-style-tag-clip, EVA-02) are published for OpenCLIP,
 # not sentence-transformers. Pulls timm, needed for the EVA-02 vision tower.
 open_clip_torch==3.3.0
+# onnxruntime (brain ccip_vision): `deepghs/ccip` answers "is this the SAME
+# anime character", not "does it look similar" -- a question a general-purpose
+# CLIP cannot answer. CCIP ships as an ONNX graph, not a torch checkpoint.
+# On charge le graphe à la main (hf_hub_download + PIL/numpy) plutôt que via
+# `dghs-imgutils` : ce paquet coûtait 95 Mo, réintroduisait opencv-contrib
+# (retiré volontairement le 2026-07-11) et rétrogradait chardet 7.4.3 -> 4.0.0,
+# le tout pour une seule fonction. Le prétraitement est donc dans
+# backend/adapters/inference/ccip_vision.py, sourcé sur l'implémentation de
+# référence (voir l'en-tête du module).
+onnxruntime==1.24.4
 sentence-transformers==3.3.1
 torch==2.5.1
 transformers==4.57.6

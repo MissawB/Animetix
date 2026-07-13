@@ -9,6 +9,7 @@ import httpx
 from adapters.inference.audio_mixin import AudioMixin
 
 # Focused Mixin imports
+from adapters.inference.ccip_vision import CcipVisionMixin
 from adapters.inference.clip_vision import ClipVisionMixin
 from adapters.inference.components.context import InferenceComponentContext
 from adapters.inference.components.manga_ocr_component import MangaOcrComponent
@@ -35,6 +36,7 @@ logger = logging.getLogger("animetix." + __name__)
 class UnifiedInferenceAdapter(
     ReachabilityHealthCheckMixin,
     ClipVisionMixin,
+    CcipVisionMixin,
     DepthEstimationMixin,
     VideoAnalysisMixin,
     AudioMixin,

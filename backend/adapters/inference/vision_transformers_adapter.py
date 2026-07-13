@@ -11,6 +11,7 @@ from core.domain.entities.ai_schemas import InferenceResponse  # noqa: E402
 from core.ports.inference_port import InferenceNotImplementedError  # noqa: E402
 from core.ports.usage_port import UsagePort  # noqa: E402
 
+from .ccip_vision import CcipVisionMixin  # noqa: E402
 from .clip_vision import ClipVisionMixin  # noqa: E402
 from .depth_estimation import DepthEstimationMixin  # noqa: E402
 from .manga_ocr import MangaOcrMixin  # noqa: E402
@@ -27,6 +28,7 @@ class VisionTransformersAdapter(
     MangaOcrMixin,
     VideoAnalysisMixin,
     ClipVisionMixin,
+    CcipVisionMixin,
     VlmMixin,
     LazyLocalModelAdapter,
 ):
