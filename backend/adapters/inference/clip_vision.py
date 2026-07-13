@@ -16,6 +16,70 @@ torch = lazy_import("torch")
 
 logger = logging.getLogger("animetix.inference.clip_vision")
 
+_MODEL_CACHE: dict = {}
+
+
+def _load_open_clip(model_id: str):
+    """Charge un modèle CLIP par son id. Deux familles, un seul point d'entrée.
+
+    `dudcjs2779/anime-style-tag-clip` est un CLIP EVA-02 publié pour OpenCLIP :
+    `sentence-transformers` ne sait pas le charger. Les modèles historiques
+    (`clip-ViT-B-32`) restent servis par sentence-transformers.
+    """
+    if model_id in _MODEL_CACHE:
+        return _MODEL_CACHE[model_id]
+
+    if "/" in model_id:  # un dépôt du Hub -> OpenCLIP
+        import open_clip  # noqa: E402
+
+        model, _, preprocess = open_clip.create_model_and_transforms(
+            f"hf-hub:{model_id}"
+        )
+        tokenizer = open_clip.get_tokenizer(f"hf-hub:{model_id}")
+        model.eval()
+        wrapped = _OpenClipModel(
+            model=model, preprocess=preprocess, tokenizer=tokenizer
+        )
+    else:
+        from sentence_transformers import SentenceTransformer  # noqa: E402
+
+        wrapped = _SentenceTransformerModel(SentenceTransformer(model_id))
+
+    _MODEL_CACHE[model_id] = wrapped
+    return wrapped
+
+
+class _OpenClipModel:
+    def __init__(self, model, preprocess, tokenizer):
+        self._model, self._preprocess, self._tokenizer = model, preprocess, tokenizer
+
+    def encode_image(self, img) -> List[float]:
+        import torch  # noqa: E402
+
+        with torch.no_grad():
+            vec = self._model.encode_image(self._preprocess(img).unsqueeze(0))
+            vec = vec / vec.norm(dim=-1, keepdim=True)
+        return vec[0].tolist()
+
+    def encode_text(self, text: str) -> List[float]:
+        import torch  # noqa: E402
+
+        with torch.no_grad():
+            vec = self._model.encode_text(self._tokenizer([text]))
+            vec = vec / vec.norm(dim=-1, keepdim=True)
+        return vec[0].tolist()
+
+
+class _SentenceTransformerModel:
+    def __init__(self, model):
+        self._model = model
+
+    def encode_image(self, img) -> List[float]:
+        return self._model.encode(img).tolist()
+
+    def encode_text(self, text: str) -> List[float]:
+        return self._model.encode(text).tolist()
+
 
 class ClipVisionMixin:
     """Provides CLIP-based similarity, classification, reranking, and ColPali late interaction."""
@@ -34,23 +98,44 @@ class ClipVisionMixin:
     def get_image_embedding(
         self, image_data: bytes, model_id: Optional[str] = None
     ) -> List[float]:
+        """Encode une image avec le modèle DEMANDÉ.
+
+        L'ancienne version ignorait `model_id` et chargeait toujours
+        `clip-ViT-B-32` : un index construit avec un autre modèle aurait été
+        interrogé avec celui-ci, et la distance n'aurait rien voulu dire.
+        """
+        from io import BytesIO  # noqa: E402
+
+        from PIL import Image  # noqa: E402
+
+        name = model_id or "clip-ViT-B-32"
         try:
-            from io import BytesIO  # noqa: E402
-
-            from PIL import Image  # noqa: E402
-            from sentence_transformers import SentenceTransformer  # noqa: E402
-
             img = Image.open(BytesIO(image_data)).convert("RGB")
-            model_name = "clip-ViT-B-32"
-            if not hasattr(self, "_clip_model"):
-                self._clip_model = SentenceTransformer(model_name)
-
-            self._log_usage(engine=f"transformers:{model_name}:embedding", units=1)
-
-            return self._clip_model.encode(img).tolist()
+            model = _load_open_clip(name)
+            vector = model.encode_image(img)
         except Exception as e:
-            logger.error(f"❌ Image Embedding failed: {e}")
-            return []
+            # Pas de `return []` : un vecteur vide part ensuite dans la recherche
+            # et devient un résultat qui a l'air d'en être un.
+            raise InferenceError(f"Image embedding failed ({name}): {e}") from e
+
+        self._log_usage(engine=f"clip:{name}:embedding", units=1)
+        return vector
+
+    def get_text_embedding_clip(self, text: str, model_id: str) -> List[float]:
+        """La tour TEXTE du même modèle — jamais un encodeur de phrases générique.
+
+        `deep_multimodal_search` fait la moyenne du vecteur texte et du vecteur
+        image : ça n'a de sens que dans un espace joint. Mélanger deux modèles
+        donne soit une erreur de dimensions, soit un nombre qui a l'air juste.
+        """
+        try:
+            model = _load_open_clip(model_id)
+            vector = model.encode_text(text)
+        except Exception as e:
+            raise InferenceError(f"Text embedding failed ({model_id}): {e}") from e
+
+        self._log_usage(engine=f"clip:{model_id}:text", units=1)
+        return vector
 
     def classify_image(
         self,
@@ -61,17 +146,16 @@ class ClipVisionMixin:
         try:
             from sentence_transformers import util  # noqa: E402
 
-            img_emb = torch.tensor(self.get_image_embedding(image_data))
-            model_name = "clip-ViT-B-32"
-            if not hasattr(self, "_clip_model"):
-                from sentence_transformers import SentenceTransformer  # noqa: E402
-
-                self._clip_model = SentenceTransformer(model_name)
-            text_embs = torch.tensor(self._clip_model.encode(candidate_labels))
+            img_emb = torch.tensor(self.get_image_embedding(image_data, model_id))
+            model_name = model_id or "clip-ViT-B-32"
+            model = _load_open_clip(model_name)
+            text_embs = torch.tensor(
+                [model.encode_text(label) for label in candidate_labels]
+            )
             scores = util.cos_sim(img_emb, text_embs)[0]
             probs = torch.nn.functional.softmax(scores, dim=0).tolist()
 
-            self._log_usage(engine=f"transformers:{model_name}:classify", units=1)
+            self._log_usage(engine=f"clip:{model_name}:classify", units=1)
 
             return {label: p for label, p in zip(candidate_labels, probs)}
         except Exception as e:

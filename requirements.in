@@ -43,6 +43,10 @@ peft==0.17.1
 # ColPali late-interaction (brain clip_vision) — the lazy import was never in
 # any lockfile until 2026-07-11, so the path silently degraded at runtime.
 colpali-engine==0.3.13
+# open_clip_torch (brain clip_vision): anime-tuned CLIP checkpoints on the Hub
+# (e.g. dudcjs2779/anime-style-tag-clip, EVA-02) are published for OpenCLIP,
+# not sentence-transformers. Pulls timm, needed for the EVA-02 vision tower.
+open_clip_torch==3.3.0
 sentence-transformers==3.3.1
 torch==2.5.1
 transformers==4.57.6
