@@ -71,7 +71,12 @@ def build_index(works: List[Dict[str, Any]]) -> ProximityIndex:
 
     document_freq: Dict[str, int] = {}
     for work in by_title.values():
-        for tag in set(work.get("tags") or []):
+        # Un genre n'est qu'un tag très fréquent : on les fusionne dans le même
+        # vocabulaire pondéré par IDF. Sans ça, les jeux vidéo (0 tag, 100% genres)
+        # et les acteurs (ni l'un ni l'autre) n'ont aucune différence de traitement
+        # alors que les premiers ont un vrai signal.
+        vocabulary = set(work.get("tags") or []) | set(work.get("genres") or [])
+        for tag in vocabulary:
             document_freq[tag] = document_freq.get(tag, 0) + 1
     total = max(1, len(by_title))
     # Plancher à 0.0 : si un tag finissait par apparaître sur TOUTES les œuvres,
@@ -107,13 +112,15 @@ def co_reco(index: ProximityIndex, a: str, b: str) -> float:
 
 
 def tag_overlap(index: ProximityIndex, a: str, b: str) -> float:
-    """Tags partagés, pondérés par leur rareté.
+    """Tags ET genres partagés, pondérés par leur rareté.
 
     Partager « Detective » vaut cher ; partager « Primarily Male Cast », que la moitié
-    du catalogue porte, ne vaut presque rien.
+    du catalogue porte, ne vaut presque rien -- et un genre n'est jamais qu'un tag très
+    fréquent : « Action » sur la moitié du catalogue pèse à peine plus que ce tag-là.
     """
-    ta = set(index.works.get(a, {}).get("tags") or [])
-    tb = set(index.works.get(b, {}).get("tags") or [])
+    wa, wb = index.works.get(a, {}), index.works.get(b, {})
+    ta = set(wa.get("tags") or []) | set(wa.get("genres") or [])
+    tb = set(wb.get("tags") or []) | set(wb.get("genres") or [])
     shared = ta & tb
     if not shared:
         return 0.0

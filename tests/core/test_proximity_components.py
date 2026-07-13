@@ -308,3 +308,134 @@ def test_the_score_is_bounded():
 
 def test_the_weights_are_the_ones_the_spec_measured():
     assert (W_DIRECT, W_CO_RECO, W_TAGS, BONUS_CAP) == (0.45, 0.30, 0.25, 0.15)
+
+
+def test_a_genre_only_catalogue_produces_a_nonzero_score():
+    # La forme "jeu vidéo" du vrai catalogue : tags=0, recommendations=0, mais des
+    # genres sur toutes les œuvres. Si le vocabulaire pondéré ignore les genres, ce
+    # signal-là est plat et le mode Game entier score zéro partout.
+    works = [
+        {
+            "title": "Game A",
+            "tags": [],
+            "genres": ["RPG", "Fantasy"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+        {
+            "title": "Game B",
+            "tags": [],
+            "genres": ["RPG", "Fantasy"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+        {
+            "title": "Game C",
+            "tags": [],
+            "genres": ["Shooter"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+    ] + [
+        # Remplit le catalogue pour que RPG/Fantasy restent minoritaires : sur 3
+        # œuvres seulement, RPG/Fantasy porté par 2/3 tombe à IDF nul (plancher à
+        # 0.0, cf. build_index) et ne prouverait rien -- un plancher de fixture, pas
+        # un bug du code. Le vrai catalogue jeux (500 œuvres) n'a pas ce problème.
+        {
+            "title": f"Filler{i}",
+            "tags": [],
+            "genres": [f"Genre{i}"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        }
+        for i in range(8)
+    ]
+    idx = build_index(works)
+    assert tag_overlap(idx, "Game A", "Game B") > 0.0
+    assert score(idx, "Game A", "Game B").total() > 0.0
+
+
+def test_a_common_genre_is_worth_much_less_than_a_rare_tag():
+    # Le genre n'est qu'un tag très fréquent : la même IDF doit s'appliquer une fois
+    # le vocabulaire fusionné. "CommonGenre" est porté par 8 œuvres sur 10 (banal) ;
+    # "Detective"/"Philosophy" par 2 seulement (rare). Partager le genre banal doit
+    # valoir beaucoup moins que partager les tags rares.
+    works = [
+        {
+            "title": "Code Geass2",
+            "tags": ["Philosophy"],
+            "genres": ["Mecha", "CommonGenre"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+        {
+            "title": "Kimetsu2",
+            "tags": ["Demons", "Swordplay"],
+            "genres": ["Action", "CommonGenre"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+        {
+            "title": "Death Note2",
+            "tags": ["Detective", "Philosophy"],
+            "genres": ["Mystery"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+        {
+            "title": "Psycho-Pass2",
+            "tags": ["Detective", "Philosophy"],
+            "genres": ["SciFi"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+    ] + [
+        {
+            "title": f"Filler{i}",
+            "tags": [],
+            "genres": ["CommonGenre", f"Filler{i}Genre"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        }
+        for i in range(6)
+    ]
+    idx = build_index(works)
+    banal_only = tag_overlap(
+        idx, "Code Geass2", "Kimetsu2"
+    )  # ne partagent que CommonGenre
+    rare_shared = tag_overlap(
+        idx, "Death Note2", "Psycho-Pass2"
+    )  # Detective + Philosophy
+    # Le genre partagé doit compter (> 0 : preuve qu'il entre bien dans le vocabulaire
+    # fusionné), mais peser beaucoup moins que les tags rares partagés.
+    assert banal_only > 0.0
+    assert rare_shared > banal_only
+    assert banal_only < 0.1
+    assert rare_shared > 0.5

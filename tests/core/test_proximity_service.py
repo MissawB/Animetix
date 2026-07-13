@@ -104,6 +104,91 @@ def test_a_catalogue_with_works_but_no_usable_signal_also_says_so():
         _service(works=mute).rank("Movie", "A")
 
 
+def test_a_genre_only_catalogue_still_produces_a_usable_ranking():
+    # La forme "jeu vidéo" du vrai catalogue : ni tags ni recommandations, seulement
+    # des genres. Avant le correctif, ce catalogue scorait zéro partout et rank()
+    # levait GameLogicError -- une régression : le mode Game était jouable avant.
+    games = [
+        {
+            "title": "Game A",
+            "tags": [],
+            "genres": ["RPG", "Fantasy"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+        {
+            "title": "Game B",
+            "tags": [],
+            "genres": ["RPG", "Fantasy"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+        {
+            "title": "Game C",
+            "tags": [],
+            "genres": ["Shooter"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+    ] + [
+        # Remplit le catalogue pour que RPG/Fantasy restent minoritaires (cf. le
+        # commentaire équivalent dans test_proximity_components.py) : sinon leur IDF
+        # tombe à zéro et le classement ne prouve plus rien.
+        {
+            "title": f"Filler{i}",
+            "tags": [],
+            "genres": [f"Genre{i}"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        }
+        for i in range(8)
+    ]
+    ranking = _service(works=games).rank("Game", "Game A")
+    assert ranking[0] == "Game B"  # partage les deux genres, contrairement à Game C
+
+
+def test_an_actor_shape_catalogue_with_no_signal_at_all_still_raises():
+    # La forme "acteur" du vrai catalogue : ni tags, ni genres, ni recommandations.
+    # Là, aucun vocabulaire fusionné ne peut aider -- GameLogicError reste la bonne
+    # réponse : un 0.0 qui a l'air d'un vrai chiffre est le bug que cette refonte tue.
+    actors = [
+        {
+            "title": "Actor A",
+            "tags": [],
+            "genres": [],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+        {
+            "title": "Actor B",
+            "tags": [],
+            "genres": [],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+    ]
+    with pytest.raises(GameLogicError):
+        _service(works=actors).rank("Actor", "Actor A")
+
+
 def test_the_ranking_can_be_passed_in_so_a_game_computes_it_once():
     service = _service()
     ranking = service.rank("Anime", "Death Note")
