@@ -32,7 +32,9 @@ def test_image_installs_a_model_server():
 
 
 def test_baked_model_matches_the_model_the_code_asks_for():
-    """The image bakes one model; the engine requests another -> `model not found`."""
+    """The image bakes one model tag; the engine requests another -> Ollama 404s
+    and the brain looks offline. Exactly what happened in prod with `qwen3.5` vs
+    `qwen3.5:9b`."""
     baked = re.search(r"ARG OLLAMA_MODEL=(\S+)", DOCKERFILE)
     assert baked, "the model must be baked in, not pulled at cold start"
 
@@ -42,9 +44,33 @@ def test_baked_model_matches_the_model_the_code_asks_for():
     )
 
 
+def test_ollama_is_pinned_to_a_version_the_cloud_run_driver_supports():
+    """Cloud Run ships NVIDIA driver 535. Ollama >= ~0.6 demands 550+, refuses the
+    L4 and silently falls back to CPU (4 tok/s). Unpinning this re-breaks the GPU
+    with no error anywhere -- only a slow model."""
+    pin = re.search(r"ARG OLLAMA_VERSION=(\S+)", DOCKERFILE)
+    assert pin, "Ollama must be version-pinned: the latest rejects driver 535"
+
+    major, minor = (int(p) for p in pin.group(1).split(".")[:2])
+    assert (major, minor) <= (0, 5), (
+        f"Ollama {pin.group(1)} likely requires driver 550+, which Cloud Run does "
+        "not provide; the GPU would fall back to CPU"
+    )
+
+
+def test_the_served_model_is_the_fine_tune_not_a_stock_one():
+    """The point of the brain is to serve OUR model. The LoRA must be merged into
+    the base its adapter_config actually names -- grafting it onto another base is
+    impossible, and that mismatch is why it went unserved for so long."""
+    assert "peft" in DOCKERFILE and "merge_and_unload" in DOCKERFILE
+    assert "MissawB/otaku-qwen-7b-adapter" in DOCKERFILE
+    assert "unsloth/Qwen2.5-7B-Instruct" in DOCKERFILE
+    assert "llama-quantize" in DOCKERFILE, "serving fp16 would not fit the L4"
+
+
 def test_weights_are_baked_before_the_source_copy():
-    """A 6.6 GB layer must not be invalidated by every code change."""
-    assert DOCKERFILE.index("ollama pull") < DOCKERFILE.index("COPY . .")
+    """The GGUF layer is expensive to produce; a code change must not invalidate it."""
+    assert DOCKERFILE.index("ollama create") < DOCKERFILE.index("COPY . .")
 
 
 def test_model_server_is_started_and_awaited_before_the_api():

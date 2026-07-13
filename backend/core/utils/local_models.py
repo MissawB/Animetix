@@ -7,7 +7,11 @@ Qwen3.5-4B). Pure module — only `os`.
 
 import os
 
-LLM_OLLAMA_MODEL = os.getenv("LLM_MODEL_NAME", "qwen3.5:9b")
+# The brain serves OUR fine-tune, not a stock model: the otaku LoRA merged into
+# its real base (Qwen2.5-7B-Instruct) and quantized to GGUF by deploy/Dockerfile.brain.
+# The tag must match what that image registers with `ollama create`, or Ollama
+# answers 404 and the whole brain looks offline.
+LLM_OLLAMA_MODEL = os.getenv("LLM_MODEL_NAME", "otaku-qwen:7b")
 LOCAL_TEXT_MODEL = os.getenv("LOCAL_MODEL_ID", "Qwen/Qwen3.5-9B")
 DRAFT_TEXT_MODEL = os.getenv("DRAFT_MODEL_ID", "Qwen/Qwen2.5-0.5B-Instruct")
 COMPACT_REASONING_MODEL = os.getenv("COMPACT_MODEL_ID", "WeiboAI/VibeThinker-3B")

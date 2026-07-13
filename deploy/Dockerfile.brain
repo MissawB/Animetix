@@ -1,3 +1,57 @@
+# ---------------------------------------------------------------------------
+# Stage 1 — bake the OTAKU fine-tune: merge the LoRA into its base, quantize to
+# GGUF. This is the artifact the whole project trained and then never served.
+#
+# The base is Qwen2.5-7B-Instruct because that is what the published adapter was
+# ACTUALLY trained on (`adapter_config.json`), whatever its model card claims. A
+# LoRA is bound to its base's architecture; it cannot be grafted onto anything
+# else. Serving that base is also what makes the GPU usable at all -- see the
+# driver note in stage 2.
+# ---------------------------------------------------------------------------
+FROM python:3.11-slim AS gguf
+
+ENV BASE_MODEL=unsloth/Qwen2.5-7B-Instruct \
+    ADAPTER_MODEL=MissawB/otaku-qwen-7b-adapter \
+    HF_HOME=/tmp/hf
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git build-essential cmake curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# CPU torch only: this stage merges weights, it never runs inference.
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir \
+    transformers peft accelerate safetensors sentencepiece protobuf gguf
+
+RUN python -c "\
+import os, torch;\
+from transformers import AutoModelForCausalLM, AutoTokenizer;\
+from peft import PeftModel;\
+base = os.environ['BASE_MODEL'];\
+adapter = os.environ['ADAPTER_MODEL'];\
+print('loading', base);\
+m = AutoModelForCausalLM.from_pretrained(base, dtype=torch.float16, device_map='cpu', low_cpu_mem_usage=True);\
+print('applying', adapter);\
+m = PeftModel.from_pretrained(m, adapter);\
+m = m.merge_and_unload();\
+m.save_pretrained('/merged', safe_serialization=True);\
+AutoTokenizer.from_pretrained(base).save_pretrained('/merged');\
+print('merged -> /merged')"
+
+# f16 GGUF, then Q4_K_M. The intermediate f16 (~15 GB) is deleted in the same
+# layer so it never reaches the final image.
+RUN git clone --depth 1 https://github.com/ggml-org/llama.cpp /llama.cpp \
+    && pip install --no-cache-dir -r /llama.cpp/requirements/requirements-convert_hf_to_gguf.txt \
+    && python /llama.cpp/convert_hf_to_gguf.py /merged --outfile /otaku-f16.gguf --outtype f16 \
+    && cmake -B /llama.cpp/build /llama.cpp -DLLAMA_CURL=OFF -DGGML_NATIVE=OFF \
+    && cmake --build /llama.cpp/build --target llama-quantize -j"$(nproc)" \
+    && /llama.cpp/build/bin/llama-quantize /otaku-f16.gguf /otaku-q4_k_m.gguf Q4_K_M \
+    && rm -rf /merged /otaku-f16.gguf /llama.cpp \
+    && ls -la /otaku-q4_k_m.gguf
+
+# ---------------------------------------------------------------------------
+# Stage 2 — the brain runtime.
+# ---------------------------------------------------------------------------
 FROM python:3.11-slim
 
 # OLLAMA_HOST must agree with the LLM_API_BASE the service is deployed with:
@@ -29,24 +83,62 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     zstd \
     && rm -rf /var/lib/apt/lists/*
 
-# The brain is the only host with a GPU and the RAM budget for local weights --
-# that is the whole point of splitting it out of the 4 GiB web container.
-# Ollama ships its own CUDA runners, so no CUDA toolchain is needed here.
-# (Its installer unpacks a zstd tarball -- hence zstd in the apt list above,
-# without which it dies with "This version requires zstd for extraction".)
-RUN curl -fsSL https://ollama.com/install.sh | sh
+# Ollama is PINNED, and the pin is load-bearing. Cloud Run provides NVIDIA driver
+# 535; Ollama >= ~0.6 requires 550 or newer, sees the L4, refuses it and silently
+# falls back to CPU -- a 9B model then generates at 4 tok/s. (CUDA forward
+# compatibility does NOT rescue this: Ollama reads the driver version from NVML,
+# which the compat runtime does not change. Tried, measured, discarded.) 0.5.13
+# still accepts 535 and was verified on a probe job to report
+# `library=cuda ... total="22.0 GiB"` on this exact platform.
+# Its installer unpacks a zstd tarball, hence zstd above.
+ARG OLLAMA_VERSION=0.5.13
+RUN curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=${OLLAMA_VERSION} sh
 
-# Bake the weights into the image: the service scales to zero, and pulling 6.6 GB
-# on every cold start would blow the request deadline. Kept ahead of the source
-# COPY so a code change does not invalidate this (large, slow) layer.
-ARG OLLAMA_MODEL=qwen3.5:9b
+# Register the merged fine-tune with Ollama. Baked, not pulled: the service
+# scales to zero and a cold-start download would blow the request deadline.
+ARG OLLAMA_MODEL=otaku-qwen:7b
 ENV OLLAMA_MODEL=${OLLAMA_MODEL}
-RUN ollama serve & \
+
+# Stock base, same family and quantization, pulled straight from Ollama's registry.
+# It is the CONTROL: if it answers cleanly while the merged fine-tune emits
+# corrupted text, the fault is in the adapter/merge, not in the serving stack.
+# It also gives the brain a known-good model to fall back to by flipping
+# LLM_MODEL_NAME -- no rebuild needed.
+ARG CONTROL_MODEL=qwen2.5:7b-instruct
+ENV CONTROL_MODEL=${CONTROL_MODEL}
+
+COPY --from=gguf /otaku-q4_k_m.gguf /opt/gguf/otaku-q4_k_m.gguf
+
+# The TEMPLATE and stop tokens are NOT optional. A bare `FROM <gguf>` Modelfile
+# leaves Qwen2.5 with no ChatML framing and nothing to stop on: it never emits
+# <|im_end|>, runs to the full context window, and every request dies on the
+# client's 90 s timeout with zero tokens returned -- while the GPU happily churns.
+# num_predict caps a runaway generation instead of letting it eat the window.
+RUN { \
+    echo 'FROM /opt/gguf/otaku-q4_k_m.gguf'; \
+    echo 'TEMPLATE """{{ if .System }}<|im_start|>system'; \
+    echo '{{ .System }}<|im_end|>'; \
+    echo '{{ end }}{{ if .Prompt }}<|im_start|>user'; \
+    echo '{{ .Prompt }}<|im_end|>'; \
+    echo '{{ end }}<|im_start|>assistant'; \
+    echo '{{ .Response }}<|im_end|>'; \
+    echo '"""'; \
+    echo 'PARAMETER stop "<|im_start|>"'; \
+    echo 'PARAMETER stop "<|im_end|>"'; \
+    echo 'PARAMETER stop "<|endoftext|>"'; \
+    echo 'PARAMETER num_ctx 8192'; \
+    echo 'PARAMETER num_predict 1024'; \
+    } > /opt/gguf/Modelfile \
+    && cat /opt/gguf/Modelfile \
+    && ollama serve & \
     OLLAMA_PID=$!; \
     for _ in $(seq 1 30); do ollama list >/dev/null 2>&1 && break; sleep 1; done; \
-    ollama pull "$OLLAMA_MODEL" && \
-    ollama list && \
-    kill "$OLLAMA_PID"
+    ollama create "$OLLAMA_MODEL" -f /opt/gguf/Modelfile \
+    && ollama show "$OLLAMA_MODEL" --modelfile | head -5 \
+    && ollama pull "$CONTROL_MODEL" \
+    && ollama list \
+    && kill "$OLLAMA_PID" \
+    && rm -rf /opt/gguf
 
 # Brain-only lockfile: GPU serving stack (CUDA torch backs the vision / rerank /
 # OCR components), no Django.
@@ -62,4 +154,9 @@ EXPOSE 7861
 # Ollama first, then the API -- and wait for the model server to answer before
 # uvicorn takes traffic, otherwise /health says "offline" for the first seconds
 # of a cold start and the router writes the brain off for the whole TTL window.
-CMD ["sh", "-c", "ollama serve & for _ in $(seq 1 60); do curl -fs http://127.0.0.1:11434/api/tags >/dev/null 2>&1 && break; sleep 1; done; exec uvicorn adapters.inference.brain_service:app --host 0.0.0.0 --port ${PORT:-7861}"]
+# The warm-up call is what makes the first real request survivable: loading 4.7 GB
+# into the L4's VRAM takes tens of seconds, and the inference client gives up after
+# 90 s. Paying that cost at startup -- before uvicorn accepts traffic -- means the
+# model is already resident when the first user arrives. OLLAMA_KEEP_ALIVE=24h
+# then keeps it there for the life of the instance.
+CMD ["sh", "-c", "ollama serve & for _ in $(seq 1 60); do curl -fs http://127.0.0.1:11434/api/tags >/dev/null 2>&1 && break; sleep 1; done; echo 'warming up $OLLAMA_MODEL...'; curl -s -X POST http://127.0.0.1:11434/api/generate -d \"{\\\"model\\\":\\\"$OLLAMA_MODEL\\\",\\\"prompt\\\":\\\"hi\\\",\\\"stream\\\":false,\\\"options\\\":{\\\"num_predict\\\":1}}\" >/dev/null; echo 'model resident'; exec uvicorn adapters.inference.brain_service:app --host 0.0.0.0 --port ${PORT:-7861}"]
