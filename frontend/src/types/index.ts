@@ -269,6 +269,12 @@ export interface ClassicHint {
 
 export type ClassicHints = Partial<Record<ClassicHintKey, ClassicHint>>;
 
+export interface ClassicReason {
+  kind: 'public' | 'tags' | 'structure';
+  label: string;
+  detail: string[];
+}
+
 export interface ClassicGuess {
   title: string;
   title_english?: string | null;
@@ -277,6 +283,7 @@ export interface ClassicGuess {
   score?: number;
   color?: 'danger' | 'warning' | 'primary' | 'secondary' | string;
   is_correct: boolean;
+  reasons?: ClassicReason[];
 }
 
 export interface ClassicGameState extends GameState {

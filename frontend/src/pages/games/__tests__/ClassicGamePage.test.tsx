@@ -118,10 +118,28 @@ describe('ClassicGamePage', () => {
       gameState: baseState({
         guess_count: 5,
         hints: {
-          origin: { label: 'Origine / Année', unlocks_at: 5, can_reveal: true, revealed: false, value: null },
+          origin: {
+            label: 'Origine / Année',
+            unlocks_at: 5,
+            can_reveal: true,
+            revealed: false,
+            value: null,
+          },
           tags: { label: 'Tags', unlocks_at: 10, can_reveal: false, revealed: false, value: null },
-          studio: { label: 'Studio', unlocks_at: 15, can_reveal: false, revealed: false, value: null },
-          desc: { label: 'Description', unlocks_at: 20, can_reveal: false, revealed: false, value: null },
+          studio: {
+            label: 'Studio',
+            unlocks_at: 15,
+            can_reveal: false,
+            revealed: false,
+            value: null,
+          },
+          desc: {
+            label: 'Description',
+            unlocks_at: 20,
+            can_reveal: false,
+            revealed: false,
+            value: null,
+          },
         },
       }),
     });
@@ -137,5 +155,56 @@ describe('ClassicGamePage', () => {
     expect(screen.getByText(/Death Note/i)).toBeInTheDocument();
     fireEvent.click(screen.getByText(/Rejouer/i));
     expect(startGame).toHaveBeenCalled();
+  });
+
+  it('affiche ce qui a rapproché une proposition chaude', () => {
+    hookValue = makeHook({
+      gameState: baseState({
+        guesses: [
+          {
+            title: 'MONSTER',
+            score: 92.3,
+            color: 'success',
+            is_correct: false,
+            reasons: [
+              { kind: 'public', label: "C'est le public qui vous rapproche", detail: [] },
+              { kind: 'tags', label: '2 tag(s) partagé(s)', detail: ['Detective', 'Philosophy'] },
+            ],
+          },
+        ],
+      }),
+    });
+    renderPage();
+    expect(screen.getByText(/le public qui vous rapproche/i)).toBeInTheDocument();
+    expect(screen.getByText(/Detective/)).toBeInTheDocument();
+  });
+
+  it("n'affiche rien pour une proposition froide", () => {
+    hookValue = makeHook({
+      gameState: baseState({
+        guesses: [
+          {
+            title: 'Kimetsu no Yaiba',
+            score: 12,
+            color: 'secondary',
+            is_correct: false,
+            reasons: [],
+          },
+        ],
+      }),
+    });
+    renderPage();
+    expect(screen.getByText('Kimetsu no Yaiba')).toBeInTheDocument();
+    expect(screen.queryByText(/rapproche/i)).not.toBeInTheDocument();
+  });
+
+  it('survit à une charge utile sans le champ reasons', () => {
+    hookValue = makeHook({
+      gameState: baseState({
+        guesses: [{ title: 'BLEACH', score: 40, color: 'warning', is_correct: false }],
+      }),
+    });
+    renderPage();
+    expect(screen.getByText('BLEACH')).toBeInTheDocument();
   });
 });
