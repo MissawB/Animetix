@@ -18,14 +18,16 @@ substitutions:
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  # The brain image bakes ~6.6 GB of Ollama weights on top of the CUDA torch
-  # stack (~13 GB total). On the default machine + 100 GB disk the build runs out
-  # of room, and the default 10-minute deadline expires during the model pull.
-  machineType: 'E2_HIGHCPU_8'
+  # The brain image merges a 7B LoRA into its fp16 base and quantizes it to GGUF
+  # before it even starts on the runtime layers. That needs real RAM (the fp16
+  # merge alone holds ~15 GB) and real disk. On the default machine + 100 GB disk
+  # it runs out of both, and the default 10-minute deadline expires during the
+  # base-model download.
+  machineType: 'E2_HIGHCPU_32'
   diskSizeGb: '200'
 
 # Default is 10 minutes -- far too short for the brain and dataflow targets.
-timeout: 3600s
+timeout: 7200s
 
 steps:
   # --- Web Image Build & Push ---
