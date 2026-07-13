@@ -4,7 +4,7 @@ import importlib
 def test_canonical_defaults():
     from core.utils import local_models as lm
 
-    assert lm.LLM_OLLAMA_MODEL == "qwen3.5:9b"
+    assert lm.LLM_OLLAMA_MODEL == "qwen2.5:7b-instruct"
     assert lm.LOCAL_TEXT_MODEL == "Qwen/Qwen3.5-9B"
     assert lm.DRAFT_TEXT_MODEL == "Qwen/Qwen2.5-0.5B-Instruct"
     assert lm.COMPACT_REASONING_MODEL == "WeiboAI/VibeThinker-3B"

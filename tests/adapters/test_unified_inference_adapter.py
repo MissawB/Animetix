@@ -64,7 +64,7 @@ def adapter():
 def test_defaults_when_no_args_and_no_env():
     a = UnifiedInferenceAdapter()
     assert a.api_base == "http://localhost:11434/v1"
-    assert a.model_name == "qwen3.5:9b"
+    assert a.model_name == "qwen2.5:7b-instruct"
     assert a.api_key == "ollama"
 
 

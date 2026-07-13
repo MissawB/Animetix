@@ -38,6 +38,54 @@ def _proximity(report):
         container.core.proximity_service.reset_last_overriding()
 
 
+# CI checks out data/processed/*.json as unfetched Git LFS pointers (~130-byte
+# stubs starting with "version https://git-lfs...") -- the real CatalogService
+# raises CatalogNotFoundError for every media type there. None of these tests
+# exercise real catalogue data or secret-selection logic (scoring is faked via
+# ``_proximity`` above); they only need the view's own membership/display-field
+# checks and a fixed secret title. A tiny in-memory catalogue -- same shape
+# CatalogService.get_catalog produces, same pattern as
+# tests/api/games/test_classic_coverage.py's ``mock_catalog`` -- stands in.
+SECRET_TITLE = "Placeholder Secret"
+
+
+def _catalog():
+    titles = [
+        "MONSTER",
+        "Code Geass: Hangyaku no Lelouch",
+        "Kimetsu no Yaiba",
+        SECRET_TITLE,
+    ]
+    return {
+        "title_to_full_data": {t: {"title": t} for t in titles},
+        "titles": titles,
+        "title_to_index": {t: i for i, t in enumerate(titles)},
+        "lookup": [{"id": i, "title": t} for i, t in enumerate(titles)],
+        "db": [{"id": i, "title": t} for i, t in enumerate(titles)],
+    }
+
+
+@contextmanager
+def _catalog_and_game(secret_title=SECRET_TITLE):
+    """Override scoped, same tripwire discipline as ``_proximity`` above."""
+    cat = MagicMock()
+    cat.get_catalog.return_value = _catalog()
+    game = MagicMock()
+    game.select_secret.return_value = secret_title
+    # Never let a guess collide with the secret by accident (check_title_match
+    # unconfigured on a MagicMock returns a truthy MagicMock, which would score
+    # every guess 100.0 and break every assertion below that pins the mocked
+    # ProximityService report instead).
+    game.check_title_match.return_value = False
+    container.core.catalog_service.override(providers.Object(cat))
+    container.core.game_service.override(providers.Object(game))
+    try:
+        yield cat, game
+    finally:
+        container.core.game_service.reset_last_overriding()
+        container.core.catalog_service.reset_last_overriding()
+
+
 HOT_REPORT = {
     "percent": 92.3,
     "rank": 1,
@@ -59,7 +107,7 @@ def _start(api):
 @pytest.mark.django_db
 def test_a_guess_is_scored_by_its_rank_not_by_a_cosine():
     api = APIClient()
-    with _proximity(HOT_REPORT):
+    with _catalog_and_game(), _proximity(HOT_REPORT):
         _start(api)
         response = api.post(
             "/api/v1/game/classic/guess/", {"guess": "MONSTER"}, format="json"
@@ -74,7 +122,7 @@ def test_a_guess_is_scored_by_its_rank_not_by_a_cosine():
 @pytest.mark.django_db
 def test_a_cold_guess_reveals_nothing():
     api = APIClient()
-    with _proximity(COLD_REPORT):
+    with _catalog_and_game(), _proximity(COLD_REPORT):
         _start(api)
         response = api.post(
             "/api/v1/game/classic/guess/", {"guess": "Kimetsu no Yaiba"}, format="json"
@@ -88,7 +136,7 @@ def test_a_cold_guess_reveals_nothing():
 @pytest.mark.django_db
 def test_the_ranking_is_computed_once_per_game_not_once_per_guess():
     api = APIClient()
-    with _proximity(HOT_REPORT) as service:
+    with _catalog_and_game(), _proximity(HOT_REPORT) as service:
         _start(api)
         for title in ("MONSTER", "Code Geass: Hangyaku no Lelouch", "Kimetsu no Yaiba"):
             api.post("/api/v1/game/classic/guess/", {"guess": title}, format="json")
@@ -132,7 +180,10 @@ def test_a_stale_v1_session_key_does_not_recompute_every_guess():
 
     service.report.side_effect = fake_report
 
-    with container.core.proximity_service.override(providers.Object(service)):
+    with (
+        _catalog_and_game(),
+        container.core.proximity_service.override(providers.Object(service)),
+    ):
         _start(api)
 
         session = api.session
@@ -163,11 +214,12 @@ def test_a_media_type_with_no_proximity_signal_is_a_clean_error_not_a_500():
     api = APIClient()
     service = MagicMock()
     service.rank.side_effect = GameLogicError("no signal for this catalogue")
-    container.core.proximity_service.override(providers.Object(service))
-    try:
-        response = _start(api)
-    finally:
-        container.core.proximity_service.reset_last_overriding()
+    with _catalog_and_game():
+        container.core.proximity_service.override(providers.Object(service))
+        try:
+            response = _start(api)
+        finally:
+            container.core.proximity_service.reset_last_overriding()
 
     assert response.status_code == 503
     assert response.status_code != 500
