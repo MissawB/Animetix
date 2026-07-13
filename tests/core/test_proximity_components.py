@@ -108,10 +108,126 @@ INDEX = build_index(WORKS)
 
 def test_the_bug_this_replaces_monster_beats_kimetsu_for_death_note():
     # L'embedding disait l'inverse. C'est LE test de non-régression du design.
-    assert (
-        score(INDEX, "Death Note", "Monster").total()
-        > score(INDEX, "Death Note", "Kimetsu no Yaiba").total()
-    )
+    monster = score(INDEX, "Death Note", "Monster").total()
+    kimetsu = score(INDEX, "Death Note", "Kimetsu no Yaiba").total()
+    assert monster > kimetsu
+    # Pas seulement un ordre relatif : sur le vrai catalogue, Death Note ~ Kimetsu
+    # est ~ 0.027. Une implémentation dégénérée qui se contenterait de séparer les
+    # deux d'un chouïa (par ex. en gardant un bonus de structure fantôme) doit
+    # échouer ici même si l'ordre reste correct.
+    assert kimetsu < 0.15
+
+
+def test_a_self_referencing_relation_grants_no_franchise_bonus_to_an_unrelated_work():
+    # Le vrai catalogue : 1786/2181 oeuvres (82 %) portent une relation qui se cite
+    # elle-même (ex. "DEATH NOTE": {"ADAPTATION": ["DEATH NOTE"]}). Le code d'origine
+    # bâtissait un seul ensemble "related" à partir des cibles des relations des DEUX
+    # oeuvres, puis testait "b in related or a in related" -- trivialement vrai pour
+    # la majorité des oeuvres via leur PROPRE auto-référence, donnant le bonus de
+    # franchise maximal (0.15) à des paires sans aucun rapport. Rien dans la fixture
+    # existante ne porte d'auto-référence : ce test comble ce trou.
+    works = [
+        {
+            "title": "Death Note",
+            "tags": [],
+            "genres": [],
+            "studios": ["MADHOUSE"],
+            "source": "MANGA",
+            "year": 2006,
+            "relations": {"ADAPTATION": ["Death Note"]},
+            "recommendations": {},
+        },
+        {
+            "title": "Nichijou",
+            "tags": [],
+            "genres": [],
+            "studios": ["Kyoto Animation"],
+            "source": "MANGA",
+            "year": 2011,
+            "relations": {},
+            "recommendations": {},
+        },
+    ]
+    idx = build_index(works)
+    assert structural_bonus(idx, "Death Note", "Nichijou") < BONUS_CAP
+
+
+def test_the_self_reference_exclusion_is_case_insensitive():
+    # Le vrai catalogue compte 55 entrées qui s'auto-référencent sous une casse
+    # différente (ex. "VINLAND SAGA" listant ["Vinland Saga"]). La comparaison
+    # d'origine était sensible à la casse (`t != a`) : rien ne casse aujourd'hui
+    # car aucune paire de titres du catalogue ne diffère uniquement par la casse --
+    # mais le correctif ne doit pas reposer sur cette coïncidence. On le prouve en
+    # plaçant, à côté de l'auto-référence mal casée, une oeuvre RÉELLEMENT distincte
+    # et sans rapport dont le titre est exactement cette variante de casse : sans
+    # comparaison insensible à la casse, l'auto-référence est prise pour une vraie
+    # relation vers cette autre oeuvre.
+    works = [
+        {
+            "title": "VINLAND SAGA",
+            "tags": [],
+            "genres": [],
+            "studios": ["WIT STUDIO"],
+            "source": "MANGA",
+            "year": 2019,
+            "relations": {"ADAPTATION": ["Vinland Saga"]},
+            "recommendations": {},
+        },
+        {
+            "title": "Vinland Saga",
+            "tags": [],
+            "genres": [],
+            "studios": ["MAPPA"],
+            "source": "ORIGINAL",
+            "year": 2023,
+            "relations": {},
+            "recommendations": {},
+        },
+    ]
+    idx = build_index(works)
+    assert structural_bonus(idx, "VINLAND SAGA", "Vinland Saga") < BONUS_CAP
+
+
+def test_a_negative_recommendation_contributes_nothing():
+    # AniList autorise des votes négatifs (des « non, rien à voir »). Le vrai
+    # catalogue en compte 1248. Un vote négatif ne doit ni renforcer le signal, ni
+    # -- pire -- rendre la paire plus éloignée qu'une paire sans arête du tout.
+    works = [
+        {
+            "title": "A",
+            "tags": [],
+            "genres": [],
+            "studios": [],
+            "source": "MANGA",
+            "year": 2000,
+            "relations": {},
+            "recommendations": {"B": -50},
+        },
+        {
+            "title": "B",
+            "tags": [],
+            "genres": [],
+            "studios": [],
+            "source": "MANGA",
+            "year": 2000,
+            "relations": {},
+            "recommendations": {},
+        },
+        {
+            "title": "C",
+            "tags": [],
+            "genres": [],
+            "studios": [],
+            "source": "MANGA",
+            "year": 2000,
+            "relations": {},
+            "recommendations": {},
+        },
+    ]
+    idx = build_index(works)
+    assert direct_reco(idx, "A", "B") == 0.0
+    # Pas plus loin qu'une paire sans arête du tout (A, C).
+    assert direct_reco(idx, "A", "B") == direct_reco(idx, "A", "C")
 
 
 def test_a_work_with_no_link_at_all_scores_zero():

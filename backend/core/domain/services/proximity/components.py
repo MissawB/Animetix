@@ -24,7 +24,6 @@ BONUS_CAP = 0.15
 # qui bougerait à chaque ingestion.
 _MAX_VOTES = math.log1p(4000)
 
-_BONUS_FRANCHISE = 0.15
 _BONUS_STUDIO = 0.04
 _BONUS_SOURCE = 0.02
 _BONUS_DECADE = 0.01
@@ -75,7 +74,10 @@ def build_index(works: List[Dict[str, Any]]) -> ProximityIndex:
         for tag in set(work.get("tags") or []):
             document_freq[tag] = document_freq.get(tag, 0) + 1
     total = max(1, len(by_title))
-    idf = {tag: math.log(total / (1 + n)) for tag, n in document_freq.items()}
+    # Plancher à 0.0 : si un tag finissait par apparaître sur TOUTES les œuvres,
+    # log(total / (1 + n)) deviendrait négatif et math.sqrt(weight_a * weight_b)
+    # planterait (ValueError) dès qu'un poids agrégé devient négatif.
+    idf = {tag: max(0.0, math.log(total / (1 + n))) for tag, n in document_freq.items()}
 
     return ProximityIndex(works=by_title, reco=reco, idf=idf)
 
@@ -131,12 +133,23 @@ def structural_bonus(index: ProximityIndex, a: str, b: str) -> float:
     # Le vrai catalogue a des entrées auto-référentes (ex. "ADAPTATION": [son propre
     # titre]) : il faut les exclure, sinon deux œuvres sans aucun rapport, qui ont
     # chacune ce quirk, se retrouvent toutes les deux dans le même ensemble "related"
-    # et se voient attribuer le bonus de franchise maximal à tort.
+    # et se voient attribuer le bonus de franchise maximal à tort. La comparaison est
+    # insensible à la casse : 55 entrées du vrai catalogue s'auto-référencent sous une
+    # casse différente (ex. "VINLAND SAGA" listant ["Vinland Saga"]). Rien ne casse
+    # aujourd'hui par coïncidence (aucune paire de titres du catalogue ne diffère
+    # uniquement par la casse), mais l'exclusion doit tenir sans compter dessus.
+    a_norm, b_norm = a.casefold(), b.casefold()
     a_related = {
-        t for titles in (wa.get("relations") or {}).values() for t in titles if t != a
+        t
+        for titles in (wa.get("relations") or {}).values()
+        for t in titles
+        if t.casefold() != a_norm
     }
     b_related = {
-        t for titles in (wb.get("relations") or {}).values() for t in titles if t != b
+        t
+        for titles in (wb.get("relations") or {}).values()
+        for t in titles
+        if t.casefold() != b_norm
     }
     if b in a_related or a in b_related:
         return BONUS_CAP  # une suite directe : rien de plus proche structurellement
