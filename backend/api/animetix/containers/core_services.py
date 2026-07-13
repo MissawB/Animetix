@@ -141,6 +141,11 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         repository=persistence.repository,
     )
 
+    proximity_service = providers.Singleton(
+        LazyClass("core.domain.services.proximity.service", "ProximityService"),
+        catalog_service=catalog_service,
+    )
+
     cfr_game_solver = providers.Singleton(
         LazyClass("core.domain.services.cfr_game_solver", "CFRGameSolver"),
         num_actions=4,
