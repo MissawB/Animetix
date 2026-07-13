@@ -1,5 +1,7 @@
 from animetix_project.logging_config import get_logger
+from core.domain.exceptions import GameLogicError
 from dependency_injector.wiring import Provide, inject
+from django.core.cache import cache
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,6 +17,26 @@ logger = get_logger("animetix." + __name__)
 # Hint keys the player may pick/order in the lobby.
 # Keep in sync with CLASSIC_HINT_ORDER in animetix/presenters.py.
 HINT_TYPES = ("year", "origin", "tags", "genres", "studio", "letter", "words", "desc")
+
+# Le classement d'un catalogue face à un secret est cher UNE fois (index +
+# comparaisons), gratuit ensuite : mis en cache par (media_type, secret), relu à
+# chaque proposition. Le défi quotidien partage un secret entre tous les joueurs :
+# le premier paie le calcul, les autres le relisent.
+PROXIMITY_CACHE_TIMEOUT = 60 * 60 * 24 * 7  # 7 jours
+
+
+def _proximity_unavailable():
+    """Un GameLogicError de ProximityService dit "aucun signal exploitable"
+    (catalogue vide, ou type de média sans recommandations -- films, jeux, acteurs
+    aujourd'hui). C'est une panne de service connue, pas un bug : 503, jamais un 500
+    opaque (même posture que World Boss face à un catalogue trop pauvre pour
+    composer une question). A fresh Response per call -- DRF Response objects carry
+    per-request render state and must never be shared across requests.
+    """
+    return Response(
+        {"error": "Proximity scoring unavailable for this media type."},
+        status=status.HTTP_503_SERVICE_UNAVAILABLE,
+    )
 
 
 def _sanitize_hint_config(raw):
@@ -126,6 +148,7 @@ class ClassicGameStartView(APIView):
         request,
         catalog_service=Provide[Container.core.catalog_service],
         game_service=Provide[Container.core.game_service],
+        proximity_service=Provide[Container.core.proximity_service],
     ):
         session_service = get_session_service(request)
         port = session_service.port
@@ -184,10 +207,28 @@ class ClassicGameStartView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        # Le classement du catalogue face au secret : calculé UNE fois par partie
+        # (2181 comparaisons, quelques millisecondes), relu à chaque proposition.
+        # Le défi quotidien partage un secret : le premier joueur paie, les autres
+        # relisent. Calculé (et vérifié) AVANT d'écrire l'état de session : si ce
+        # type de média n'a aucun signal exploitable, la partie ne doit pas démarrer
+        # dans un état à moitié initialisé.
+        cache_key = f"proximity_{media_type}_{secret_title}"
+        ranking = cache.get(cache_key)
+        if ranking is None:
+            try:
+                ranking = proximity_service.rank(media_type, secret_title)
+            except GameLogicError as e:
+                logger.warning(
+                    f"Classic: no proximity signal for {media_type}/{secret_title}: {e}"
+                )
+                return _proximity_unavailable()
+            cache.set(cache_key, ranking, timeout=PROXIMITY_CACHE_TIMEOUT)
+
         port.update(
             {
                 "secret_title": secret_title,
-                "max_raw_sim": 0.8,
+                "proximity_key": cache_key,
                 "difficulty": difficulty,
                 "media_type": media_type,
                 "guesses": [],
@@ -234,6 +275,7 @@ class ClassicGameGuessView(APIView):
         request,
         catalog_service=Provide[Container.core.catalog_service],
         game_service=Provide[Container.core.game_service],
+        proximity_service=Provide[Container.core.proximity_service],
     ):
         session_service = get_session_service(request)
         port = session_service.port
@@ -265,7 +307,6 @@ class ClassicGameGuessView(APIView):
 
         media_type = state["media_type"]
         secret_title = state["secret_title"]
-        max_sim = port.get("max_raw_sim", 1.0)
 
         data = catalog_service.get_catalog(media_type)
         if not data or guess_title not in data["title_to_index"]:
@@ -274,19 +315,32 @@ class ClassicGameGuessView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        raw_sim = game_service.calculate_raw_similarity(
-            media_type, secret_title, guess_title, data
-        )
         secret_item = data["title_to_full_data"].get(secret_title)
         is_correct = game_service.check_title_match(guess_title, secret_item)
 
+        # Le classement est en cache depuis le lancement de la partie (voir
+        # ClassicGameStartView) ; on ne le recalcule que si le cache l'a perdu
+        # (expiration TTL, éviction) -- un cas rare une fois la partie démarrée.
+        cache_key = (
+            port.get("proximity_key") or f"proximity_{media_type}_{secret_title}"
+        )
+        ranking = cache.get(cache_key)
+        try:
+            if ranking is None:
+                ranking = proximity_service.rank(media_type, secret_title)
+                cache.set(cache_key, ranking, timeout=PROXIMITY_CACHE_TIMEOUT)
+            report = proximity_service.report(
+                media_type, secret_title, guess_title, ranking=ranking
+            )
+        except GameLogicError as e:
+            logger.warning(
+                f"Classic: no proximity signal for {media_type}/{secret_title}: {e}"
+            )
+            return _proximity_unavailable()
+
         from ...presenters import GamePresenter  # noqa: E402
 
-        score = (
-            100.0
-            if is_correct
-            else round(min(0.99, (raw_sim / max_sim) * 0.99) * 100, 2)
-        )
+        score = 100.0 if is_correct else report["percent"]
         color = GamePresenter.get_score_color(score)
 
         g_data = data["title_to_full_data"].get(guess_title, {})
@@ -299,6 +353,7 @@ class ClassicGameGuessView(APIView):
             "color": color,
             "is_correct": is_correct,
             "isCorrect": is_correct,
+            "reasons": [] if is_correct else report["reasons"],
         }
 
         # Add guess
