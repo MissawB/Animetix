@@ -7,6 +7,7 @@ import pytest
 from animetix.containers import container
 from core.domain.exceptions import GameLogicError
 from dependency_injector import providers
+from django.core.cache import cache
 from rest_framework.test import APIClient
 
 
@@ -89,6 +90,65 @@ def test_the_ranking_is_computed_once_per_game_not_once_per_guess():
     api = APIClient()
     with _proximity(HOT_REPORT) as service:
         _start(api)
+        for title in ("MONSTER", "Code Geass: Hangyaku no Lelouch", "Kimetsu no Yaiba"):
+            api.post("/api/v1/game/classic/guess/", {"guess": title}, format="json")
+
+    assert service.rank.call_count == 1
+
+
+@pytest.mark.django_db
+def test_a_stale_v1_session_key_does_not_recompute_every_guess():
+    """Une session ouverte avant le passage au cache v2 porte encore une clé v1
+    (``proximity_{media}_{secret}``, sans le ``_v2_``) ; ces entrées vivent
+    encore 7 jours. Cette clé HIT le cache -- mais son contenu (des titres nus,
+    sans score) est un format que ``ProximityService._as_ranking`` refuse, à
+    raison, de croire sur parole : il recalcule. Comme la vue ne remet en cache
+    QUE sur un ``None``, une clé de session non-v2 ferait recalculer à CHAQUE
+    proposition pour le reste de la partie -- sur le catalogue Personnages
+    (32 384 entrées), un recalcul complet par proposition. Ce test simule
+    exactement cette session : on rejoue la clé v1 et l'entrée nue qu'un
+    déploiement antérieur y aurait laissée, et on vérifie que le classement
+    n'est recalculé qu'une fois, pas à chaque proposition.
+    """
+    api = APIClient()
+    service = MagicMock()
+    # Le VRAI rank() v2 rend des paires (titre, score) -- la vue ne doit jamais
+    # relire une entrée v1 (des titres nus) sans la juger périmée.
+    tuple_ranking = [
+        ("MONSTER", 92.3),
+        ("Code Geass: Hangyaku no Lelouch", 50.0),
+        ("Kimetsu no Yaiba", 12.0),
+    ]
+    service.rank.return_value = tuple_ranking
+
+    def fake_report(media_type, secret_title, guess_title, ranking=None):
+        # Mirroir de ProximityService._as_ranking : un classement nu (pas de
+        # paires) est un format d'une version antérieure -- on le rejette et on
+        # recalcule, exactement comme le service réel.
+        stale_format = not ranking or not isinstance(ranking[0], (list, tuple))
+        if stale_format:
+            service.rank(media_type, secret_title)
+        return HOT_REPORT
+
+    service.report.side_effect = fake_report
+
+    with container.core.proximity_service.override(providers.Object(service)):
+        _start(api)
+
+        session = api.session
+        secret_title = session["secret_title"]
+        media_type = session["media_type"]
+
+        # Simule l'entrée v1 qu'un déploiement antérieur aurait laissée en
+        # cache (le VRAI cache Django, pas le mock) -- toujours vivante, sept
+        # jours de TTL obligent -- et une session qui pointe encore dessus.
+        v1_key = f"proximity_{media_type}_{secret_title}"
+        cache.set(
+            v1_key, ["MONSTER", "Code Geass: Hangyaku no Lelouch", "Kimetsu no Yaiba"]
+        )
+        session["proximity_key"] = v1_key
+        session.save()
+
         for title in ("MONSTER", "Code Geass: Hangyaku no Lelouch", "Kimetsu no Yaiba"):
             api.post("/api/v1/game/classic/guess/", {"guess": title}, format="json")
 

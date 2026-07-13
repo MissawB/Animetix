@@ -325,8 +325,22 @@ class ClassicGameGuessView(APIView):
         # Le classement est en cache depuis le lancement de la partie (voir
         # ClassicGameStartView) ; on ne le recalcule que si le cache l'a perdu
         # (expiration TTL, éviction) -- un cas rare une fois la partie démarrée.
+        #
+        # Une session ouverte avant le passage à v2 porte encore sa clé v1
+        # (``proximity_{media}_{secret}``), et ces entrées vivent encore 7 jours.
+        # Cette clé HIT le cache -- mais son format (des titres nus, sans score)
+        # fait que ProximityService._as_ranking refuse -- à raison -- de s'y fier
+        # et recalcule. Comme cette branche ne recache que sur un None, une clé
+        # session non-v2 ferait recalculer à CHAQUE proposition pour le reste de
+        # la partie. On ignore donc toute clé qui n'est pas déjà v2 et on
+        # reconstruit celle que la vue de lancement a construite (et déjà mise en
+        # cache) : l'entrée v1, elle, s'éteint d'elle-même à l'expiration de son
+        # TTL.
+        session_key = port.get("proximity_key")
         cache_key = (
-            port.get("proximity_key") or f"proximity_v2_{media_type}_{secret_title}"
+            session_key
+            if session_key and session_key.startswith("proximity_v2_")
+            else f"proximity_v2_{media_type}_{secret_title}"
         )
         ranking = cache.get(cache_key)
         try:
