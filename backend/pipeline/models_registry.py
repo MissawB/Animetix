@@ -18,7 +18,12 @@ class ModelsRegistry:
         self._vision_model = None
         self._device = None
         self.active_text_version = resolve_text_embedding_version()
-        self.active_vision_version = os.getenv("MODEL_VERSION_VISION", "v3")
+        # v2 (siglip2) par défaut, pas v3 : le code distant de Qwen3-VL-Embedding-8B
+        # importe `sentence_transformers.base`, un module qui n'existe plus dans la
+        # version installée (3.3.1) -- le vectoriseur mourait dessus avant d'écrire
+        # une seule ligne. v3 reste accessible par MODEL_VERSION_VISION pour qui a
+        # le GPU et la bonne pile.
+        self.active_vision_version = os.getenv("MODEL_VERSION_VISION", "v2")
         self.verifier = ModelIntegrityVerifier()
 
     @property

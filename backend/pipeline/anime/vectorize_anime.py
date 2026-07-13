@@ -70,9 +70,15 @@ def run_vectorization(vector_res=None, neo4j_res=None, limit=None):
     with open(INPUT_FILE, "r", encoding="utf-8") as f:
         items = json.load(f)
 
-    # Initialisation des modèles SOTA
+    # Le modèle de texte est la raison d'être du script : s'il ne charge pas, on
+    # s'arrête. Le modèle de vision n'alimente qu'une collection secondaire —
+    # perdre les vecteurs visuels ne doit pas coûter les vecteurs thématiques.
     text_model = models_registry.text_model
-    vision_model = models_registry.vision_model
+    try:
+        vision_model = models_registry.vision_model
+    except Exception as e:
+        logger.warning(f"⚠️ Vision model unavailable ({e}) — text vectors only.")
+        vision_model = None
 
     # On ne traite que les items non encore indexés (simulation simplifiée)
     new_items = items if limit is None else items[:limit]
@@ -90,7 +96,7 @@ def run_vectorization(vector_res=None, neo4j_res=None, limit=None):
         for item in batch:
             img_url = item.get("image")
             try:
-                if img_url:
+                if img_url and vision_model is not None:
                     response = safe_http_request("GET", img_url, timeout=10)
                     img = Image.open(BytesIO(response.content)).convert("RGB")
                     v_emb = vision_model.encode(img, convert_to_numpy=True)
