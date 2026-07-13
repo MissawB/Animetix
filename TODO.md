@@ -11,6 +11,12 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
+- [ ] **Fine-tune otaku — l'adaptateur est corrompu, le dataset est à refaire** _(expérience contrôlée 2026-07-13)_
+  - `MissawB/otaku-qwen-7b-adapter` mergé dans sa vraie base et servi produit du **texte corrompu** : chiffres injectés au milieu des mots, personnages inventés (« Izanagi Eikichi1 » comme héros de Chainsaw Man). Même image, même quantification, même template : le modèle **stock** répond « Denji » proprement. La chaîne de service est donc saine — **c'est l'adaptateur**.
+  - **Cause** : il a mémorisé le **gabarit** de `MissawB/otaku-expert-dataset`, qui est synthétique et templaté (« jouit d'une immense popularité », « figure incontournable », « se plaçant au rang numéro… »), et il **remplit les emplacements numériques au hasard**. Il a appris la forme d'une réponse, pas son contenu.
+  - **Écartés** : désalignement du tokenizer (adaptateur et base partagent les mêmes 22 tokens ajoutés) et pollution du dataset (1 ligne sur 100 porte le motif, et c'est une formule mathématique).
+  - **À faire** : assainir le dataset (varier les formulations, ancrer les faits, purger les emplacements numériques) **avant** tout réentraînement. Le re-servir est un `LLM_MODEL_NAME=otaku-qwen:7b` (déjà baké dans l'image, aucun rebuild).
+
 - [ ] **pgvector n'a jamais été alimenté — 0 embedding pour 44 763 items** _(constaté 2026-07-12 via `reconcile_db`)_
   - `VectorRecord.objects.count() == 0`. Le seul mécanisme d'écriture était le signal `post_save` de `MediaItem` ([signals.py:126](backend/api/animetix/signals.py#L126)) → `enqueue_task("sync_media_item_task")`, qui n'a jamais rien persisté (et qui, hors prod, s'exécutait **en synchrone** : c'est ce qui faisait durer `sync_catalog` 2 h+ pour 44 798 items — la commande écrit désormais en masse, sans signaux, et la réconciliation est un travail séparé). `reconcile_db` **diagnostique seulement**, elle ne répare pas : il n'existe aucun chemin de reconstruction en masse. Avant de reconstruire (coût GPU/API réel), identifier **ce qui dépend réellement des vecteurs** : si ces fonctionnalités marchent en prod sur une base vectorielle vide, c'est qu'elles ont un repli silencieux — c'est ça le vrai sujet.
 - [ ] **URI Neo4j locale morte** _(constaté 2026-07-12)_
