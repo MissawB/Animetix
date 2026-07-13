@@ -7,11 +7,23 @@ Qwen3.5-4B). Pure module — only `os`.
 
 import os
 
-# The brain serves OUR fine-tune, not a stock model: the otaku LoRA merged into
-# its real base (Qwen2.5-7B-Instruct) and quantized to GGUF by deploy/Dockerfile.brain.
-# The tag must match what that image registers with `ollama create`, or Ollama
-# answers 404 and the whole brain looks offline.
-LLM_OLLAMA_MODEL = os.getenv("LLM_MODEL_NAME", "otaku-qwen:7b")
+# Must name a tag the brain image actually registers with Ollama: Ollama 404s on
+# an unknown tag, and downstream that reads as "the whole brain is offline" --
+# which is exactly how prod broke (`qwen3.5` asked for, `qwen3.5:9b` baked).
+#
+# The STOCK base, not the otaku fine-tune, even though the fine-tune is baked and
+# ready to serve. Served identically (same image, same Q4_K_M, same ChatML
+# template) the fine-tune emits corrupted text -- digits injected mid-word and
+# invented characters ("Izanagi Eikichi1" as the hero of Chainsaw Man) -- where
+# the stock model answers "Denji" cleanly. It memorised the templated shape of
+# its synthetic training set and fills the numeric slots at random. Ruled out
+# first: tokenizer drift (adapter and base share the same 22 added tokens) and
+# dataset contamination (1 row in 100 matches the digit pattern, and it is a
+# maths formula).
+#
+# `otaku-qwen:7b` stays in the image: a fixed adapter can be tried by flipping
+# LLM_MODEL_NAME, no rebuild. See TODO.md.
+LLM_OLLAMA_MODEL = os.getenv("LLM_MODEL_NAME", "qwen2.5:7b-instruct")
 LOCAL_TEXT_MODEL = os.getenv("LOCAL_MODEL_ID", "Qwen/Qwen3.5-9B")
 DRAFT_TEXT_MODEL = os.getenv("DRAFT_MODEL_ID", "Qwen/Qwen2.5-0.5B-Instruct")
 COMPACT_REASONING_MODEL = os.getenv("COMPACT_MODEL_ID", "WeiboAI/VibeThinker-3B")

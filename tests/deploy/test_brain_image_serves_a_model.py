@@ -31,16 +31,20 @@ def test_image_installs_a_model_server():
     )
 
 
-def test_baked_model_matches_the_model_the_code_asks_for():
-    """The image bakes one model tag; the engine requests another -> Ollama 404s
-    and the brain looks offline. Exactly what happened in prod with `qwen3.5` vs
-    `qwen3.5:9b`."""
-    baked = re.search(r"ARG OLLAMA_MODEL=(\S+)", DOCKERFILE)
+def test_the_model_the_code_asks_for_is_actually_in_the_image():
+    """Ollama 404s on an unknown tag, and downstream that reads as "the whole brain
+    is offline" -- exactly how prod broke (`qwen3.5` asked for, `qwen3.5:9b` baked).
+    The image carries two tags now (the fine-tune and its control); the code must
+    name one of them."""
+    baked = {
+        m.group(1)
+        for m in re.finditer(r"ARG (?:OLLAMA_MODEL|CONTROL_MODEL)=(\S+)", DOCKERFILE)
+    }
     assert baked, "the model must be baked in, not pulled at cold start"
 
-    assert baked.group(1) == LLM_OLLAMA_MODEL, (
-        f"image bakes {baked.group(1)!r} but the code asks for "
-        f"{LLM_OLLAMA_MODEL!r} (core.utils.local_models.LLM_OLLAMA_MODEL)"
+    assert LLM_OLLAMA_MODEL in baked, (
+        f"the code asks for {LLM_OLLAMA_MODEL!r} (core.utils.local_models."
+        f"LLM_OLLAMA_MODEL) but the image only registers {sorted(baked)}"
     )
 
 
