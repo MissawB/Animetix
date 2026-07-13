@@ -209,7 +209,9 @@ class ProximityService:
             vocabulary_of(index.works[secret]) & vocabulary_of(index.works[guess]),
             key=lambda t: -index.idf.get(t, 0.0),
         )
-        candidates = [
+        # Annoté : sans ça, mypy infère `object` pour les valeurs de ces dicts
+        # hétérogènes et refuse de comparer les poids.
+        candidates: List[Dict[str, Any]] = [
             {
                 "kind": "public",
                 "weight": W_DIRECT * components.direct + W_CO_RECO * components.co_reco,
@@ -230,7 +232,8 @@ class ProximityService:
             },
         ]
         ranked = sorted(
-            (c for c in candidates if c["weight"] > 0), key=lambda c: -c["weight"]
+            (c for c in candidates if float(c["weight"]) > 0),
+            key=lambda c: -float(c["weight"]),
         )
         # Le bonus structurel n'est JAMAIS montré seul : sinon la première proposition
         # tiède donnerait le studio du secret, et le catalogue fondrait d'un coup. Il ne
