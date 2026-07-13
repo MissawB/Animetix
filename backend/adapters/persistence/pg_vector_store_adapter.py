@@ -2,9 +2,18 @@ import logging
 from typing import Dict, List
 
 from core.ports.vector_store_port import VectorStorePort
+from django.core.cache import cache
 from pipeline.vector_client import vector_manager
 
 logger = logging.getLogger("animetix.vector_store")
+
+# TTL du cache "la collection a-t-elle des vecteurs ?". Cette question est
+# posée avant chaque recherche payante (garde-fou anti-facturation d'un index
+# vide) -- sans cache, ce serait une requête COUNT(*) de plus par recherche.
+# 60s suffit : il ne s'agit que de détecter si l'index a été construit, pas de
+# suivre un compteur exact en temps réel (un backfill met alors jusqu'à 60s à
+# "débloquer" la recherche -- c'est le compromis accepté).
+_COLLECTION_COUNT_CACHE_TTL = 60
 
 
 class PgVectorStoreAdapter(VectorStorePort):
@@ -39,3 +48,19 @@ class PgVectorStoreAdapter(VectorStorePort):
                 f"Vector search failed for collection '{collection_name}': {e}"
             )
             return []
+
+    def get_collection_count(self, collection_name: str) -> int:
+        cache_key = f"vsp_collection_count_{collection_name}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return int(cached)
+
+        try:
+            collection = vector_manager.get_collection(collection_name)
+            count = collection.count()
+        except Exception as e:
+            logger.error(f"Failed to count collection '{collection_name}': {e}")
+            count = 0
+
+        cache.set(cache_key, count, timeout=_COLLECTION_COUNT_CACHE_TTL)
+        return count

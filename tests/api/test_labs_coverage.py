@@ -550,6 +550,7 @@ def test_video_rag_search_success():
     request = factory.get("/api/v1/labs/video/search/?q=fight")
     force_authenticate(request, user=MagicMock(id=1))
     mock_service = MagicMock()
+    mock_service.is_available.return_value = True
     mock_service.search_video_segment.return_value = [{"ts": 12, "score": 0.9}]
     mock_usage = MagicMock()
     mock_usage.check_quota.return_value = True
@@ -557,7 +558,7 @@ def test_video_rag_search_success():
     container.agentic.video_rag_service.override(mock_service)
     container.infrastructure.usage_port.override(mock_usage)
     d = patch("animetix.api.labs.video.deduct_berrix")
-    d.start()
+    mock_deduct = d.start()
     try:
         view = VideoRAGSearchView.as_view(permission_classes=[])
         response = view(request)
@@ -568,12 +569,15 @@ def test_video_rag_search_success():
     assert response.status_code == 200
     assert response.data["status"] == "success"
     assert response.data["results"][0]["ts"] == 12
+    # Regression guard for the billing fix: available index -> charges as before.
+    mock_deduct.assert_called_once()
 
 
 def test_video_rag_search_error():
     request = factory.get("/api/v1/labs/video/search/?q=fight")
     force_authenticate(request, user=MagicMock(id=1))
     mock_service = MagicMock()
+    mock_service.is_available.return_value = True
     mock_service.search_video_segment.side_effect = Exception("search down")
     mock_usage = MagicMock()
     mock_usage.check_quota.return_value = True
@@ -591,6 +595,34 @@ def test_video_rag_search_error():
         d.stop()
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
+
+
+def test_video_rag_search_index_unavailable_no_charge():
+    """`video_temporal`'s only writer is admin-gated and hidden from the UI --
+    for an ordinary user it's empty. The search must be refused up front
+    (503, honest French copy) and Berrix must never be deducted."""
+    request = factory.get("/api/v1/labs/video/search/?q=fight")
+    force_authenticate(request, user=MagicMock(id=1))
+    mock_service = MagicMock()
+    mock_service.is_available.return_value = False
+    mock_usage = MagicMock()
+    mock_usage.check_quota.return_value = True
+    container = get_container()
+    container.agentic.video_rag_service.override(mock_service)
+    container.infrastructure.usage_port.override(mock_usage)
+    d = patch("animetix.api.labs.video.deduct_berrix")
+    mock_deduct = d.start()
+    try:
+        view = VideoRAGSearchView.as_view(permission_classes=[])
+        response = view(request)
+    finally:
+        container.agentic.video_rag_service.reset_last_overriding()
+        container.infrastructure.usage_port.reset_last_overriding()
+        d.stop()
+    assert response.status_code == 503
+    assert "index" in response.data["error"].lower()
+    mock_deduct.assert_not_called()
+    mock_service.search_video_segment.assert_not_called()
 
 
 # --------------------------------------------------------------------------- #

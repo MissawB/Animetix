@@ -25,6 +25,7 @@ from .entities.exceptions import (
     ParsingError,
     PromptTemplateError,
     QuotaExceededError,
+    SearchIndexUnavailableError,
     SpatialComputingError,
     VideoProcessingError,
 )
@@ -48,6 +49,7 @@ __all__ = [
     "ParsingError",
     "PromptTemplateError",
     "QuotaExceededError",
+    "SearchIndexUnavailableError",
     "SpatialComputingError",
     "VideoProcessingError",
 ]

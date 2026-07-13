@@ -1,6 +1,7 @@
 import logging
 from typing import Any, Dict, List
 
+from core.domain.exceptions import SearchIndexUnavailableError
 from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.rag.video")
@@ -20,6 +21,18 @@ class VideoRAGService:
         self.prompt_manager = prompt_manager
         self.chunk_duration = 30  # Secondes par segment
         self.collection_name = "video_temporal"
+
+    def is_available(self) -> bool:
+        """True si `video_temporal` contient au moins un segment indexé.
+
+        Le seul writer de cette collection (`VideoRAGIndexView`) est
+        `IsAdminUser` et masqué côté UI -- pour un utilisateur ordinaire, la
+        collection est vide. Garde-fou anti-facturation : à appeler par le
+        caller (vue) AVANT toute déduction de Berrix.
+        """
+        if not self.repository:
+            return False
+        return self.repository.get_collection_count(self.collection_name) > 0
 
     def index_video(self, video_id: str, video_data: bytes) -> int:
         """Découpe, analyse et indexe une vidéo dans pgvector."""
@@ -65,6 +78,11 @@ class VideoRAGService:
         """Recherche sémantique d'un segment vidéo."""
         if not self.repository:
             return []
+        if not self.is_available():
+            raise SearchIndexUnavailableError(
+                f"La collection '{self.collection_name}' est vide : "
+                "recherche vidéo impossible."
+            )
         # Uses standard collection search
         return self.repository.search_media_items(
             query, media_type=self.collection_name, limit=limit

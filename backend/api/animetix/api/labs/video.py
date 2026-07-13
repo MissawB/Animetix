@@ -124,6 +124,24 @@ class VideoRAGSearchView(APIView):
         tier = getattr(request, "user_tier", "free")
         if not self.usage_port.check_quota(request.user.id, tier):
             return Response({"error": "Daily AI quota exceeded."}, status=403)
+
+        # `video_temporal`'s only writer (VideoRAGIndexView) is admin-gated
+        # and hidden from the UI -- for an ordinary user the collection is
+        # empty and a search against it can never return a result. Check
+        # BEFORE charging: paying for a search that cannot possibly succeed
+        # is the bug, not the missing index itself.
+        if not self.video_rag_service.is_available():
+            return Response(
+                {
+                    "error": (
+                        "Recherche vidéo indisponible : aucune vidéo n'a "
+                        "encore été indexée dans le Video-RAG. Réessayez "
+                        "plus tard."
+                    )
+                },
+                status=503,
+            )
+
         deduct_berrix(
             request.user, FEATURE_BX_COSTS["video_rag"], "VideoRAG — recherche vidéo"
         )

@@ -66,6 +66,19 @@ class GameLogicError(DomainError):
     pass
 
 
+class SearchIndexUnavailableError(DomainError):
+    """Raised when a vector-backed search targets a collection that holds no
+    data (index never built / not yet populated for this user).
+
+    Callers MUST NOT interpret this the same way as "the search ran and
+    matched nothing": the search never had a chance to succeed, so it must
+    not be billed, and the caller must surface an honest "unavailable"
+    signal instead of a silent empty result.
+    """
+
+    pass
+
+
 class AgentLogicalFailure(DomainError):
     """Raised when an agent makes a logical error or reaches an inconsistent state."""
 

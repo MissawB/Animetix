@@ -297,6 +297,24 @@ def test_get_collection_count_zero_on_error(adapter):
     assert adapter.get_collection_count("col") == 0
 
 
+def test_get_collection_count_is_cached(adapter):
+    """The billing-fix availability check (`VideoRAGService.is_available`)
+    calls this on every search -- without a cache, that's a COUNT(*) per
+    request. A second call within the TTL must not re-hit the manager."""
+    adapter.manager.get_collection.return_value.count.return_value = 9
+    assert adapter.get_collection_count("cached_col") == 9
+    assert adapter.get_collection_count("cached_col") == 9
+    adapter.manager.get_collection.assert_called_once_with("cached_col")
+
+
+def test_get_collection_count_cache_is_per_collection(adapter):
+    adapter.manager.get_collection.return_value.count.return_value = 3
+    assert adapter.get_collection_count("col_a") == 3
+    adapter.manager.get_collection.return_value.count.return_value = 0
+    assert adapter.get_collection_count("col_b") == 0
+    assert adapter.manager.get_collection.call_count == 2
+
+
 def test_get_all_ids(adapter):
     adapter.manager.get_all_ids.return_value = {"1", "2"}
     assert sorted(adapter.get_all_ids("col")) == ["1", "2"]

@@ -129,6 +129,9 @@ def test_video_rag_indexing_and_search():
             "summary": "A battle scene",
         }
     ]
+    # `video_temporal` holds data in this scenario -- the availability guard
+    # must let the search through.
+    mock_repo.get_collection_count.return_value = 3
 
     service = VideoRAGService(inference_engine=mock_engine, repository=mock_repo)
 
@@ -145,3 +148,53 @@ def test_video_rag_indexing_and_search():
     results = service.search_video_segment("battle")
     assert len(results) == 1
     assert results[0]["video_id"] == "vid1"
+
+
+# --------------------------------------------------------------------------- #
+# Empty-index guard: `video_temporal`'s only writer is admin-gated and hidden
+# from the UI, so for every ordinary user the collection is empty. Searching
+# it must say so rather than silently return [].
+# --------------------------------------------------------------------------- #
+def test_video_rag_is_available_false_when_collection_empty():
+    from unittest.mock import MagicMock  # noqa: E402
+
+    from core.domain.services.rag.video_rag_service import (  # noqa: E402
+        VideoRAGService,
+    )
+
+    mock_repo = MagicMock()
+    mock_repo.get_collection_count.return_value = 0
+    service = VideoRAGService(inference_engine=MagicMock(), repository=mock_repo)
+
+    assert service.is_available() is False
+    mock_repo.get_collection_count.assert_called_once_with("video_temporal")
+
+
+def test_video_rag_is_available_false_without_repository():
+    from unittest.mock import MagicMock  # noqa: E402
+
+    from core.domain.services.rag.video_rag_service import (  # noqa: E402
+        VideoRAGService,
+    )
+
+    service = VideoRAGService(inference_engine=MagicMock(), repository=None)
+    assert service.is_available() is False
+
+
+def test_video_rag_search_raises_when_collection_empty():
+    from unittest.mock import MagicMock  # noqa: E402
+
+    import pytest  # noqa: E402
+    from core.domain.exceptions import SearchIndexUnavailableError  # noqa: E402
+    from core.domain.services.rag.video_rag_service import (  # noqa: E402
+        VideoRAGService,
+    )
+
+    mock_repo = MagicMock()
+    mock_repo.get_collection_count.return_value = 0
+    service = VideoRAGService(inference_engine=MagicMock(), repository=mock_repo)
+
+    with pytest.raises(SearchIndexUnavailableError):
+        service.search_video_segment("battle")
+
+    mock_repo.search_media_items.assert_not_called()

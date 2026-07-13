@@ -167,6 +167,23 @@ class MediaSearchView(APIView):
         if not image_file:
             return Response({"error": "No image provided"}, status=400)
 
+        # `unified_clip_space` has no reachable writer for an ordinary user
+        # (see docs/analysis/2026-07-13-pgvector-consumers.md §2.1) -- a search
+        # against an empty index can never return a result. Check BEFORE
+        # charging: paying for a search that cannot possibly succeed is the
+        # bug, not the missing index itself.
+        if not self.cross_modal_search_service.is_available():
+            return Response(
+                {
+                    "error": (
+                        "Recherche par image indisponible : l'index visuel "
+                        "(CLIP) n'a pas encore été construit. Réessayez plus "
+                        "tard."
+                    )
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         # Berrix deduction for the CLIP cross-modal search (raises 402 if balance
         # too low). Outside the try below so PaymentRequired isn't swallowed into 500.
         deduct_berrix(

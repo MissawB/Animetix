@@ -181,14 +181,30 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             logger.error(f"PGVector Delete Error for {collection_name}: {e}")
 
     def get_collection_count(self, collection_name: str) -> int:
+        """Nombre de vecteurs dans la collection, mis en cache 60s.
+
+        Sert de garde-fou anti-facturation avant une recherche payante
+        (`VideoRAGService.is_available`) : sans cache, chaque recherche
+        déclencherait un COUNT(*) supplémentaire. Un TTL court (60s, aligné
+        sur `PgVectorStoreAdapter.get_collection_count`) suffit -- il ne
+        s'agit que de détecter si l'index a été construit.
+        """
+        cache_key = f"pgvra_collection_count_{collection_name}"
+        cached_count = cache.get(cache_key)
+        if cached_count is not None:
+            return int(cached_count)
+
         try:
             coll = self.manager.get_collection(collection_name)
-            return coll.count()
+            count = coll.count()
         except Exception as e:
             logger.exception(
                 f"Error getting collection count for {collection_name}: {e}"
             )
-            return 0
+            count = 0
+
+        cache.set(cache_key, count, timeout=60)
+        return count
 
     def get_all_ids(self, collection_name: str) -> List[str]:
         try:

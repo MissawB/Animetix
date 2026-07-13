@@ -95,12 +95,27 @@ def test_image_proxy_non_200_upstream_returns_404(factory):
 # --------------------------------------------------------------------------- #
 # MediaSearchView.post image-search flow (lines 152-197)
 # --------------------------------------------------------------------------- #
-def _post_image_view(request, *, quota=True):
-    """Instantiate MediaSearchView with mocked injected services and call .post."""
+def _post_image_view(
+    request, *, quota=True, index_available=True, cross_modal_service=None
+):
+    """Instantiate MediaSearchView with mocked injected services and call .post.
+
+    ``cross_modal_search_service`` is mocked here too (rather than left to
+    resolve to the real, DI-wired singleton): `unified_clip_space` has no
+    writer, so the real service's `is_available()` would hit the (empty) test
+    DB and return False, turning every one of these unrelated branch tests
+    (quota / missing image / size / mime / generic exception) into an
+    unintended 503. Pass ``cross_modal_service`` when a test needs to assert
+    against a specific mock (e.g. one already wired via a container
+    override); ``is_available`` is (re)configured to ``index_available``
+    either way so callers don't have to repeat that wiring.
+    """
     view = MediaSearchView()
     view.guardrail_service = MagicMock()
     view.usage_port = MagicMock()
     view.usage_port.check_quota.return_value = quota
+    view.cross_modal_search_service = cross_modal_service or MagicMock()
+    view.cross_modal_search_service.is_available.return_value = index_available
     drf_request = Request(request, parsers=[MultiPartParser(), JSONParser()])
     return view, drf_request
 
@@ -178,10 +193,13 @@ def test_media_search_post_success(factory):
     real_container = get_container()
     real_container.core.cross_modal_search_service.override(mock_cross_modal)
     try:
-        view, drf_request = _post_image_view(request)
+        view, drf_request = _post_image_view(
+            request, cross_modal_service=mock_cross_modal
+        )
         with (
             patch("animetix.api.core.media.validate_file_size", return_value=True),
             patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
+            patch("animetix.api.core.media.deduct_berrix") as mock_deduct,
         ):
             response = view.post(drf_request)
     finally:
@@ -189,6 +207,30 @@ def test_media_search_post_success(factory):
     assert response.status_code == 200
     assert response.data[0]["id"] == "7"
     view.usage_port.log_usage.assert_called_once()
+    # Regression guard for the billing fix: when the index *is* available,
+    # the search still charges exactly as before.
+    mock_deduct.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_media_search_post_index_unavailable_no_charge(factory):
+    """`unified_clip_space` has no reachable writer -- if it's empty, the
+    search must be refused up front (503, honest French copy) and Berrix
+    must never be deducted."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    user = User.objects.create_user(username="emptyidx", password="pw")
+    img = SimpleUploadedFile("x.png", b"imgbytes", content_type="image/png")
+    request = factory.post("/search/", {"image": img})
+    force_authenticate(request, user=user)
+    request.user = user
+    view, drf_request = _post_image_view(request, index_available=False)
+    with patch("animetix.api.core.media.deduct_berrix") as mock_deduct:
+        response = view.post(drf_request)
+    assert response.status_code == 503
+    assert "index" in response.data["error"].lower()
+    mock_deduct.assert_not_called()
+    view.cross_modal_search_service.deep_multimodal_search.assert_not_called()
 
 
 @pytest.mark.django_db

@@ -2,6 +2,7 @@ import logging
 from typing import Dict, List, Optional
 
 import numpy as np
+from core.domain.exceptions import SearchIndexUnavailableError
 from core.domain.services.prompt_manager import PromptManager
 from core.ports.inference_port import InferencePort
 
@@ -13,9 +14,23 @@ class CrossModalSearchService:
     RAG Cross-Modal (Deep Multimodality).
     """
 
+    # `unified_clip_space` a aujourd'hui zéro pipeline d'écriture accessible
+    # à un utilisateur normal (voir docs/analysis/2026-07-13-pgvector-consumers.md
+    # §2.1) : interroger cette collection ne peut jamais retourner de résultat
+    # tant qu'elle est vide.
+    COLLECTION_NAME = "unified_clip_space"
+
     def __init__(self, inference_engine: InferencePort, vector_db):
         self.inference_engine = inference_engine
         self.vector_db = vector_db
+
+    def is_available(self) -> bool:
+        """True si la collection cible contient au moins un vecteur.
+
+        Garde-fou anti-facturation : à appeler par le caller (vue) AVANT
+        toute déduction de Berrix, pas seulement avant la recherche.
+        """
+        return self.vector_db.get_collection_count(self.COLLECTION_NAME) > 0
 
     def deep_multimodal_search(
         self, text_query: str, image_data: Optional[bytes] = None, limit: int = 10
@@ -23,6 +38,12 @@ class CrossModalSearchService:
         """
         Effectue une recherche en fusionnant les intentions texte et image.
         """
+        if not self.is_available():
+            raise SearchIndexUnavailableError(
+                f"La collection '{self.COLLECTION_NAME}' est vide : "
+                "recherche cross-modale impossible."
+            )
+
         logger.info(
             f"🌉 Cross-Modal Search: Fusioning text '{text_query}' and image data..."
         )
@@ -31,13 +52,11 @@ class CrossModalSearchService:
 
         text_vec = []
         if text_query:
-            try:
-                text_vec = self.inference_engine.get_text_embedding(text_query)
-            except Exception as e:
-                logger.warning(
-                    f"⚠️ Failed to get real text embedding: {e}. Falling back to mock vector."
-                )
-                text_vec = np.random.rand(512).tolist()
+            # Pas de repli sur un vecteur aléatoire : un échec d'embedding
+            # doit être visible (l'appelant reçoit l'exception), jamais
+            # transformé en résultat de recherche à l'apparence plausible
+            # mais en réalité tiré au hasard.
+            text_vec = self.inference_engine.get_text_embedding(text_query)
 
         image_vec = []
         if image_data:

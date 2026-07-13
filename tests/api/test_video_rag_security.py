@@ -27,12 +27,46 @@ def test_video_rag_anonymous_is_403():
     assert resp.status_code == 403
 
 
-def test_video_rag_zero_balance_is_402(mocker):
+def test_video_rag_zero_balance_is_402():
+    # `video_temporal` has no writer an ordinary user can reach, so the real
+    # service would report the index unavailable against the (empty) test DB.
+    # This test is about the *balance* check specifically, so the whole
+    # service is overridden with a mock (same pattern as
+    # `test_video_rag_happy_path_deducts_and_returns` below) whose
+    # `is_available()` is truthy by default -- letting the request reach
+    # `deduct_berrix`.
+    from unittest.mock import MagicMock
+
+    from animetix.containers import get_container
+
     u = _mk_user(0)
+    mock_service = MagicMock()
+    container = get_container()
+    container.agentic.video_rag_service.override(mock_service)
+    try:
+        c = APIClient()
+        c.force_authenticate(u)
+        resp = c.get("/api/v1/labs/video/search/", {"q": "duel"})
+    finally:
+        container.agentic.video_rag_service.reset_last_overriding()
+    assert resp.status_code == 402
+
+
+def test_video_rag_search_index_empty_no_charge():
+    """`video_temporal`'s only writer (`VideoRAGIndexView`) is admin-gated and
+    hidden from the UI, so for an ordinary user the collection is empty. This
+    drives the real, un-mocked service against the (empty) test DB -- no
+    patching of the availability check -- and asserts the search is refused
+    before Berrix is touched at all."""
+    u = _mk_user(100)
     c = APIClient()
     c.force_authenticate(u)
     resp = c.get("/api/v1/labs/video/search/", {"q": "duel"})
-    assert resp.status_code == 402
+    assert resp.status_code == 503
+    assert "index" in resp.json()["error"].lower()
+    from animetix.models import Profile
+
+    assert Profile.objects.get(user=u).wallet_balance == 100
 
 
 def test_video_rag_happy_path_deducts_and_returns():

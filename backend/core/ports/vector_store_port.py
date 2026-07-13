@@ -27,3 +27,12 @@ class VectorStorePort(ABC):
         Retourne une liste vide si la collection est absente ou en cas d'erreur.
         """
         ...
+
+    @abstractmethod
+    def get_collection_count(self, collection_name: str) -> int:
+        """Retourne le nombre de vecteurs dans une collection (0 si absente).
+
+        Sert de garde-fou avant facturation : une recherche contre une
+        collection vide ne peut jamais retourner de résultat.
+        """
+        ...

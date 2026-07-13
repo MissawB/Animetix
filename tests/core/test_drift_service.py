@@ -14,6 +14,9 @@ class _FakeVectorStore(VectorStorePort):
     def search_by_vector(self, collection_name, query_vector, limit=10):
         return []
 
+    def get_collection_count(self, collection_name):
+        return len(self._embeddings)
+
 
 class _FakeStore:
     """Store de baselines en mémoire (API load/save du store DB)."""
