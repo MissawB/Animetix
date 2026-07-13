@@ -367,6 +367,83 @@ def test_a_genre_only_catalogue_produces_a_nonzero_score():
     assert score(idx, "Game A", "Game B").total() > 0.0
 
 
+def test_traits_and_organizations_join_the_shared_vocabulary():
+    # Forme "personnage" du vrai catalogue (data/processed/filtered_characters.json) :
+    # ni tags, ni genres, ni recommandations -- seulement des traits et des
+    # organisations (`entities.organizations`). Sans les fondre dans le même
+    # vocabulaire pondéré par IDF que tags/genres, ce signal est plat et le mode
+    # Personnages ne score jamais rien.
+    characters = [
+        {
+            "name": "Levi",
+            "origin": "Shingeki no Kyojin",
+            "traits": ["Stoic"],
+            "entities": {"organizations": ["Survey Corps"]},
+        },
+        {
+            "name": "Erwin",
+            "origin": "Shingeki no Kyojin",
+            "traits": ["Charismatic"],
+            "entities": {"organizations": ["Survey Corps"]},
+        },
+        {
+            "name": "Random",
+            "origin": "Some Other Show",
+            "traits": ["Random"],
+            "entities": {"organizations": ["Some Other Org"]},
+        },
+    ] + [
+        # Remplit le catalogue pour que "Survey Corps" reste minoritaire (même
+        # besoin que RPG/Fantasy dans les fixtures œuvres ci-dessus) : sinon son
+        # IDF tombe au plancher 0.0 et ne prouve rien.
+        {
+            "name": f"Filler{i}",
+            "origin": f"Filler Show {i}",
+            "traits": [],
+            "entities": {"organizations": [f"Org{i}"]},
+        }
+        for i in range(8)
+    ]
+    idx = build_index(characters)
+    assert tag_overlap(idx, "Levi", "Erwin") > 0.0
+    assert tag_overlap(idx, "Levi", "Random") == 0.0
+
+
+def test_two_characters_from_the_same_work_get_the_franchise_bonus():
+    # `origin` est le signal le plus fort qu'un personnage porte : deux
+    # personnages de la même œuvre sont structurellement aussi proches qu'une
+    # suite directe l'est pour deux œuvres -- ils héritent donc du même bonus
+    # plafond, pas d'un petit incrément comme le studio partagé.
+    characters = [
+        {"name": "Levi", "origin": "Shingeki no Kyojin", "traits": [], "entities": {}},
+        {"name": "Erwin", "origin": "Shingeki no Kyojin", "traits": [], "entities": {}},
+        {"name": "Naruto", "origin": "Naruto", "traits": [], "entities": {}},
+    ]
+    idx = build_index(characters)
+    assert structural_bonus(idx, "Levi", "Erwin") == pytest.approx(BONUS_CAP)
+    assert structural_bonus(idx, "Levi", "Naruto") < BONUS_CAP
+
+
+def test_a_franchise_tier_bonus_carries_the_score_alone():
+    # Deux personnages de la même œuvre qui ne partagent NI trait NI organisation
+    # doivent quand même remonter : la même origine EST la preuve de proximité,
+    # pas une coïncidence structurelle (studio/source/décennie) que le garde-fou
+    # de Components.total() a raison de neutraliser seule. Sans exception pour un
+    # bonus au plafond, ce cas retomberait à zéro malgré le lien le plus fort qui
+    # existe entre deux personnages -- exactement le trou que l'IMPORTANT 1 pointe.
+    characters = [
+        {"name": "Levi", "origin": "Shingeki no Kyojin", "traits": [], "entities": {}},
+        {"name": "Erwin", "origin": "Shingeki no Kyojin", "traits": [], "entities": {}},
+    ]
+    idx = build_index(characters)
+    components = score(idx, "Levi", "Erwin")
+    assert components.direct == 0.0
+    assert components.co_reco == 0.0
+    assert components.tags == 0.0
+    assert components.bonus == pytest.approx(BONUS_CAP)
+    assert components.total() > 0.0
+
+
 def test_a_common_genre_is_worth_much_less_than_a_rare_tag():
     # Le genre n'est qu'un tag très fréquent : la même IDF doit s'appliquer une fois
     # le vocabulaire fusionné. "CommonGenre" est porté par 8 œuvres sur 10 (banal) ;

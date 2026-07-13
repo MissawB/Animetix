@@ -45,6 +45,20 @@ def test_session_service_classic_start(mock_request):
     assert mock_request.session.modified is True
 
 
+def test_session_service_classic_start_writes_no_fake_similarity_ceiling(mock_request):
+    # "max_raw_sim": 0.8 was a live copy of the exact bug the proximity redesign
+    # kills -- a hardcoded fake similarity ceiling standing in for a real score.
+    # start_classic_game() is operationally dead (the start view builds its
+    # session dict inline), but it must never again write this key: the obvious
+    # DRY move (delegate the view back to this helper) would silently resurrect
+    # the bug this whole redesign exists to remove.
+    port = DjangoSessionStateAdapter(mock_request.session)
+    service = GameSessionService(port)
+    service.start_classic_game("Naruto", "Normal", "Anime")
+
+    assert "max_raw_sim" not in mock_request.session.data
+
+
 def test_session_service_add_guess(mock_request):
     port = DjangoSessionStateAdapter(mock_request.session)
     service = GameSessionService(port)

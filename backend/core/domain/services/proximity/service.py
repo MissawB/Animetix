@@ -12,6 +12,7 @@ from .components import (
     ProximityIndex,
     build_index,
     score,
+    vocabulary_of,
 )
 
 logger = logging.getLogger("animetix.proximity")
@@ -104,19 +105,14 @@ class ProximityService:
             return []  # une proposition froide n'apprend rien
 
         # Le même vocabulaire fusionné que la composante qui score dessus (cf.
-        # tag_overlap dans components.py) : un genre n'est qu'un tag très fréquent,
-        # et c'est tout ce que le mode Game partage (0 tag, 100 % genres). Relire
-        # uniquement "tags" ici ferait mentir le service : un score "tags" non nul
-        # porté entièrement par des genres partagés s'afficherait avec un detail vide.
+        # vocabulary_of dans components.py) : tags, genres, traits, organisations.
+        # Un genre n'est qu'un tag très fréquent, et c'est tout ce que le mode Game
+        # partage (0 tag, 100 % genres) ; un personnage, lui, ne porte ni l'un ni
+        # l'autre, seulement traits/organisations. Relire uniquement "tags" ici
+        # ferait mentir le service : un score "tags" non nul porté entièrement par
+        # des genres ou des organisations partagés s'afficherait avec un detail vide.
         shared_vocabulary = sorted(
-            (
-                set(index.works[secret].get("tags") or [])
-                | set(index.works[secret].get("genres") or [])
-            )
-            & (
-                set(index.works[guess].get("tags") or [])
-                | set(index.works[guess].get("genres") or [])
-            ),
+            vocabulary_of(index.works[secret]) & vocabulary_of(index.works[guess]),
             key=lambda t: -index.idf.get(t, 0.0),
         )
         candidates = [

@@ -74,6 +74,7 @@ def _rewire_game_modules():
         "akinetix_service",
         "blind_test_service",
         "world_boss_quiz_service",
+        "proximity_service",
     )
     for name in guarded:
         getattr(container.core, name).reset()
@@ -123,10 +124,18 @@ def _default_proximity_service():
     pushes its OWN ``providers.Object`` override on top of this one and pops only
     that layer (its own ``with`` block, via ``reset_last_overriding()``) well
     before this fixture's teardown runs -- so this default is always the last
-    thing pushed and the last thing popped. It is deliberately kept OUT of the
-    ``guarded`` tuple above: that tuple's tripwire polices tests that add an
-    override and forget to remove it, and this fixture's own ``with`` block
-    already guarantees removal, every time, regardless of what any test does.
+    thing pushed and the last thing popped, in the well-behaved case.
+
+    What is NOT guaranteed: this fixture's own ``with`` block only pops whatever
+    is on TOP of the override stack when it exits -- ``reset_last_overriding()``
+    has no notion of "pop MY override specifically". If some future test also
+    overrides ``proximity_service`` and forgets to clean up, this fixture's exit
+    pops the LEAK instead of its own stub, stranding the stub on the stack. That
+    is exactly the "leaked MagicMock poisons the whole session" failure
+    ``_rewire_game_modules``'s tripwire exists to catch -- so ``proximity_service``
+    is now IN the ``guarded`` tuple above: the stranded stub still shows up as an
+    unexpected extra override there, fails the leaking test loudly, and gets
+    popped clean for every test that runs after it.
     """
     from animetix.containers import container
 

@@ -45,15 +45,45 @@ class Components:
 
     def total(self) -> float:
         base = W_DIRECT * self.direct + W_CO_RECO * self.co_reco + W_TAGS * self.tags
-        # Le bonus ne PORTE jamais un score : sans signal de fond, il vaut zéro. Deux
-        # œuvres sans rapport du même studio ne doivent pas remonter.
-        if base <= 0:
+        # Le bonus ne PORTE jamais un score À LUI SEUL : sans signal de fond, il
+        # vaut zéro. Deux œuvres sans rapport du même studio ne doivent pas
+        # remonter. Exception unique : un bonus au PLAFOND (BONUS_CAP) ne vient
+        # jamais d'une coïncidence structurelle (studio/source/décennie ne
+        # peuvent, cumulés, qu'approcher le plafond -- cf. _BONUS_STUDIO +
+        # _BONUS_SOURCE + _BONUS_DECADE = 0.07 < BONUS_CAP) : il ne peut venir
+        # que d'un lien de franchise avéré (suite directe, ou -- pour un
+        # personnage -- même origine). C'est une preuve directe de proximité,
+        # pas un à-côté structurel, et le garder muet serait le même bug que
+        # cette refonte corrige : deux personnages de la même œuvre qui ne
+        # partagent ni trait ni organisation scoreraient zéro malgré le lien le
+        # plus fort qui existe entre deux personnages.
+        if base <= 0 and self.bonus < BONUS_CAP:
             return 0.0
         return min(1.0, base + self.bonus)
 
 
 def _title(work: Dict[str, Any]) -> str:
     return work.get("title") or work.get("name") or ""
+
+
+def vocabulary_of(work: Dict[str, Any]) -> set:
+    """Le vocabulaire pondéré par IDF d'une œuvre OU d'un personnage.
+
+    Tags et genres pour une œuvre (un genre n'est qu'un tag très fréquent, cf.
+    build_index) ; traits et organisations (`entities.organizations`) pour un
+    personnage -- le vrai catalogue personnages
+    (data/processed/filtered_characters.json) n'a ni tags, ni genres, ni
+    recommandations, seulement `origin`/`traits`/`entities`. Sans ce
+    quatrième-et-cinquième vocabulaire fondu ici, ce signal est plat et le
+    mode Personnages ne score jamais rien.
+    """
+    entities = work.get("entities") or {}
+    return (
+        set(work.get("tags") or [])
+        | set(work.get("genres") or [])
+        | set(work.get("traits") or [])
+        | set(entities.get("organizations") or [])
+    )
 
 
 def build_index(works: List[Dict[str, Any]]) -> ProximityIndex:
@@ -71,11 +101,12 @@ def build_index(works: List[Dict[str, Any]]) -> ProximityIndex:
 
     document_freq: Dict[str, int] = {}
     for work in by_title.values():
-        # Un genre n'est qu'un tag très fréquent : on les fusionne dans le même
-        # vocabulaire pondéré par IDF. Sans ça, les jeux vidéo (0 tag, 100% genres)
-        # et les acteurs (ni l'un ni l'autre) n'ont aucune différence de traitement
-        # alors que les premiers ont un vrai signal.
-        vocabulary = set(work.get("tags") or []) | set(work.get("genres") or [])
+        # Un genre n'est qu'un tag très fréquent, et traits/organisations en sont
+        # l'équivalent côté personnage : on fusionne tout dans le même vocabulaire
+        # pondéré par IDF (cf. vocabulary_of). Sans ça, les jeux vidéo (0 tag, 100%
+        # genres) et les personnages (ni tags ni genres, seulement traits/
+        # organisations) n'ont aucun signal alors qu'un vrai en existe.
+        vocabulary = vocabulary_of(work)
         for tag in vocabulary:
             document_freq[tag] = document_freq.get(tag, 0) + 1
     total = max(1, len(by_title))
@@ -112,15 +143,17 @@ def co_reco(index: ProximityIndex, a: str, b: str) -> float:
 
 
 def tag_overlap(index: ProximityIndex, a: str, b: str) -> float:
-    """Tags ET genres partagés, pondérés par leur rareté.
+    """Vocabulaire partagé (tags, genres, traits, organisations), pondéré par sa rareté.
 
     Partager « Detective » vaut cher ; partager « Primarily Male Cast », que la moitié
     du catalogue porte, ne vaut presque rien -- et un genre n'est jamais qu'un tag très
     fréquent : « Action » sur la moitié du catalogue pèse à peine plus que ce tag-là.
+    Même logique pour un personnage : partager une organisation rare (« Survey
+    Corps ») vaut cher, un trait banal ne vaut presque rien (cf. vocabulary_of).
     """
     wa, wb = index.works.get(a, {}), index.works.get(b, {})
-    ta = set(wa.get("tags") or []) | set(wa.get("genres") or [])
-    tb = set(wb.get("tags") or []) | set(wb.get("genres") or [])
+    ta = vocabulary_of(wa)
+    tb = vocabulary_of(wb)
     shared = ta & tb
     if not shared:
         return 0.0
@@ -160,6 +193,15 @@ def structural_bonus(index: ProximityIndex, a: str, b: str) -> float:
     }
     if b in a_related or a in b_related:
         return BONUS_CAP  # une suite directe : rien de plus proche structurellement
+
+    # Personnages : `origin` est l'œuvre d'origine. Deux personnages de la même
+    # œuvre sont structurellement aussi proches qu'une suite directe l'est pour
+    # deux œuvres -- ils héritent donc du même bonus plafond, pas d'un petit
+    # incrément comme le studio partagé. Les œuvres n'ont pas de champ "origin" :
+    # `wa.get("origin")` y est toujours None, donc ce test ne peut jamais
+    # s'appliquer à une paire œuvre/œuvre par accident.
+    if wa.get("origin") and wa.get("origin") == wb.get("origin"):
+        return BONUS_CAP
 
     bonus = 0.0
     if set(wa.get("studios") or []) & set(wb.get("studios") or []):

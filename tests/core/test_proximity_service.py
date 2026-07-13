@@ -226,6 +226,40 @@ def test_a_genre_only_hot_guess_carries_an_honest_tags_reason():
     assert "0 tag" not in tags_reason["label"]
 
 
+def test_a_character_shaped_catalogue_ranks_without_raising_and_shared_origin_wins():
+    # Forme "personnage" du vrai catalogue (data/processed/filtered_characters.json) :
+    # ni tags, ni genres, ni recommandations -- seulement origin/traits/
+    # entities.organizations. Avant le correctif de l'IMPORTANT 1, ce catalogue
+    # scorait zéro partout et rank() levait GameLogicError : le mode Personnages
+    # était injouable alors que c'est l'un des trois univers proposés en lobby.
+    characters = [
+        {
+            "name": "Levi",
+            "origin": "Shingeki no Kyojin",
+            "traits": [],
+            "entities": {"organizations": ["Survey Corps"]},
+        },
+        {
+            "name": "Erwin",
+            "origin": "Shingeki no Kyojin",
+            "traits": [],
+            "entities": {"organizations": ["Survey Corps"]},
+        },
+    ] + [
+        # Des inconnus d'œuvres et organisations toutes différentes : aucun ne
+        # doit dépasser Erwin, qui partage l'origine ET l'organisation avec Levi.
+        {
+            "name": f"Stranger{i}",
+            "origin": f"Show {i}",
+            "traits": [],
+            "entities": {"organizations": [f"Org{i}"]},
+        }
+        for i in range(8)
+    ]
+    ranking = _service(works=characters).rank("Character", "Levi")
+    assert ranking[0] == "Erwin"
+
+
 def test_an_actor_shape_catalogue_with_no_signal_at_all_still_raises():
     # La forme "acteur" du vrai catalogue : ni tags, ni genres, ni recommandations.
     # Là, aucun vocabulaire fusionné ne peut aider -- GameLogicError reste la bonne

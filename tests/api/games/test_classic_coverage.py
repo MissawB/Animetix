@@ -349,7 +349,6 @@ def test_guess_incorrect(api_client, mock_catalog):
     cat = MagicMock()
     cat.get_catalog.return_value = mock_catalog
     game = MagicMock()
-    game.calculate_raw_similarity.return_value = 0.4
     game.check_title_match.return_value = False
     with (
         container.core.catalog_service.override(providers.Object(cat)),
@@ -391,7 +390,6 @@ def test_guess_correct_authenticated_creates_session(api_client, mock_catalog):
     cat = MagicMock()
     cat.get_catalog.return_value = mock_catalog
     game = MagicMock()
-    game.calculate_raw_similarity.return_value = 1.0
     game.check_title_match.return_value = True
     with (
         container.core.catalog_service.override(providers.Object(cat)),
@@ -422,7 +420,6 @@ def test_guess_when_game_over(api_client, mock_catalog):
     cat = MagicMock()
     cat.get_catalog.return_value = mock_catalog
     game = MagicMock()
-    game.calculate_raw_similarity.return_value = 1.0
     game.check_title_match.return_value = True
     with (
         container.core.catalog_service.override(providers.Object(cat)),

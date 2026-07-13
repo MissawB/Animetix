@@ -36,10 +36,18 @@ class GameSessionService:
         }
 
     def start_classic_game(self, secret_title: str, difficulty: str, media_type: str):
+        # "max_raw_sim" used to be written here as a hardcoded fake similarity
+        # ceiling (0.8) -- the exact bug the proximity redesign kills: a 0.0-to-1.0
+        # number that looks real but isn't. This helper is operationally dead (the
+        # classic start view builds its session dict inline, see
+        # animetix/api/games/classic.py), but it must never write that key again:
+        # the obvious DRY move (make the view delegate back to this helper) would
+        # silently resurrect the bug. Kept, not deleted, because
+        # tests/backend/test_infrastructure.py exercises it directly against the
+        # real DjangoSessionStateAdapter.
         self.port.update(
             {
                 "secret_title": secret_title,
-                "max_raw_sim": 0.8,
                 "difficulty": difficulty,
                 "media_type": media_type,
                 "guesses": [],
