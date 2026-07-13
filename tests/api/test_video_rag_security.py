@@ -32,15 +32,17 @@ def test_video_rag_zero_balance_is_402():
     # service would report the index unavailable against the (empty) test DB.
     # This test is about the *balance* check specifically, so the whole
     # service is overridden with a mock (same pattern as
-    # `test_video_rag_happy_path_deducts_and_returns` below) whose
-    # `is_available()` is truthy by default -- letting the request reach
-    # `deduct_berrix`.
+    # `test_video_rag_happy_path_deducts_and_returns` below) with
+    # `is_available()` explicitly set to True -- relying on MagicMock's
+    # default truthiness here is exactly the fragility that let the original
+    # version of this test pass the availability gate by accident.
     from unittest.mock import MagicMock
 
     from animetix.containers import get_container
 
     u = _mk_user(0)
     mock_service = MagicMock()
+    mock_service.is_available.return_value = True
     container = get_container()
     container.agentic.video_rag_service.override(mock_service)
     try:

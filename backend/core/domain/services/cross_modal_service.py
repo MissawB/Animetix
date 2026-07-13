@@ -75,8 +75,12 @@ class CrossModalSearchService:
 
         # 3. Recherche dans pgvector avec le vecteur fusionné
         # Note: On suppose que la collection contient des embeddings CLIP
+        # Doit rester `self.COLLECTION_NAME` (pas un littéral) : c'est la même
+        # collection que celle vérifiée par `is_available()` ci-dessus -- un
+        # littéral dupliqué ici pourrait un jour diverger silencieusement du
+        # garde-fou anti-facturation.
         results = self.vector_db.search_by_vector(
-            "unified_clip_space", final_vec.tolist(), limit=limit
+            self.COLLECTION_NAME, final_vec.tolist(), limit=limit
         )
 
         return results

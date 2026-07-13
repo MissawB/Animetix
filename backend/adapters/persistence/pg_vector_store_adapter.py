@@ -1,19 +1,12 @@
 import logging
 from typing import Dict, List
 
+from adapters.persistence.cache_constants import COLLECTION_COUNT_CACHE_TTL_SECONDS
 from core.ports.vector_store_port import VectorStorePort
 from django.core.cache import cache
 from pipeline.vector_client import vector_manager
 
 logger = logging.getLogger("animetix.vector_store")
-
-# TTL du cache "la collection a-t-elle des vecteurs ?". Cette question est
-# posée avant chaque recherche payante (garde-fou anti-facturation d'un index
-# vide) -- sans cache, ce serait une requête COUNT(*) de plus par recherche.
-# 60s suffit : il ne s'agit que de détecter si l'index a été construit, pas de
-# suivre un compteur exact en temps réel (un backfill met alors jusqu'à 60s à
-# "débloquer" la recherche -- c'est le compromis accepté).
-_COLLECTION_COUNT_CACHE_TTL = 60
 
 
 class PgVectorStoreAdapter(VectorStorePort):
@@ -51,7 +44,15 @@ class PgVectorStoreAdapter(VectorStorePort):
 
     def get_collection_count(self, collection_name: str) -> int:
         cache_key = f"vsp_collection_count_{collection_name}"
-        cached = cache.get(cache_key)
+
+        try:
+            cached = cache.get(cache_key)
+        except Exception as e:
+            # The cache is an optimisation, not a dependency: a Redis blip
+            # must degrade to a live COUNT, not to a 500 for callers that
+            # don't otherwise need Redis.
+            logger.warning(f"Cache read failed for '{cache_key}': {e}")
+            cached = None
         if cached is not None:
             return int(cached)
 
@@ -59,8 +60,16 @@ class PgVectorStoreAdapter(VectorStorePort):
             collection = vector_manager.get_collection(collection_name)
             count = collection.count()
         except Exception as e:
+            # A failure to ask the database is NOT the same fact as "I asked,
+            # and it is empty" -- caching a 0 here would memoise a transient
+            # outage as "the index doesn't exist" for the full TTL. Fail
+            # closed for *this* request only, without remembering it.
             logger.error(f"Failed to count collection '{collection_name}': {e}")
-            count = 0
+            return 0
 
-        cache.set(cache_key, count, timeout=_COLLECTION_COUNT_CACHE_TTL)
+        try:
+            cache.set(cache_key, count, timeout=COLLECTION_COUNT_CACHE_TTL_SECONDS)
+        except Exception as e:
+            logger.warning(f"Cache write failed for '{cache_key}': {e}")
+
         return count

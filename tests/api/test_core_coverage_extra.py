@@ -263,6 +263,85 @@ def test_media_search_post_exception_returns_500(factory):
     assert response.data["error"] == "Internal server error"
 
 
+@pytest.mark.django_db
+def test_media_search_post_search_exception_returns_500(factory):
+    """Distinct from `test_media_search_post_exception_returns_500` above,
+    which now lands entirely inside the upload-validation try/except added
+    by the billing fix: this covers the *other* try/except, the one around
+    `deep_multimodal_search` itself, which nothing else exercises."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    user = User.objects.create_user(username="searchexc", password="pw")
+    img = SimpleUploadedFile("x.png", b"imgbytes", content_type="image/png")
+    request = factory.post("/search/", {"image": img})
+    force_authenticate(request, user=user)
+    request.user = user
+    view, drf_request = _post_image_view(request)
+    view.cross_modal_search_service.deep_multimodal_search.side_effect = RuntimeError(
+        "boom"
+    )
+    with (
+        patch("animetix.api.core.media.validate_file_size", return_value=True),
+        patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
+        patch("animetix.api.core.media.deduct_berrix"),
+    ):
+        response = view.post(drf_request)
+    assert response.status_code == 500
+    assert response.data["error"] == "Internal server error"
+
+
+@pytest.mark.django_db
+def test_media_search_post_survives_cache_backend_failure(factory, mocker):
+    """A Redis blip in the availability-check cache must not 500 an endpoint
+    that doesn't otherwise need Redis -- it must fall back to a live COUNT
+    and behave exactly as if the cache had a hit (index available -> search
+    proceeds, charges, and returns 200)."""
+    from adapters.persistence.pg_vector_store_adapter import PgVectorStoreAdapter
+    from core.domain.services.cross_modal_service import CrossModalSearchService
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    user = User.objects.create_user(username="cachefail", password="pw")
+    img = SimpleUploadedFile("x.png", b"imgbytes", content_type="image/png")
+    request = factory.post("/search/", {"image": img})
+    force_authenticate(request, user=user)
+    request.user = user
+
+    mock_manager = MagicMock()
+    mock_manager.get_collection.return_value.count.return_value = 3
+    mocker.patch(
+        "adapters.persistence.pg_vector_store_adapter.vector_manager", mock_manager
+    )
+    mocker.patch(
+        "adapters.persistence.pg_vector_store_adapter.cache.get",
+        side_effect=RuntimeError("redis down"),
+    )
+
+    real_vector_db = PgVectorStoreAdapter()
+    cross_modal = CrossModalSearchService(
+        inference_engine=MagicMock(), vector_db=real_vector_db
+    )
+    cross_modal.deep_multimodal_search = MagicMock(
+        return_value=[{"id": "1", "title": "T"}]
+    )
+
+    view = MediaSearchView()
+    view.guardrail_service = MagicMock()
+    view.usage_port = MagicMock()
+    view.usage_port.check_quota.return_value = True
+    view.cross_modal_search_service = cross_modal
+    drf_request = Request(request, parsers=[MultiPartParser(), JSONParser()])
+    with (
+        patch("animetix.api.core.media.validate_file_size", return_value=True),
+        patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
+        patch("animetix.api.core.media.deduct_berrix") as mock_deduct,
+    ):
+        response = view.post(drf_request)
+
+    assert response.status_code == 200
+    mock_manager.get_collection.assert_called()
+    mock_deduct.assert_called_once()
+
+
 # --------------------------------------------------------------------------- #
 # GameSessionView.get (lines 215-216)
 # --------------------------------------------------------------------------- #

@@ -112,6 +112,25 @@ def test_deep_multimodal_search_raises_when_collection_empty(
     mock_vector_db.search_by_vector.assert_not_called()
 
 
+def test_search_by_vector_uses_the_collection_name_constant(
+    cross_modal_service, mock_vector_db, monkeypatch
+):
+    """The availability guard and the actual search must never be able to
+    drift apart: both must resolve the same collection. Pin this against the
+    named constant (not the literal "unified_clip_space") so that renaming
+    `COLLECTION_NAME` alone -- without touching `deep_multimodal_search` --
+    would be caught here."""
+    monkeypatch.setattr(
+        CrossModalSearchService, "COLLECTION_NAME", "renamed_clip_space"
+    )
+    mock_vector_db.search_by_vector.return_value = []
+
+    cross_modal_service.deep_multimodal_search("query", limit=5)
+
+    args, kwargs = mock_vector_db.search_by_vector.call_args
+    assert args[0] == "renamed_clip_space"
+
+
 def test_failed_text_embedding_does_not_fall_back_to_random_vector(
     cross_modal_service, mock_engine, mock_vector_db
 ):

@@ -315,6 +315,71 @@ def test_get_collection_count_cache_is_per_collection(adapter):
     assert adapter.manager.get_collection.call_count == 2
 
 
+def test_get_collection_count_transient_failure_is_not_cached(adapter):
+    """A `count() == 0` that actually means "the DB call blew up" must never
+    be memoised as though the collection were empty -- the very next call
+    (still within the 60s TTL) must hit the database again."""
+    adapter.manager.get_collection.return_value.count.side_effect = [
+        RuntimeError("transient"),
+        4,
+    ]
+    assert adapter.get_collection_count("col") == 0
+    assert adapter.get_collection_count("col") == 4
+    assert adapter.manager.get_collection.return_value.count.call_count == 2
+
+
+def test_get_collection_count_cache_read_failure_falls_back_to_live_count(
+    adapter, mocker
+):
+    """A Redis blip on `cache.get` must not 500 the caller -- it must degrade
+    to a live COUNT."""
+    adapter.manager.get_collection.return_value.count.return_value = 8
+    mocker.patch(
+        "adapters.persistence.pgvector_repository_adapter.cache.get",
+        side_effect=RuntimeError("redis down"),
+    )
+    assert adapter.get_collection_count("col") == 8
+    adapter.manager.get_collection.assert_called_once_with("col")
+
+
+def test_get_collection_count_cache_write_failure_still_returns_live_count(
+    adapter, mocker
+):
+    adapter.manager.get_collection.return_value.count.return_value = 6
+    mocker.patch(
+        "adapters.persistence.pgvector_repository_adapter.cache.get",
+        return_value=None,
+    )
+    mocker.patch(
+        "adapters.persistence.pgvector_repository_adapter.cache.set",
+        side_effect=RuntimeError("redis down"),
+    )
+    assert adapter.get_collection_count("col") == 6
+
+
+def test_upsert_items_invalidates_cached_count(adapter):
+    """A fresh backfill must be immediately visible, not hidden behind a
+    stale "empty" count for up to 60s."""
+    from django.core.cache import cache
+
+    cache.set("pgvra_collection_count_col", 0, timeout=60)
+    adapter.upsert_items("col", ["1"], [[0.1]], [{"m": 1}])
+    assert cache.get("pgvra_collection_count_col") is None
+
+    adapter.manager.get_collection.return_value.count.return_value = 1
+    assert adapter.get_collection_count("col") == 1
+
+
+def test_delete_collection_invalidates_cached_count(adapter):
+    """An emptied collection must not stay billable (cached non-zero count)
+    for up to 60s after the delete."""
+    from django.core.cache import cache
+
+    cache.set("pgvra_collection_count_col", 5, timeout=60)
+    adapter.delete_collection("col")
+    assert cache.get("pgvra_collection_count_col") is None
+
+
 def test_get_all_ids(adapter):
     adapter.manager.get_all_ids.return_value = {"1", "2"}
     assert sorted(adapter.get_all_ids("col")) == ["1", "2"]

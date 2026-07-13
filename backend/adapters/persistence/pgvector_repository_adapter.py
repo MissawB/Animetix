@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 
 import numpy as np
 import orjson
+from adapters.persistence.cache_constants import COLLECTION_COUNT_CACHE_TTL_SECONDS
 from core.ports.repository_port import RepositoryPort
 from core.utils.model_registry import (
     resolve_text_embedding_model_id,
@@ -158,6 +159,22 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             logger.error(f"Catalog Load Error for {media_type}: {e}")
             return None
 
+    @staticmethod
+    def _collection_count_cache_key(collection_name: str) -> str:
+        return f"pgvra_collection_count_{collection_name}"
+
+    def _invalidate_collection_count(self, collection_name: str) -> None:
+        """Best-effort cache invalidation: a failure here must not surface as
+        an upsert/delete failure -- it only means the cached count stays
+        stale for (at most) the remainder of the TTL, the same tradeoff
+        already accepted for the cache in general."""
+        try:
+            cache.delete(self._collection_count_cache_key(collection_name))
+        except Exception as e:
+            logger.warning(
+                f"Cache invalidation failed for collection '{collection_name}': {e}"
+            )
+
     def upsert_items(
         self,
         collection_name: str,
@@ -173,24 +190,40 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             )
         except Exception as e:
             logger.error(f"PGVector Upsert Error in {collection_name}: {e}")
+            return
+        # A fresh backfill must be immediately visible, not hidden behind a
+        # cached "empty" count for up to 60s (see get_collection_count below).
+        self._invalidate_collection_count(collection_name)
 
     def delete_collection(self, collection_name: str):
         try:
             self.manager.delete_collection(collection_name)
         except Exception as e:
             logger.error(f"PGVector Delete Error for {collection_name}: {e}")
+            return
+        # An emptied collection must not stay billable for up to 60s on the
+        # strength of a stale cached (non-zero) count.
+        self._invalidate_collection_count(collection_name)
 
     def get_collection_count(self, collection_name: str) -> int:
         """Nombre de vecteurs dans la collection, mis en cache 60s.
 
         Sert de garde-fou anti-facturation avant une recherche payante
         (`VideoRAGService.is_available`) : sans cache, chaque recherche
-        déclencherait un COUNT(*) supplémentaire. Un TTL court (60s, aligné
-        sur `PgVectorStoreAdapter.get_collection_count`) suffit -- il ne
-        s'agit que de détecter si l'index a été construit.
+        déclencherait un COUNT(*) supplémentaire. Un TTL court (aligné sur
+        `PgVectorStoreAdapter.get_collection_count` via
+        `COLLECTION_COUNT_CACHE_TTL_SECONDS`) suffit -- il ne s'agit que de
+        détecter si l'index a été construit.
         """
-        cache_key = f"pgvra_collection_count_{collection_name}"
-        cached_count = cache.get(cache_key)
+        cache_key = self._collection_count_cache_key(collection_name)
+
+        try:
+            cached_count = cache.get(cache_key)
+        except Exception as e:
+            # The cache is an optimisation, not a dependency: a Redis blip
+            # must degrade to a live COUNT, not to a 500.
+            logger.warning(f"Cache read failed for '{cache_key}': {e}")
+            cached_count = None
         if cached_count is not None:
             return int(cached_count)
 
@@ -198,12 +231,21 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             coll = self.manager.get_collection(collection_name)
             count = coll.count()
         except Exception as e:
+            # A failure to ask the database is NOT the same fact as "I
+            # asked, and it is empty" -- caching a 0 here would memoise a
+            # transient outage as "the index doesn't exist" for the full
+            # TTL. Fail closed for *this* request only, without remembering
+            # it.
             logger.exception(
                 f"Error getting collection count for {collection_name}: {e}"
             )
-            count = 0
+            return 0
 
-        cache.set(cache_key, count, timeout=60)
+        try:
+            cache.set(cache_key, count, timeout=COLLECTION_COUNT_CACHE_TTL_SECONDS)
+        except Exception as e:
+            logger.warning(f"Cache write failed for '{cache_key}': {e}")
+
         return count
 
     def get_all_ids(self, collection_name: str) -> List[str]:
