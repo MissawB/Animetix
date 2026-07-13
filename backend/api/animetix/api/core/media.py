@@ -184,14 +184,9 @@ class MediaSearchView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
-        # Berrix deduction for the CLIP cross-modal search (raises 402 if balance
-        # too low). Outside the try below so PaymentRequired isn't swallowed into 500.
-        deduct_berrix(
-            request.user,
-            FEATURE_BX_COSTS["vision_clip"],
-            "Recherche par image (CLIP)",
-        )
-
+        # Validate the upload BEFORE charging: neither the size nor the MIME
+        # type depend on payment, so a request that can never succeed must
+        # be rejected up front instead of being charged and then refused.
         try:
             if not validate_file_size(image_file.size, MAX_IMAGE_SIZE):
                 return Response(
@@ -210,7 +205,19 @@ class MediaSearchView(APIView):
                     },
                     status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                 )
+        except Exception:
+            logger.exception("Error in image search")
+            return Response({"error": "Internal server error"}, status=500)
 
+        # Berrix deduction for the CLIP cross-modal search (raises 402 if balance
+        # too low). Outside the try below so PaymentRequired isn't swallowed into 500.
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["vision_clip"],
+            "Recherche par image (CLIP)",
+        )
+
+        try:
             # Appel au service Cross-Modal
             results = self.cross_modal_search_service.deep_multimodal_search(
                 text_query="", image_data=image_data, limit=limit

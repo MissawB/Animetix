@@ -146,6 +146,9 @@ def test_media_search_post_no_image(factory):
 
 @pytest.mark.django_db
 def test_media_search_post_image_too_large(factory):
+    """An oversized upload must be rejected *before* Berrix is touched: the
+    size is known without spending money, so charging first and validating
+    after means paying for a request that was always going to be refused."""
     from django.core.files.uploadedfile import SimpleUploadedFile
 
     user = User.objects.create_user(username="big", password="pw")
@@ -154,13 +157,19 @@ def test_media_search_post_image_too_large(factory):
     force_authenticate(request, user=user)
     request.user = user
     view, drf_request = _post_image_view(request)
-    with patch("animetix.api.core.media.validate_file_size", return_value=False):
+    with (
+        patch("animetix.api.core.media.validate_file_size", return_value=False),
+        patch("animetix.api.core.media.deduct_berrix") as mock_deduct,
+    ):
         response = view.post(drf_request)
     assert response.status_code == 413
+    mock_deduct.assert_not_called()
 
 
 @pytest.mark.django_db
 def test_media_search_post_invalid_mime(factory):
+    """A disallowed MIME type is likewise known without spending money: it
+    must be rejected before Berrix is deducted, not after."""
     from django.core.files.uploadedfile import SimpleUploadedFile
 
     user = User.objects.create_user(username="badmime", password="pw")
@@ -172,9 +181,11 @@ def test_media_search_post_invalid_mime(factory):
     with (
         patch("animetix.api.core.media.validate_file_size", return_value=True),
         patch("animetix.api.core.media.validate_file_mime_type", return_value=False),
+        patch("animetix.api.core.media.deduct_berrix") as mock_deduct,
     ):
         response = view.post(drf_request)
     assert response.status_code == 415
+    mock_deduct.assert_not_called()
 
 
 @pytest.mark.django_db
