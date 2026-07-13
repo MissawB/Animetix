@@ -85,8 +85,15 @@ def _patch_container(mocker, is_correct=False, rank=None, report=None):
     These are sync callables (the consumer wraps them in ``sync_to_async``).
     """
     container = MagicMock()
+    catalogue_titles = ["Naruto"] + list(
+        rank if rank is not None else ["Bleach", "One Piece"]
+    )
     container.core.catalog_service.return_value.load_data.return_value = {
-        "title_to_full_data": {"Naruto": {"id": 1, "title": "Naruto"}}
+        "title_to_full_data": {"Naruto": {"id": 1, "title": "Naruto"}},
+        # Le duel valide la proposition contre le catalogue avant de la scorer,
+        # exactement comme le mode Classique (classic.py) : sans ça, une trame
+        # websocket portant un titre inventé diffusait « 100 % » à toute la salle.
+        "title_to_index": {t: i for i, t in enumerate(catalogue_titles)},
     }
     container.core.game_service.return_value.check_title_match.return_value = is_correct
     container.core.proximity_service.return_value.rank.return_value = (
@@ -368,6 +375,34 @@ async def test_handle_guess_with_no_relationship_scores_low_not_the_noise_floor(
     assert message["type"] == "opponent_guess"
     assert message["score"] < 50.0  # nowhere near the old ~58 noise floor
     assert message["score"] == 1.0
+
+
+async def test_handle_guess_rejects_a_title_that_is_not_in_the_catalogue(mocker):
+    """Une proposition hors catalogue n'est PAS scorée et n'est PAS diffusée.
+
+    Le mode Classique valide la proposition contre le catalogue avant tout scoring
+    (classic.py) ; le duel ne le faisait pas. Comme report() rendait 100 % pour un
+    titre absent du classement, n'importe quelle trame websocket portant un titre
+    inventé diffusait un « 100 % » à toute la salle -- strictement pire que le
+    chemin qu'elle remplace, qui rendait 0.0.
+    """
+    player = _make_user("p2")
+    duel = _make_duel(secret="Naruto", media_type="Anime", is_finished=False)
+    _patch_duelroom(mocker, get_return=duel)
+    container = _patch_container(mocker, is_correct=False)
+    consumer = _make_consumer(player)
+
+    await consumer.handle_guess("Titre Inventé <script>")
+
+    # Rien n'est diffusé à la salle, rien n'est scoré.
+    consumer.channel_layer.group_send.assert_not_awaited()
+    container.core.proximity_service.return_value.report.assert_not_called()
+
+    # Seul le joueur qui a proposé reçoit une erreur.
+    consumer.send.assert_awaited_once()
+    sent = json.loads(consumer.send.await_args.kwargs["text_data"])
+    assert sent["type"] == "error"
+    assert duel.is_finished is False
 
 
 async def test_handle_guess_caches_ranking_once_per_room_not_once_per_guess(mocker):

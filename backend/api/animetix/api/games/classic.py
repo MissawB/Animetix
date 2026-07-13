@@ -213,7 +213,11 @@ class ClassicGameStartView(APIView):
         # relisent. Calculé (et vérifié) AVANT d'écrire l'état de session : si ce
         # type de média n'a aucun signal exploitable, la partie ne doit pas démarrer
         # dans un état à moitié initialisé.
-        cache_key = f"proximity_{media_type}_{secret_title}"
+        # v2 : le classement porte désormais (titre, score) -- le percentile se calcule
+        # sur les scores, pas sur une position d'index. Une entrée v1 (des titres nus)
+        # ferait recalculer le service à chaque proposition : la clé change pour ne pas
+        # relire l'ancien format.
+        cache_key = f"proximity_v2_{media_type}_{secret_title}"
         ranking = cache.get(cache_key)
         if ranking is None:
             try:
@@ -322,7 +326,7 @@ class ClassicGameGuessView(APIView):
         # ClassicGameStartView) ; on ne le recalcule que si le cache l'a perdu
         # (expiration TTL, éviction) -- un cas rare une fois la partie démarrée.
         cache_key = (
-            port.get("proximity_key") or f"proximity_{media_type}_{secret_title}"
+            port.get("proximity_key") or f"proximity_v2_{media_type}_{secret_title}"
         )
         ranking = cache.get(cache_key)
         try:

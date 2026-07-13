@@ -10,4 +10,10 @@ from .components import (  # noqa: F401
     build_index,
     score,
 )
-from .service import HOT, WARM, ProximityService  # noqa: F401
+from .service import (  # noqa: F401
+    HOT,
+    HOT_FLOOR,
+    WARM,
+    WARM_FLOOR,
+    ProximityService,
+)

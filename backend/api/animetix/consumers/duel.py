@@ -107,6 +107,23 @@ class DuelConsumer(BaseConsumer):
                 },
             )
         else:
+            # La proposition doit exister dans le catalogue AVANT d'être scorée --
+            # exactement ce que fait le mode Classique (api/games/classic.py). Sans
+            # cette validation, n'importe quelle trame websocket portant un titre
+            # inventé était scorée puis DIFFUSÉE à toute la salle. La vérification
+            # vient après check_title_match : une bonne réponse donnée sous un titre
+            # alternatif (anglais, natif) doit continuer de gagner.
+            if guess not in (data.get("title_to_index") or {}):
+                await self.send(
+                    text_data=json.dumps(
+                        {
+                            "type": "error",
+                            "message": f"Title '{guess}' not in catalog.",
+                        }
+                    )
+                )
+                return
+
             # Score honnête : le percentile ProximityService (même moteur que le mode
             # Classique), pas le cosinus brut -- sur le vrai catalogue, deux oeuvres
             # SANS AUCUNE relation moyennent 0.583 de cosinus : un joueur qui propose
@@ -115,7 +132,10 @@ class DuelConsumer(BaseConsumer):
             # (media_type, secret_title), calculé une fois par salle et relu à chaque
             # proposition.
             proximity_service = container.core.proximity_service()
-            cache_key = f"proximity_{duel.media_type}_{secret}"
+            # v2 : le classement porte désormais (titre, score). Une entrée v1 (des
+            # titres nus) ferait recalculer le service à chaque proposition -- correct,
+            # mais lent : la clé change pour ne pas relire l'ancien format.
+            cache_key = f"proximity_v2_{duel.media_type}_{secret}"
             ranking = await sync_to_async(cache.get)(cache_key)
             try:
                 if ranking is None:
