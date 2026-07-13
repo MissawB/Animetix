@@ -17,6 +17,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from animetix.consumers import duel as duel_module
 from animetix.consumers.duel import DuelConsumer
+from core.domain.exceptions import GameLogicError
 
 pytestmark = pytest.mark.asyncio
 
@@ -74,11 +75,13 @@ def _patch_duelroom(mocker, get_return=None, get_side_effect=None):
     return duelroom
 
 
-def _patch_container(mocker, is_correct=False, raw_similarity=0.0):
+def _patch_container(mocker, is_correct=False, rank=None, report=None):
     """Patch ``get_container`` in the duel module to a structured mock.
 
-    Mirrors the real access path: ``container.core.catalog_service.load_data`` and
-    ``container.core.game_service.{check_title_match, calculate_raw_similarity}``.
+    Mirrors the real access path: ``container.core.catalog_service.load_data``,
+    ``container.core.game_service.check_title_match`` and
+    ``container.core.proximity_service.{rank, report}`` -- the same percentile
+    scoring the classic game uses, instead of the raw (meaningless) cosine.
     These are sync callables (the consumer wraps them in ``sync_to_async``).
     """
     container = MagicMock()
@@ -86,9 +89,15 @@ def _patch_container(mocker, is_correct=False, raw_similarity=0.0):
         "title_to_full_data": {"Naruto": {"id": 1, "title": "Naruto"}}
     }
     container.core.game_service.return_value.check_title_match.return_value = is_correct
-    container.core.game_service.return_value.calculate_raw_similarity.return_value = (
-        raw_similarity
+    container.core.proximity_service.return_value.rank.return_value = (
+        rank if rank is not None else ["Bleach", "One Piece"]
     )
+    container.core.proximity_service.return_value.report.return_value = report or {
+        "percent": 5.0,
+        "rank": 2,
+        "total": 2,
+        "reasons": [],
+    }
     mocker.patch.object(duel_module, "get_container", return_value=container)
     return container
 
@@ -279,8 +288,9 @@ async def test_handle_guess_correct_finishes_duel_and_broadcasts_winner(mocker):
     # Reward path fired with the right game mode / media type.
     winner.profile.add_win.assert_called_once_with(game_mode="duel", media_type="Anime")
 
-    # No similarity scoring on a win.
-    container.core.game_service.return_value.calculate_raw_similarity.assert_not_called()
+    # No proximity scoring on a win.
+    container.core.proximity_service.return_value.rank.assert_not_called()
+    container.core.proximity_service.return_value.report.assert_not_called()
 
     # Broadcast announces the winner and reveals the secret.
     group, message = _last_group_send_message(consumer.channel_layer)
@@ -292,13 +302,21 @@ async def test_handle_guess_correct_finishes_duel_and_broadcasts_winner(mocker):
     }
 
 
-async def test_handle_guess_wrong_broadcasts_similarity_score_without_finishing(mocker):
-    """A wrong guess: duel stays open, no reward, broadcast carries a rounded score."""
+async def test_handle_guess_wrong_broadcasts_proximity_percent_without_finishing(
+    mocker,
+):
+    """A wrong guess: duel stays open, no reward, broadcast carries the
+    ProximityService percentile (NOT the raw cosine -- that's the whole point of
+    this fix)."""
     player = _make_user("p2")
     duel = _make_duel(secret="Naruto", media_type="Anime", is_finished=False)
     _patch_duelroom(mocker, get_return=duel)
-    # 0.8123 -> round(81.23, 1) == 81.2
-    container = _patch_container(mocker, is_correct=False, raw_similarity=0.8123)
+    container = _patch_container(
+        mocker,
+        is_correct=False,
+        rank=["Bleach", "One Piece"],
+        report={"percent": 81.2, "rank": 1, "total": 2, "reasons": []},
+    )
     consumer = _make_consumer(player)
 
     await consumer.handle_guess("Bleach")
@@ -309,12 +327,12 @@ async def test_handle_guess_wrong_broadcasts_similarity_score_without_finishing(
     duel.save.assert_not_called()
     player.profile.add_win.assert_not_called()
 
-    # Similarity computed against the secret with the loaded data set.
-    container.core.game_service.return_value.calculate_raw_similarity.assert_called_once_with(
-        "Anime",
-        "Naruto",
-        "Bleach",
-        {"title_to_full_data": {"Naruto": {"id": 1, "title": "Naruto"}}},
+    # Ranking computed against the secret, report computed for this guess.
+    container.core.proximity_service.return_value.rank.assert_called_once_with(
+        "Anime", "Naruto"
+    )
+    container.core.proximity_service.return_value.report.assert_called_once_with(
+        "Anime", "Naruto", "Bleach", ranking=["Bleach", "One Piece"]
     )
 
     group, message = _last_group_send_message(consumer.channel_layer)
@@ -326,6 +344,87 @@ async def test_handle_guess_wrong_broadcasts_similarity_score_without_finishing(
     }
 
 
+async def test_handle_guess_with_no_relationship_scores_low_not_the_noise_floor(mocker):
+    """The regression this fix closes: with the 0.7 cosine factor gone, an
+    unrelated guess used to render at the raw-cosine noise floor (~58 on the real
+    catalogue -- the average for two works with NO relationship). The percentile
+    from ProximityService must instead put a no-signal guess near the BOTTOM of
+    the ranking, never in the high 50s reading as "getting warm"."""
+    player = _make_user("p2")
+    duel = _make_duel(secret="Naruto", media_type="Anime", is_finished=False)
+    _patch_duelroom(mocker, get_return=duel)
+    # An unrelated title ranked dead last out of 100 -> percentile near 0, not ~58.
+    _patch_container(
+        mocker,
+        is_correct=False,
+        rank=["Unrelated Title"] + [f"Title {i}" for i in range(99)],
+        report={"percent": 1.0, "rank": 100, "total": 100, "reasons": []},
+    )
+    consumer = _make_consumer(player)
+
+    await consumer.handle_guess("Unrelated Title")
+
+    _, message = _last_group_send_message(consumer.channel_layer)
+    assert message["type"] == "opponent_guess"
+    assert message["score"] < 50.0  # nowhere near the old ~58 noise floor
+    assert message["score"] == 1.0
+
+
+async def test_handle_guess_caches_ranking_once_per_room_not_once_per_guess(mocker):
+    """The ranking is expensive (whole-catalogue comparison): computed once per
+    room and re-read from cache on every subsequent guess, exactly like the
+    classic game caches it once per game."""
+    from django.core.cache import cache
+
+    player = _make_user("p2")
+    duel = _make_duel(secret="Naruto", media_type="Anime", is_finished=False)
+    _patch_duelroom(mocker, get_return=duel)
+    container = _patch_container(
+        mocker,
+        is_correct=False,
+        rank=["Bleach", "One Piece"],
+        report={"percent": 5.0, "rank": 2, "total": 2, "reasons": []},
+    )
+    consumer = _make_consumer(player)
+
+    await consumer.handle_guess("Bleach")
+    await consumer.handle_guess("One Piece")
+
+    # rank() is the expensive whole-catalogue computation -- called once, not twice.
+    container.core.proximity_service.return_value.rank.assert_called_once_with(
+        "Anime", "Naruto"
+    )
+    assert container.core.proximity_service.return_value.report.call_count == 2
+    cache.clear()
+
+
+async def test_handle_guess_proximity_unavailable_sends_error_not_crash(mocker):
+    """GameLogicError (no exploitable proximity signal for this media type) must
+    not crash the socket. It's handled like the classic game's 503: a clean error
+    is sent to the guessing player only, the duel is left open, and nothing is
+    broadcast to the room."""
+    player = _make_user("p2")
+    duel = _make_duel(secret="Naruto", media_type="Anime", is_finished=False)
+    _patch_duelroom(mocker, get_return=duel)
+    container = _patch_container(mocker, is_correct=False)
+    container.core.proximity_service.return_value.rank.side_effect = GameLogicError(
+        "no signal for this catalogue"
+    )
+    consumer = _make_consumer(player)
+
+    await consumer.handle_guess("Bleach")  # must not raise
+
+    # No broadcast to the room -- the error is only for the player who guessed.
+    consumer.channel_layer.group_send.assert_not_awaited()
+    consumer.send.assert_awaited_once()
+    sent = json.loads(consumer.send.await_args.kwargs["text_data"])
+    assert sent["type"] == "error"
+
+    # Duel state untouched -- a scoring outage isn't a game-ending event.
+    assert duel.is_finished is False
+    duel.save.assert_not_called()
+
+
 async def test_handle_guess_reconciles_turns_between_two_players(mocker):
     """Two players guess the same room: only the correct guesser wins; the other
     receives a score and the win is attributed to the right player."""
@@ -334,7 +433,12 @@ async def test_handle_guess_reconciles_turns_between_two_players(mocker):
         secret="Naruto", media_type="Anime", player1=p1, player2=p2, is_finished=False
     )
     _patch_duelroom(mocker, get_return=duel)
-    container = _patch_container(mocker, is_correct=False, raw_similarity=0.5)
+    container = _patch_container(
+        mocker,
+        is_correct=False,
+        rank=["Bleach", "One Piece"],
+        report={"percent": 5.0, "rank": 2, "total": 2, "reasons": []},
+    )
 
     # p1 guesses wrong first -> opponent_guess for p1, duel still open.
     consumer1 = _make_consumer(p1)

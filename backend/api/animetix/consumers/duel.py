@@ -1,9 +1,23 @@
 import json
 
+from animetix_project.logging_config import get_logger
 from asgiref.sync import sync_to_async
+from core.domain.exceptions import GameLogicError
+from django.core.cache import cache
 
 from ..containers import get_container
 from .base import BaseConsumer
+
+logger = get_logger("animetix." + __name__)
+
+# Le classement d'un catalogue face à un secret est cher UNE fois (index +
+# comparaisons), gratuit ensuite : mis en cache par (media_type, secret_title),
+# relu à chaque proposition -- une partie de duel calcule le sien une fois par
+# salle, exactement comme le mode Classique calcule le sien une fois par partie
+# (backend/api/animetix/api/games/classic.py). Même clé de cache : si un défi
+# classique et un duel partagent (media_type, secret), le second à demander lit
+# le calcul du premier.
+PROXIMITY_CACHE_TIMEOUT = 60 * 60 * 24 * 7  # 7 jours
 
 
 class DuelConsumer(BaseConsumer):
@@ -93,11 +107,51 @@ class DuelConsumer(BaseConsumer):
                 },
             )
         else:
-            # Similarité pour feedback (facultatif mais fun en 1vs1)
-            raw_sim = await sync_to_async(
-                container.core.game_service().calculate_raw_similarity
-            )(duel.media_type, secret, guess, data)
-            score = round(raw_sim * 100, 1)
+            # Score honnête : le percentile ProximityService (même moteur que le mode
+            # Classique), pas le cosinus brut -- sur le vrai catalogue, deux oeuvres
+            # SANS AUCUNE relation moyennent 0.583 de cosinus : un joueur qui propose
+            # un titre sans rapport verrait ~58 %, lisant "tu chauffes" alors qu'il n'y
+            # a rien. Le classement est cher (tout le catalogue) : mis en cache par
+            # (media_type, secret_title), calculé une fois par salle et relu à chaque
+            # proposition.
+            proximity_service = container.core.proximity_service()
+            cache_key = f"proximity_{duel.media_type}_{secret}"
+            ranking = await sync_to_async(cache.get)(cache_key)
+            try:
+                if ranking is None:
+                    ranking = await sync_to_async(proximity_service.rank)(
+                        duel.media_type, secret
+                    )
+                    await sync_to_async(cache.set)(
+                        cache_key, ranking, timeout=PROXIMITY_CACHE_TIMEOUT
+                    )
+                report = await sync_to_async(proximity_service.report)(
+                    duel.media_type, secret, guess, ranking=ranking
+                )
+            except GameLogicError as e:
+                # Aucun signal exploitable pour ce type de média (films, jeux,
+                # acteurs aujourd'hui) : une panne de service connue, pas un bug.
+                # Ne DOIT PAS faire planter la boucle websocket -- on prévient
+                # seulement le joueur qui vient de proposer, pas toute la salle.
+                logger.warning(
+                    f"Duel: no proximity signal for {duel.media_type}/{secret}: {e}"
+                )
+                await self.send(
+                    text_data=json.dumps(
+                        {
+                            "type": "error",
+                            "message": "Proximity scoring unavailable for this media type.",
+                        }
+                    )
+                )
+                return
+
+            # Le percentile seul, pas les "reasons" : le duel est une course entre
+            # deux joueurs qui voient les scores de l'autre (opponent_guess est
+            # diffusé à toute la salle) -- révéler ce qui rapproche donnerait à
+            # l'adversaire une longueur d'avance gratuite. Le mode Classique, solo,
+            # peut se permettre ce détail ; le duel s'en tient au nombre.
+            score = report["percent"]
 
             await self.channel_layer.group_send(
                 self.room_group_name,
