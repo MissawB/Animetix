@@ -5,7 +5,11 @@ from typing import Dict, List, Optional
 import numpy as np
 import orjson
 from core.ports.repository_port import RepositoryPort
-from core.utils.model_registry import resolve_trust_remote_code, trusted_revision
+from core.utils.model_registry import (
+    resolve_text_embedding_model_id,
+    resolve_trust_remote_code,
+    trusted_revision,
+)
 from django.core.cache import cache
 from pipeline.vector_client import vector_manager
 
@@ -56,8 +60,13 @@ class PGVectorRepositoryAdapter(RepositoryPort):
     @property
     def embedding_fn(self):
         if self._embedding_fn is None:
+            # Resolved from the same core.utils.model_registry source of truth
+            # (EMBEDDING_VERSIONS + MODEL_VERSION_TEXT env var) the catalogue
+            # vectoriser (pipeline.models_registry) uses -- never hardcoded
+            # here, or query embeddings would drift to a different model/
+            # dimension than what's actually stored in pgvector.
             self._embedding_fn = LocalSentenceTransformerEmbeddingFunction(
-                model_name="jinaai/jina-embeddings-v3"
+                model_name=resolve_text_embedding_model_id()
             )
         return self._embedding_fn
 

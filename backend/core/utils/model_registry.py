@@ -131,6 +131,35 @@ EMBEDDING_VERSIONS: dict[str, dict[str, str]] = {
 }
 
 
+def resolve_text_embedding_version() -> str:
+    """Active text-embedding version, from the ``MODEL_VERSION_TEXT`` env var.
+
+    Defaults to ``"v3"`` (jina-embeddings-v3: 1024-d, ~1GB, CPU-loadable)
+    rather than the 4096-d/10GB GPU-only ``"v4"`` (Qwen3-Embedding-8B) --
+    v3 is the version the whole app agrees on. Overridable by whoever has
+    the GPU budget for v4.
+
+    The ONLY place this env var / default is read, so both the writer
+    (``pipeline.models_registry.ModelsRegistry``) and the reader
+    (``PGVectorRepositoryAdapter.embedding_fn`` via
+    ``resolve_text_embedding_model_id``) move together.
+    """
+    return os.getenv("MODEL_VERSION_TEXT", "v3")
+
+
+def resolve_text_embedding_model_id(version: Optional[str] = None) -> str:
+    """Resolve the active text-embedding model id from ``EMBEDDING_VERSIONS``.
+
+    Single source of truth for BOTH the writer (``pipeline.models_registry``,
+    which vectorises the catalogue) and the reader
+    (``PGVectorRepositoryAdapter.embedding_fn``, which embeds search
+    queries). Before this existed the two hardcoded different models at
+    different dimensions and nothing could ever match in pgvector.
+    """
+    version = version or resolve_text_embedding_version()
+    return EMBEDDING_VERSIONS["text"][version]
+
+
 def get_verified_revision(model_id: str) -> str | None:
     """Pinned SHA for a known model; STRICT mode blocks unknown models."""
     entry = MODELS.get(model_id)

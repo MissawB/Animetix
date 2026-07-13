@@ -93,6 +93,28 @@ def test_siglip2_present_and_pinned():
     }
 
 
+def test_jina_v3_pinned_revision_matches_verified_hub_sha():
+    """Guard: jina-embeddings-v3's pin must stay the exact SHA fetched from
+    ``HfApi().model_info("jinaai/jina-embeddings-v3").sha`` (verified to load
+    cleanly with the installed sentence-transformers) so a future edit cannot
+    silently unpin it or swap in an unverified/incompatible revision.
+    """
+    assert (
+        mr.MODELS["jinaai/jina-embeddings-v3"]["revision"]
+        == "ab036b023d30b4d1138c4c3bfa9f0c445ab455d6"
+    )
+
+
+def test_resolve_text_embedding_model_id_defaults_to_v3_jina(monkeypatch):
+    monkeypatch.delenv("MODEL_VERSION_TEXT", raising=False)
+    assert mr.resolve_text_embedding_model_id() == "jinaai/jina-embeddings-v3"
+
+
+def test_resolve_text_embedding_model_id_respects_env_override(monkeypatch):
+    monkeypatch.setenv("MODEL_VERSION_TEXT", "v4")
+    assert mr.resolve_text_embedding_model_id() == "Qwen/Qwen3-Embedding-8B"
+
+
 def test_embedding_versions_map_resolves_to_known_models():
     assert mr.EMBEDDING_VERSIONS == {
         "text": {

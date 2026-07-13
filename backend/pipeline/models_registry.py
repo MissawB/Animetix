@@ -5,6 +5,7 @@ from core.utils.model_registry import (
     EMBEDDING_VERSIONS,
     ModelIntegrityVerifier,
     get_verified_revision,
+    resolve_text_embedding_version,
     resolve_trust_remote_code,
 )
 
@@ -16,7 +17,7 @@ class ModelsRegistry:
         self._text_model = None
         self._vision_model = None
         self._device = None
-        self.active_text_version = os.getenv("MODEL_VERSION_TEXT", "v4")
+        self.active_text_version = resolve_text_embedding_version()
         self.active_vision_version = os.getenv("MODEL_VERSION_VISION", "v3")
         self.verifier = ModelIntegrityVerifier()
 
