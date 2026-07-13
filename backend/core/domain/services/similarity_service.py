@@ -13,44 +13,8 @@ class SimilarityService:
     et à la validation intelligente des titres.
     """
 
-    def __init__(self, repository: RepositoryPort, neo4j_manager=None):
+    def __init__(self, repository: RepositoryPort):
         self.repository = repository
-        self.neo4j = neo4j_manager
-
-    def _calculate_graph_similarity(
-        self, media_type: str, id_a: str, id_b: str
-    ) -> float:
-        """
-        Calcule une similarité structurelle basée sur le graphe Neo4j.
-        Prend en compte les voisins communs (Studios, Créateurs, Thèmes).
-        """
-        if not self.neo4j:
-            return 0.0
-
-        # Requête pour trouver le nombre de nœuds partagés à 1 saut
-        query = """
-        MATCH (a:Media {id: $id_a})-[:PRODUCED_BY|CREATED_BY|HAS_THEME]->(common)<-[:PRODUCED_BY|CREATED_BY|HAS_THEME]-(b:Media {id: $id_b})
-        RETURN count(common) as shared_nodes
-        """
-        res = self.neo4j.execute_query(query, {"id_a": str(id_a), "id_b": str(id_b)})
-        shared_count = res[0]["shared_nodes"] if res else 0
-
-        # Vérification d'une relation directe (Séquelle/Adaptation)
-        direct_query = """
-        MATCH (a:Media {id: $id_a})-[r:ADAPTED_FROM|SEQUEL_OF]-(b:Media {id: $id_b})
-        RETURN count(r) > 0 as has_direct_link
-        """
-        direct_res = self.neo4j.execute_query(
-            direct_query, {"id_a": str(id_a), "id_b": str(id_b)}
-        )
-        has_direct = direct_res[0]["has_direct_link"] if direct_res else False
-
-        # Normalisation (simplifiée) : 1 nœud commun = 0.2, 5+ = 1.0. Lien direct = bonus immédiat.
-        score = min(1.0, shared_count * 0.2)
-        if has_direct:
-            score = max(score, 0.9)
-
-        return score
 
     def calculate_similarity(self, media_type: str, item_a: str, item_b: str) -> float:
         """Wrapper pour l'appel au repository."""
@@ -59,25 +23,25 @@ class SimilarityService:
     def calculate_raw_similarity(
         self, media_type: str, secret_title: str, guess_title: str, catalog: Dict
     ) -> float:
-        """Calcule la similarité composite (Vecteurs + Graphe)."""
+        """Similarité vectorielle brute entre deux œuvres.
+
+        Ce n'est PLUS ce qui note le jeu classique : mesuré sur le vrai catalogue, le
+        cosinus des embeddings de description a un plancher de bruit à 0,583 entre deux
+        œuvres sans rapport, et il classait Kimetsu plus proche de Death Note que Monster.
+        La proximité du jeu vit désormais dans `ProximityService`. Ceci sert la recherche
+        sémantique, où le voisinage flou est un atout et non un mensonge.
+        """
         if secret_title == guess_title:
             return 1.0
 
         secret_full = catalog["title_to_full_data"].get(secret_title)
         guess_full = catalog["title_to_full_data"].get(guess_title)
-
         if not secret_full or not guess_full:
             return 0.0
 
-        vec_sim = self.repository.calculate_similarity(
+        return self.repository.calculate_similarity(
             media_type, str(secret_full["id"]), str(guess_full["id"])
         )
-        graph_sim = self._calculate_graph_similarity(
-            media_type, str(secret_full["id"]), str(guess_full["id"])
-        )
-
-        # Pondération hybride : 70% Vecteur + 30% Graphe
-        return (0.7 * vec_sim) + (0.3 * graph_sim)
 
     def find_similar_items(
         self, media_type: str, item_id: str, count: int = 5
