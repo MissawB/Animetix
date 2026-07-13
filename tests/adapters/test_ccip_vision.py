@@ -14,7 +14,6 @@ canaux, moyenne/écart-type), pas seulement la plomberie.
 
 import sys
 import types
-from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -34,12 +33,6 @@ PNG = (
 MEAN = np.array([0.48145466, 0.4578275, 0.40821073])
 STD = np.array([0.26862954, 0.26130258, 0.27577711])
 SIZE = 384
-
-
-def _png_bytes(img: Image.Image) -> bytes:
-    buf = BytesIO()
-    img.save(buf, format="PNG")
-    return buf.getvalue()
 
 
 @pytest.fixture(autouse=True)

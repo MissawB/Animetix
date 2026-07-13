@@ -35,7 +35,6 @@ les fichiers du dépôt via l'API du Hub — il n'y a que les graphes, `metrics.
 et `cluster.json`).
 """
 
-import logging
 from io import BytesIO
 from typing import Any, List
 
@@ -43,8 +42,6 @@ import numpy as np
 from core.domain.exceptions import InferenceError
 from huggingface_hub import hf_hub_download
 from PIL import Image
-
-logger = logging.getLogger("animetix.ccip")
 
 # Les poids ONNX vivent dans `deepghs/ccip_onnx` ; `deepghs/ccip` est le dépôt
 # de base (checkpoints torch), il ne sert aucun graphe ONNX.
@@ -55,7 +52,6 @@ CCIP_MODEL_ID = f"{CCIP_REPO_ID}/{CCIP_MODEL_NAME}"
 CCIP_IMAGE_SIZE = 384
 CCIP_MEAN = (0.48145466, 0.4578275, 0.40821073)
 CCIP_STD = (0.26862954, 0.26130258, 0.27577711)
-CCIP_EMBEDDING_DIM = 768
 
 _SESSION_CACHE: dict = {}
 
