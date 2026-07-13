@@ -103,9 +103,20 @@ class ProximityService:
         if percent < WARM:
             return []  # une proposition froide n'apprend rien
 
-        shared_tags = sorted(
-            set(index.works[secret].get("tags") or [])
-            & set(index.works[guess].get("tags") or []),
+        # Le même vocabulaire fusionné que la composante qui score dessus (cf.
+        # tag_overlap dans components.py) : un genre n'est qu'un tag très fréquent,
+        # et c'est tout ce que le mode Game partage (0 tag, 100 % genres). Relire
+        # uniquement "tags" ici ferait mentir le service : un score "tags" non nul
+        # porté entièrement par des genres partagés s'afficherait avec un detail vide.
+        shared_vocabulary = sorted(
+            (
+                set(index.works[secret].get("tags") or [])
+                | set(index.works[secret].get("genres") or [])
+            )
+            & (
+                set(index.works[guess].get("tags") or [])
+                | set(index.works[guess].get("genres") or [])
+            ),
             key=lambda t: -index.idf.get(t, 0.0),
         )
         candidates = [
@@ -118,8 +129,8 @@ class ProximityService:
             {
                 "kind": "tags",
                 "weight": W_TAGS * components.tags,
-                "label": f"{len(shared_tags)} tag(s) partagé(s)",
-                "detail": shared_tags[:3],
+                "label": f"{len(shared_vocabulary)} point(s) commun(s) (tags/genres) partagé(s)",
+                "detail": shared_vocabulary[:3],
             },
             {
                 "kind": "structure",

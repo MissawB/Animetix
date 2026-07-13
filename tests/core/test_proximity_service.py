@@ -159,6 +159,73 @@ def test_a_genre_only_catalogue_still_produces_a_usable_ranking():
     assert ranking[0] == "Game B"  # partage les deux genres, contrairement à Game C
 
 
+def test_a_genre_only_hot_guess_carries_an_honest_tags_reason():
+    # Même forme "jeu vidéo" que le test ci-dessus : ni tags, ni recommandations,
+    # seulement des genres partagés. La composante vocabulaire (components.tags) score
+    # sur tags UNION genres -- mais _reasons, avant ce correctif, ne relisait QUE le
+    # champ "tags" des œuvres pour bâtir le label et le detail. Résultat : pour Game B,
+    # le service affichait "0 tag(s) partagé(s)" avec un detail vide, alors que le score
+    # HOT affiché au joueur est intégralement porté par RPG/Fantasy partagés -- un
+    # mensonge. Ce test épingle qu'après correctif, la raison "tags" nomme bien le
+    # genre partagé.
+    games = [
+        {
+            "title": "Game A",
+            "tags": [],
+            "genres": ["RPG", "Fantasy"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+        {
+            "title": "Game B",
+            "tags": [],
+            "genres": ["RPG", "Fantasy"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+        {
+            "title": "Game C",
+            "tags": [],
+            "genres": ["Shooter"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        },
+    ] + [
+        {
+            "title": f"Filler{i}",
+            "tags": [],
+            "genres": [f"Genre{i}"],
+            "studios": [],
+            "source": None,
+            "year": None,
+            "relations": {},
+            "recommendations": {},
+        }
+        for i in range(8)
+    ]
+    report = _service(works=games).report("Game", "Game A", "Game B")
+    assert report["percent"] >= 80
+
+    tags_reason = next((r for r in report["reasons"] if r["kind"] == "tags"), None)
+    assert tags_reason is not None
+    # Le cœur du correctif : le detail ne doit pas être vide, et doit nommer le
+    # genre réellement partagé -- pas un tag inexistant.
+    assert tags_reason["detail"]
+    assert "RPG" in tags_reason["detail"] or "Fantasy" in tags_reason["detail"]
+    # La formulation d'origine ("0 tag(s) partagé(s)") était un mensonge pur et simple
+    # ici : elle ne doit plus apparaître.
+    assert "0 tag" not in tags_reason["label"]
+
+
 def test_an_actor_shape_catalogue_with_no_signal_at_all_still_raises():
     # La forme "acteur" du vrai catalogue : ni tags, ni genres, ni recommandations.
     # Là, aucun vocabulaire fusionné ne peut aider -- GameLogicError reste la bonne
