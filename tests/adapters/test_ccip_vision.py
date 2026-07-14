@@ -149,6 +149,56 @@ def test_a_greyscale_or_rgba_image_is_coerced_to_three_channels():
     assert rgba.shape == (1, 3, SIZE, SIZE)
 
 
+def test_a_fully_transparent_pixel_matches_the_reference_white_background():
+    """`deepghs`'s reference does `load_image(img, mode='RGB',
+    force_background='white')`: a transparent region must land on WHITE, not
+    on whatever the underlying RGB channel happens to hold. This pins the
+    output tensor of a fully-transparent RGBA pixel to the SAME tensor
+    produced by an opaque white pixel of the same size -- the reference
+    behavior, byte for byte.
+    """
+    from adapters.inference.ccip_vision import _preprocess_ccip_image
+
+    # Underlying RGB is pure black, but alpha=0: must flatten to white, not
+    # black, exactly like a bare `.convert("RGB")` would (wrongly) produce.
+    transparent = _preprocess_ccip_image(Image.new("RGBA", (32, 32), (0, 0, 0, 0)))
+    opaque_white = _preprocess_ccip_image(Image.new("RGB", (32, 32), (255, 255, 255)))
+
+    np.testing.assert_allclose(transparent, opaque_white, atol=1e-5)
+
+
+def test_a_partially_transparent_region_is_composited_not_dropped():
+    """A half-transparent portrait, flattened by hand onto white with PIL's
+    own `Image.alpha_composite`, must match what `_preprocess_ccip_image`
+    produces for the same RGBA source -- the two are the same operation,
+    performed once by the test (independently) and once by the code under
+    test.
+    """
+    from adapters.inference.ccip_vision import _preprocess_ccip_image
+
+    rgba = Image.new("RGBA", (32, 32), (20, 40, 60, 128))
+
+    # Reference flattening, computed independently of `_flatten_onto_white`.
+    white_bg = Image.new("RGBA", rgba.size, (255, 255, 255, 255))
+    expected_rgb = Image.alpha_composite(white_bg, rgba).convert("RGB")
+    expected = _preprocess_ccip_image(expected_rgb)
+
+    actual = _preprocess_ccip_image(rgba)
+
+    np.testing.assert_allclose(actual, expected, atol=1e-5)
+
+
+def test_an_opaque_rgba_image_is_unaffected_by_the_white_flattening():
+    """alpha=255 everywhere: compositing onto white must be a no-op, same as
+    before this fix -- only genuinely transparent pixels should move."""
+    from adapters.inference.ccip_vision import _preprocess_ccip_image
+
+    opaque_rgba = _preprocess_ccip_image(Image.new("RGBA", (32, 32), (10, 20, 30, 255)))
+    plain_rgb = _preprocess_ccip_image(Image.new("RGB", (32, 32), (10, 20, 30)))
+
+    np.testing.assert_allclose(opaque_rgba, plain_rgb, atol=1e-5)
+
+
 # --------------------------------------------------------------------------
 # La plomberie — le graphe, la session, le contrat.
 # --------------------------------------------------------------------------

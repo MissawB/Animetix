@@ -18,7 +18,13 @@ référence, celle qui a produit les métriques publiées sur le dépôt du mod�
 
 Source du prétraitement (lue, pas supposée) :
   https://github.com/deepghs/imgutils -> imgutils/metrics/ccip.py
-  - `_preprocess_image()` : RGB, `resize((384, 384), resample=Image.BILINEAR)`,
+  - `_preprocess_image()` appelle `load_image(img, mode='RGB',
+    force_background='white')` -- un canal alpha est COMPOSITÉ SUR FOND BLANC
+    avant la conversion RGB, jamais juste jeté. Un bare `.convert("RGB")`
+    laisse les pixels transparents à leur valeur RGB sous-jacente (souvent
+    noir sur un PNG détouré) : même forme de tenseur, valeurs différentes,
+    embedding qui n'est plus celui que les métriques publiées mesurent. Puis
+    `resize((384, 384), resample=Image.BILINEAR)`,
     `np.array(img).transpose(2, 0, 1).astype(np.float32) / 255.0`, puis
     `_normalize()`.
   - `_normalize()` : mean = (0.48145466, 0.4578275, 0.40821073),
@@ -60,13 +66,36 @@ CCIP_STD = (0.26862954, 0.26130258, 0.27577711)
 _SESSION_CACHE: dict = {}
 
 
+def _flatten_onto_white(img: Image.Image) -> Image.Image:
+    """`load_image(img, mode='RGB', force_background='white')` -- reproduit
+    trait pour trait le comportement de la référence deepghs sur un canal
+    alpha : composité sur un fond BLANC, jamais simplement jeté.
+
+    Un `.convert("RGB")` nu retire l'alpha et laisse les pixels transparents
+    à leur valeur RGB sous-jacente, souvent noir sur un PNG détouré. Les
+    portraits de personnages détourés (fond transparent) sont courants ; sans
+    ce compositing, ils partaient avec un fond NOIR au lieu du fond BLANC que
+    la référence produit -- un embedding différent de celui que les
+    métriques publiées mesurent, silencieusement.
+    """
+    if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+        rgba = img.convert("RGBA")
+        background = Image.new("RGB", rgba.size, (255, 255, 255))
+        # Le canal alpha lui-même sert de masque de compositing : opaque garde
+        # le pixel d'origine, transparent laisse le blanc, entre les deux mêle
+        # les deux -- exactement ce que fait un compositing alpha standard.
+        background.paste(rgba, mask=rgba.split()[-1])
+        return background
+    return img.convert("RGB")
+
+
 def _preprocess_ccip_image(img: Image.Image) -> np.ndarray:
     """Image PIL -> tenseur (1, 3, 384, 384) float32, prêt pour le graphe.
 
     Chaque étape est celle de la référence, dans cet ordre — voir l'en-tête du
     module. Toute divergence ici est invisible à l'œil et fatale au classement.
     """
-    img = img.convert("RGB")
+    img = _flatten_onto_white(img)
     img = img.resize((CCIP_IMAGE_SIZE, CCIP_IMAGE_SIZE), resample=Image.BILINEAR)
 
     data = np.array(img).transpose(2, 0, 1).astype(np.float32) / 255.0
