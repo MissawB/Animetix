@@ -94,30 +94,22 @@ def test_image_proxy_non_200_upstream_returns_404(factory):
 
 # --------------------------------------------------------------------------- #
 # MediaSearchView.post image-search flow (lines 152-197)
+#
+# `post()` now takes `visual_index_service` as an `@inject`-ed keyword
+# argument (Provide[Container.core.visual_index_service]) rather than reading
+# `self.cross_modal_search_service`: passing an explicit mock for that keyword
+# overrides the DI default outright, so these tests never touch the real,
+# DI-wired singleton (whose `is_available()` would hit the empty test DB).
 # --------------------------------------------------------------------------- #
-def _post_image_view(
-    request, *, quota=True, index_available=True, cross_modal_service=None
-):
-    """Instantiate MediaSearchView with mocked injected services and call .post.
-
-    ``cross_modal_search_service`` is mocked here too (rather than left to
-    resolve to the real, DI-wired singleton): `unified_clip_space` has no
-    writer, so the real service's `is_available()` would hit the (empty) test
-    DB and return False, turning every one of these unrelated branch tests
-    (quota / missing image / size / mime / generic exception) into an
-    unintended 503. Pass ``cross_modal_service`` when a test needs to assert
-    against a specific mock (e.g. one already wired via a container
-    override); ``is_available`` is (re)configured to ``index_available``
-    either way so callers don't have to repeat that wiring.
-    """
+def _post_image_view(request, *, quota=True, index_available=True, visual_index=None):
     view = MediaSearchView()
     view.guardrail_service = MagicMock()
     view.usage_port = MagicMock()
     view.usage_port.check_quota.return_value = quota
-    view.cross_modal_search_service = cross_modal_service or MagicMock()
-    view.cross_modal_search_service.is_available.return_value = index_available
+    visual = visual_index or MagicMock()
+    visual.is_available.return_value = index_available
     drf_request = Request(request, parsers=[MultiPartParser(), JSONParser()])
-    return view, drf_request
+    return view, drf_request, visual
 
 
 @pytest.mark.django_db
@@ -126,8 +118,8 @@ def test_media_search_post_quota_exceeded(factory):
     request = factory.post("/search/")
     force_authenticate(request, user=user)
     request.user = user
-    view, drf_request = _post_image_view(request, quota=False)
-    response = view.post(drf_request)
+    view, drf_request, visual = _post_image_view(request, quota=False)
+    response = view.post(drf_request, visual_index_service=visual)
     assert response.status_code == 403
     assert "quota" in response.data["error"].lower()
 
@@ -138,10 +130,29 @@ def test_media_search_post_no_image(factory):
     request = factory.post("/search/")
     force_authenticate(request, user=user)
     request.user = user
-    view, drf_request = _post_image_view(request)
-    response = view.post(drf_request)
+    view, drf_request, visual = _post_image_view(request)
+    response = view.post(drf_request, visual_index_service=visual)
     assert response.status_code == 400
     assert response.data["error"] == "No image provided"
+
+
+@pytest.mark.django_db
+def test_media_search_post_unknown_target(factory):
+    """`target` is validated -- and charged nothing -- before the
+    per-target availability guard even runs."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    user = User.objects.create_user(username="banana", password="pw")
+    img = SimpleUploadedFile("x.png", b"data", content_type="image/png")
+    request = factory.post("/search/", {"image": img, "target": "banana"})
+    force_authenticate(request, user=user)
+    request.user = user
+    view, drf_request, visual = _post_image_view(request)
+    with patch("animetix.api.core.media.deduct_berrix") as mock_deduct:
+        response = view.post(drf_request, visual_index_service=visual)
+    assert response.status_code == 400
+    mock_deduct.assert_not_called()
+    visual.is_available.assert_not_called()
 
 
 @pytest.mark.django_db
@@ -156,12 +167,12 @@ def test_media_search_post_image_too_large(factory):
     request = factory.post("/search/", {"image": img})
     force_authenticate(request, user=user)
     request.user = user
-    view, drf_request = _post_image_view(request)
+    view, drf_request, visual = _post_image_view(request)
     with (
         patch("animetix.api.core.media.validate_file_size", return_value=False),
         patch("animetix.api.core.media.deduct_berrix") as mock_deduct,
     ):
-        response = view.post(drf_request)
+        response = view.post(drf_request, visual_index_service=visual)
     assert response.status_code == 413
     mock_deduct.assert_not_called()
 
@@ -177,13 +188,13 @@ def test_media_search_post_invalid_mime(factory):
     request = factory.post("/search/", {"image": img})
     force_authenticate(request, user=user)
     request.user = user
-    view, drf_request = _post_image_view(request)
+    view, drf_request, visual = _post_image_view(request)
     with (
         patch("animetix.api.core.media.validate_file_size", return_value=True),
         patch("animetix.api.core.media.validate_file_mime_type", return_value=False),
         patch("animetix.api.core.media.deduct_berrix") as mock_deduct,
     ):
-        response = view.post(drf_request)
+        response = view.post(drf_request, visual_index_service=visual)
     assert response.status_code == 415
     mock_deduct.assert_not_called()
 
@@ -197,26 +208,19 @@ def test_media_search_post_success(factory):
     request = factory.post("/search/", {"image": img})
     force_authenticate(request, user=user)
     request.user = user
-    mock_cross_modal = MagicMock()
-    mock_cross_modal.deep_multimodal_search.return_value = [
-        {"id": "7", "title": "ByImage"}
-    ]
-    real_container = get_container()
-    real_container.core.cross_modal_search_service.override(mock_cross_modal)
-    try:
-        view, drf_request = _post_image_view(
-            request, cross_modal_service=mock_cross_modal
-        )
-        with (
-            patch("animetix.api.core.media.validate_file_size", return_value=True),
-            patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
-            patch("animetix.api.core.media.deduct_berrix") as mock_deduct,
-        ):
-            response = view.post(drf_request)
-    finally:
-        real_container.core.cross_modal_search_service.reset_last_overriding()
+    view, drf_request, visual = _post_image_view(request)
+    visual.encode_image.return_value = [0.1] * 512
+    visual.search.return_value = [{"id": "7", "title": "ByImage"}]
+    with (
+        patch("animetix.api.core.media.validate_file_size", return_value=True),
+        patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
+        patch("animetix.api.core.media.deduct_berrix") as mock_deduct,
+    ):
+        response = view.post(drf_request, visual_index_service=visual)
     assert response.status_code == 200
     assert response.data[0]["id"] == "7"
+    visual.encode_image.assert_called_once_with("work", b"imgbytes")
+    visual.search.assert_called_once()
     view.usage_port.log_usage.assert_called_once()
     # Regression guard for the billing fix: when the index *is* available,
     # the search still charges exactly as before.
@@ -225,9 +229,8 @@ def test_media_search_post_success(factory):
 
 @pytest.mark.django_db
 def test_media_search_post_index_unavailable_no_charge(factory):
-    """`unified_clip_space` has no reachable writer -- if it's empty, the
-    search must be refused up front (503, honest French copy) and Berrix
-    must never be deducted."""
+    """An empty target index -- `work` or `character` -- must be refused up
+    front (503, honest French copy) and Berrix must never be deducted."""
     from django.core.files.uploadedfile import SimpleUploadedFile
 
     user = User.objects.create_user(username="emptyidx", password="pw")
@@ -235,13 +238,14 @@ def test_media_search_post_index_unavailable_no_charge(factory):
     request = factory.post("/search/", {"image": img})
     force_authenticate(request, user=user)
     request.user = user
-    view, drf_request = _post_image_view(request, index_available=False)
+    view, drf_request, visual = _post_image_view(request, index_available=False)
     with patch("animetix.api.core.media.deduct_berrix") as mock_deduct:
-        response = view.post(drf_request)
+        response = view.post(drf_request, visual_index_service=visual)
     assert response.status_code == 503
     assert "index" in response.data["error"].lower()
     mock_deduct.assert_not_called()
-    view.cross_modal_search_service.deep_multimodal_search.assert_not_called()
+    visual.encode_image.assert_not_called()
+    visual.search.assert_not_called()
 
 
 @pytest.mark.django_db
@@ -253,12 +257,12 @@ def test_media_search_post_exception_returns_500(factory):
     request = factory.post("/search/", {"image": img})
     force_authenticate(request, user=user)
     request.user = user
-    view, drf_request = _post_image_view(request)
+    view, drf_request, visual = _post_image_view(request)
     with patch(
         "animetix.api.core.media.validate_file_size",
         side_effect=RuntimeError("boom"),
     ):
-        response = view.post(drf_request)
+        response = view.post(drf_request, visual_index_service=visual)
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
 
@@ -268,7 +272,7 @@ def test_media_search_post_search_exception_returns_500(factory):
     """Distinct from `test_media_search_post_exception_returns_500` above,
     which now lands entirely inside the upload-validation try/except added
     by the billing fix: this covers the *other* try/except, the one around
-    `deep_multimodal_search` itself, which nothing else exercises."""
+    `encode_image`/`search` themselves, which nothing else exercises."""
     from django.core.files.uploadedfile import SimpleUploadedFile
 
     user = User.objects.create_user(username="searchexc", password="pw")
@@ -276,16 +280,15 @@ def test_media_search_post_search_exception_returns_500(factory):
     request = factory.post("/search/", {"image": img})
     force_authenticate(request, user=user)
     request.user = user
-    view, drf_request = _post_image_view(request)
-    view.cross_modal_search_service.deep_multimodal_search.side_effect = RuntimeError(
-        "boom"
-    )
+    view, drf_request, visual = _post_image_view(request)
+    visual.encode_image.return_value = [0.1] * 512
+    visual.search.side_effect = RuntimeError("boom")
     with (
         patch("animetix.api.core.media.validate_file_size", return_value=True),
         patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
         patch("animetix.api.core.media.deduct_berrix"),
     ):
-        response = view.post(drf_request)
+        response = view.post(drf_request, visual_index_service=visual)
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
 
@@ -297,7 +300,7 @@ def test_media_search_post_survives_cache_backend_failure(factory, mocker):
     and behave exactly as if the cache had a hit (index available -> search
     proceeds, charges, and returns 200)."""
     from adapters.persistence.pg_vector_store_adapter import PgVectorStoreAdapter
-    from core.domain.services.cross_modal_service import CrossModalSearchService
+    from core.domain.services.visual_index import VisualIndexService
     from django.core.files.uploadedfile import SimpleUploadedFile
 
     user = User.objects.create_user(username="cachefail", password="pw")
@@ -317,25 +320,25 @@ def test_media_search_post_survives_cache_backend_failure(factory, mocker):
     )
 
     real_vector_db = PgVectorStoreAdapter()
-    cross_modal = CrossModalSearchService(
-        inference_engine=MagicMock(), vector_db=real_vector_db
+    visual = VisualIndexService(
+        inference_engine=MagicMock(),
+        repository=MagicMock(),
+        vector_store=real_vector_db,
     )
-    cross_modal.deep_multimodal_search = MagicMock(
-        return_value=[{"id": "1", "title": "T"}]
-    )
+    visual.encode_image = MagicMock(return_value=[0.1] * 512)
+    visual.search = MagicMock(return_value=[{"id": "1", "title": "T"}])
 
     view = MediaSearchView()
     view.guardrail_service = MagicMock()
     view.usage_port = MagicMock()
     view.usage_port.check_quota.return_value = True
-    view.cross_modal_search_service = cross_modal
     drf_request = Request(request, parsers=[MultiPartParser(), JSONParser()])
     with (
         patch("animetix.api.core.media.validate_file_size", return_value=True),
         patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
         patch("animetix.api.core.media.deduct_berrix") as mock_deduct,
     ):
-        response = view.post(drf_request)
+        response = view.post(drf_request, visual_index_service=visual)
 
     assert response.status_code == 200
     mock_manager.get_collection.assert_called()

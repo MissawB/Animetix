@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 import numpy as np
 from core.domain.exceptions import SearchIndexUnavailableError
 from core.domain.services.prompt_manager import PromptManager
+from core.domain.services.visual_index import TARGETS
 from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.cross_modal")
@@ -52,11 +53,18 @@ class CrossModalSearchService:
 
         text_vec = []
         if text_query:
-            # Pas de repli sur un vecteur aléatoire : un échec d'embedding
-            # doit être visible (l'appelant reçoit l'exception), jamais
-            # transformé en résultat de recherche à l'apparence plausible
-            # mais en réalité tiré au hasard.
-            text_vec = self.inference_engine.get_text_embedding(text_query)
+            # Jamais `get_text_embedding` (sentence-transformers générique) :
+            # elle vit dans un espace vectoriel différent de CLIP. Fusionner
+            # les deux (moyenne pondérée ci-dessous) donnerait soit une erreur
+            # de dimension, soit -- pire -- un nombre qui a l'air juste et ne
+            # l'est pas. La tour texte doit être celle du MÊME modèle CLIP que
+            # l'image ci-dessous, jamais un encodeur générique de repli : un
+            # échec d'embedding doit être visible (l'appelant reçoit
+            # l'exception), jamais transformé en résultat de recherche à
+            # l'apparence plausible mais en réalité tiré au hasard.
+            text_vec = self.inference_engine.get_text_embedding_clip(
+                text_query, model_id=TARGETS["work"].model_id
+            )
 
         image_vec = []
         if image_data:

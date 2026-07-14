@@ -21,7 +21,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from core.domain.exceptions import GameLogicError, InferenceError
-from core.domain.services.visual_index import TARGETS, VisualIndexService
+from core.domain.services.visual_index import TARGETS, VisualIndexService, vector_key
 from core.ports.inference_port import InferencePort
 from core.ports.repository_port import RepositoryPort
 from core.ports.vector_store_port import VectorStorePort
@@ -124,8 +124,10 @@ def test_indexing_writes_under_the_composite_key_and_into_the_target_collection(
     collection, ids, vectors, metadatas = repo.upsert_items.call_args[0]
     assert collection == "unified_clip_space"
     # `media_type:external_id` : l'external_id nu n'est unique que PAR type, et
-    # quatre types partagent cette collection.
-    assert ids == ["anime:38000"]
+    # quatre types partagent cette collection. Pure concaténation -- la casse
+    # de `media_type` n'est PAS normalisée (`MediaItem` l'écrit "Anime").
+    assert ids == ["Anime:38000"]
+    assert ids == [vector_key("Anime", "38000")]
     # Les métadonnées, elles, ne changent pas : c'est ce que l'utilisateur voit.
     assert metadatas[0]["external_id"] == "38000"
     assert metadatas[0]["media_type"] == "Anime"
@@ -158,8 +160,50 @@ def test_two_media_types_sharing_a_bare_id_do_not_collide():
     )
 
     _, ids, _, _ = repo.upsert_items.call_args[0]
-    assert ids == ["anime:1", "movie:1"]
+    assert ids == ["Anime:1", "Movie:1"]
     assert len(set(ids)) == 2
+
+
+def test_vector_key_does_not_lowercase_media_type():
+    """La clé est une concaténation PURE des deux champs -- pas de casse
+    normalisée. Les métadonnées rendues au lecteur portent `media_type` tel
+    que `MediaItem` l'écrit (`"Anime"`, capitalisé, via ses `choices`) : un
+    lecteur qui reconstruit la clé à la main avec
+    `f"{item['media_type']}:{item['external_id']}"` doit retomber sur
+    EXACTEMENT ce que `vector_key` aurait produit -- sinon la recherche par id
+    ne rend plus rien, silencieusement, un f-string après l'autre.
+    """
+    assert vector_key("Anime", "38000") == "Anime:38000"
+    assert vector_key("Anime", "38000") != "anime:38000"
+
+
+def test_the_id_the_writer_wrote_is_the_id_the_reader_looks_up():
+    """Bout en bout : ce que `index()` écrit sous cette clé doit être
+    exactement ce qu'un lecteur retrouve en rebâtissant la clé depuis les
+    métadonnées qu'il vient de lire (`media_type` + `external_id`, tels que
+    remis au sérialiseur) -- pas un id devine a la main."""
+    service, _, repo, _ = _service()
+    service.index(
+        "work",
+        [
+            {
+                "external_id": "38000",
+                "media_type": "Anime",
+                "title": "Kimetsu",
+                "image": "u",
+                "image_bytes": b"png",
+            }
+        ],
+    )
+
+    _, ids, _, metadatas = repo.upsert_items.call_args[0]
+    written_id = ids[0]
+    metadata = metadatas[0]
+
+    # Le lecteur ne connait que les métadonnées (ce que le sérialiseur rend à
+    # l'utilisateur) -- il doit pouvoir retrouver le MÊME id en appelant la
+    # MÊME fonction que l'écrivain, jamais en le reconstruisant à la main.
+    assert vector_key(metadata["media_type"], metadata["external_id"]) == written_id
 
 
 def test_a_failed_write_is_not_counted_as_written():
@@ -222,7 +266,7 @@ def test_a_dead_image_is_skipped_and_the_rest_of_the_batch_is_still_written():
 
     assert written == 1
     _, ids, vectors, metadatas = repo.upsert_items.call_args[0]
-    assert ids == ["anime:2"]
+    assert ids == ["Anime:2"]
     assert metadatas[0]["title"] == "Vivante"
     assert len(vectors) == 1
 

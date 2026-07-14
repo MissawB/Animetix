@@ -148,7 +148,7 @@ def _already_indexed(item_id, collection=COLLECTION):
 
 @pytest.mark.django_db
 def test_a_rerun_does_not_re_encode_what_is_already_indexed(catalogue, service):
-    _already_indexed("anime:38000")
+    _already_indexed("Anime:38000")
     _run("work", service)
     assert _indexed(service) == ["1535"]
 
@@ -167,7 +167,7 @@ def test_a_bare_external_id_does_not_count_as_indexed(catalogue, service):
 def test_another_collection_does_not_count_as_indexed(catalogue, service):
     """La reprise est bornée à la collection de la cible. Sans ce filtre, un
     vecteur de personnage ferait sauter une œuvre."""
-    _already_indexed("anime:38000", collection="character_ccip_space")
+    _already_indexed("Anime:38000", collection="character_ccip_space")
     _run("work", service)
     assert set(_indexed(service)) == {"38000", "1535"}
 
@@ -245,17 +245,28 @@ def test_the_item_indexed_is_the_item_the_reader_finds(collision):
         downloads={"http://img/anime": b"ANIME", "http://img/movie": b"MOVIE"},
     )
 
-    # Les deux vecteurs coexistent : aucun n'a écrasé l'autre.
-    assert set(space.rows) == {(COLLECTION, "anime:1"), (COLLECTION, "movie:1")}
+    # Les deux vecteurs coexistent : aucun n'a écrasé l'autre. La clé est une
+    # concaténation pure -- `media_type` garde la casse que `MediaItem` lui
+    # donne ("Anime", "Movie"), jamais forcée en minuscules.
+    assert set(space.rows) == {(COLLECTION, "Anime:1"), (COLLECTION, "Movie:1")}
 
     # Le chemin du lecteur : on cherche avec le vecteur de l'anime, on doit
     # retrouver l'ANIME — pas le film qui porte le même external_id nu.
     found = real.search("work", [1.0, 0.0], limit=1)[0]
-    assert found["id"] == "anime:1"
+    assert found["id"] == "Anime:1"
     assert found["title"] == "Cowboy Bebop"
     assert found["media_type"] == "Anime"
     assert found["external_id"] == "1"  # l'utilisateur voit toujours l'id nu
     assert found["image"] == "http://img/anime"
+
+    # Le lecteur ne connait que les métadonnées qu'il vient de lire -- il doit
+    # retrouver le MÊME id en rebâtissant la clé avec `vector_key`, jamais en
+    # la reconstruisant à la main (un `f"{media_type}:{external_id}"` avec la
+    # mauvaise casse ne lèverait rien : la recherche ne rendrait juste plus
+    # rien).
+    from core.domain.services.visual_index import vector_key
+
+    assert found["id"] == vector_key(found["media_type"], found["external_id"])
 
 
 # --------------------------------------------------------------------------

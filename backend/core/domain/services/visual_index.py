@@ -46,8 +46,15 @@ def vector_key(media_type: str, external_id: Any) -> str:
 
     Les métadonnées, elles, continuent de porter `external_id` nu et `media_type`
     séparément : ce que l'utilisateur voit ne change pas.
+
+    Pure concaténation des deux champs -- SANS normaliser la casse. Les
+    métadonnées rendues au lecteur portent `media_type` tel que `MediaItem`
+    l'écrit (`"Anime"`, capitalisé). Un `.lower()` ici forcerait quiconque
+    reconstruit la clé à la main (au lieu d'appeler cette fonction) à deviner
+    la bonne casse ; se tromper ne lève rien -- la recherche par id ne rend
+    juste plus rien.
     """
-    return f"{str(media_type).lower()}:{external_id}"
+    return f"{media_type}:{external_id}"
 
 
 @dataclass(frozen=True)
