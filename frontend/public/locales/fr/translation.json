@@ -2665,7 +2665,11 @@
     "target_label": "Cible de la recherche visuelle",
     "target_work": "Jaquette",
     "target_character": "Personnage",
-    "target_hint": "Cherchez une œuvre par sa jaquette, ou un personnage par son portrait."
+    "target_hint": "Cherchez une œuvre par sa jaquette, ou un personnage par son portrait.",
+    "error_index_missing": "Cet index n'a pas encore été construit : la recherche n'a pas eu lieu (et ne vous a rien coûté).",
+    "error_bad_request": "Requête invalide : cette image ou cette cible n'a pas pu être traitée.",
+    "error_failed": "La recherche a échoué. Réessayez plus tard.",
+    "error_network": "Serveur injoignable. Vérifiez votre connexion."
   },
   "search.expert.auth_error": "Ce mode utilise l'IA (GPU) et coûte des Berrix. Connecte-toi pour lancer une analyse.",
   "search.expert.auth_required": "Connexion requise",

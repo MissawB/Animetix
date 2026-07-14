@@ -2665,7 +2665,11 @@
     "target_label": "Visual search target",
     "target_work": "Cover",
     "target_character": "Character",
-    "target_hint": "Search for a work by its cover art, or a character by their portrait."
+    "target_hint": "Search for a work by its cover art, or a character by their portrait.",
+    "error_index_missing": "This index has not been built yet: the search did not run (and cost you nothing).",
+    "error_bad_request": "Invalid request: this image or target could not be processed.",
+    "error_failed": "The search failed. Please try again later.",
+    "error_network": "Server unreachable. Check your connection."
   },
   "search.expert.auth_error": "This mode uses AI (GPU) and costs Berrix. Please log in to start an analysis.",
   "search.expert.auth_required": "Login required",

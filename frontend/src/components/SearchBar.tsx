@@ -20,6 +20,48 @@ interface SearchBarProps {
   id?: string;
 }
 
+/**
+ * Classe une erreur de recherche visuelle par son STATUT HTTP, jamais par le
+ * texte du message renvoyé par le serveur. La copie appartient au frontend :
+ * si la formulation du backend dérive, l'honnêteté de l'interface ne bouge pas.
+ *
+ * Le 503 (« l'index de cette cible n'est pas encore construit ») ne doit
+ * JAMAIS pouvoir se lire comme « aucun résultat » : ce n'est pas une recherche
+ * qui n'a rien trouvé, c'est une recherche qui n'a pas eu lieu (et qui n'est
+ * pas facturée). Une absence de statut = pas de réponse du tout (réseau) ; on
+ * ne recrache jamais la chaîne brute d'une exception à l'utilisateur.
+ */
+const classifySearchError = (err: unknown): { key: string; fallback: string } => {
+  const status = (err as { status?: number } | undefined)?.status;
+
+  if (status === 503) {
+    return {
+      key: 'search.error_index_missing',
+      fallback:
+        "Cet index n'a pas encore été construit : la recherche n'a pas eu lieu (et ne vous a rien coûté).",
+    };
+  }
+  if (status === 400) {
+    return {
+      key: 'search.error_bad_request',
+      fallback: "Requête invalide : cette image ou cette cible n'a pas pu être traitée.",
+    };
+  }
+  if (typeof status === 'number') {
+    // 500 et tout autre code : la recherche a échoué. On ne prétend surtout
+    // pas qu'elle a tourné et n'a rien trouvé.
+    return {
+      key: 'search.error_failed',
+      fallback: 'La recherche a échoué. Réessayez plus tard.',
+    };
+  }
+  // Aucune réponse : erreur réseau, serveur injoignable.
+  return {
+    key: 'search.error_network',
+    fallback: 'Serveur injoignable. Vérifiez votre connexion.',
+  };
+};
+
 export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -29,7 +71,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id 
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [imagePreview, setPreviewUrl] = useState<string | null>(null);
   const [target, setTarget] = useState<'work' | 'character'>('work');
-  const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchError, setSearchError] = useState<{ key: string; fallback: string } | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const targetGroupName = `visual-search-target-${useId()}`;
@@ -83,11 +125,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id 
       const data = await searchByImage(file, target);
       setResults(data);
     } catch (err) {
-      // apiClient already surfaced the error via a toast. A 503 means the
-      // requested index (jaquette/personnage) simply isn't built yet --
-      // that's not "no results", so we say exactly that instead of
-      // falling back to the generic empty-results copy.
-      setSearchError((err as Error)?.message || null);
+      // apiClient already surfaced the error via a toast. On branche sur le
+      // STATUT HTTP, pas sur la prose du serveur : un 503 (index non construit)
+      // ne doit jamais se lire « aucun résultat », et une panne réseau ne doit
+      // jamais afficher une exception brute.
+      setSearchError(classifySearchError(err));
       setResults([]);
     } finally {
       setIsLoading(false);
@@ -230,7 +272,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id 
               {t('search.searching')}
             </div>
           ) : searchError ? (
-            <div className="p-4 text-amber-600 dark:text-amber-400 text-sm">{searchError}</div>
+            <div className="p-4 text-amber-600 dark:text-amber-400 text-sm">
+              {t(searchError.key, searchError.fallback)}
+            </div>
           ) : results.length === 0 ? (
             <div className="p-4 text-black/40 dark:text-white/40 text-sm italic">
               {t('search.no_results')}
