@@ -2,7 +2,7 @@
 
 import asyncio  # noqa: E402
 import logging  # noqa: E402
-from typing import TYPE_CHECKING, Any, Dict, List, Optional  # noqa: E402
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union  # noqa: E402
 
 import httpx  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
@@ -36,6 +36,10 @@ def _load_open_clip(model_id: str):
     """
     if model_id in _MODEL_CACHE:
         return _MODEL_CACHE[model_id]
+
+    # Les deux familles servent la même interface (encode_image / encode_text) :
+    # les appelants ne branchent jamais dessus, et l'annotation le dit.
+    wrapped: Union["_OpenClipModel", "_SentenceTransformerModel"]
 
     recipe = OPEN_CLIP_MODELS.get(model_id)
     if recipe is not None:  # un modèle OpenCLIP déclaré -> poids + architecture

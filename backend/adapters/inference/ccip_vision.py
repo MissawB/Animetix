@@ -42,7 +42,7 @@ et `cluster.json`).
 """
 
 from io import BytesIO
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
 import numpy as np
 from core.domain.exceptions import InferenceError
@@ -136,6 +136,17 @@ def _ccip_extract_feature(img: Image.Image) -> List[float]:
 
 
 class CcipVisionMixin:
+    if TYPE_CHECKING:
+        # Fourni par l'adaptateur qui compose ce mixin (comme pour ClipVisionMixin).
+        def _log_usage(
+            self,
+            engine: str,
+            input_tokens: int = 0,
+            output_tokens: int = 0,
+            units: int = 0,
+            allocated_budget: int = 0,
+        ) -> None: ...
+
     def get_character_embedding(self, image_data: bytes) -> List[float]:
         try:
             img = Image.open(BytesIO(image_data))
