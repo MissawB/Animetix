@@ -24,7 +24,13 @@ class VectorStorePort(ABC):
         """Retourne les `limit` éléments les plus proches de `query_vector`.
 
         Chaque élément est un dict de métadonnées augmenté de sa clé ``id``.
-        Retourne une liste vide si la collection est absente ou en cas d'erreur.
+
+        Une liste vide signifie « la requête a tourné et n'a rien trouvé », et
+        UNIQUEMENT ça. Une panne (collection injoignable, requête refusée)
+        DOIT lever `InfrastructureError` — jamais rendre `[]`. L'appelant
+        facture avant de chercher : une panne rendue comme « aucun résultat »
+        fait payer l'utilisateur pour une recherche qui n'a jamais eu lieu, et
+        ne laisse aucune trace dans la réponse.
         """
         ...
 

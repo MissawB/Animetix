@@ -81,3 +81,56 @@ def test_an_unknown_target_is_a_400_and_charges_nothing(api):
 
     assert response.status_code == 400
     deduct.assert_not_called()
+
+
+# --------------------------------------------------------------------------- #
+# Une panne de la base vectorielle n'est PAS « aucun résultat ».
+#
+# Les tests ci-dessus doublent `visual_index_service` en entier : ils ne
+# touchent jamais le vrai adaptateur, donc ils ne voient pas ce qu'il fait d'une
+# requête qui échoue. Celui-ci monte la VRAIE chaîne de lecture
+# (VisualIndexService -> PgVectorStoreAdapter) et ne moque que le client
+# pgvector lui-même.
+# --------------------------------------------------------------------------- #
+@pytest.mark.django_db
+def test_a_failed_vector_query_is_a_500_never_a_200_with_an_empty_list(api):
+    """L'index existe (le garde-fou passe), on facture — puis la requête
+    vectorielle échoue. Avant, l'adaptateur avalait l'exception et rendait
+    `[]` : l'utilisateur payait, lisait « aucun résultat », et rien nulle part
+    ne disait que la recherche n'avait jamais tourné. Une liste vide doit
+    vouloir dire « la recherche a tourné et n'a rien trouvé », et rien d'autre.
+    """
+    from adapters.persistence.pg_vector_store_adapter import PgVectorStoreAdapter
+    from core.domain.services.visual_index import VisualIndexService
+    from django.core.cache import cache
+
+    cache.clear()
+
+    engine = MagicMock()
+    engine.get_image_embedding.return_value = [0.1] * 512
+
+    # La collection est peuplée (`count` > 0, donc `is_available` passe), mais la
+    # requête, elle, tombe.
+    manager = MagicMock()
+    manager.get_collection.return_value.count.return_value = 42
+    manager.get_collection.return_value.query.side_effect = RuntimeError(
+        "connexion pgvector perdue"
+    )
+
+    real = VisualIndexService(
+        inference_engine=engine,
+        repository=MagicMock(),
+        vector_store=PgVectorStoreAdapter(),
+    )
+
+    with patch("adapters.persistence.pg_vector_store_adapter.vector_manager", manager):
+        with patch("animetix.api.core.media.deduct_berrix"):
+            container.core.visual_index_service.override(providers.Object(real))
+            try:
+                response = _post(api, "work")
+            finally:
+                container.core.visual_index_service.reset_last_overriding()
+                cache.clear()
+
+    assert response.status_code == 500
+    assert response.data["error"] == "Internal server error"
