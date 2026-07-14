@@ -12,3 +12,15 @@
 # "la collection a au moins un vecteur ?") et doivent donc partager le même
 # TTL au lieu de deux littéraux qui pourraient diverger silencieusement.
 COLLECTION_COUNT_CACHE_TTL_SECONDS = 60
+
+# Préfixes des deux clés de cache ci-dessus -- une par adapter, PAS une
+# partagée : `PGVectorRepositoryAdapter` (le côté ÉCRITURE, `upsert_items` /
+# `delete_collection`) et `PgVectorStoreAdapter` (le côté LECTURE, le
+# garde-fou 503 « index non construit » de `MediaSearchView`) comptaient la
+# même chose sous deux clés différentes, et seule celle de l'écrivain était
+# invalidée après un backfill. Le garde-fou de lecture pouvait donc continuer
+# à répondre « index non construit » jusqu'à `COLLECTION_COUNT_CACHE_TTL_SECONDS`
+# après qu'une construction venait de réussir. Nommer les deux préfixes ICI
+# permet à une écriture d'invalider les deux d'un coup.
+PGVRA_COLLECTION_COUNT_CACHE_PREFIX = "pgvra_collection_count_"
+VSP_COLLECTION_COUNT_CACHE_PREFIX = "vsp_collection_count_"

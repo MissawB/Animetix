@@ -1,7 +1,10 @@
 import logging
 from typing import Dict, List
 
-from adapters.persistence.cache_constants import COLLECTION_COUNT_CACHE_TTL_SECONDS
+from adapters.persistence.cache_constants import (
+    COLLECTION_COUNT_CACHE_TTL_SECONDS,
+    VSP_COLLECTION_COUNT_CACHE_PREFIX,
+)
 from core.domain.exceptions import InfrastructureError
 from core.ports.vector_store_port import VectorStorePort
 from django.core.cache import cache
@@ -61,7 +64,7 @@ class PgVectorStoreAdapter(VectorStorePort):
         return results
 
     def get_collection_count(self, collection_name: str) -> int:
-        cache_key = f"vsp_collection_count_{collection_name}"
+        cache_key = f"{VSP_COLLECTION_COUNT_CACHE_PREFIX}{collection_name}"
 
         try:
             cached = cache.get(cache_key)
