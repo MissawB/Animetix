@@ -84,8 +84,8 @@ def test_the_real_model_loads_and_both_towers_are_512_dimensional(adapter):
     assert len(image_vector) == CLIP_DIM
     assert len(text_vector) == CLIP_DIM
     assert all(isinstance(x, float) for x in image_vector)
-    # Deux vecteurs de dimensions différentes = deux espaces : la moyenne
-    # image+texte de `deep_multimodal_search` n'aurait aucun sens.
+    # Deux vecteurs de dimensions différentes = deux espaces : toute moyenne
+    # image+texte n'aurait aucun sens.
     assert len(image_vector) == len(text_vector)
 
 

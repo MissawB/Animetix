@@ -115,20 +115,12 @@ class MediaSearchView(APIView):
         guardrail_service: GuardrailService = Provide[Container.core.guardrail_service],
         usage_port: UsagePort = Provide[Container.infrastructure.usage_port],
         catalog_service=Provide[Container.core.catalog_service],
-        cross_modal_search_service=Provide[Container.core.cross_modal_search_service],
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.guardrail_service = guardrail_service
         self.usage_port = usage_port
         self.catalog_service = catalog_service
-        # Bypassed by `post()` since the per-target rewrite: `CrossModalSearchService`
-        # has zero callers anywhere in the backend today (the Universal Search hub
-        # calls /api/v1/search/ and /api/v1/labs/video/search/, neither of which
-        # touches this service). Kept injected so existing collaborators/tests
-        # that reach through this attribute keep working; removing the service
-        # itself is a separate ticket.
-        self.cross_modal_search_service = cross_modal_search_service
 
     def get(self, request):
         media_type = request.query_params.get("media_type")

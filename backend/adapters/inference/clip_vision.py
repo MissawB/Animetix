@@ -143,9 +143,9 @@ class ClipVisionMixin:
     def get_text_embedding_clip(self, text: str, model_id: str) -> List[float]:
         """La tour TEXTE du même modèle — jamais un encodeur de phrases générique.
 
-        `deep_multimodal_search` fait la moyenne du vecteur texte et du vecteur
-        image : ça n'a de sens que dans un espace joint. Mélanger deux modèles
-        donne soit une erreur de dimensions, soit un nombre qui a l'air juste.
+        Toute fusion d'un vecteur texte et d'un vecteur image (moyenne, produit)
+        n'a de sens que dans un espace joint. Mélanger deux modèles donne soit une
+        erreur de dimensions, soit un nombre qui a l'air juste et ne l'est pas.
         """
         try:
             model = _load_open_clip(model_id)

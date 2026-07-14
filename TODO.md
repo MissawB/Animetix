@@ -28,9 +28,6 @@ _Aucun item ouvert._
   - CCIP est vérifié contre les **vrais poids** (768 dims, déterministe, personnages différents à 0,36-0,45 sur de vrais portraits du catalogue). La construction est un `python manage.py build_visual_index --target character` (reprenable, une image morte est sautée) — dominée par le téléchargement, ~35 000 images.
   - **La tour texte de CLIP est construite et testée mais aucun endpoint ne l'expose** : `VisualIndexService.encode_text` n'a aucun appelant. Soit on l'expose (la spec promet la recherche texte gratuite sur les œuvres), soit on l'assume en phase 2.
 
-- [ ] **Surface morte à supprimer : `CrossModalSearchService` et `VlmIndexingService`** _(vérifié deux fois, 2026-07-14)_
-  - Zéro appelant en production depuis que l'endpoint est passé par `VisualIndexService`. Le commentaire qui les justifiait (« le hub Universal Search les appelle ») était **faux** — `UniversalSearchHubPage` tape `/api/v1/search/` et `/api/v1/labs/video/search/`. Supprimer le service, son provider DI, son injection dans `MediaSearchView` et ses ~10 tests.
-
 - [ ] **`PGVectorCollectionWrapper.upsert` ne sait pas écrire un vecteur pré-calculé sur AlloyDB** _(2026-07-14)_
   - La branche AlloyDB dérive l'embedding d'un `document` ; quand on lui passe un vecteur **et** aucun document — ce que fait `VisualIndexService.index` — elle ignorait l'argument et écrivait `embedding = NULL` sans exception. C'est **gardé** depuis (elle lève), mais cela signifie que le jour où l'on migre vers un vrai AlloyDB, le constructeur d'index refusera d'écrire. Lui apprendre à écrire un vecteur fourni.
 - [ ] **URI Neo4j locale morte** _(constaté 2026-07-12)_

@@ -55,8 +55,9 @@ def test_get_collection_count_zero_on_error(adapter):
 
 
 def test_get_collection_count_is_cached(adapter):
-    """Without a cache, `CrossModalSearchService.is_available()` would add a
-    COUNT(*) to every image-search request -- this pins that it doesn't."""
+    """Without a cache, `VisualIndexService.is_available()` (the per-target
+    anti-charge guard) would add a COUNT(*) to every image-search request --
+    this pins that it doesn't."""
     mock_manager = MagicMock()
     mock_manager.get_collection.return_value.count.return_value = 7
     with patch(

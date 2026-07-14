@@ -269,14 +269,6 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         prompt_manager=infrastructure.prompt_manager,
     )
 
-    cross_modal_search_service = providers.Singleton(
-        LazyClass(
-            "core.domain.services.cross_modal_service", "CrossModalSearchService"
-        ),
-        inference_engine=inference.inference_engine,
-        vector_db=persistence.vector_store,
-    )
-
     # Deux ports de persistance, volontairement : `search_by_vector` n'existe que
     # sur `vector_store` (VectorStorePort), `upsert_items` n'existe que sur
     # `repository` (RepositoryPort). Câbler un seul des deux = AttributeError en

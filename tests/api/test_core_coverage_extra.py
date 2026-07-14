@@ -95,11 +95,10 @@ def test_image_proxy_non_200_upstream_returns_404(factory):
 # --------------------------------------------------------------------------- #
 # MediaSearchView.post image-search flow (lines 152-197)
 #
-# `post()` now takes `visual_index_service` as an `@inject`-ed keyword
-# argument (Provide[Container.core.visual_index_service]) rather than reading
-# `self.cross_modal_search_service`: passing an explicit mock for that keyword
-# overrides the DI default outright, so these tests never touch the real,
-# DI-wired singleton (whose `is_available()` would hit the empty test DB).
+# `post()` takes `visual_index_service` as an `@inject`-ed keyword argument
+# (Provide[Container.core.visual_index_service]): passing an explicit mock for
+# that keyword overrides the DI default outright, so these tests never touch the
+# real, DI-wired singleton (whose `is_available()` would hit the empty test DB).
 # --------------------------------------------------------------------------- #
 def _post_image_view(request, *, quota=True, index_available=True, visual_index=None):
     view = MediaSearchView()
