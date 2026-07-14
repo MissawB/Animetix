@@ -281,6 +281,73 @@ def test_a_failed_write_is_never_announced_as_a_success(catalogue, service, caps
 
 
 @pytest.mark.django_db
+def test_a_total_encoder_outage_fails_loudly_instead_of_announcing_success(
+    catalogue, service, capsys
+):
+    """IMPORTANT: `VisualIndexService.index` swallows encode failures ONE
+    image at a time (a single dead cover must not be fatal) -- so when EVERY
+    image fails to encode (Hub down, `open_clip` missing, Brain unreachable),
+    `index()` just returns 0 for every batch, without ever raising. Downloads
+    all succeed here (`skipped` stays 0), so nothing else would have caught
+    this: before the fix, the command printed a green SUCCESS line reading
+    "0 vecteurs écrits ..., 2 candidats" -- a total outage, in green.
+    """
+    service.index.return_value = 0
+
+    with pytest.raises(CommandError):
+        _run("work", service)
+
+    out = capsys.readouterr().out
+    assert "vecteurs écrits" not in out
+    assert "SUCCESS" not in out.upper()
+
+
+@pytest.mark.django_db
+def test_partial_encode_failures_are_counted_and_reported(catalogue, service, capsys):
+    """Encode failures must be visible in the final report, separately from
+    both `skipped` (download failures) and `written` -- not silently absorbed
+    into a written count that undercounts without ever saying why."""
+    # Catalogue "work" a deux candidats Anime ; un seul est effectivement écrit.
+    service.index.return_value = 1
+
+    _run("work", service)
+
+    out = capsys.readouterr().out
+    assert "1 vecteurs écrits" in out
+    assert "1 échecs d'encodage" in out
+
+
+@pytest.mark.django_db
+def test_limit_applies_after_the_resume_filter_not_before(service):
+    """IMPORTANT: `--limit` used to slice the (popularity-ordered) queryset
+    BEFORE the resume filter ran. On a rerun where the most popular candidate
+    is already indexed, `[:limit]` sliced exactly that already-done item and
+    the loop's `already` check then skipped it -- a `--limit 1` rerun indexed
+    NOTHING new, even though a fresh candidate existed right behind it.
+    """
+    MediaItem.objects.create(
+        external_id="38000",
+        media_type="Anime",
+        title="Kimetsu",
+        image_url="http://img/a",
+        popularity=100,  # le plus populaire -- et déjà indexé, ci-dessous.
+    )
+    MediaItem.objects.create(
+        external_id="1535",
+        media_type="Anime",
+        title="Death Note",
+        image_url="http://img/b",
+        popularity=1,
+    )
+    _already_indexed("Anime:38000")
+
+    _run("work", service, limit=1)
+
+    # Le seul candidat qui reste à indexer doit être soumis, malgré la limite.
+    assert _indexed(service) == ["1535"]
+
+
+@pytest.mark.django_db
 def test_it_refuses_an_unknown_target(catalogue, service):
     """Le garde-fou de `handle()` lui-même : `choices=` d'argparse n'est qu'une
     porte, la commande peut être appelée par programme."""
