@@ -108,6 +108,16 @@ class Base64ImageRequest(BaseModel):
     model_id: Optional[str] = None
 
 
+class ClipTextEmbeddingRequest(BaseModel):
+    """La tour TEXTE d'un modèle CLIP. `model_id` est OBLIGATOIRE ici (contrairement
+    à `Base64ImageRequest.model_id`) : il n'existe pas de tour texte par défaut
+    sensée -- `get_text_embedding_clip` doit savoir dans quel espace joint chercher.
+    """
+
+    text: str
+    model_id: str
+
+
 class DetectRequest(BaseModel):
     image: str
     candidate_labels: List[str]
@@ -302,6 +312,34 @@ def vision_embedding(req: Base64ImageRequest):
     try:
         img_bytes = base64.b64decode(req.image)
         emb = brain_engine.get_image_embedding(img_bytes, req.model_id)
+        return {"embedding": emb}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/vision/embedding/text", dependencies=[Depends(verify_api_key)])
+def vision_embedding_text(req: ClipTextEmbeddingRequest):
+    """Tour TEXTE d'un CLIP -- pour la recherche visuelle par description.
+
+    Route dédiée, distincte de `/vision/embedding` : elle porte le même
+    routage que le mixin (`ClipVisionMixin.get_text_embedding_clip`), jamais
+    l'encodeur de phrases générique de `/v1/embeddings`.
+    """
+    try:
+        emb = brain_engine.get_text_embedding_clip(req.text, req.model_id)
+        return {"embedding": emb}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/vision/character/embedding", dependencies=[Depends(verify_api_key)])
+def vision_character_embedding(req: Base64ImageRequest):
+    """Embedding CCIP -- « est-ce le MÊME personnage ? ». Pas de `model_id` :
+    CCIP est un modèle unique, contrairement à la tour CLIP multi-modèle.
+    """
+    try:
+        img_bytes = base64.b64decode(req.image)
+        emb = brain_engine.get_character_embedding(img_bytes)
         return {"embedding": emb}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

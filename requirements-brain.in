@@ -42,6 +42,14 @@ pillow
 imageio
 pydub
 
+# Visual search (Task 5b): the brain is the only host with the GPU + weights,
+# so it must serve get_image_embedding/get_text_embedding_clip (anime CLIP,
+# open_clip_torch -- see clip_vision.py) and get_character_embedding (CCIP,
+# onnxruntime -- see ccip_vision.py) for the web container's production chain
+# ([brain_api, google_genai]) to have anyone to delegate to.
+open_clip_torch
+onnxruntime
+
 # Observability (best-effort in brain_service lifespan/middleware)
 opentelemetry-api
 opentelemetry-sdk

@@ -1,4 +1,4 @@
-﻿"""Real-behavior tests for adapters.inference.brain_service.
+"""Real-behavior tests for adapters.inference.brain_service.
 
 NOTE: this module is the FastAPI *server* (the "Brain API"), NOT the HTTP
 client `brain_api_adapter`. It defines a `FastAPI` app whose endpoints delegate
@@ -251,6 +251,90 @@ def test_vision_embedding_error_branch(client, monkeypatch):
     resp = client.post("/vision/embedding", json={"image": _b64(b"x")})
     assert resp.status_code == 500
     assert resp.json()["detail"] == "emb fail"
+
+
+# --- vision: CLIP text-tower embedding (visual search, text query) -----------
+#
+# The text tower of the SAME CLIP model that encoded the covers -- never the
+# generic sentence-transformers encoder (see clip_vision.get_text_embedding_clip).
+# Unlike the image embedding route, model_id is REQUIRED here: there is no
+# sensible default text tower to fall back to.
+
+
+def test_vision_embedding_text_reaches_the_encoder_with_the_requested_model_id(
+    client, monkeypatch
+):
+    seen = {}
+
+    def fake(text, model_id):
+        seen.update(text=text, model_id=model_id)
+        return [0.1, 0.2, 0.3]
+
+    monkeypatch.setattr(brain_engine, "get_text_embedding_clip", fake)
+    resp = client.post(
+        "/vision/embedding/text",
+        json={
+            "text": "une fille aux cheveux blancs",
+            "model_id": "dudcjs2779/anime-style-tag-clip",
+        },
+    )
+    assert resp.status_code == 200
+    assert resp.json() == {"embedding": [0.1, 0.2, 0.3]}
+    assert seen == {
+        "text": "une fille aux cheveux blancs",
+        "model_id": "dudcjs2779/anime-style-tag-clip",
+    }
+
+
+def test_vision_embedding_text_error_branch_is_honest_never_a_200(client, monkeypatch):
+    monkeypatch.setattr(
+        brain_engine,
+        "get_text_embedding_clip",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("clip text fail")),
+    )
+    resp = client.post("/vision/embedding/text", json={"text": "x", "model_id": "m"})
+    assert resp.status_code == 500
+    assert resp.json()["detail"] == "clip text fail"
+
+
+def test_vision_embedding_text_requires_a_model_id(client):
+    # No sensible default text tower: omitting model_id is a 422, not a guess.
+    resp = client.post("/vision/embedding/text", json={"text": "x"})
+    assert resp.status_code == 422
+
+
+# --- vision: CCIP character embedding (visual search, character target) -----
+#
+# CCIP answers "is this the SAME character?" -- a different model, a different
+# 768-d space than the CLIP `work` target. No model_id: CCIP is a single model.
+
+
+def test_vision_character_embedding_reaches_the_ccip_encoder(client, monkeypatch):
+    raw = b"\x89PNG-character-portrait"
+    seen = {}
+
+    def fake(img_bytes):
+        seen["img"] = img_bytes
+        return [0.4] * 768
+
+    monkeypatch.setattr(brain_engine, "get_character_embedding", fake)
+    resp = client.post("/vision/character/embedding", json={"image": _b64(raw)})
+    assert resp.status_code == 200
+    assert resp.json() == {"embedding": [0.4] * 768}
+    assert seen["img"] == raw
+
+
+def test_vision_character_embedding_error_branch_is_honest_never_a_200(
+    client, monkeypatch
+):
+    monkeypatch.setattr(
+        brain_engine,
+        "get_character_embedding",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("ccip fail")),
+    )
+    resp = client.post("/vision/character/embedding", json={"image": _b64(b"x")})
+    assert resp.status_code == 500
+    assert resp.json()["detail"] == "ccip fail"
 
 
 def test_vision_detect_returns_objects(client, monkeypatch):

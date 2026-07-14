@@ -387,6 +387,56 @@ def test_the_injected_engine_really_implements_every_method_the_service_calls():
         )
 
 
+def test_the_production_chain_can_actually_serve_visual_search():
+    """Le test précédent vérifie une CLASSE (`FallbackInferenceAdapter`) qui
+    délègue TOUJOURS aux trois méthodes -- que la délégation trouve preneur ou
+    non. Il resterait vert même si aucun moteur de la chaîne production ne
+    servait plus rien : c'est exactement le trou que ce module documente
+    (`build_inference_chain` rend `[brain_api, google_genai]` quand
+    `LOCAL_INFERENCE_ENABLED` est faux -- le cas du conteneur web en prod).
+
+    Celui-ci descend d'un niveau : il prend la forme RÉELLE de la chaîne
+    production et vérifie qu'au moins un de ses membres implémente VRAIMENT
+    chacune des trois méthodes. Avant que `BrainAPIAdapter` ne les porte, ce
+    test échouait pour `get_text_embedding_clip` et `get_character_embedding` :
+    ni `BrainAPIAdapter` ni `GoogleGenAIAdapter` ne les servait, et
+    `FallbackInferenceAdapter._fallback_call` n'avait personne à qui déléguer --
+    une `InferenceError` à chaque recherche visuelle, en production, silencieuse
+    jusqu'au premier utilisateur qui l'aurait rencontrée.
+    """
+    from adapters.inference.brain_api_adapter import BrainAPIAdapter
+    from adapters.inference.google_genai_adapter import GoogleGenAIAdapter
+    from animetix.containers.inference import build_inference_chain
+
+    # La forme réelle de la chaîne production (`local_enabled=False`) : deux
+    # jetons de classe suffisent, `build_inference_chain` ne fait que les ordonner.
+    prod_chain = build_inference_chain(
+        local_enabled=False,
+        unified="unified",
+        compact_reasoning="compact_reasoning",
+        local_text="local_text",
+        brain_api="brain_api",
+        google_genai="google_genai",
+        local_guardrail="local_guardrail",
+    )
+    assert prod_chain == ["brain_api", "google_genai"]
+
+    chain_classes = [BrainAPIAdapter, GoogleGenAIAdapter]
+    for method in (
+        "get_image_embedding",
+        "get_text_embedding_clip",
+        "get_character_embedding",
+    ):
+        assert any(
+            _really_implements(cls, method, InferencePort) for cls in chain_classes
+        ), (
+            f"Aucun membre de la chaîne production "
+            f"({[c.__name__ for c in chain_classes]}) n'implémente {method} : "
+            "en production, FallbackInferenceAdapter ne trouve personne à qui "
+            "déléguer et chaque recherche visuelle échoue."
+        )
+
+
 def test_the_injected_repository_can_write_and_the_injected_store_can_search():
     collaborators = _collaborators()
 
