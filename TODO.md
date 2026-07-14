@@ -7,6 +7,7 @@
 
 ## 🔴 Critiques
 
+
 _Aucun item ouvert._
 
 ## 🟠 Élevés
@@ -17,8 +18,21 @@ _Aucun item ouvert._
   - **Écartés** : désalignement du tokenizer (adaptateur et base partagent les mêmes 22 tokens ajoutés) et pollution du dataset (1 ligne sur 100 porte le motif, et c'est une formule mathématique).
   - **À faire** : assainir le dataset (varier les formulations, ancrer les faits, purger les emplacements numériques) **avant** tout réentraînement. Le re-servir est un `LLM_MODEL_NAME=otaku-qwen:7b` (déjà baké dans l'image, aucun rebuild).
 
-- [ ] **pgvector n'a jamais été alimenté — 0 embedding pour 44 763 items** _(constaté 2026-07-12 via `reconcile_db`)_
-  - `VectorRecord.objects.count() == 0`. Le seul mécanisme d'écriture était le signal `post_save` de `MediaItem` ([signals.py:126](backend/api/animetix/signals.py#L126)) → `enqueue_task("sync_media_item_task")`, qui n'a jamais rien persisté (et qui, hors prod, s'exécutait **en synchrone** : c'est ce qui faisait durer `sync_catalog` 2 h+ pour 44 798 items — la commande écrit désormais en masse, sans signaux, et la réconciliation est un travail séparé). `reconcile_db` **diagnostique seulement**, elle ne répare pas : il n'existe aucun chemin de reconstruction en masse. Avant de reconstruire (coût GPU/API réel), identifier **ce qui dépend réellement des vecteurs** : si ces fonctionnalités marchent en prod sur une base vectorielle vide, c'est qu'elles ont un repli silencieux — c'est ça le vrai sujet.
+- [ ] **Une dépendance ajoutée au brain n'arrive JAMAIS en prod — et le workflow reste vert** _(constaté 2026-07-14, en déployant la recherche visuelle)_
+  - Le job « Deploy to Production » lance Cloud Build avec `_BUILD_TARGET=web` **uniquement**, et ne `gcloud run deploy` que `animetix-web`. C'est délibéré (`ci.yml` l'explique) : `Dockerfile.brain` refait à chaque build la fusion du LoRA 7B et la quantisation GGUF, ce qui **dépasse le timeout de Cloud Build** (vérifié : TIMEOUT à 7 200 s). Personne n'en avait tiré la conséquence : `open_clip_torch` et `onnxruntime` étaient dans `requirements-brain.txt`, **absents de l'image qui tournait**, et la recherche visuelle aurait été morte en prod avec une CI verte.
+  - **Contournement livré** : [Dockerfile.brain.encoders](deploy/Dockerfile.brain.encoders) repart de l'image qui sert déjà (`brain:otaku3`) et n'ajoute que le code + les deps — 5 min au lieu de 2 h, poids identiques.
+  - **À faire** : donner un cache de couches à `Dockerfile.brain` (`--cache-from` sur les étapes `gguf`) pour que le build complet redevienne possible, puis supprimer l'image dérivée. Tant que ce n'est pas fait, **toute modif du brain doit être déployée à la main et vérifiée en live** (le vert du workflow ne dit rien sur le brain).
+
+- [ ] **Index visuel : phase 2 (35 292 portraits de personnages)** _(phase 1 livrée 2026-07-14)_
+  - `unified_clip_space` contient désormais **9 165 jaquettes** (anime/manga/film/jeu) et la recherche par jaquette fonctionne en prod. `character_ccip_space` est **vide** : une recherche de personnage répond honnêtement 503 sans facturer.
+  - CCIP est vérifié contre les **vrais poids** (768 dims, déterministe, personnages différents à 0,36-0,45 sur de vrais portraits du catalogue). La construction est un `python manage.py build_visual_index --target character` (reprenable, une image morte est sautée) — dominée par le téléchargement, ~35 000 images.
+  - **La tour texte de CLIP est construite et testée mais aucun endpoint ne l'expose** : `VisualIndexService.encode_text` n'a aucun appelant. Soit on l'expose (la spec promet la recherche texte gratuite sur les œuvres), soit on l'assume en phase 2.
+
+- [ ] **Surface morte à supprimer : `CrossModalSearchService` et `VlmIndexingService`** _(vérifié deux fois, 2026-07-14)_
+  - Zéro appelant en production depuis que l'endpoint est passé par `VisualIndexService`. Le commentaire qui les justifiait (« le hub Universal Search les appelle ») était **faux** — `UniversalSearchHubPage` tape `/api/v1/search/` et `/api/v1/labs/video/search/`. Supprimer le service, son provider DI, son injection dans `MediaSearchView` et ses ~10 tests.
+
+- [ ] **`PGVectorCollectionWrapper.upsert` ne sait pas écrire un vecteur pré-calculé sur AlloyDB** _(2026-07-14)_
+  - La branche AlloyDB dérive l'embedding d'un `document` ; quand on lui passe un vecteur **et** aucun document — ce que fait `VisualIndexService.index` — elle ignorait l'argument et écrivait `embedding = NULL` sans exception. C'est **gardé** depuis (elle lève), mais cela signifie que le jour où l'on migre vers un vrai AlloyDB, le constructeur d'index refusera d'écrire. Lui apprendre à écrire un vecteur fourni.
 - [ ] **URI Neo4j locale morte** _(constaté 2026-07-12)_
   - `Failed to DNS resolve a654e145.databases.neo4j.io` — l'instance configurée en local n'existe plus (la prod tourne sur l'instance `1254b9b8`). `reconcile_db` saute donc toutes les vérifications de graphe en silence, et personne ne le voit.
 
@@ -44,6 +58,10 @@ _Aucun item ouvert._
   - URL de prod HF en dur [workflows_client.py:72](backend/adapters/inference/workflows_client.py#L72) (la même classe lit `BRAIN_API_URL` en env ligne 24 — incohérent) ; table de tiers ~85 l. dans [vs_battle_service.py:367](backend/core/domain/services/creative/vs_battle_service.py#L367) ; modèles en dur (`clip-ViT-B-32` ×3 dans `clip_vision.py`, `imagen-3.0-generate-001`, `jina-embeddings-v3`) ; [otaku_concepts.py](backend/pipeline/mlops/otaku_concepts.py) = 2459 lignes de dictionnaire de données → asset JSON/YAML.
 - [ ] **Covertest — sortir les covers du blob JSON** _(suite de l'ingestion complète 2026-07-12)_
   - La base passe de 90 à ~4 000 mangas : [manga_covers.json](data/processed/manga_covers.json) grossit de 0,5 à ~25 Mo, chargé **intégralement en RAM** par le singleton ([pgvector_repository_adapter.py:199](backend/adapters/persistence/pgvector_repository_adapter.py#L199)) au premier appel, et `list_entries()` sérialise tout le référentiel vers le front à chaque partie. À cette taille ça doit passer en Postgres (ou au minimum : un index allégé `{id, title, aliases}` pour l'autocomplétion + les covers servies à la demande). Blob LFS lu au cold start Cloud Run = mauvais compromis au-delà de quelques Mo.
+- [ ] **La recherche texte sémantique vient d'être rallumée — personne ne l'a jamais vue tourner** _(2026-07-14)_
+  - `PGVectorRepositoryAdapter.search_media_items` faisait `dict(meta)` sur une métadonnée que le pilote rend en **chaîne** (Django désactive le décodage `jsonb` de psycopg2 : tout curseur SQL brut reçoit une `str`). L'exception était avalée en `[]`, et `UnifiedRepositoryAdapter` retombait silencieusement sur la recherche SQL `LIKE`. **La branche sémantique renvoyait donc `[]` depuis toujours en prod.** Corrigé à la source le 2026-07-14 — ce qui la rallume, ainsi qu'`advanced_rag_service` et `video_rag_service`.
+  - **À faire** : vérifier que ces trois chemins se comportent correctement maintenant qu'ils rendent de vrais résultats (aucun n'a jamais été observé en fonctionnement).
+
 - [ ] **Tests — hygiène : fixtures dupliquées, snapshot `sys.modules`, env forcé à l'import** _(audit dette 2026-07-11)_
   - `api_client` défini **38×**, `mock_prompt_manager` et `mock_engine` **22×** chacun (2 conftest seulement) → factoriser. Fixture autouse [tests/conftest.py:107-139](tests/conftest.py#L107-L139) snapshot/restore `sys.modules` entier à chaque test pour compenser les mocks fuyants (`test_diffusers_adapter.py:25`). `BRAIN_API_URL` forcé au niveau import ([tests/conftest.py:12](tests/conftest.py#L12)) masque les tests d'absence de config.
 
