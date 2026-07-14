@@ -2661,7 +2661,11 @@
     "image_search_hint": "Recherche par image",
     "no_results": "Aucun résultat trouvé",
     "placeholder": "Rechercher un anime, manga...",
-    "searching": "Recherche en cours..."
+    "searching": "Recherche en cours...",
+    "target_label": "Cible de la recherche visuelle",
+    "target_work": "Jaquette",
+    "target_character": "Personnage",
+    "target_hint": "Cherchez une œuvre par sa jaquette, ou un personnage par son portrait."
   },
   "search.expert.auth_error": "Ce mode utilise l'IA (GPU) et coûte des Berrix. Connecte-toi pour lancer une analyse.",
   "search.expert.auth_required": "Connexion requise",

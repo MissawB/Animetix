@@ -1,41 +1,41 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiClient } from '../utils/apiClient';
-import { searchMediaByImage } from '../api';
+import { searchByImage } from '../api';
 
 vi.mock('../utils/apiClient', () => ({ apiClient: vi.fn() }));
 
 const mocked = vi.mocked(apiClient);
 
-describe('searchMediaByImage', () => {
+describe('searchByImage', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('POSTs the image as multipart form-data through apiClient (CSRF + auth + toasts)', async () => {
+  it('POSTs the image + target as multipart form-data through apiClient (CSRF + auth + toasts)', async () => {
     const results = [{ id: 1 }];
     mocked.mockResolvedValue(results);
-    const file = new File(['x'], 'shot.png', { type: 'image/png' });
+    const file = new File(['x'], 'cover.png', { type: 'image/png' });
 
-    const out = await searchMediaByImage(file);
+    const out = await searchByImage(file);
 
     expect(mocked).toHaveBeenCalledTimes(1);
     const [url, options] = mocked.mock.calls[0];
-    expect(url).toBe('/api/v1/search/');
+    expect(url).toBe('/api/v1/media/search/');
     expect(options).toMatchObject({ method: 'POST', isFormData: true });
 
     const body = options!.body as FormData;
     expect(body).toBeInstanceOf(FormData);
     expect(body.get('image')).toBe(file);
-    expect(body.get('media_type')).toBe('Anime');
+    expect(body.get('target')).toBe('work');
 
     expect(out).toBe(results);
   });
 
-  it('uses the provided media type', async () => {
+  it('sends the requested target', async () => {
     mocked.mockResolvedValue([]);
-    const file = new File(['x'], 'shot.png', { type: 'image/png' });
+    const file = new File(['x'], 'portrait.png', { type: 'image/png' });
 
-    await searchMediaByImage(file, 'Manga');
+    await searchByImage(file, 'character');
 
     const body = mocked.mock.calls[0][1]!.body as FormData;
-    expect(body.get('media_type')).toBe('Manga');
+    expect(body.get('target')).toBe('character');
   });
 });

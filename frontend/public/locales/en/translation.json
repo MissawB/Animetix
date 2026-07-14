@@ -2661,7 +2661,11 @@
     "image_search_hint": "Search by image",
     "no_results": "No results found",
     "placeholder": "Search for anime, manga...",
-    "searching": "Searching..."
+    "searching": "Searching...",
+    "target_label": "Visual search target",
+    "target_work": "Cover",
+    "target_character": "Character",
+    "target_hint": "Search for a work by its cover art, or a character by their portrait."
   },
   "search.expert.auth_error": "This mode uses AI (GPU) and costs Berrix. Please log in to start an analysis.",
   "search.expert.auth_required": "Login required",
