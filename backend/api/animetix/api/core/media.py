@@ -122,9 +122,12 @@ class MediaSearchView(APIView):
         self.guardrail_service = guardrail_service
         self.usage_port = usage_port
         self.catalog_service = catalog_service
-        # Bypassed by `post()` since the per-target rewrite (the Universal
-        # Search hub still calls it directly) -- kept injected so existing
-        # collaborators/tests that reach through this attribute keep working.
+        # Bypassed by `post()` since the per-target rewrite: `CrossModalSearchService`
+        # has zero callers anywhere in the backend today (the Universal Search hub
+        # calls /api/v1/search/ and /api/v1/labs/video/search/, neither of which
+        # touches this service). Kept injected so existing collaborators/tests
+        # that reach through this attribute keep working; removing the service
+        # itself is a separate ticket.
         self.cross_modal_search_service = cross_modal_search_service
 
     def get(self, request):
@@ -175,7 +178,13 @@ class MediaSearchView(APIView):
             )
 
         image_file = request.FILES.get("image")
-        limit = min(int(request.data.get("limit", 10)), 20)
+        try:
+            limit = min(int(request.data.get("limit", 10)), 20)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "`limit` must be an integer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if not image_file:
             return Response({"error": "No image provided"}, status=400)
@@ -224,24 +233,29 @@ class MediaSearchView(APIView):
             logger.exception("Error in image search")
             return Response({"error": "Internal server error"}, status=500)
 
-        # Berrix deduction (raises 402 if balance too low). Outside the try
-        # below so PaymentRequired isn't swallowed into 500.
+        # Charge only AFTER a successful encode+search: a cold Brain (Cloud Run
+        # GPU scaled to zero -- a routine event, not an outage) used to be
+        # charged and then answered with a bare 500, in that order. The
+        # branch's own thesis is that a search that never happened must never
+        # cost Bx, so the encode+search now runs FIRST; `deduct_berrix` (which
+        # itself raises 402, not 500, on an insufficient balance) only runs
+        # once it has something to charge for.
+        try:
+            vector = visual_index_service.encode_image(target, image_data)
+            results = visual_index_service.search(target, vector, limit=limit)
+        except Exception:
+            logger.exception("Error in visual search")
+            return Response({"error": "Internal server error"}, status=500)
+
         deduct_berrix(
             request.user,
             FEATURE_BX_COSTS["vision_clip"],
             "Recherche par image (CLIP)",
         )
-
-        try:
-            vector = visual_index_service.encode_image(target, image_data)
-            results = visual_index_service.search(target, vector, limit=limit)
-            self.usage_port.log_usage(
-                engine=TARGETS[target].model_id, units=1, user_id=request.user.id
-            )
-            return Response(self._format_results(results))
-        except Exception:
-            logger.exception("Error in visual search")
-            return Response({"error": "Internal server error"}, status=500)
+        self.usage_port.log_usage(
+            engine=TARGETS[target].model_id, units=1, user_id=request.user.id
+        )
+        return Response(self._format_results(results))
 
     def _format_results(self, results):
         # Utilise le serializer pour formater les résultats

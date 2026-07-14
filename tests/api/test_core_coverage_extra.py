@@ -365,6 +365,78 @@ def test_media_search_post_search_exception_returns_500(factory):
 
 
 @pytest.mark.django_db
+def test_media_search_post_encode_failure_never_charges_berrix(factory):
+    """IMPORTANT: a cold Brain (Cloud Run GPU scaled to zero) is a routine
+    event, not an outage. Before the fix, Berrix was deducted BEFORE
+    encode_image/search ran, so a routine cold start meant the user paid Bx
+    and read "Internal server error" for a search that never happened. Now
+    the charge only happens after a successful encode+search: an encode
+    failure must leave the user's balance untouched."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    user = User.objects.create_user(username="nopay", password="pw")
+    img = SimpleUploadedFile("x.png", b"imgbytes", content_type="image/png")
+    request = factory.post("/search/", {"image": img})
+    force_authenticate(request, user=user)
+    request.user = user
+    view, drf_request, visual = _post_image_view(request)
+    visual.encode_image.side_effect = RuntimeError("brain unreachable: cold start")
+    with (
+        patch("animetix.api.core.media.validate_file_size", return_value=True),
+        patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
+        patch("animetix.api.core.media.deduct_berrix") as mock_deduct,
+    ):
+        response = view.post(drf_request, visual_index_service=visual)
+    assert response.status_code == 500
+    mock_deduct.assert_not_called()
+    view.usage_port.log_usage.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_media_search_post_search_failure_never_charges_berrix(factory):
+    """Same guarantee, but the failure happens one step later (search itself,
+    not encode) -- both must leave Berrix untouched."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    user = User.objects.create_user(username="nopay2", password="pw")
+    img = SimpleUploadedFile("x.png", b"imgbytes", content_type="image/png")
+    request = factory.post("/search/", {"image": img})
+    force_authenticate(request, user=user)
+    request.user = user
+    view, drf_request, visual = _post_image_view(request)
+    visual.encode_image.return_value = [0.1] * 512
+    visual.search.side_effect = RuntimeError("pgvector connection lost")
+    with (
+        patch("animetix.api.core.media.validate_file_size", return_value=True),
+        patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
+        patch("animetix.api.core.media.deduct_berrix") as mock_deduct,
+    ):
+        response = view.post(drf_request, visual_index_service=visual)
+    assert response.status_code == 500
+    mock_deduct.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_media_search_post_invalid_limit_is_a_400_not_a_500(factory):
+    """MINOR: `int(request.data.get("limit", 10))` used to sit outside any
+    try/except -- `limit=abc` was an uncaught ValueError -> 500. It must be a
+    400 (a client input error), and must never touch Berrix."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    user = User.objects.create_user(username="badlimit", password="pw")
+    img = SimpleUploadedFile("x.png", b"imgbytes", content_type="image/png")
+    request = factory.post("/search/", {"image": img, "limit": "abc"})
+    force_authenticate(request, user=user)
+    request.user = user
+    view, drf_request, visual = _post_image_view(request)
+    with patch("animetix.api.core.media.deduct_berrix") as mock_deduct:
+        response = view.post(drf_request, visual_index_service=visual)
+    assert response.status_code == 400
+    mock_deduct.assert_not_called()
+    visual.is_available.assert_not_called()
+
+
+@pytest.mark.django_db
 def test_media_search_post_survives_cache_backend_failure(factory, mocker):
     """A Redis blip in the availability-check cache must not 500 an endpoint
     that doesn't otherwise need Redis -- it must fall back to a live COUNT
