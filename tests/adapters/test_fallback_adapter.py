@@ -20,6 +20,7 @@ from core.domain.entities.ai_schemas import (
     InferenceResponse,
     TokenLogProb,
 )
+from core.domain.exceptions import InferenceError
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 
 # --- test doubles ------------------------------------------------------------
@@ -261,14 +262,73 @@ def test_fallback_call_none_result_falls_through():
     assert fb.get_text_embedding("hi") == [1.0, 2.0]
 
 
-def test_fallback_call_all_fail_returns_method_default_empty_list():
+def test_get_image_embedding_raises_when_every_backend_fails():
+    """`_fallback_call` avale l'exception de chaque adaptateur et rend `None` ;
+    la méthode le transformait en `[]`. Un appelant sans garde-fou
+    (`AdvancedVisionService.get_unified_embedding`, `get_style_embedding_with_lora`,
+    `get_character_face_embedding`) recevait alors « l'image s'est encodée en
+    rien » sans une erreur -- la panne silencieuse que cette branche existe pour
+    tuer. Ses deux jumelles (`get_text_embedding_clip`, `get_character_embedding`)
+    lèvent déjà ; celle-ci n'avait jamais été alignée.
+    """
+
     class A(BaseFake):
         def get_image_embedding(self, image_data, model_id=None):
             raise RuntimeError("x")
 
     fb = FallbackInferenceAdapter([A("A")])
-    # _fallback_call returns None -> method coalesces to [].
-    assert fb.get_image_embedding(b"img") == []
+    with pytest.raises(InferenceError):
+        fb.get_image_embedding(b"img")
+
+
+def test_get_image_embedding_raises_when_the_only_backend_returns_an_empty_vector():
+    """Un moteur qui rend `[]` sans lever est la même panne, autrement déguisée."""
+
+    class A(BaseFake):
+        def get_image_embedding(self, image_data, model_id=None):
+            return []
+
+    fb = FallbackInferenceAdapter([A("A")])
+    with pytest.raises(InferenceError):
+        fb.get_image_embedding(b"img")
+
+
+def test_cold_brain_then_gemini_refuses_foreign_model_never_answers_with_a_vector():
+    """CRITICAL: the production chain is `[brain_api, google_genai]`. A cold
+    Cloud Run GPU (scaled to zero) is a NORMAL event -- `BrainAPIAdapter`
+    raises `InferenceError`. Before the fix, `GoogleGenAIAdapter.
+    get_image_embedding` would then call Gemini with the CLIP `model_id`
+    unchanged, fail against the real SDK, and silently fall back to a
+    TEXT-description embedding -- a foreign vector that could get written to
+    or compared against `unified_clip_space` while looking like a 200. This
+    uses the REAL `GoogleGenAIAdapter` (only its SDK client is mocked) chained
+    with a real `InferencePort` subclass standing in for a cold brain, and
+    asserts the whole chain raises instead of ever reaching Gemini's SDK.
+    """
+    from unittest.mock import MagicMock, patch
+
+    from adapters.inference.google_genai_adapter import GoogleGenAIAdapter
+
+    class ColdBrain(BaseFake):
+        def get_image_embedding(self, image_data, model_id=None):
+            raise InferenceError("BrainAPI unreachable: Cloud Run GPU cold start")
+
+    client = MagicMock()
+    client.models = MagicMock()
+    client.caches = MagicMock()
+    with patch(
+        "adapters.inference.google_genai_adapter.genai.Client", return_value=client
+    ):
+        gemini = GoogleGenAIAdapter(api_key="key")
+
+    fb = FallbackInferenceAdapter([ColdBrain("brain"), gemini])
+
+    with pytest.raises(InferenceError):
+        fb.get_image_embedding(b"cover.png", model_id="dudcjs2779/anime-style-tag-clip")
+
+    # Gemini must have refused before ever attempting the SDK call -- no
+    # foreign request went out, and certainly no vector came back from one.
+    client.models.embed_content.assert_not_called()
 
 
 def test_classify_image_default_empty_dict_when_all_fail():

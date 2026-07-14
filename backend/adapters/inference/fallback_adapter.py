@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from adapters.inference.capability_registry import CapabilityRegistry
 from core.domain.entities.ai_schemas import InferenceResponse, TokenLogProb
+from core.domain.exceptions import InferenceError
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 
 logger = logging.getLogger("animetix.inference.fallback")
@@ -516,10 +517,54 @@ class FallbackInferenceAdapter(InferencePort):
     def get_image_embedding(
         self, image_data: bytes, model_id: Optional[str] = None
     ) -> List[float]:
-        return self._fallback_call("get_image_embedding", image_data, model_id) or []
+        """Embedding image. Même règle que ses deux jumelles ci-dessous : une
+        panne se lève, elle ne se déguise pas en `[]`.
+
+        `_fallback_call` avale l'exception de CHAQUE adaptateur et rend `None`
+        quand aucun n'a servi la méthode. Le `or []` historique transformait ça
+        en « l'image s'est encodée en rien » : `VisualIndexService.encode_image`
+        s'en protégeait (`_checked`), mais `AdvancedVisionService`
+        (`get_unified_embedding`, `get_style_embedding_with_lora`,
+        `get_character_face_embedding`) appelle cette méthode SANS garde-fou et
+        continuait comme si l'encodage avait réussi.
+        """
+        vector = self._fallback_call("get_image_embedding", image_data, model_id)
+        if not vector:
+            raise InferenceError(
+                f"Aucun moteur d'inférence n'a servi get_image_embedding "
+                f"({model_id}) : impossible d'encoder cette image."
+            )
+        return vector
 
     def get_text_embedding(self, text: str) -> List[float]:
         return self._fallback_call("get_text_embedding", text) or []
+
+    def get_text_embedding_clip(self, text: str, model_id: str) -> List[float]:
+        """Tour TEXTE du modèle CLIP demandé. Échoue fort, jamais `[]`.
+
+        `_fallback_call` avale les exceptions et rend `None` quand aucun backend
+        n'a servi la méthode (dans le conteneur web, la chaîne est
+        `[BrainAPI, Gemini]` — aucun des deux ne porte CLIP). Rendre `[]` ici,
+        c'est écrire un vecteur vide dans l'index ou chercher avec : les deux
+        remontent des résultats qui ont l'air d'en être.
+        """
+        vector = self._fallback_call("get_text_embedding_clip", text, model_id)
+        if not vector:
+            raise InferenceError(
+                f"Aucun moteur d'inférence n'a servi get_text_embedding_clip "
+                f"({model_id}) : la recherche texte sur cet espace est impossible."
+            )
+        return vector
+
+    def get_character_embedding(self, image_data: bytes) -> List[float]:
+        """Embedding CCIP. Même règle : une panne se lève, elle ne se déguise pas."""
+        vector = self._fallback_call("get_character_embedding", image_data)
+        if not vector:
+            raise InferenceError(
+                "Aucun moteur d'inférence n'a servi get_character_embedding "
+                "(CCIP) : impossible d'encoder ce personnage."
+            )
+        return vector
 
     def classify_image(
         self,

@@ -7,6 +7,7 @@ from animetix_project.logging_config import get_logger
 from core.constants import ALLOWED_IMAGE_MIMES, MAX_IMAGE_SIZE  # noqa: E402
 from core.domain.services.berrix_economy import FEATURE_BX_COSTS
 from core.domain.services.guardrail_service import GuardrailService
+from core.domain.services.visual_index import TARGETS
 from core.ports.usage_port import UsagePort
 from core.utils.security import (
     safe_http_request,
@@ -121,6 +122,12 @@ class MediaSearchView(APIView):
         self.guardrail_service = guardrail_service
         self.usage_port = usage_port
         self.catalog_service = catalog_service
+        # Bypassed by `post()` since the per-target rewrite: `CrossModalSearchService`
+        # has zero callers anywhere in the backend today (the Universal Search hub
+        # calls /api/v1/search/ and /api/v1/labs/video/search/, neither of which
+        # touches this service). Kept injected so existing collaborators/tests
+        # that reach through this attribute keep working; removing the service
+        # itself is a separate ticket.
         self.cross_modal_search_service = cross_modal_search_service
 
     def get(self, request):
@@ -145,8 +152,18 @@ class MediaSearchView(APIView):
         results = self.catalog_service.search_items(query, media_type, limit)
         return Response(self._format_results(results))
 
-    def post(self, request):
-        """Recherche par image (Cross-Modal). Requiert Authentification + Quota."""
+    @inject
+    def post(
+        self,
+        request,
+        visual_index_service=Provide[Container.core.visual_index_service],
+    ):
+        """Recherche par image, par cible (`work` ou `character`).
+
+        Requiert Authentification + Quota. Le garde-fou anti-facturation est
+        par cible : l'index des œuvres peut exister sans celui des
+        personnages, et chacun doit répondre honnêtement pour lui-même.
+        """
         if not request.user.is_authenticated:
             return Response(
                 {"error": "Authentication required for image search."},
@@ -161,25 +178,32 @@ class MediaSearchView(APIView):
             )
 
         image_file = request.FILES.get("image")
-        request.data.get("media_type", "Anime")
-        limit = min(int(request.data.get("limit", 10)), 20)
+        try:
+            limit = min(int(request.data.get("limit", 10)), 20)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "`limit` must be an integer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if not image_file:
             return Response({"error": "No image provided"}, status=400)
 
-        # `unified_clip_space` has no reachable writer for an ordinary user
-        # (see docs/analysis/2026-07-13-pgvector-consumers.md §2.1) -- a search
-        # against an empty index can never return a result. Check BEFORE
-        # charging: paying for a search that cannot possibly succeed is the
-        # bug, not the missing index itself.
-        if not self.cross_modal_search_service.is_available():
+        target = request.data.get("target", "work")
+        if target not in ("work", "character"):
+            return Response(
+                {"error": f"Cible de recherche inconnue : {target}"}, status=400
+            )
+
+        # Le garde-fou anti-facturation, par cible : on ne prélève jamais pour une
+        # recherche qui ne peut pas aboutir. L'index des œuvres peut exister sans
+        # celui des personnages.
+        if not visual_index_service.is_available(target):
+            label = "visuel (jaquettes)" if target == "work" else "des personnages"
             return Response(
                 {
-                    "error": (
-                        "Recherche par image indisponible : l'index visuel "
-                        "(CLIP) n'a pas encore été construit. Réessayez plus "
-                        "tard."
-                    )
+                    "error": f"Recherche indisponible : l'index {label} n'a pas "
+                    "encore été construit. Réessayez plus tard."
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
@@ -209,29 +233,29 @@ class MediaSearchView(APIView):
             logger.exception("Error in image search")
             return Response({"error": "Internal server error"}, status=500)
 
-        # Berrix deduction for the CLIP cross-modal search (raises 402 if balance
-        # too low). Outside the try below so PaymentRequired isn't swallowed into 500.
+        # Charge only AFTER a successful encode+search: a cold Brain (Cloud Run
+        # GPU scaled to zero -- a routine event, not an outage) used to be
+        # charged and then answered with a bare 500, in that order. The
+        # branch's own thesis is that a search that never happened must never
+        # cost Bx, so the encode+search now runs FIRST; `deduct_berrix` (which
+        # itself raises 402, not 500, on an insufficient balance) only runs
+        # once it has something to charge for.
+        try:
+            vector = visual_index_service.encode_image(target, image_data)
+            results = visual_index_service.search(target, vector, limit=limit)
+        except Exception:
+            logger.exception("Error in visual search")
+            return Response({"error": "Internal server error"}, status=500)
+
         deduct_berrix(
             request.user,
             FEATURE_BX_COSTS["vision_clip"],
             "Recherche par image (CLIP)",
         )
-
-        try:
-            # Appel au service Cross-Modal
-            results = self.cross_modal_search_service.deep_multimodal_search(
-                text_query="", image_data=image_data, limit=limit
-            )
-
-            # Log Usage
-            self.usage_port.log_usage(
-                engine="clip-vit-large-patch14", units=1, user_id=request.user.id
-            )
-
-            return Response(self._format_results(results))
-        except Exception:
-            logger.exception("Error in image search")
-            return Response({"error": "Internal server error"}, status=500)
+        self.usage_port.log_usage(
+            engine=TARGETS[target].model_id, units=1, user_id=request.user.id
+        )
+        return Response(self._format_results(results))
 
     def _format_results(self, results):
         # Utilise le serializer pour formater les résultats

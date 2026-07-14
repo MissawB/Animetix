@@ -10,7 +10,7 @@ from core.domain.entities.ai_schemas import (
     InferenceResponse,
     TokenLogProb,
 )
-from core.domain.exceptions import ConfigurationError
+from core.domain.exceptions import ConfigurationError, InferenceError
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 from core.ports.usage_port import UsagePort
 from core.utils.inference_config import check_brain_config
@@ -228,11 +228,26 @@ class BrainAPIAdapter(ReachabilityHealthCheckMixin, InferencePort):
                 f"BrainAPI Sprite Generation failed: {e}"
             )
 
+    @staticmethod
+    def _checked_vector(vector: Optional[List[float]], what: str) -> List[float]:
+        """Un vecteur absent, vide ou entièrement nul est la même panne
+        déguisée -- voir `core.domain.services.visual_index._checked` et
+        `adapters.inference.ccip_vision`. Cette classe parle au Brain par
+        HTTP : une réponse tronquée, un JSON incomplet ou un modèle qui a
+        échoué côté GPU sans lever proprement peuvent tous produire un `[]`
+        ou un vecteur nul qui, sans ce garde-fou, partirait tel quel dans la
+        recherche et rendrait des voisins arbitraires en ayant l'air valide.
+        """
+        if not vector or not any(v != 0 for v in vector):
+            raise InferenceError(
+                f"{what} a rendu un vecteur vide ou nul -- refus de l'utiliser "
+                "pour indexer ou chercher : il classerait arbitrairement."
+            )
+        return vector
+
     def get_image_embedding(
         self, image_data: bytes, model_id: Optional[str] = None
     ) -> List[float]:
-        if not self.api_url:
-            return []
         try:
             img_b64 = base64.b64encode(image_data).decode("utf-8")
             response = safe_http_request(
@@ -241,10 +256,52 @@ class BrainAPIAdapter(ReachabilityHealthCheckMixin, InferencePort):
                 json={"image": img_b64, "model_id": model_id},
                 headers=self._get_headers(),
             )
-            return response.json()["embedding"]
+            vector = response.json().get("embedding")
         except Exception as e:
             logger.error(f"BrainAPI Image Embedding failed: {e}")
-            raise
+            raise InferenceError(
+                f"BrainAPI image embedding failed (model_id={model_id}): {e}"
+            ) from e
+        return self._checked_vector(
+            vector, f"BrainAPI image embedding (model_id={model_id})"
+        )
+
+    def get_text_embedding_clip(self, text: str, model_id: str) -> List[float]:
+        """Tour TEXTE du même CLIP -- jamais `get_text_embedding` (l'encodeur de
+        phrases générique) : les deux vivent dans des espaces différents."""
+        try:
+            response = safe_http_request(
+                "POST",
+                f"{self.api_url}/vision/embedding/text",
+                json={"text": text, "model_id": model_id},
+                headers=self._get_headers(),
+            )
+            vector = response.json().get("embedding")
+        except Exception as e:
+            logger.error(f"BrainAPI CLIP Text Embedding failed: {e}")
+            raise InferenceError(
+                f"BrainAPI CLIP text embedding failed (model_id={model_id}): {e}"
+            ) from e
+        return self._checked_vector(
+            vector, f"BrainAPI CLIP text embedding (model_id={model_id})"
+        )
+
+    def get_character_embedding(self, image_data: bytes) -> List[float]:
+        """Embedding CCIP -- « est-ce le MÊME personnage ? ». Pas de `model_id` :
+        CCIP est un modèle unique."""
+        try:
+            img_b64 = base64.b64encode(image_data).decode("utf-8")
+            response = safe_http_request(
+                "POST",
+                f"{self.api_url}/vision/character/embedding",
+                json={"image": img_b64},
+                headers=self._get_headers(),
+            )
+            vector = response.json().get("embedding")
+        except Exception as e:
+            logger.error(f"BrainAPI CCIP Embedding failed: {e}")
+            raise InferenceError(f"BrainAPI CCIP embedding failed: {e}") from e
+        return self._checked_vector(vector, "BrainAPI CCIP embedding")
 
     def classify_image(
         self,

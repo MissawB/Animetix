@@ -117,6 +117,58 @@ MODELS: dict[str, dict] = {
 }
 
 
+# --- Modèles de recherche visuelle : le nom vit dans le core ---------------
+#
+# Un service de domaine (`core.domain.services.visual_index`) doit pouvoir NOMMER
+# le modèle qui définit un espace vectoriel sans dépendre à la compilation de
+# l'adaptateur qui le charge (règle énoncée dans `core/ports/vector_store_port.py`).
+# Les constantes vivent donc ici ; `adapters.inference.ccip_vision` les importe
+# DEPUIS ce module et les ré-exporte pour ses propres appelants.
+#
+# CCIP : les poids ONNX vivent dans `deepghs/ccip_onnx`. `deepghs/ccip` est le
+# dépôt de base (checkpoints torch), il ne sert aucun graphe ONNX — écrire
+# `deepghs/ccip` ici, c'est nommer un modèle que personne ne charge.
+CCIP_REPO_ID = "deepghs/ccip_onnx"
+CCIP_MODEL_NAME = "ccip-caformer-24-randaug-pruned"
+CCIP_MODEL_ID = f"{CCIP_REPO_ID}/{CCIP_MODEL_NAME}"
+
+# CLIP EVA-02 affiné sur de l'illustration japonaise : une jaquette est un
+# dessin, pas une photo. Espace joint (image + texte) -> tour texte disponible.
+ANIME_CLIP_MODEL_ID = "dudcjs2779/anime-style-tag-clip"
+
+
+# --- Comment on CHARGE un modèle OpenCLIP ----------------------------------
+#
+# Le dépôt `dudcjs2779/anime-style-tag-clip` ne contient QUE trois fichiers :
+# `.gitattributes`, `README.md`, `model.safetensors`. Pas d'`open_clip_config.json`,
+# pas de `config.json`, pas de tokenizer. Donc
+# `open_clip.create_model_and_transforms("hf-hub:dudcjs2779/anime-style-tag-clip")`
+# ÉCHOUE : le Hub met en cache un marqueur `.no_exist/open_clip_config.json` et
+# open_clip n'a aucune architecture à construire. Router vers `hf-hub:` tout id
+# contenant un `/`, c'était nommer un modèle que personne ne peut charger.
+#
+# Ce qui existe dans le dépôt, ce sont les POIDS (un fine-tune) ; l'ARCHITECTURE
+# vient du config embarqué d'open_clip. La carte du modèle le dit :
+# fine-tune de `timm/eva02_base_patch16_clip_224.merged2b_s8b_b131k`,
+# `library_name: open_clip` -> architecture `EVA02-B-16`, 512 dimensions,
+# deux tours (image + texte) dans un espace joint.
+#
+# La recette vit ICI, à côté du nom du modèle, et pas dans un `if` de
+# l'adaptateur : « cet id » signifie « cette architecture, ces poids ». Un
+# deuxième modèle OpenCLIP s'ajoute en une entrée, sans toucher au chargeur.
+# Un id ABSENT de cette table n'est pas un modèle OpenCLIP : il part chez
+# sentence-transformers (`clip-ViT-B-32` et consorts), qui lèvera s'il ne sait
+# pas le charger — jamais de vecteur vide rendu en silence.
+OPEN_CLIP_MODELS: dict[str, dict[str, str]] = {
+    ANIME_CLIP_MODEL_ID: {
+        # Le nom d'architecture d'open_clip, pas un dépôt du Hub.
+        "architecture": "EVA02-B-16",
+        # Le seul fichier de poids publié par le dépôt.
+        "weights_file": "model.safetensors",
+    },
+}
+
+
 # Versioned embedding models (logical version -> model id). Revisions resolve
 # from MODELS via get_verified_revision — never duplicated here.
 EMBEDDING_VERSIONS: dict[str, dict[str, str]] = {

@@ -9,6 +9,56 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 logger = logging.getLogger("animetix." + __name__)
 
+
+def _as_metadata_dict(raw, collection_name, item_id):
+    """Normalise une valeur de la colonne `metadata` en dict.
+
+    `VectorRecord.metadata` est un `JSONField` : lu par l'ORM, il arrive déjà
+    décodé en dict. Lu en SQL BRUT (le chemin `query` sur PostgreSQL), il
+    court-circuite le décodage de Django et arrive tel que le pilote le rend —
+    une CHAÎNE JSON. Les deux branches de `query` rendaient donc deux types
+    différents, et le lecteur faisait `dict(meta)` : sur une chaîne, `dict()`
+    itère les CARACTÈRES et lève
+    « dictionary update sequence element #0 has length 1; 2 is required ».
+    Toute recherche visuelle contre la vraie base tombait là.
+
+    On normalise ICI, à la source, pour que TOUT lecteur de ce magasin reçoive
+    le même type — pas dans un adaptateur en aval avec un `isinstance`, qui
+    laisserait le piège armé pour le lecteur suivant.
+
+    Une métadonnée illisible est une VRAIE panne : on lève. La remplacer par
+    `{}` rendrait un résultat de recherche sans titre ni id — une corruption
+    déguisée en « aucune correspondance ».
+    """
+    if isinstance(raw, dict):
+        return raw
+
+    if isinstance(raw, (str, bytes, bytearray)):
+        try:
+            decoded = json.loads(raw)
+        except (TypeError, ValueError) as e:
+            raise ValueError(
+                f"Métadonnées illisibles pour « {item_id} » dans la collection "
+                f"« {collection_name} » : JSON invalide ({e}). Refus de rendre "
+                "un dict vide — la corruption passerait pour une absence de "
+                "résultat."
+            ) from e
+        if not isinstance(decoded, dict):
+            # `json.loads("[1, 2]")` réussit et rend une liste : `dict([1, 2])`
+            # lèverait chez le lecteur exactement comme la chaîne. Le contrôle
+            # porte sur la valeur DÉCODÉE, pas sur « json.loads a marché ».
+            raise ValueError(
+                f"Métadonnées de « {item_id} » dans « {collection_name} » : "
+                f"attendu un objet JSON, reçu {type(decoded).__name__}."
+            )
+        return decoded
+
+    raise ValueError(
+        f"Métadonnées de « {item_id} » dans « {collection_name} » : type "
+        f"inattendu {type(raw).__name__} — impossible d'en faire un dict."
+    )
+
+
 _alloydb_ai_supported = None
 
 
@@ -285,6 +335,31 @@ class PGVectorCollectionWrapper:
                                 ],
                             )
                         else:
+                            # Sans `document`, cette branche calcule NULL --
+                            # elle ne lit JAMAIS `embeddings` (l'embedding
+                            # vient de `embedding(model, doc)`, pas d'un
+                            # vecteur déjà calculé). Si l'appelant A fourni un
+                            # vecteur (ex. `VisualIndexService.index`, qui
+                            # n'appelle jamais `upsert_items` avec des
+                            # `documents`), l'écrire quand même en NULL le
+                            # jetterait en silence : `strict=True` ne se
+                            # déclenche jamais (aucune exception ne remonte),
+                            # et l'appelant annonce un succès pour une ligne
+                            # sans vecteur. Dormant sur Neon/Cloud SQL
+                            # aujourd'hui ; armé le jour où quelqu'un pointe
+                            # ceci sur une vraie instance AlloyDB.
+                            if embeddings is not None and embeddings[i]:
+                                raise ValueError(
+                                    f"AlloyDB AI branch: item {item_id!r} in "
+                                    f"collection {self.name!r} was given a "
+                                    "computed embedding but no `document` -- "
+                                    "this branch derives the embedding FROM "
+                                    "`documents` (`embedding(model, doc)`) and "
+                                    "silently writes NULL otherwise, discarding "
+                                    "the vector the caller already computed. "
+                                    "Refusing rather than writing a vectorless "
+                                    "row that looks like a successful upsert."
+                                )
                             sql = """
                                 INSERT INTO animetix_vectorrecord (collection_name, item_id, embedding, metadata, document, created_at)
                                 VALUES (%s, %s, NULL, %s, NULL, NOW())
@@ -378,7 +453,10 @@ class PGVectorCollectionWrapper:
                 ids, metas, docs, dists = [], [], [], []
                 for row in rows:
                     ids.append(row[0])
-                    metas.append(row[1])
+                    # SQL brut = pas de décodage JSONField : la colonne arrive en
+                    # chaîne. On la décode ici pour que cette branche rende le
+                    # MÊME type que la branche ORM plus bas (des dicts).
+                    metas.append(_as_metadata_dict(row[1], self.name, row[0]))
                     docs.append(row[2] or "")
                     dists.append(row[3])
 
@@ -430,7 +508,13 @@ class PGVectorCollectionWrapper:
                 for idx in sorted_indices:
                     rec = clean_records[idx]
                     ids.append(rec.item_id)
-                    metas.append(rec.metadata)
+                    # L'ORM décode déjà le JSONField : c'est un dict, et le
+                    # normaliseur le laisse passer tel quel. On l'applique quand
+                    # même — les deux branches passent par la MÊME fonction, donc
+                    # elles ne peuvent plus rendre deux types différents.
+                    metas.append(
+                        _as_metadata_dict(rec.metadata, self.name, rec.item_id)
+                    )
                     docs.append(rec.document or "")
                     dists.append(float(distances[idx]))
 

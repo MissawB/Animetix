@@ -4,7 +4,11 @@ from typing import Dict, List, Optional
 
 import numpy as np
 import orjson
-from adapters.persistence.cache_constants import COLLECTION_COUNT_CACHE_TTL_SECONDS
+from adapters.persistence.cache_constants import (
+    COLLECTION_COUNT_CACHE_TTL_SECONDS,
+    PGVRA_COLLECTION_COUNT_CACHE_PREFIX,
+    VSP_COLLECTION_COUNT_CACHE_PREFIX,
+)
 from core.ports.repository_port import RepositoryPort
 from core.utils.model_registry import (
     resolve_text_embedding_model_id,
@@ -161,19 +165,33 @@ class PGVectorRepositoryAdapter(RepositoryPort):
 
     @staticmethod
     def _collection_count_cache_key(collection_name: str) -> str:
-        return f"pgvra_collection_count_{collection_name}"
+        return f"{PGVRA_COLLECTION_COUNT_CACHE_PREFIX}{collection_name}"
 
     def _invalidate_collection_count(self, collection_name: str) -> None:
         """Best-effort cache invalidation: a failure here must not surface as
         an upsert/delete failure -- it only means the cached count stays
         stale for (at most) the remainder of the TTL, the same tradeoff
-        already accepted for the cache in general."""
-        try:
-            cache.delete(self._collection_count_cache_key(collection_name))
-        except Exception as e:
-            logger.warning(
-                f"Cache invalidation failed for collection '{collection_name}': {e}"
-            )
+        already accepted for the cache in general.
+
+        Invalidates BOTH count caches -- this adapter's own
+        (`pgvra_collection_count_*`) AND `PgVectorStoreAdapter`'s
+        (`vsp_collection_count_*`, the one `MediaSearchView`'s 503 "index not
+        built" guard actually reads). They count the same fact under two
+        different keys; clearing only the writer's own key left the guard
+        free to keep answering "index not built" for up to
+        `COLLECTION_COUNT_CACHE_TTL_SECONDS` after a build had already landed.
+        """
+        for cache_key in (
+            self._collection_count_cache_key(collection_name),
+            f"{VSP_COLLECTION_COUNT_CACHE_PREFIX}{collection_name}",
+        ):
+            try:
+                cache.delete(cache_key)
+            except Exception as e:
+                logger.warning(
+                    f"Cache invalidation failed for collection '{collection_name}' "
+                    f"(key '{cache_key}'): {e}"
+                )
 
     def upsert_items(
         self,
@@ -182,6 +200,7 @@ class PGVectorRepositoryAdapter(RepositoryPort):
         embeddings: List[List[float]],
         metadatas: List[Dict],
         documents: Optional[List[str]] = None,
+        strict: bool = False,
     ):
         try:
             coll = self.manager.get_collection(collection_name)
@@ -190,6 +209,11 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             )
         except Exception as e:
             logger.error(f"PGVector Upsert Error in {collection_name}: {e}")
+            # L'upsert tourne dans un `transaction.atomic()` : l'échec a annulé le
+            # LOT ENTIER. Un appelant qui compte ce qu'il a écrit doit le savoir,
+            # sinon il annonce des vecteurs qui n'existent pas.
+            if strict:
+                raise
             return
         # A fresh backfill must be immediately visible, not hidden behind a
         # cached "empty" count for up to 60s (see get_collection_count below).

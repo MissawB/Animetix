@@ -1,7 +1,11 @@
 import logging
 from typing import Dict, List
 
-from adapters.persistence.cache_constants import COLLECTION_COUNT_CACHE_TTL_SECONDS
+from adapters.persistence.cache_constants import (
+    COLLECTION_COUNT_CACHE_TTL_SECONDS,
+    VSP_COLLECTION_COUNT_CACHE_PREFIX,
+)
+from core.domain.exceptions import InfrastructureError
 from core.ports.vector_store_port import VectorStorePort
 from django.core.cache import cache
 from pipeline.vector_client import vector_manager
@@ -26,24 +30,41 @@ class PgVectorStoreAdapter(VectorStorePort):
     def search_by_vector(
         self, collection_name: str, query_vector: List[float], limit: int = 10
     ) -> List[Dict]:
+        """Cherche les plus proches voisins. LÈVE si la requête échoue.
+
+        Cette méthode avalait toute exception et rendait `[]`. Or l'appelant
+        (la recherche visuelle) facture AVANT de chercher : une panne pgvector
+        devenait un 200 avec zéro résultat, impossible à distinguer d'un
+        « aucune correspondance ». L'utilisateur payait, lisait « rien trouvé »,
+        et la panne ne laissait aucune trace côté réponse.
+
+        Une liste vide veut dire « la requête a tourné et n'a rien trouvé », et
+        uniquement ça. Tout le reste lève — l'appelant (la vue) transforme déjà
+        une exception en 500.
+        """
         try:
             collection = vector_manager.get_collection(collection_name)
             res = collection.query(query_embeddings=[query_vector], n_results=limit)
-            results: List[Dict] = []
-            if res and res.get("metadatas") and res["metadatas"][0]:
-                for meta, doc_id in zip(res["metadatas"][0], res["ids"][0]):
-                    doc = dict(meta)
-                    doc["id"] = doc_id
-                    results.append(doc)
-            return results
         except Exception as e:
-            logger.error(
+            logger.exception(
                 f"Vector search failed for collection '{collection_name}': {e}"
             )
-            return []
+            raise InfrastructureError(
+                f"La recherche vectorielle dans « {collection_name} » a échoué : "
+                f"{e}. Refus de rendre une liste vide — elle passerait pour "
+                "« aucun résultat » alors que la requête n'a jamais abouti."
+            ) from e
+
+        results: List[Dict] = []
+        if res and res.get("metadatas") and res["metadatas"][0]:
+            for meta, doc_id in zip(res["metadatas"][0], res["ids"][0]):
+                doc = dict(meta)
+                doc["id"] = doc_id
+                results.append(doc)
+        return results
 
     def get_collection_count(self, collection_name: str) -> int:
-        cache_key = f"vsp_collection_count_{collection_name}"
+        cache_key = f"{VSP_COLLECTION_COUNT_CACHE_PREFIX}{collection_name}"
 
         try:
             cached = cache.get(cache_key)

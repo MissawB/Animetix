@@ -108,6 +108,7 @@ def test_deep_multimodal_search_raises_when_collection_empty(
         cross_modal_service.deep_multimodal_search("query", image_data=b"img")
 
     mock_engine.get_text_embedding.assert_not_called()
+    mock_engine.get_text_embedding_clip.assert_not_called()
     mock_engine.get_image_embedding.assert_not_called()
     mock_vector_db.search_by_vector.assert_not_called()
 
@@ -137,9 +138,33 @@ def test_failed_text_embedding_does_not_fall_back_to_random_vector(
     """A failed embedding must never be replaced by `np.random.rand(...)` --
     that turned a broken inference call into a confident-looking, made-up
     result set. It must propagate instead."""
-    mock_engine.get_text_embedding.side_effect = RuntimeError("embedding backend down")
+    mock_engine.get_text_embedding_clip.side_effect = RuntimeError(
+        "embedding backend down"
+    )
 
     with pytest.raises(RuntimeError):
         cross_modal_service.deep_multimodal_search("some query")
 
     mock_vector_db.search_by_vector.assert_not_called()
+
+
+def test_text_query_is_encoded_by_clips_own_text_tower_never_the_generic_one(
+    cross_modal_service, mock_engine, mock_vector_db
+):
+    """`unified_clip_space` holds CLIP image vectors. Fusing them with a
+    generic sentence-transformers text vector (`get_text_embedding`) averages
+    two unrelated spaces -- either a dimension error, or a number that looks
+    plausible and means nothing. The text side must go through the SAME
+    model's own text tower (`get_text_embedding_clip`), pinned to the `work`
+    target's model id -- never the generic encoder, even silently as a
+    fallback."""
+    mock_engine.get_text_embedding_clip.return_value = [0.2] * 512
+    mock_vector_db.search_by_vector.return_value = []
+
+    cross_modal_service.deep_multimodal_search("une fille aux cheveux blancs")
+
+    mock_engine.get_text_embedding_clip.assert_called_once_with(
+        "une fille aux cheveux blancs",
+        model_id="dudcjs2779/anime-style-tag-clip",
+    )
+    mock_engine.get_text_embedding.assert_not_called()

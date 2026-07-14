@@ -14,7 +14,7 @@ import httpx
 import pytest
 from adapters.inference.brain_api_adapter import BrainAPIAdapter
 from core.domain.entities.ai_schemas import InferenceResponse
-from core.domain.exceptions import ConfigurationError
+from core.domain.exceptions import ConfigurationError, InferenceError
 from core.ports.inference_port import InferenceNotImplementedError
 
 MODULE = "adapters.inference.brain_api_adapter.safe_http_request"
@@ -260,10 +260,109 @@ def test_get_image_embedding_encodes_and_parses(adapter):
     assert req.call_args.args[1] == "http://brain:5000/vision/embedding"
 
 
-def test_get_image_embedding_reraises(adapter):
+def test_get_image_embedding_raises_inference_error_on_transport_failure(adapter):
+    """Le contrat de toute la branche : une panne se lève, elle ne se déguise
+    jamais en `[]`. Avant ce correctif, seule l'exception brute (`RuntimeError`)
+    remontait -- un appelant qui n'attrape que `InferenceError` (comme
+    `VisualIndexService`/`FallbackInferenceAdapter`) la laissait filtrer."""
     with patch(MODULE, side_effect=RuntimeError("x")):
-        with pytest.raises(RuntimeError):
+        with pytest.raises(InferenceError, match="x"):
             adapter.get_image_embedding(b"data")
+
+
+def test_get_image_embedding_raises_on_empty_vector(adapter):
+    with patch(MODULE) as req:
+        req.return_value = _resp({"embedding": []})
+        with pytest.raises(InferenceError):
+            adapter.get_image_embedding(b"data")
+
+
+def test_get_image_embedding_raises_on_zero_vector(adapter):
+    """Un vecteur non vide mais entièrement nul est la même panne déguisée."""
+    with patch(MODULE) as req:
+        req.return_value = _resp({"embedding": [0.0, 0.0, 0.0]})
+        with pytest.raises(InferenceError):
+            adapter.get_image_embedding(b"data")
+
+
+# --- CLIP text-tower embedding (visual search, text query) ------------------
+#
+# The text tower of the SAME CLIP model that produced the image space --
+# reaches a DIFFERENT route than get_image_embedding. Never confused with
+# get_text_embedding (the generic sentence-transformers endpoint above).
+
+
+def test_get_text_embedding_clip_encodes_and_parses(adapter):
+    with patch(MODULE) as req:
+        req.return_value = _resp({"embedding": [0.1, 0.2]})
+        out = adapter.get_text_embedding_clip(
+            "une fille aux cheveux blancs",
+            model_id="dudcjs2779/anime-style-tag-clip",
+        )
+    assert out == [0.1, 0.2]
+    assert req.call_args.args[1] == "http://brain:5000/vision/embedding/text"
+    assert req.call_args.kwargs["json"] == {
+        "text": "une fille aux cheveux blancs",
+        "model_id": "dudcjs2779/anime-style-tag-clip",
+    }
+
+
+def test_get_text_embedding_clip_raises_inference_error_on_transport_failure(adapter):
+    with patch(MODULE, side_effect=RuntimeError("down")):
+        with pytest.raises(InferenceError, match="down"):
+            adapter.get_text_embedding_clip("x", model_id="m")
+
+
+def test_get_text_embedding_clip_raises_on_empty_vector(adapter):
+    with patch(MODULE) as req:
+        req.return_value = _resp({"embedding": []})
+        with pytest.raises(InferenceError):
+            adapter.get_text_embedding_clip("x", model_id="m")
+
+
+def test_get_text_embedding_clip_raises_on_zero_vector(adapter):
+    with patch(MODULE) as req:
+        req.return_value = _resp({"embedding": [0.0, 0.0]})
+        with pytest.raises(InferenceError):
+            adapter.get_text_embedding_clip("x", model_id="m")
+
+
+# --- CCIP character embedding (visual search, character target) -------------
+#
+# "Is this the SAME character?" -- a different model, a different route, no
+# model_id (CCIP is a single fixed model, unlike CLIP's multi-model tower).
+
+
+def test_get_character_embedding_encodes_and_parses(adapter):
+    raw = b"\x89PNG-character-portrait"
+    with patch(MODULE) as req:
+        req.return_value = _resp({"embedding": [0.3] * 768})
+        out = adapter.get_character_embedding(raw)
+    assert out == [0.3] * 768
+    assert req.call_args.args[1] == "http://brain:5000/vision/character/embedding"
+    assert req.call_args.kwargs["json"] == {
+        "image": base64.b64encode(raw).decode("utf-8")
+    }
+
+
+def test_get_character_embedding_raises_inference_error_on_transport_failure(adapter):
+    with patch(MODULE, side_effect=RuntimeError("down")):
+        with pytest.raises(InferenceError, match="down"):
+            adapter.get_character_embedding(b"img")
+
+
+def test_get_character_embedding_raises_on_empty_vector(adapter):
+    with patch(MODULE) as req:
+        req.return_value = _resp({"embedding": []})
+        with pytest.raises(InferenceError):
+            adapter.get_character_embedding(b"img")
+
+
+def test_get_character_embedding_raises_on_zero_vector(adapter):
+    with patch(MODULE) as req:
+        req.return_value = _resp({"embedding": [0.0] * 768})
+        with pytest.raises(InferenceError):
+            adapter.get_character_embedding(b"img")
 
 
 # --- vision: classify / detect ----------------------------------------------

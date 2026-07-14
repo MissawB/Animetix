@@ -74,6 +74,15 @@ urlpatterns = [
         name="api-achievements",
     ),
     path("search/", api_views.MediaSearchView.as_view(), name="api_search"),
+    # Same view, new path: the per-target visual search (`target=work|character`)
+    # this endpoint now serves (see task-5-brief.md). Additive -- `search/`
+    # keeps working for the existing text/legacy-image callers until the
+    # frontend migrates (a later task) to this one.
+    path(
+        "media/search/",
+        api_views.MediaSearchView.as_view(),
+        name="api_media_search",
+    ),
     path(
         "media/Manga/suwayomi-image/",
         api_views.suwayomi_image_proxy,

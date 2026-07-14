@@ -27,14 +27,22 @@ export async function searchMedia(query: string, mediaType = 'anime'): Promise<M
   return apiClient(`/api/v1/search/?q=${encodeURIComponent(query)}&media_type=${mediaType}`);
 }
 
-export async function searchMediaByImage(file: File, mediaType = 'Anime'): Promise<MediaItem[]> {
+// Recherche visuelle par cible : `work` (jaquette, CLIP anime-tuné) ou
+// `character` (portrait, CCIP). Ce n'est PAS un index de frames d'épisodes
+// (ça, c'est le métier de trace.moe) -- on ne retrouve jamais un anime depuis
+// une capture d'écran. Le serveur répond 503 (sans facturer) si l'index de la
+// cible demandée n'est pas encore construit.
+export async function searchByImage(
+  file: File,
+  target: 'work' | 'character' = 'work',
+): Promise<MediaItem[]> {
   const formData = new FormData();
   formData.append('image', file);
-  formData.append('media_type', mediaType);
+  formData.append('target', target);
   // isFormData lets apiClient skip the JSON Content-Type (so the browser sets the
   // multipart boundary) while still injecting CSRF + Firebase auth and surfacing
   // error toasts — which a raw fetch() would bypass.
-  return apiClient('/api/v1/search/', { method: 'POST', body: formData, isFormData: true });
+  return apiClient('/api/v1/media/search/', { method: 'POST', body: formData, isFormData: true });
 }
 
 // --- Classic Game API ---

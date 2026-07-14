@@ -41,8 +41,12 @@ class DjangoRepositoryAdapter(RepositoryPort):
         embeddings: List[List[float]],
         metadatas: List[Dict],
         documents: Optional[List[str]] = None,
+        strict: bool = False,
     ):
-        """Upsert les items dans Django (ignore les embeddings)."""
+        """Upsert les items dans Django (ignore les embeddings).
+
+        Rien n'est avalé ici : `strict` n'a rien à changer, l'échec lève déjà.
+        """
         for i, external_id in enumerate(ids):
             MediaItem.objects.update_or_create(
                 external_id=external_id, defaults={"metadata": metadatas[i]}

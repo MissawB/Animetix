@@ -273,8 +273,21 @@ def test_upsert_items_forwards_to_collection(adapter):
 
 def test_upsert_items_swallows_error(adapter):
     adapter.manager.get_collection.side_effect = RuntimeError("x")
-    # Must not raise.
+    # Must not raise: the mass pipelines prefer to lose a batch over losing a run.
     adapter.upsert_items("col", ["1"], [[0.1]], [{}])
+
+
+def test_upsert_items_raises_when_strict(adapter):
+    """A caller that COUNTS what it wrote must be told when nothing landed.
+
+    The upsert runs in a transaction: a failure rolled the whole batch back.
+    Swallowing it there is how `build_visual_index` came to print "N vecteurs
+    écrits" in green for vectors that do not exist.
+    """
+    adapter.manager.get_collection.side_effect = RuntimeError("dimension mismatch")
+
+    with pytest.raises(RuntimeError):
+        adapter.upsert_items("col", ["1"], [[0.1]], [{}], strict=True)
 
 
 def test_delete_collection_forwards(adapter):
@@ -370,6 +383,19 @@ def test_upsert_items_invalidates_cached_count(adapter):
     assert adapter.get_collection_count("col") == 1
 
 
+def test_upsert_items_invalidates_the_twin_read_side_cache_too(adapter):
+    """MINOR: `PgVectorStoreAdapter`'s 503 "index not built" guard
+    (`MediaSearchView.post`) reads `vsp_collection_count_*`, a DIFFERENT key
+    from this adapter's own `pgvra_collection_count_*`. Before this fix, an
+    upsert invalidated only its own key -- the guard could keep answering
+    "index not built" for up to 60s after a build had already landed."""
+    from django.core.cache import cache
+
+    cache.set("vsp_collection_count_col", 0, timeout=60)
+    adapter.upsert_items("col", ["1"], [[0.1]], [{"m": 1}])
+    assert cache.get("vsp_collection_count_col") is None
+
+
 def test_delete_collection_invalidates_cached_count(adapter):
     """An emptied collection must not stay billable (cached non-zero count)
     for up to 60s after the delete."""
@@ -378,6 +404,14 @@ def test_delete_collection_invalidates_cached_count(adapter):
     cache.set("pgvra_collection_count_col", 5, timeout=60)
     adapter.delete_collection("col")
     assert cache.get("pgvra_collection_count_col") is None
+
+
+def test_delete_collection_invalidates_the_twin_read_side_cache_too(adapter):
+    from django.core.cache import cache
+
+    cache.set("vsp_collection_count_col", 5, timeout=60)
+    adapter.delete_collection("col")
+    assert cache.get("vsp_collection_count_col") is None
 
 
 def test_get_all_ids(adapter):

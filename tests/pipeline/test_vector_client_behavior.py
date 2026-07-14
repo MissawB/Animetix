@@ -160,7 +160,12 @@ def test_manager_heartbeat_returns_timestamp():
 
 
 def test_query_native_pgvector_sql(mocker):
-    rows = [("id1", {"t": "a"}, "doc1", 0.12)]
+    # A real psycopg cursor hands the `metadata` column back as a JSON STRING,
+    # not a dict -- Django's JSONField decoding only happens through the ORM,
+    # and this branch bypasses it with raw SQL. The fake must hand back what the
+    # database hands back, or it tests nothing. (This row used to be a dict, and
+    # that is precisely why the crash below reached production.)
+    rows = [("id1", json.dumps({"t": "a"}), "doc1", 0.12)]
     conn, cur = _fake_connection(cursor=FakeCursor(rows=rows))
     mocker.patch.object(cc, "connection", conn)
     mocker.patch.object(cc, "is_alloydb_ai_supported", return_value=False)
@@ -193,7 +198,7 @@ def test_query_native_pgvector_applies_where_filter(mocker):
 
 
 def test_query_alloydb_native_vectorization_sql(mocker):
-    rows = [("id9", {"m": 1}, "d", 0.5)]
+    rows = [("id9", json.dumps({"m": 1}), "d", 0.5)]
     conn, cur = _fake_connection(cursor=FakeCursor(rows=rows))
     mocker.patch.object(cc, "connection", conn)
     mocker.patch.object(cc, "is_alloydb_ai_supported", return_value=True)
@@ -207,6 +212,143 @@ def test_query_alloydb_native_vectorization_sql(mocker):
     assert "text-embedding-005" in params
     assert "a hero" in params
     assert out["ids"] == [["id9"]]
+    assert out["metadatas"] == [[{"m": 1}]]
+
+
+# --- query() : the metadata TYPE contract, pinned on BOTH branches -------
+#
+# The raw-SQL branch appended the cursor's `metadata` column straight through --
+# a JSON *string* -- while the ORM branch appended `record.metadata`, a *dict*.
+# Two branches of one method returned two different types, and every fake in the
+# suite happened to hand back the dict-shaped one. The first real search against
+# the real database blew up in the reader:
+#     doc = dict(meta)  ->  ValueError: dictionary update sequence element #0
+#                           has length 1; 2 is required
+# (`dict("{\"title\": ...")` iterates the string's characters.) These tests pin
+# the type on both branches so the two can never drift apart again.
+
+
+def test_query_postgres_branch_decodes_json_string_metadata_into_dicts(mocker):
+    """THE regression. The database returns a JSON string; the caller must get
+    a dict, exactly like the ORM branch below."""
+    rows = [
+        (
+            "Anime:1",
+            json.dumps(
+                {"title": "Cowboy Bebop", "media_type": "Anime", "external_id": "1"}
+            ),
+            "",
+            0.02,
+        )
+    ]
+    conn, _ = _fake_connection(cursor=FakeCursor(rows=rows))
+    mocker.patch.object(cc, "connection", conn)
+    mocker.patch.object(cc, "is_alloydb_ai_supported", return_value=False)
+
+    out = PGVectorCollectionWrapper("unified_clip_space").query(
+        query_embeddings=[[1.0, 0.0]], n_results=1
+    )
+
+    meta = out["metadatas"][0][0]
+    assert isinstance(meta, dict)
+    assert meta["title"] == "Cowboy Bebop"
+    # The reader's exact move, the one that crashed in production.
+    assert dict(meta)["media_type"] == "Anime"
+
+
+def test_query_postgres_branch_passes_a_dict_through_untouched(mocker):
+    """Some drivers/configs already decode `jsonb` for you. Both shapes must
+    land on a dict -- the fix must not depend on which one you get."""
+    rows = [("Anime:1", {"title": "Cowboy Bebop"}, "", 0.02)]
+    conn, _ = _fake_connection(cursor=FakeCursor(rows=rows))
+    mocker.patch.object(cc, "connection", conn)
+    mocker.patch.object(cc, "is_alloydb_ai_supported", return_value=False)
+
+    out = PGVectorCollectionWrapper("unified_clip_space").query(
+        query_embeddings=[[1.0, 0.0]]
+    )
+    assert out["metadatas"][0][0] == {"title": "Cowboy Bebop"}
+
+
+def test_query_postgres_branch_raises_on_metadata_it_cannot_parse(mocker):
+    """A row whose metadata cannot be decoded is a REAL failure. Substituting
+    `{}` would hand the reader a result with no title and no id -- a search
+    result that looks like a miss instead of the corruption it is."""
+    rows = [("Anime:1", "{ceci n'est pas du JSON", "", 0.02)]
+    conn, _ = _fake_connection(cursor=FakeCursor(rows=rows))
+    mocker.patch.object(cc, "connection", conn)
+    mocker.patch.object(cc, "is_alloydb_ai_supported", return_value=False)
+
+    with pytest.raises(ValueError):
+        PGVectorCollectionWrapper("unified_clip_space").query(
+            query_embeddings=[[1.0, 0.0]]
+        )
+
+
+def test_query_postgres_branch_raises_when_metadata_is_json_but_not_an_object(mocker):
+    """`json.loads("[1, 2]")` succeeds and returns a list. `dict([1, 2])` then
+    blows up in the reader exactly like the string did -- so the type check must
+    be on the DECODED value, not merely on "did json.loads work"."""
+    rows = [("Anime:1", json.dumps([1, 2]), "", 0.02)]
+    conn, _ = _fake_connection(cursor=FakeCursor(rows=rows))
+    mocker.patch.object(cc, "connection", conn)
+    mocker.patch.object(cc, "is_alloydb_ai_supported", return_value=False)
+
+    with pytest.raises(ValueError):
+        PGVectorCollectionWrapper("unified_clip_space").query(
+            query_embeddings=[[1.0, 0.0]]
+        )
+
+
+def test_query_with_alloydb_supported_but_a_vector_query_uses_the_pgvector_branch(
+    mocker,
+):
+    """La configuration EXACTE de la base de production : `is_alloydb_ai_supported()`
+    est VRAI, et la recherche visuelle passe un VECTEUR déjà calculé (jamais de
+    `query_texts` — `VisualIndexService.search` n'en passe aucun).
+
+    Deux choses à tenir, et c'est la branche qui vient de tomber en production :
+
+    1. Le SQL doit rester le `<=>` natif sur le vecteur de l'appelant. Si
+       AlloyDB « gagnait » ici, il vectoriserait du TEXTE avec
+       `embedding(text-embedding-005, ...)` — un espace à 768 dimensions — pour
+       interroger une collection de vecteurs CLIP à 512 : erreur de dimension,
+       ou pire, un classement qui ne veut rien dire.
+    2. Les métadonnées doivent revenir en dicts, comme partout ailleurs.
+    """
+    rows = [("Anime:1", json.dumps({"title": "Cowboy Bebop"}), "", 0.02)]
+    conn, cur = _fake_connection(cursor=FakeCursor(rows=rows))
+    mocker.patch.object(cc, "connection", conn)
+    mocker.patch.object(cc, "is_alloydb_ai_supported", return_value=True)
+
+    out = PGVectorCollectionWrapper("unified_clip_space").query(
+        query_embeddings=[[0.1] * 512], n_results=1
+    )
+
+    sql, params = cur.executed[0]
+    # Le vecteur de l'appelant, pas une vectorisation de texte côté serveur.
+    assert "(embedding <=> %s::vector) as distance" in sql
+    assert "embedding(%s, %s)::vector" not in sql
+    assert params[0] == [0.1] * 512
+    assert out["metadatas"][0][0] == {"title": "Cowboy Bebop"}
+
+
+@pytest.mark.django_db
+def test_query_orm_branch_also_returns_dicts():
+    """The other half of the contract, against the REAL model/DB (sqlite): the
+    ORM branch must return dicts too. Pinning both halves in the same file is
+    the point -- it is their DIVERGENCE that shipped the bug."""
+    coll = PGVectorCollectionWrapper("coll_types")
+    coll.upsert(
+        ids=["Anime:1"],
+        embeddings=[[1.0, 0.0]],
+        metadatas=[{"title": "Cowboy Bebop", "media_type": "Anime"}],
+    )
+    out = coll.query(query_embeddings=[[1.0, 0.0]], n_results=1)
+
+    meta = out["metadatas"][0][0]
+    assert isinstance(meta, dict)
+    assert dict(meta)["title"] == "Cowboy Bebop"
 
 
 def test_query_returns_empty_structure_when_no_inputs(mocker):
@@ -263,6 +405,55 @@ def test_upsert_alloydb_null_embedding_when_no_document(mocker):
     sql, params = cur.executed[0]
     assert "VALUES (%s, %s, NULL, %s, NULL, NOW())" in sql
     assert params[0] == "anime" and params[1] == "1"
+
+
+def test_upsert_alloydb_raises_instead_of_discarding_a_supplied_embedding(mocker):
+    """IMPORTANT: this branch computes `embedding = embedding(model, document)`
+    -- it never reads a caller-supplied `embeddings` vector at all. When
+    `documents` is absent (exactly what `VisualIndexService.index` always
+    passes: it hands over vectors it already computed itself, never raw text),
+    the old code silently wrote `embedding = NULL` and returned normally. No
+    exception meant `strict=True` never fired, so `VisualIndexService.index`
+    (and the command built on it) announced success for a row that holds no
+    vector at all. Dormant on Neon/Cloud SQL today (is_alloydb_ai_supported()
+    is False there); armed the day anyone points this at a real AlloyDB
+    instance. Must raise instead of quietly writing a vectorless row.
+    """
+    cur = FakeCursor()
+    conn, _ = _fake_connection(cursor=cur)
+    mocker.patch.object(cc, "connection", conn)
+    mocker.patch.object(cc, "is_alloydb_ai_supported", return_value=True)
+    mocker.patch.object(cc.transaction, "atomic", MagicMock())
+
+    coll = PGVectorCollectionWrapper("unified_clip_space")
+
+    with pytest.raises(ValueError):
+        coll.upsert(
+            ids=["Anime:1"],
+            embeddings=[[0.1, 0.2, 0.3]],
+            metadatas=[{"external_id": "1"}],
+            # no documents: exactly VisualIndexService.index's call shape.
+        )
+
+    # Nothing was silently written under this id.
+    assert cur.executed == []
+
+
+def test_upsert_alloydb_still_writes_null_when_no_embedding_and_no_document(mocker):
+    """The guard is specific to a DISCARDED vector -- when the caller never
+    supplied one in the first place (the pre-existing, legitimate case), NULL
+    is the honest answer and nothing is being thrown away."""
+    cur = FakeCursor()
+    conn, _ = _fake_connection(cursor=cur)
+    mocker.patch.object(cc, "connection", conn)
+    mocker.patch.object(cc, "is_alloydb_ai_supported", return_value=True)
+    mocker.patch.object(cc.transaction, "atomic", MagicMock())
+
+    coll = PGVectorCollectionWrapper("anime")
+    coll.upsert(ids=["1"], embeddings=[[]], metadatas=[{"a": 1}])
+
+    sql, params = cur.executed[0]
+    assert "VALUES (%s, %s, NULL, %s, NULL, NOW())" in sql
 
 
 # --- SQLite real-DB paths (django_db) -----------------------------------
