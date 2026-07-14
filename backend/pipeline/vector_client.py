@@ -285,6 +285,31 @@ class PGVectorCollectionWrapper:
                                 ],
                             )
                         else:
+                            # Sans `document`, cette branche calcule NULL --
+                            # elle ne lit JAMAIS `embeddings` (l'embedding
+                            # vient de `embedding(model, doc)`, pas d'un
+                            # vecteur déjà calculé). Si l'appelant A fourni un
+                            # vecteur (ex. `VisualIndexService.index`, qui
+                            # n'appelle jamais `upsert_items` avec des
+                            # `documents`), l'écrire quand même en NULL le
+                            # jetterait en silence : `strict=True` ne se
+                            # déclenche jamais (aucune exception ne remonte),
+                            # et l'appelant annonce un succès pour une ligne
+                            # sans vecteur. Dormant sur Neon/Cloud SQL
+                            # aujourd'hui ; armé le jour où quelqu'un pointe
+                            # ceci sur une vraie instance AlloyDB.
+                            if embeddings is not None and embeddings[i]:
+                                raise ValueError(
+                                    f"AlloyDB AI branch: item {item_id!r} in "
+                                    f"collection {self.name!r} was given a "
+                                    "computed embedding but no `document` -- "
+                                    "this branch derives the embedding FROM "
+                                    "`documents` (`embedding(model, doc)`) and "
+                                    "silently writes NULL otherwise, discarding "
+                                    "the vector the caller already computed. "
+                                    "Refusing rather than writing a vectorless "
+                                    "row that looks like a successful upsert."
+                                )
                             sql = """
                                 INSERT INTO animetix_vectorrecord (collection_name, item_id, embedding, metadata, document, created_at)
                                 VALUES (%s, %s, NULL, %s, NULL, NOW())

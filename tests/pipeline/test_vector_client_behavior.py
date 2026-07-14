@@ -265,6 +265,55 @@ def test_upsert_alloydb_null_embedding_when_no_document(mocker):
     assert params[0] == "anime" and params[1] == "1"
 
 
+def test_upsert_alloydb_raises_instead_of_discarding_a_supplied_embedding(mocker):
+    """IMPORTANT: this branch computes `embedding = embedding(model, document)`
+    -- it never reads a caller-supplied `embeddings` vector at all. When
+    `documents` is absent (exactly what `VisualIndexService.index` always
+    passes: it hands over vectors it already computed itself, never raw text),
+    the old code silently wrote `embedding = NULL` and returned normally. No
+    exception meant `strict=True` never fired, so `VisualIndexService.index`
+    (and the command built on it) announced success for a row that holds no
+    vector at all. Dormant on Neon/Cloud SQL today (is_alloydb_ai_supported()
+    is False there); armed the day anyone points this at a real AlloyDB
+    instance. Must raise instead of quietly writing a vectorless row.
+    """
+    cur = FakeCursor()
+    conn, _ = _fake_connection(cursor=cur)
+    mocker.patch.object(cc, "connection", conn)
+    mocker.patch.object(cc, "is_alloydb_ai_supported", return_value=True)
+    mocker.patch.object(cc.transaction, "atomic", MagicMock())
+
+    coll = PGVectorCollectionWrapper("unified_clip_space")
+
+    with pytest.raises(ValueError):
+        coll.upsert(
+            ids=["Anime:1"],
+            embeddings=[[0.1, 0.2, 0.3]],
+            metadatas=[{"external_id": "1"}],
+            # no documents: exactly VisualIndexService.index's call shape.
+        )
+
+    # Nothing was silently written under this id.
+    assert cur.executed == []
+
+
+def test_upsert_alloydb_still_writes_null_when_no_embedding_and_no_document(mocker):
+    """The guard is specific to a DISCARDED vector -- when the caller never
+    supplied one in the first place (the pre-existing, legitimate case), NULL
+    is the honest answer and nothing is being thrown away."""
+    cur = FakeCursor()
+    conn, _ = _fake_connection(cursor=cur)
+    mocker.patch.object(cc, "connection", conn)
+    mocker.patch.object(cc, "is_alloydb_ai_supported", return_value=True)
+    mocker.patch.object(cc.transaction, "atomic", MagicMock())
+
+    coll = PGVectorCollectionWrapper("anime")
+    coll.upsert(ids=["1"], embeddings=[[]], metadatas=[{"a": 1}])
+
+    sql, params = cur.executed[0]
+    assert "VALUES (%s, %s, NULL, %s, NULL, NOW())" in sql
+
+
 # --- SQLite real-DB paths (django_db) -----------------------------------
 
 
