@@ -166,3 +166,4 @@ coverage.xml
 
 # Catalogue offline généré au runtime (SQLite), pas une source
 backend/api/animetix/static/animetix/data/
+.playwright-mcp/
