@@ -277,6 +277,12 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         vector_db=persistence.vector_store,
     )
 
+    visual_index_service = providers.Singleton(
+        LazyClass("core.domain.services.visual_index", "VisualIndexService"),
+        inference_engine=inference.inference_engine,
+        repository=persistence.repository,
+    )
+
     spatial_computing_service = providers.Singleton(
         LazyClass(
             "core.domain.services.spatial_computing_service", "SpatialComputingService"
