@@ -20,6 +20,7 @@ from core.domain.entities.ai_schemas import (
     InferenceResponse,
     TokenLogProb,
 )
+from core.domain.exceptions import InferenceError
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 
 # --- test doubles ------------------------------------------------------------
@@ -261,14 +262,35 @@ def test_fallback_call_none_result_falls_through():
     assert fb.get_text_embedding("hi") == [1.0, 2.0]
 
 
-def test_fallback_call_all_fail_returns_method_default_empty_list():
+def test_get_image_embedding_raises_when_every_backend_fails():
+    """`_fallback_call` avale l'exception de chaque adaptateur et rend `None` ;
+    la méthode le transformait en `[]`. Un appelant sans garde-fou
+    (`AdvancedVisionService.get_unified_embedding`, `get_style_embedding_with_lora`,
+    `get_character_face_embedding`) recevait alors « l'image s'est encodée en
+    rien » sans une erreur -- la panne silencieuse que cette branche existe pour
+    tuer. Ses deux jumelles (`get_text_embedding_clip`, `get_character_embedding`)
+    lèvent déjà ; celle-ci n'avait jamais été alignée.
+    """
+
     class A(BaseFake):
         def get_image_embedding(self, image_data, model_id=None):
             raise RuntimeError("x")
 
     fb = FallbackInferenceAdapter([A("A")])
-    # _fallback_call returns None -> method coalesces to [].
-    assert fb.get_image_embedding(b"img") == []
+    with pytest.raises(InferenceError):
+        fb.get_image_embedding(b"img")
+
+
+def test_get_image_embedding_raises_when_the_only_backend_returns_an_empty_vector():
+    """Un moteur qui rend `[]` sans lever est la même panne, autrement déguisée."""
+
+    class A(BaseFake):
+        def get_image_embedding(self, image_data, model_id=None):
+            return []
+
+    fb = FallbackInferenceAdapter([A("A")])
+    with pytest.raises(InferenceError):
+        fb.get_image_embedding(b"img")
 
 
 def test_classify_image_default_empty_dict_when_all_fail():

@@ -517,7 +517,24 @@ class FallbackInferenceAdapter(InferencePort):
     def get_image_embedding(
         self, image_data: bytes, model_id: Optional[str] = None
     ) -> List[float]:
-        return self._fallback_call("get_image_embedding", image_data, model_id) or []
+        """Embedding image. Même règle que ses deux jumelles ci-dessous : une
+        panne se lève, elle ne se déguise pas en `[]`.
+
+        `_fallback_call` avale l'exception de CHAQUE adaptateur et rend `None`
+        quand aucun n'a servi la méthode. Le `or []` historique transformait ça
+        en « l'image s'est encodée en rien » : `VisualIndexService.encode_image`
+        s'en protégeait (`_checked`), mais `AdvancedVisionService`
+        (`get_unified_embedding`, `get_style_embedding_with_lora`,
+        `get_character_face_embedding`) appelle cette méthode SANS garde-fou et
+        continuait comme si l'encodage avait réussi.
+        """
+        vector = self._fallback_call("get_image_embedding", image_data, model_id)
+        if not vector:
+            raise InferenceError(
+                f"Aucun moteur d'inférence n'a servi get_image_embedding "
+                f"({model_id}) : impossible d'encoder cette image."
+            )
+        return vector
 
     def get_text_embedding(self, text: str) -> List[float]:
         return self._fallback_call("get_text_embedding", text) or []
