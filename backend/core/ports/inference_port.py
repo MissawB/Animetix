@@ -208,6 +208,19 @@ class InferencePort(ABC):
         """Génère un embedding vectoriel à partir d'une image."""
         raise InferenceNotImplementedError("get_image_embedding not implemented")
 
+    def get_text_embedding_clip(self, text: str, model_id: str) -> List[float]:
+        """Tour TEXTE d'un modèle CLIP — le même modèle que la tour image.
+
+        Distinct de `get_text_embedding` (encodeur de phrases générique) : les
+        deux vivent dans des espaces différents, et une comparaison entre les
+        deux rend un nombre qui a l'air juste sans l'être.
+        """
+        raise InferenceNotImplementedError("get_text_embedding_clip not implemented")
+
+    def get_character_embedding(self, image_data: bytes) -> List[float]:
+        """Embedding CCIP — « est-ce le MÊME personnage ? ». Pas de tour texte."""
+        raise InferenceNotImplementedError("get_character_embedding not implemented")
+
     def classify_image(
         self,
         image_data: bytes,

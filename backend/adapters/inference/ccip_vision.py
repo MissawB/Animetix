@@ -40,14 +40,18 @@ from typing import Any, List
 
 import numpy as np
 from core.domain.exceptions import InferenceError
+
+# Le NOM du modèle vit dans le core (`core.utils.model_registry`) : un service de
+# domaine doit pouvoir nommer l'espace vectoriel qu'il interroge sans dépendre de
+# cet adaptateur. On le ré-exporte ici pour les appelants historiques — une seule
+# valeur, deux chemins d'import, jamais deux définitions.
+from core.utils.model_registry import (  # noqa: F401  (ré-export)
+    CCIP_MODEL_ID,
+    CCIP_MODEL_NAME,
+    CCIP_REPO_ID,
+)
 from huggingface_hub import hf_hub_download
 from PIL import Image
-
-# Les poids ONNX vivent dans `deepghs/ccip_onnx` ; `deepghs/ccip` est le dépôt
-# de base (checkpoints torch), il ne sert aucun graphe ONNX.
-CCIP_REPO_ID = "deepghs/ccip_onnx"
-CCIP_MODEL_NAME = "ccip-caformer-24-randaug-pruned"
-CCIP_MODEL_ID = f"{CCIP_REPO_ID}/{CCIP_MODEL_NAME}"
 
 CCIP_IMAGE_SIZE = 384
 CCIP_MEAN = (0.48145466, 0.4578275, 0.40821073)

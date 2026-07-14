@@ -277,10 +277,16 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         vector_db=persistence.vector_store,
     )
 
+    # Deux ports de persistance, volontairement : `search_by_vector` n'existe que
+    # sur `vector_store` (VectorStorePort), `upsert_items` n'existe que sur
+    # `repository` (RepositoryPort). Câbler un seul des deux = AttributeError en
+    # production sur la moitié des opérations. `tests/core/test_visual_index_service.py`
+    # vérifie ce câblage contre les VRAIES classes.
     visual_index_service = providers.Singleton(
         LazyClass("core.domain.services.visual_index", "VisualIndexService"),
         inference_engine=inference.inference_engine,
         repository=persistence.repository,
+        vector_store=persistence.vector_store,
     )
 
     spatial_computing_service = providers.Singleton(

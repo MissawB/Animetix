@@ -117,6 +117,26 @@ MODELS: dict[str, dict] = {
 }
 
 
+# --- Modèles de recherche visuelle : le nom vit dans le core ---------------
+#
+# Un service de domaine (`core.domain.services.visual_index`) doit pouvoir NOMMER
+# le modèle qui définit un espace vectoriel sans dépendre à la compilation de
+# l'adaptateur qui le charge (règle énoncée dans `core/ports/vector_store_port.py`).
+# Les constantes vivent donc ici ; `adapters.inference.ccip_vision` les importe
+# DEPUIS ce module et les ré-exporte pour ses propres appelants.
+#
+# CCIP : les poids ONNX vivent dans `deepghs/ccip_onnx`. `deepghs/ccip` est le
+# dépôt de base (checkpoints torch), il ne sert aucun graphe ONNX — écrire
+# `deepghs/ccip` ici, c'est nommer un modèle que personne ne charge.
+CCIP_REPO_ID = "deepghs/ccip_onnx"
+CCIP_MODEL_NAME = "ccip-caformer-24-randaug-pruned"
+CCIP_MODEL_ID = f"{CCIP_REPO_ID}/{CCIP_MODEL_NAME}"
+
+# CLIP EVA-02 affiné sur de l'illustration japonaise : une jaquette est un
+# dessin, pas une photo. Espace joint (image + texte) -> tour texte disponible.
+ANIME_CLIP_MODEL_ID = "dudcjs2779/anime-style-tag-clip"
+
+
 # Versioned embedding models (logical version -> model id). Revisions resolve
 # from MODELS via get_verified_revision — never duplicated here.
 EMBEDDING_VERSIONS: dict[str, dict[str, str]] = {

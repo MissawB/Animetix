@@ -3,17 +3,30 @@
 Le couple (modèle, collection) est indissociable. Deux modèles = deux espaces
 vectoriels ; une distance entre deux espaces ne veut rien dire. Ce service est le
 seul endroit qui connaît ce couple — partout ailleurs, on demande une cible.
+
+Deux collaborateurs de persistance, et ce n'est pas un oubli : l'ÉCRITURE
+(`upsert_items`) n'existe que sur `RepositoryPort`, la RECHERCHE
+(`search_by_vector`) n'existe que sur `VectorStorePort`. Aucun des deux ne porte
+les deux méthodes. N'en injecter qu'un, c'était appeler une méthode absente —
+`AttributeError` à chaque recherche, en production, pour les deux cibles.
 """
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
-from adapters.inference.ccip_vision import CCIP_MODEL_ID
+from core.utils.model_registry import ANIME_CLIP_MODEL_ID, CCIP_MODEL_ID
 
-from ..exceptions import GameLogicError
+from ..exceptions import GameLogicError, InferenceError
 
 logger = logging.getLogger("animetix.visual_index")
+
+# Les deux encodeurs d'image possibles. Le routage se fait sur CE champ, jamais
+# en comparant `model_id` à une chaîne d'infrastructure : le jour où un second
+# modèle sans tour texte arrive, une comparaison de chaîne l'enverrait
+# silencieusement chez CLIP.
+ENCODER_CLIP = "clip"
+ENCODER_CCIP = "ccip"
 
 
 @dataclass(frozen=True)
@@ -21,7 +34,11 @@ class Target:
     name: str
     model_id: str
     collection: str
-    media_types: List[str]
+    # Un tuple, pas une liste : `TARGETS["work"].media_types.append("Character")`
+    # corromprait le singleton partagé pour tout le processus, sans un mot —
+    # `frozen=True` gèle la référence, pas le contenu.
+    media_types: Tuple[str, ...]
+    image_encoder: str
     has_text_tower: bool
 
 
@@ -30,43 +47,59 @@ TARGETS: Dict[str, Target] = {
         name="work",
         # CLIP EVA-02 affiné sur de l'illustration japonaise : une jaquette est un
         # dessin, pas une photo.
-        model_id="dudcjs2779/anime-style-tag-clip",
+        model_id=ANIME_CLIP_MODEL_ID,
         collection="unified_clip_space",
-        media_types=["Anime", "Manga", "Movie", "Game"],
+        media_types=("Anime", "Manga", "Movie", "Game"),
+        image_encoder=ENCODER_CLIP,
         has_text_tower=True,  # CLIP est un espace joint : la recherche texte est gratuite
     ),
     "character": Target(
         name="character",
         # CCIP répond à « est-ce le MÊME personnage ? ». Pas d'encodeur de texte.
-        # `CCIP_MODEL_ID` est importé de l'adaptateur qui charge réellement le
-        # graphe ONNX -- jamais recopié ici : `deepghs/ccip` (le dépôt de base,
-        # checkpoints torch) ne sert aucun graphe, seul `deepghs/ccip_onnx/...`
-        # est chargé en pratique.
         model_id=CCIP_MODEL_ID,
         collection="character_ccip_space",
-        media_types=["Character"],
+        media_types=("Character",),
+        image_encoder=ENCODER_CCIP,
         has_text_tower=False,
     ),
 }
 
 
 class VisualIndexService:
-    def __init__(self, inference_engine, repository):
+    def __init__(self, inference_engine, repository, vector_store):
         self.inference_engine = inference_engine
-        self.repository = repository
+        self.repository = repository  # écriture : upsert_items
+        self.vector_store = vector_store  # lecture : search_by_vector / count
 
     def target(self, name: str) -> Target:
         if name not in TARGETS:
             raise ValueError(f"Cible de recherche visuelle inconnue : {name!r}")
         return TARGETS[name]
 
+    @staticmethod
+    def _checked(vector: List[float], what: str) -> List[float]:
+        """Un vecteur vide n'est pas un résultat : c'est une panne déguisée."""
+        if not vector:
+            raise InferenceError(
+                f"{what} a rendu un vecteur vide — refus de l'indexer ou de "
+                "chercher avec : il classerait arbitrairement."
+            )
+        return vector
+
     def encode_image(self, target: str, image_data: bytes) -> List[float]:
         spec = self.target(target)
-        if spec.model_id == CCIP_MODEL_ID:
-            return self.inference_engine.get_character_embedding(image_data)
-        return self.inference_engine.get_image_embedding(
-            image_data, model_id=spec.model_id
-        )
+        if spec.image_encoder == ENCODER_CCIP:
+            vector = self.inference_engine.get_character_embedding(image_data)
+        elif spec.image_encoder == ENCODER_CLIP:
+            vector = self.inference_engine.get_image_embedding(
+                image_data, model_id=spec.model_id
+            )
+        else:  # une cible mal déclarée ne doit pas router au hasard
+            raise ValueError(
+                f"Encodeur d'image inconnu pour la cible {spec.name!r} : "
+                f"{spec.image_encoder!r}"
+            )
+        return self._checked(vector, f"{spec.image_encoder} ({spec.model_id})")
 
     def encode_text(self, target: str, text: str) -> List[float]:
         spec = self.target(target)
@@ -78,17 +111,18 @@ class VisualIndexService:
         # La tour texte du MÊME modèle. Jamais un encodeur de phrases générique :
         # la recherche fait la moyenne du texte et de l'image, et une moyenne
         # entre deux espaces est soit une erreur, soit un mensonge plausible.
-        return self.inference_engine.get_text_embedding_clip(
+        vector = self.inference_engine.get_text_embedding_clip(
             text, model_id=spec.model_id
         )
+        return self._checked(vector, f"la tour texte de {spec.model_id}")
 
     def search(self, target: str, vector: List[float], limit: int = 10) -> List[Dict]:
         spec = self.target(target)
-        return self.repository.search_by_vector(spec.collection, vector, limit=limit)
+        return self.vector_store.search_by_vector(spec.collection, vector, limit=limit)
 
     def is_available(self, target: str) -> bool:
         spec = self.target(target)
-        return self.repository.get_collection_count(spec.collection) > 0
+        return self.vector_store.get_collection_count(spec.collection) > 0
 
     def index(self, target: str, items: List[Dict[str, Any]]) -> int:
         """Encode et écrit un lot. Une image morte est sautée, jamais fatale."""
