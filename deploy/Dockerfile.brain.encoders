@@ -1,0 +1,24 @@
+# Image derivee, temporaire : elle repart de l'image brain QUI SERT DEJA en prod
+# (brain:otaku3) et n'ajoute que ce qui a change.
+#
+# Pourquoi : deploy/Dockerfile.brain refait a chaque build la fusion du LoRA 7B et
+# la quantisation GGUF -- plus de 2 h, au-dela du timeout de Cloud Build -- alors
+# que le modele n'a PAS change. Seuls le code et deux dependances bougent
+# (open_clip_torch, onnxruntime : les encodeurs de la recherche visuelle).
+#
+# Les poids, Ollama (epingle 0.5.13, cf. le driver 535 de Cloud Run) et le
+# Modelfile viennent donc intacts de l'image de base.
+#
+# A SUPPRIMER une fois que Dockerfile.brain aura un cache de couches.
+FROM europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:otaku3
+
+WORKDIR /app
+
+COPY requirements-brain.txt .
+RUN pip install --no-cache-dir -r requirements-brain.txt
+
+COPY . .
+
+RUN mkdir -p data/models/torch data/models/huggingface
+
+EXPOSE 7861
