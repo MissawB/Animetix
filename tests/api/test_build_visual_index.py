@@ -253,20 +253,16 @@ def test_the_item_indexed_is_the_item_the_reader_finds(collision):
     # Le chemin du lecteur : on cherche avec le vecteur de l'anime, on doit
     # retrouver l'ANIME — pas le film qui porte le même external_id nu.
     found = real.search("work", [1.0, 0.0], limit=1)[0]
-    assert found["id"] == "Anime:1"
+    # `id` est l'external_id NU, pas la clé composite interne : c'est ce que
+    # `MediaDetailView` (`MediaItem.objects.get(media_type=..., external_id=id)`)
+    # et `SearchBar.tsx` (`/media/${item.type}/${item.id}/`) savent résoudre.
+    # Rendre la clé composite ici serait un lien mort -- 404 garanti à chaque
+    # clic sur un résultat de recherche visuelle.
+    assert found["id"] == "1"
     assert found["title"] == "Cowboy Bebop"
     assert found["media_type"] == "Anime"
     assert found["external_id"] == "1"  # l'utilisateur voit toujours l'id nu
     assert found["image"] == "http://img/anime"
-
-    # Le lecteur ne connait que les métadonnées qu'il vient de lire -- il doit
-    # retrouver le MÊME id en rebâtissant la clé avec `vector_key`, jamais en
-    # la reconstruisant à la main (un `f"{media_type}:{external_id}"` avec la
-    # mauvaise casse ne lèverait rien : la recherche ne rendrait juste plus
-    # rien).
-    from core.domain.services.visual_index import vector_key
-
-    assert found["id"] == vector_key(found["media_type"], found["external_id"])
 
 
 # --------------------------------------------------------------------------

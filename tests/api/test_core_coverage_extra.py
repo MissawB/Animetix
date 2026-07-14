@@ -228,6 +228,77 @@ def test_media_search_post_success(factory):
 
 
 @pytest.mark.django_db
+def test_media_search_post_result_id_is_resolvable_by_media_detail_view(factory):
+    """CRITICAL regression guard: every other test in this module hands
+    `MediaSearchView.post` an already-mocked `visual_index_service`, so none
+    of them exercise the REAL `VisualIndexService.search()` id-rewrite through
+    the REAL `MediaItemSerializer`. Before the fix, the composite key the
+    writer used internally (`vector_key`, "Anime:5114") travelled all the way
+    to the client: `SearchBar.tsx` would navigate to
+    `/media/Anime/Anime:5114/`, and `MediaDetailView`
+    (`MediaItem.objects.get(media_type=..., external_id=item_id)`) would 404
+    on every single visual-search result -- a correct-looking hit that was
+    always a dead link.
+    """
+    from animetix.models import MediaItem
+    from core.domain.services.visual_index import VisualIndexService
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    MediaItem.objects.create(
+        external_id="5114",
+        media_type="Anime",
+        title="Fullmetal Alchemist",
+        image_url="http://img/fma.png",
+    )
+
+    user = User.objects.create_user(username="realhit", password="pw")
+    img = SimpleUploadedFile("x.png", b"imgbytes", content_type="image/png")
+    request = factory.post("/search/", {"image": img})
+    force_authenticate(request, user=user)
+    request.user = user
+
+    store = MagicMock()
+    store.get_collection_count.return_value = 1
+    store.search_by_vector.return_value = [
+        {
+            "id": "Anime:5114",
+            "external_id": "5114",
+            "media_type": "Anime",
+            "title": "Fullmetal Alchemist",
+            "image": "http://img/fma.png",
+        }
+    ]
+    engine = MagicMock()
+    engine.get_image_embedding.return_value = [0.1] * 512
+    real_visual = VisualIndexService(
+        inference_engine=engine, repository=MagicMock(), vector_store=store
+    )
+
+    view = MediaSearchView()
+    view.guardrail_service = MagicMock()
+    view.usage_port = MagicMock()
+    view.usage_port.check_quota.return_value = True
+    drf_request = Request(request, parsers=[MultiPartParser(), JSONParser()])
+
+    with (
+        patch("animetix.api.core.media.validate_file_size", return_value=True),
+        patch("animetix.api.core.media.validate_file_mime_type", return_value=True),
+        patch("animetix.api.core.media.deduct_berrix"),
+    ):
+        response = view.post(drf_request, visual_index_service=real_visual)
+
+    assert response.status_code == 200
+    result = response.data[0]
+    # The id the client receives is the one `MediaDetailView` can actually
+    # resolve -- not the internal composite key.
+    assert result["id"] == "5114"
+    assert (
+        MediaItem.objects.get(media_type=result["type"], external_id=result["id"]).title
+        == "Fullmetal Alchemist"
+    )
+
+
+@pytest.mark.django_db
 def test_media_search_post_index_unavailable_no_charge(factory):
     """An empty target index -- `work` or `character` -- must be refused up
     front (503, honest French copy) and Berrix must never be deducted."""

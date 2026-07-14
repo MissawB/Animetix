@@ -105,6 +105,46 @@ def test_a_search_only_ever_touches_its_own_target_collection():
     )
 
 
+def test_search_rewrites_id_to_the_bare_external_id_the_reader_can_resolve():
+    """CRITICAL: `PgVectorStoreAdapter.search_by_vector` sets `doc["id"]` to
+    the composite key the writer used (`vector_key`, e.g. "Anime:5114").
+    `MediaItemSerializer` has no `external_id` field, only `id` -- so without
+    this rewrite the composite key travels to the frontend unchanged,
+    `SearchBar.tsx` navigates to `/media/Anime/Anime:5114/`, and
+    `MediaDetailView` looks up `external_id="Anime:5114"` (a value that was
+    never written): 404 on every single visual-search result, silently.
+    """
+    service, _, _, store = _service()
+    store.search_by_vector.return_value = [
+        {
+            "id": "Anime:5114",
+            "external_id": "5114",
+            "media_type": "Anime",
+            "title": "Fullmetal Alchemist",
+        }
+    ]
+
+    results = service.search("work", [0.1] * 512, limit=1)
+
+    assert results[0]["id"] == "5114"
+    # The composite key is not lost -- callers that still need it have
+    # `external_id` + `media_type` to rebuild it via `vector_key`.
+    assert results[0]["external_id"] == "5114"
+    assert results[0]["media_type"] == "Anime"
+
+
+def test_search_leaves_id_alone_when_metadata_carries_no_external_id():
+    """A defensive default: if a caller's fake vector store doesn't stamp
+    `external_id` (e.g. a minimal test double), the rewrite must not crash or
+    blank out `id` -- it leaves it exactly as the store returned it."""
+    service, _, _, store = _service()
+    store.search_by_vector.return_value = [{"id": "7", "title": "NoExternalId"}]
+
+    results = service.search("work", [0.1] * 512, limit=1)
+
+    assert results[0]["id"] == "7"
+
+
 def test_indexing_writes_under_the_composite_key_and_into_the_target_collection():
     service, _, repo, _ = _service()
     written = service.index(

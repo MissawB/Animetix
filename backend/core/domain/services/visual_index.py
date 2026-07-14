@@ -145,8 +145,29 @@ class VisualIndexService:
         return self._checked(vector, f"la tour texte de {spec.model_id}")
 
     def search(self, target: str, vector: List[float], limit: int = 10) -> List[Dict]:
+        """Cherche, puis rend au lecteur l'id qu'il peut RÉELLEMENT résoudre.
+
+        `PgVectorStoreAdapter.search_by_vector` rend `doc["id"] = doc_id`, la
+        clé composite écrite par `index()` (`vector_key`, ex. « Anime:5114 »).
+        C'est la bonne clé pour retrouver le vecteur -- mais `MediaItemSerializer`
+        n'a pas de champ `external_id`, seulement `id` : sans réécriture ici, la
+        clé composite voyage telle quelle jusqu'au front (`SearchBar.tsx` fait
+        `navigate(/media/${item.type}/${item.id}/)`), qui appelle
+        `MediaDetailView` avec `item_id="Anime:5114"`. Or `MediaDetailView`
+        cherche `MediaItem.objects.get(media_type=media_type,
+        external_id=item_id)` avec l'external_id NU ("5114") -- 404 garanti :
+        un résultat de recherche visuelle qui a l'air juste et ne mène nulle
+        part. On réécrit `id` depuis les métadonnées (`external_id`, nu, que
+        `index()` a préservé pour cette raison précise) avant de rendre.
+        """
         spec = self.target(target)
-        return self.vector_store.search_by_vector(spec.collection, vector, limit=limit)
+        results = self.vector_store.search_by_vector(
+            spec.collection, vector, limit=limit
+        )
+        for doc in results:
+            if "external_id" in doc:
+                doc["id"] = doc["external_id"]
+        return results
 
     def is_available(self, target: str) -> bool:
         spec = self.target(target)
