@@ -186,3 +186,77 @@ def test_search_by_vector_still_returns_an_empty_list_when_nothing_matched(adapt
         "adapters.persistence.pg_vector_store_adapter.vector_manager", mock_manager
     ):
         assert adapter.search_by_vector("unified_clip_space", [0.1, 0.2]) == []
+
+
+# --------------------------------------------------------------------------- #
+# The seam that actually broke: adapter <-> REAL vector_client wrapper.
+#
+# Every test above doubles `vector_manager`, so the adapter only ever saw a
+# hand-written `query()` result -- always dict-shaped metadata. The real wrapper's
+# raw-SQL branch handed back JSON *strings* (Django's postgres backend registers
+# `loads=lambda x: x` for jsonb, so ANY raw cursor in this project gets a str),
+# and `dict(meta)` in the adapter iterated the string's characters:
+#     ValueError: dictionary update sequence element #0 has length 1; 2 is required
+# Nothing in the suite crossed that seam, so nothing caught it. This does: the
+# REAL PGVectorCollectionWrapper, with only the DB cursor faked -- in the shape
+# the production database genuinely returns.
+# --------------------------------------------------------------------------- #
+def test_search_by_vector_over_the_real_wrapper_with_a_postgres_shaped_cursor(
+    adapter, mocker
+):
+    import json
+
+    import pipeline.vector_client as vc
+
+    class _Cursor:
+        def execute(self, sql, params=None):
+            pass
+
+        def fetchall(self):
+            # Exactly what psycopg hands back for a jsonb column in this
+            # project: a STRING, not a dict.
+            return [
+                (
+                    "Anime:1",
+                    json.dumps(
+                        {
+                            "title": "Cowboy Bebop",
+                            "media_type": "Anime",
+                            "external_id": "1",
+                            "image": "http://img/anime",
+                        }
+                    ),
+                    "",
+                    0.02,
+                )
+            ]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    conn = MagicMock()
+    conn.vendor = "postgresql"
+    conn.cursor.return_value = _Cursor()
+    mocker.patch.object(vc, "connection", conn)
+    mocker.patch.object(vc, "is_alloydb_ai_supported", return_value=False)
+
+    # The real manager/wrapper -- no double between the adapter and the SQL.
+    mocker.patch.object(vc, "is_vertex_ai_supported", return_value=False)
+    with patch(
+        "adapters.persistence.pg_vector_store_adapter.vector_manager",
+        vc.PGVectorManager(),
+    ):
+        results = adapter.search_by_vector("unified_clip_space", [0.1] * 512, limit=1)
+
+    assert results == [
+        {
+            "title": "Cowboy Bebop",
+            "media_type": "Anime",
+            "external_id": "1",
+            "image": "http://img/anime",
+            "id": "Anime:1",
+        }
+    ]
