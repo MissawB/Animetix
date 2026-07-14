@@ -72,9 +72,10 @@ class UnifiedRepositoryAdapter(RepositoryPort):
         embeddings: List[List[float]],
         metadatas: List[Dict],
         documents: Optional[List[str]] = None,
+        strict: bool = False,
     ):
         self.vectors.upsert_items(
-            collection_name, ids, embeddings, metadatas, documents
+            collection_name, ids, embeddings, metadatas, documents, strict=strict
         )
 
     def delete_collection(self, collection_name: str):

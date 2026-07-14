@@ -273,8 +273,21 @@ def test_upsert_items_forwards_to_collection(adapter):
 
 def test_upsert_items_swallows_error(adapter):
     adapter.manager.get_collection.side_effect = RuntimeError("x")
-    # Must not raise.
+    # Must not raise: the mass pipelines prefer to lose a batch over losing a run.
     adapter.upsert_items("col", ["1"], [[0.1]], [{}])
+
+
+def test_upsert_items_raises_when_strict(adapter):
+    """A caller that COUNTS what it wrote must be told when nothing landed.
+
+    The upsert runs in a transaction: a failure rolled the whole batch back.
+    Swallowing it there is how `build_visual_index` came to print "N vecteurs
+    écrits" in green for vectors that do not exist.
+    """
+    adapter.manager.get_collection.side_effect = RuntimeError("dimension mismatch")
+
+    with pytest.raises(RuntimeError):
+        adapter.upsert_items("col", ["1"], [[0.1]], [{}], strict=True)
 
 
 def test_delete_collection_forwards(adapter):

@@ -4,8 +4,17 @@ La source est la BASE, pas les fichiers JSON : c'est elle qui sert le catalogue 
 l'application. Indexer depuis les fichiers, c'est risquer d'écrire sous des
 identifiants que personne n'interrogera — l'erreur qui a coûté la semaine.
 
-Reprenable : on saute ce qui est déjà indexé. Une image morte (404, format
-illisible, timeout) est journalisée et sautée ; elle ne fait jamais tomber le lot.
+Reprenable : on saute ce qui est déjà DANS la collection (`VectorRecord`), clé
+par clé. Une image morte (404, format illisible, timeout) est journalisée et
+sautée ; elle ne fait jamais tomber le lot.
+
+La clé d'un vecteur est `media_type:external_id` (`vector_key`) — jamais
+l'external_id nu, qui n'est unique que par type de média alors que la cible
+`work` verse quatre types dans une seule collection. Écrivain et lecteur
+appellent LA MÊME fonction : c'est la seule garantie qu'ils ne divergeront pas.
+
+Une écriture qui échoue lève (CommandError) : mieux vaut s'arrêter — la reprise
+ne coûtera que ce qui reste — qu'annoncer en vert des vecteurs qui n'existent pas.
 """
 
 import logging
@@ -44,8 +53,22 @@ class Command(BaseCommand):
         parser.add_argument("--limit", type=int, default=None)
         parser.add_argument("--batch-size", type=int, default=BATCH)
 
+    def _write(self, service, target, batch):
+        """Le seul endroit qui écrit. Un échec s'arrête ici, il ne se déguise pas
+        en succès : `service.index` écrit en mode strict, donc ce qu'il rend est
+        ce qui est VRAIMENT dans la collection."""
+        try:
+            return service.index(target, batch)
+        except Exception as e:
+            raise CommandError(
+                f"Écriture du lot échouée dans {target} ({len(batch)} vecteurs "
+                f"perdus, le lot entier a été annulé) : {e}. Rien n'a été annoncé "
+                "comme écrit. Relancer la commande : elle reprendra où elle s'est "
+                "arrêtée."
+            ) from e
+
     def handle(self, *args, **options):
-        from core.domain.services.visual_index import TARGETS  # noqa: E402
+        from core.domain.services.visual_index import TARGETS, vector_key  # noqa: E402
 
         target = options["target"]
         if target not in TARGETS:
@@ -54,14 +77,16 @@ class Command(BaseCommand):
         service = _service()
         spec = TARGETS[target]
 
+        # La reprise se lit dans la collection elle-même, la seule source qui sache
+        # ce qui a réellement été écrit — et elle se compare en CLÉS COMPOSITES.
+        # Comparer des external_id nus ferait sauter des œuvres jamais indexées (un
+        # « 1 » de film prendrait le « 1 » d'un anime pour lui) et rendrait la
+        # reprise fausse dans les deux sens.
         already = set(
             VectorRecord.objects.filter(collection_name=spec.collection).values_list(
                 "item_id", flat=True
             )
         )
-        # Le service peut exposer un ensemble déjà indexé (les tests s'en servent) ;
-        # sinon on lit la collection.
-        already |= set(getattr(service, "indexed_ids", set()) or set())
 
         rows = (
             MediaItem.objects.filter(media_type__in=spec.media_types)
@@ -74,7 +99,7 @@ class Command(BaseCommand):
         total, written, skipped = 0, 0, 0
         batch = []
         for row in rows.iterator(chunk_size=500):
-            if str(row.external_id) in already:
+            if vector_key(row.media_type, row.external_id) in already:
                 continue
             total += 1
             try:
@@ -96,12 +121,12 @@ class Command(BaseCommand):
                 }
             )
             if len(batch) >= options["batch_size"]:
-                written += service.index(target, batch)
+                written += self._write(service, target, batch)
                 self.stdout.write(f"  {written} indexés ({skipped} sautés)...")
                 batch = []
 
         if batch:
-            written += service.index(target, batch)
+            written += self._write(service, target, batch)
 
         self.stdout.write(
             self.style.SUCCESS(

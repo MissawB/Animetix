@@ -105,7 +105,7 @@ def test_a_search_only_ever_touches_its_own_target_collection():
     )
 
 
-def test_indexing_writes_under_external_id_and_into_the_target_collection():
+def test_indexing_writes_under_the_composite_key_and_into_the_target_collection():
     service, _, repo, _ = _service()
     written = service.index(
         "work",
@@ -123,9 +123,59 @@ def test_indexing_writes_under_external_id_and_into_the_target_collection():
     assert written == 1
     collection, ids, vectors, metadatas = repo.upsert_items.call_args[0]
     assert collection == "unified_clip_space"
-    assert ids == ["38000"]  # l'id sous lequel le catalogue sert l'œuvre, pas un autre
+    # `media_type:external_id` : l'external_id nu n'est unique que PAR type, et
+    # quatre types partagent cette collection.
+    assert ids == ["anime:38000"]
+    # Les métadonnées, elles, ne changent pas : c'est ce que l'utilisateur voit.
+    assert metadatas[0]["external_id"] == "38000"
     assert metadatas[0]["media_type"] == "Anime"
     assert metadatas[0]["title"] == "Kimetsu"
+
+
+def test_two_media_types_sharing_a_bare_id_do_not_collide():
+    """L'anime n°1 (MAL) et le film n°1 (TMDB) vont dans la MÊME collection.
+
+    Sous l'id nu, le second écrasait le premier — vecteur et métadonnées — et on
+    servait un titre à la place d'un autre, sans une erreur.
+    """
+    service, _, repo, _ = _service()
+    service.index(
+        "work",
+        [
+            {
+                "external_id": "1",
+                "media_type": "Anime",
+                "title": "Cowboy Bebop",
+                "image_bytes": b"png",
+            },
+            {
+                "external_id": "1",
+                "media_type": "Movie",
+                "title": "Toy Story",
+                "image_bytes": b"png",
+            },
+        ],
+    )
+
+    _, ids, _, _ = repo.upsert_items.call_args[0]
+    assert ids == ["anime:1", "movie:1"]
+    assert len(set(ids)) == 2
+
+
+def test_a_failed_write_is_not_counted_as_written():
+    """Le dépôt journalise et rend la main par défaut : le service DOIT écrire en
+    mode strict, sans quoi il rend `len(ids)` — le nombre de vecteurs qu'il aurait
+    écrits — et la commande annonce en vert un lot annulé."""
+    service, _, repo, _ = _service()
+    repo.upsert_items.side_effect = RuntimeError("dimension mismatch")
+
+    with pytest.raises(RuntimeError):
+        service.index(
+            "work",
+            [{"external_id": "1", "media_type": "Anime", "image_bytes": b"png"}],
+        )
+
+    assert repo.upsert_items.call_args.kwargs["strict"] is True
 
 
 def test_an_item_whose_image_never_downloaded_is_skipped_not_written():
@@ -172,7 +222,7 @@ def test_a_dead_image_is_skipped_and_the_rest_of_the_batch_is_still_written():
 
     assert written == 1
     _, ids, vectors, metadatas = repo.upsert_items.call_args[0]
-    assert ids == ["2"]
+    assert ids == ["anime:2"]
     assert metadatas[0]["title"] == "Vivante"
     assert len(vectors) == 1
 

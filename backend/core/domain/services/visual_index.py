@@ -29,6 +29,27 @@ ENCODER_CLIP = "clip"
 ENCODER_CCIP = "ccip"
 
 
+def vector_key(media_type: str, external_id: Any) -> str:
+    """La clé d'un vecteur dans une collection : « anime:5114 ».
+
+    `MediaItem` n'est unique que sur le COUPLE (external_id, media_type) — un
+    external_id nu ne l'est pas. Or la cible `work` verse Anime + Manga + Movie +
+    Game dans UNE seule collection, et `VectorRecord` est claveté sur
+    (collection_name, item_id) : les ids d'anime viennent de MAL, ceux des films
+    de TMDB, ceux des jeux d'IGDB — trois espaces de petits entiers indépendants.
+    Écrire sous l'id nu, c'est laisser l'anime n°1 écraser le film n°1, vecteur ET
+    métadonnées, sans un mot — et rendre un titre à la place d'un autre.
+
+    UNE seule fonction pour l'écrivain ET le lecteur : le jour où ils construisent
+    la clé chacun de leur côté et divergent, la recherche ne rend plus rien et
+    rien ne lève.
+
+    Les métadonnées, elles, continuent de porter `external_id` nu et `media_type`
+    séparément : ce que l'utilisateur voit ne change pas.
+    """
+    return f"{str(media_type).lower()}:{external_id}"
+
+
 @dataclass(frozen=True)
 class Target:
     name: str
@@ -137,7 +158,7 @@ class VisualIndexService:
             except Exception as e:  # une image morte ne fait pas tomber le lot
                 logger.warning("Image illisible pour %s : %s", item.get("title"), e)
                 continue
-            ids.append(str(item["external_id"]))
+            ids.append(vector_key(item["media_type"], item["external_id"]))
             vectors.append(vector)
             # Ce qu'on écrit ICI est ce que l'utilisateur verra : le lecteur rend
             # ces métadonnées telles quelles au sérialiseur.
@@ -151,5 +172,14 @@ class VisualIndexService:
             )
         if not ids:
             return 0
-        self.repository.upsert_items(spec.collection, ids, vectors, metadatas)
+        # `strict=True` : par défaut, `upsert_items` journalise l'échec et rend la
+        # main. Le compte rendu ici serait alors `len(ids)` — le nombre de vecteurs
+        # qu'on AURAIT écrits. Un décalage de dimension ou un verrou expiré annule
+        # tout le lot (l'upsert tourne dans un `transaction.atomic()`) et on
+        # annoncerait quand même le succès : exactement la panne silencieuse que ce
+        # module existe pour empêcher. Le nombre rendu doit être le nombre de
+        # vecteurs réellement dans la collection, ou rien.
+        self.repository.upsert_items(
+            spec.collection, ids, vectors, metadatas, strict=True
+        )
         return len(ids)

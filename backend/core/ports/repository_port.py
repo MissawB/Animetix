@@ -35,8 +35,18 @@ class RepositoryPort(ABC):
         embeddings: List[List[float]],
         metadatas: List[Dict],
         documents: Optional[List[str]] = None,
+        strict: bool = False,
     ):
-        """Ajoute ou met à jour des items dans une collection vectorielle."""
+        """Ajoute ou met à jour des items dans une collection vectorielle.
+
+        `strict=False` (le défaut historique) : une écriture qui échoue est
+        journalisée et la main est rendue — les pipelines de masse préfèrent
+        continuer plutôt que perdre un run entier sur un lot.
+
+        `strict=True` : l'échec est propagé. À utiliser dès que l'appelant COMPTE
+        ce qu'il a écrit : sans ça, il compte ce qu'il aurait voulu écrire et
+        annonce un succès qui n'a pas eu lieu.
+        """
         pass
 
     @abstractmethod

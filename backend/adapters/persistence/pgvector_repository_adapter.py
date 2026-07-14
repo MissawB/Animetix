@@ -182,6 +182,7 @@ class PGVectorRepositoryAdapter(RepositoryPort):
         embeddings: List[List[float]],
         metadatas: List[Dict],
         documents: Optional[List[str]] = None,
+        strict: bool = False,
     ):
         try:
             coll = self.manager.get_collection(collection_name)
@@ -190,6 +191,11 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             )
         except Exception as e:
             logger.error(f"PGVector Upsert Error in {collection_name}: {e}")
+            # L'upsert tourne dans un `transaction.atomic()` : l'échec a annulé le
+            # LOT ENTIER. Un appelant qui compte ce qu'il a écrit doit le savoir,
+            # sinon il annonce des vecteurs qui n'existent pas.
+            if strict:
+                raise
             return
         # A fresh backfill must be immediately visible, not hidden behind a
         # cached "empty" count for up to 60s (see get_collection_count below).
