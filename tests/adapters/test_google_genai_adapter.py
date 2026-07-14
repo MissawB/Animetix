@@ -319,6 +319,7 @@ def test_get_text_embedding_returns_empty_on_error():
 
 
 def test_get_image_embedding_parses_values():
+    """No `model_id` (or Gemini's own) -> the real multimodal call goes out."""
     client = _mock_client()
     emb = MagicMock()
     emb.values = [1.0, 2.0]
@@ -326,9 +327,9 @@ def test_get_image_embedding_parses_values():
     res.embeddings = [emb]
     client.models.embed_content.return_value = res
     a = _adapter(client)
-    out = a.get_image_embedding(b"\x89PNG\r\n\x1a\nbytes", model_id="clip-v2")
+    out = a.get_image_embedding(b"\x89PNG\r\n\x1a\nbytes", model_id=a.embedding_model)
     assert out == [1.0, 2.0]
-    assert client.models.embed_content.call_args.kwargs["model"] == "clip-v2"
+    assert client.models.embed_content.call_args.kwargs["model"] == a.embedding_model
 
 
 def test_get_image_embedding_returns_empty_when_client_none():
@@ -350,6 +351,36 @@ def test_get_image_embedding_falls_back_to_text_description_on_error():
     assert out == [0.5, 0.6]
     gid.assert_called_once()
     gte.assert_called_once_with("a red sky")
+
+
+def test_get_image_embedding_refuses_a_foreign_model_id():
+    """CRITICAL: the production chain is [brain_api, google_genai]. When the
+    brain is cold, `FallbackInferenceAdapter` calls Gemini next with the SAME
+    `model_id` it gave the brain -- `dudcjs2779/anime-style-tag-clip` (CLIP) or
+    the CCIP repo id. Gemini has never heard of either: silently answering with
+    a text-description embedding under that name would write/compare a foreign
+    vector inside `unified_clip_space` / `character_ccip_space`. It must refuse
+    instead, so the fallback chain moves on (and, with nothing left, raises)."""
+    client = _mock_client()
+    a = _adapter(client)
+    with pytest.raises(InferenceNotImplementedError):
+        a.get_image_embedding(
+            b"\x89PNG\r\n\x1a\nbytes", model_id="dudcjs2779/anime-style-tag-clip"
+        )
+    # Refused before ever attempting the SDK call: no foreign request, no
+    # accidental success on a name Gemini happens to accept.
+    client.models.embed_content.assert_not_called()
+
+
+def test_get_image_embedding_refuses_ccip_model_id_too():
+    client = _mock_client()
+    a = _adapter(client)
+    with pytest.raises(InferenceNotImplementedError):
+        a.get_image_embedding(
+            b"\x89PNG\r\n\x1a\nbytes",
+            model_id="deepghs/ccip_onnx/ccip-caformer-24-randaug-pruned",
+        )
+    client.models.embed_content.assert_not_called()
 
 
 # --- calculate_visual_similarity --------------------------------------------

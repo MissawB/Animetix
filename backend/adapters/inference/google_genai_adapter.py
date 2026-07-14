@@ -175,9 +175,31 @@ class GoogleGenAIAdapter(
     def get_image_embedding(
         self, image_data: bytes, model_id: Optional[str] = None
     ) -> List[float]:
-        """Génère un embedding multimodal pour une image via Gemini."""
+        """Génère un embedding multimodal pour une image via Gemini.
+
+        Ne sert QUE son propre modèle d'embedding (`self.embedding_model`) --
+        jamais un `model_id` d'un autre espace vectoriel (le CLIP EVA-02 de
+        `unified_clip_space`, le CCIP de `character_ccip_space`...). Gemini n'a
+        jamais entendu parler de ces poids : passer `model=model_id` tel quel à
+        `embed_content` échouait côté SDK et retombait dans l'`except`
+        ci-dessous sur « décris l'image, encode la description » -- un vecteur
+        de PHRASE, écrit ou comparé dans un espace CLIP/CCIP, qui a l'air
+        valide et classe n'importe comment. `InferenceNotImplementedError`
+        (pas `InferenceError`) est le bon signal : `FallbackInferenceAdapter.
+        _fallback_call` la traite comme « cet adaptateur ne sait pas faire ça »
+        et passe au moteur suivant, au lieu de compter la levée comme une
+        panne de CE modèle et de continuer quand même avec sa réponse.
+        """
         if not self.client:
             return []
+        if model_id and model_id != self.embedding_model:
+            raise InferenceNotImplementedError(
+                f"GoogleGenAIAdapter ne sait servir que son propre modèle "
+                f"d'embedding ({self.embedding_model!r}) -- {model_id!r} "
+                "appartient à un autre espace vectoriel (CLIP/CCIP). Refus de "
+                "fabriquer un vecteur de description textuelle sous ce nom : "
+                "cela fusionnerait deux espaces vectoriels incompatibles."
+            )
         try:
             mime = get_image_mime_type(image_data)
             image_part = types.Part.from_bytes(data=image_data, mime_type=mime)
