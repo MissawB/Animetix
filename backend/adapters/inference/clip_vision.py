@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional  # noqa: E402
 import httpx  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
+from core.utils.model_registry import OPEN_CLIP_MODELS  # noqa: E402
 from core.utils.security import (
     safe_http_request,  # noqa: E402
     safe_http_request_async,
@@ -22,20 +23,34 @@ _MODEL_CACHE: dict = {}
 def _load_open_clip(model_id: str):
     """Charge un modèle CLIP par son id. Deux familles, un seul point d'entrée.
 
-    `dudcjs2779/anime-style-tag-clip` est un CLIP EVA-02 publié pour OpenCLIP :
-    `sentence-transformers` ne sait pas le charger. Les modèles historiques
-    (`clip-ViT-B-32`) restent servis par sentence-transformers.
+    Le routage se fait sur la table `OPEN_CLIP_MODELS` du registre, PAS sur la
+    forme de l'id. La version précédente envoyait chez `hf-hub:` tout id
+    contenant un `/` : or le dépôt d'`anime-style-tag-clip` ne publie que des
+    poids (ni `open_clip_config.json`, ni tokenizer), donc `hf-hub:` n'avait
+    aucune architecture à construire et le SEUL modèle OpenCLIP de la branche
+    ne se chargeait pas. L'architecture et le fichier de poids sont des
+    propriétés DU modèle : ils vivent avec son nom, dans le registre.
+
+    Les modèles historiques (`clip-ViT-B-32`) restent servis par
+    sentence-transformers, inchangés.
     """
     if model_id in _MODEL_CACHE:
         return _MODEL_CACHE[model_id]
 
-    if "/" in model_id:  # un dépôt du Hub -> OpenCLIP
+    recipe = OPEN_CLIP_MODELS.get(model_id)
+    if recipe is not None:  # un modèle OpenCLIP déclaré -> poids + architecture
         import open_clip  # noqa: E402
+        from huggingface_hub import hf_hub_download  # noqa: E402
 
+        weights = hf_hub_download(model_id, recipe["weights_file"])
+        architecture = recipe["architecture"]
+        # `preprocess` est la transformation d'image d'open_clip POUR CETTE
+        # architecture. On la garde telle quelle : un prétraitement fait main
+        # produit des vecteurs qui ont l'air bons et classent mal.
         model, _, preprocess = open_clip.create_model_and_transforms(
-            f"hf-hub:{model_id}"
+            architecture, pretrained=weights
         )
-        tokenizer = open_clip.get_tokenizer(f"hf-hub:{model_id}")
+        tokenizer = open_clip.get_tokenizer(architecture)
         model.eval()
         wrapped = _OpenClipModel(
             model=model, preprocess=preprocess, tokenizer=tokenizer

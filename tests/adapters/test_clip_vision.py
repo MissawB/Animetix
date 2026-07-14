@@ -25,20 +25,24 @@ def _clean_model_cache():
 
 @pytest.fixture
 def fake_open_clip(monkeypatch):
-    """`open_clip` n'est pas installé dans le venv (il n'est que dans le lock).
+    """Un `open_clip` factice au point d'import : la CI ne charge aucun poids.
 
-    On injecte un module factice au point d'import, ce que `_load_open_clip`
-    fera via `import open_clip`. `monkeypatch.setitem` le retire ensuite —
-    un stub laissé dans `sys.modules` contaminerait tout le reste de la suite.
+    `monkeypatch.setitem` retire le stub ensuite — un faux module laissé dans
+    `sys.modules` contaminerait tout le reste de la suite. `hf_hub_download` est
+    endormi de la même façon : un test unitaire ne télécharge rien.
     """
     module = MagicMock()
-    module.create_model_and_transforms.side_effect = lambda name: (
-        MagicMock(name=f"model:{name}"),
+    module.create_model_and_transforms.side_effect = lambda arch, pretrained=None: (
+        MagicMock(name=f"model:{arch}"),
         None,
-        MagicMock(name=f"preprocess:{name}"),
+        MagicMock(name=f"preprocess:{arch}"),
     )
-    module.get_tokenizer.side_effect = lambda name: MagicMock(name=f"tok:{name}")
+    module.get_tokenizer.side_effect = lambda arch: MagicMock(name=f"tok:{arch}")
     monkeypatch.setitem(sys.modules, "open_clip", module)
+
+    download = MagicMock(return_value="/hf-cache/model.safetensors")
+    monkeypatch.setattr("huggingface_hub.hf_hub_download", download)
+    module.hf_hub_download = download  # exposé pour les assertions
     return module
 
 
@@ -137,8 +141,13 @@ def test_two_model_ids_are_two_distinct_simultaneous_entries(fake_open_clip):
     # Chacun n'a été chargé qu'une fois, par SON backend.
     assert st.call_count == 1
     st.assert_called_once_with("clip-ViT-B-32")
+    # Le modèle OpenCLIP se charge par ARCHITECTURE + POIDS, jamais par
+    # `hf-hub:<id>` : le dépôt ne publie pas d'`open_clip_config.json`.
     fake_open_clip.create_model_and_transforms.assert_called_once_with(
-        "hf-hub:dudcjs2779/anime-style-tag-clip"
+        "EVA02-B-16", pretrained="/hf-cache/model.safetensors"
+    )
+    fake_open_clip.hf_hub_download.assert_called_once_with(
+        "dudcjs2779/anime-style-tag-clip", "model.safetensors"
     )
 
 
@@ -162,28 +171,66 @@ def test_text_embedding_uses_the_text_tower_of_the_requested_model():
 
 
 def test_text_embedding_on_a_hub_model_goes_through_open_clip(fake_open_clip):
-    """Un modèle OpenCLIP : c'est son tokenizer + sa tour texte qu'on utilise."""
+    """Un modèle OpenCLIP : c'est le tokenizer de SON architecture, et sa tour
+    texte, qu'on utilise — pas un encodeur de phrases générique."""
     import torch
 
     adapter = _adapter()
-    model, _, _ = fake_open_clip.create_model_and_transforms(
-        "hf-hub:dudcjs2779/anime-style-tag-clip"
-    )
-    fake_open_clip.create_model_and_transforms.reset_mock()
+    model = MagicMock(name="eva02")
+    model.encode_text.return_value = torch.tensor([[3.0, 4.0]])
     fake_open_clip.create_model_and_transforms.side_effect = None
     fake_open_clip.create_model_and_transforms.return_value = (model, None, MagicMock())
-    model.encode_text.return_value = torch.tensor([[3.0, 4.0]])
 
     vector = adapter.get_text_embedding_clip(
         "cheveux roses", "dudcjs2779/anime-style-tag-clip"
     )
 
-    fake_open_clip.get_tokenizer.assert_called_once_with(
-        "hf-hub:dudcjs2779/anime-style-tag-clip"
-    )
+    # Le tokenizer est celui de l'ARCHITECTURE, pas de `hf-hub:<id>`.
+    fake_open_clip.get_tokenizer.assert_called_once_with("EVA02-B-16")
     model.encode_text.assert_called_once()
     # normalisé L2 : (3,4)/5 == (0.6, 0.8)
     assert vector == pytest.approx([0.6, 0.8])
+
+
+def test_the_image_transform_is_open_clips_own_preprocess(fake_open_clip):
+    """Le prétraitement doit être CELUI que rend `create_model_and_transforms`.
+
+    Un redimensionnement fait main produit des vecteurs qui ont l'air bons et
+    classent mal : la panne est invisible jusqu'à ce qu'on lise les résultats.
+    """
+    import torch
+
+    adapter = _adapter()
+    model = MagicMock(name="eva02")
+    model.encode_image.return_value = torch.tensor([[3.0, 4.0]])
+    preprocess = MagicMock(name="preprocess", return_value=torch.zeros(3, 224, 224))
+    fake_open_clip.create_model_and_transforms.side_effect = None
+    fake_open_clip.create_model_and_transforms.return_value = (model, None, preprocess)
+
+    adapter.get_image_embedding(PNG, model_id="dudcjs2779/anime-style-tag-clip")
+
+    # L'image décodée passe par le transform d'open_clip, et c'est SA sortie
+    # (unsqueeze -> batch de 1) qui entre dans la tour image.
+    preprocess.assert_called_once()
+    assert preprocess.call_args[0][0].mode == "RGB"  # une PIL.Image, pas des bytes
+    model.encode_image.assert_called_once()
+    assert model.encode_image.call_args[0][0].shape == (1, 3, 224, 224)
+
+
+def test_an_id_absent_from_the_registry_is_not_an_open_clip_model(fake_open_clip):
+    """Le routage se fait sur le REGISTRE, pas sur la présence d'un `/`.
+
+    L'ancienne version envoyait chez `hf-hub:` tout id contenant un slash — et
+    le seul modèle OpenCLIP de la branche ne s'y chargeait pas.
+    """
+    from adapters.inference.clip_vision import _load_open_clip
+
+    with patch("sentence_transformers.SentenceTransformer") as st:
+        st.return_value = MagicMock(name="st-instance")
+        _load_open_clip("sentence-transformers/clip-ViT-L-14")
+
+    st.assert_called_once_with("sentence-transformers/clip-ViT-L-14")
+    fake_open_clip.create_model_and_transforms.assert_not_called()
 
 
 def test_text_embedding_raises_when_the_model_has_no_text_tower():

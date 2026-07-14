@@ -137,6 +137,38 @@ CCIP_MODEL_ID = f"{CCIP_REPO_ID}/{CCIP_MODEL_NAME}"
 ANIME_CLIP_MODEL_ID = "dudcjs2779/anime-style-tag-clip"
 
 
+# --- Comment on CHARGE un modèle OpenCLIP ----------------------------------
+#
+# Le dépôt `dudcjs2779/anime-style-tag-clip` ne contient QUE trois fichiers :
+# `.gitattributes`, `README.md`, `model.safetensors`. Pas d'`open_clip_config.json`,
+# pas de `config.json`, pas de tokenizer. Donc
+# `open_clip.create_model_and_transforms("hf-hub:dudcjs2779/anime-style-tag-clip")`
+# ÉCHOUE : le Hub met en cache un marqueur `.no_exist/open_clip_config.json` et
+# open_clip n'a aucune architecture à construire. Router vers `hf-hub:` tout id
+# contenant un `/`, c'était nommer un modèle que personne ne peut charger.
+#
+# Ce qui existe dans le dépôt, ce sont les POIDS (un fine-tune) ; l'ARCHITECTURE
+# vient du config embarqué d'open_clip. La carte du modèle le dit :
+# fine-tune de `timm/eva02_base_patch16_clip_224.merged2b_s8b_b131k`,
+# `library_name: open_clip` -> architecture `EVA02-B-16`, 512 dimensions,
+# deux tours (image + texte) dans un espace joint.
+#
+# La recette vit ICI, à côté du nom du modèle, et pas dans un `if` de
+# l'adaptateur : « cet id » signifie « cette architecture, ces poids ». Un
+# deuxième modèle OpenCLIP s'ajoute en une entrée, sans toucher au chargeur.
+# Un id ABSENT de cette table n'est pas un modèle OpenCLIP : il part chez
+# sentence-transformers (`clip-ViT-B-32` et consorts), qui lèvera s'il ne sait
+# pas le charger — jamais de vecteur vide rendu en silence.
+OPEN_CLIP_MODELS: dict[str, dict[str, str]] = {
+    ANIME_CLIP_MODEL_ID: {
+        # Le nom d'architecture d'open_clip, pas un dépôt du Hub.
+        "architecture": "EVA02-B-16",
+        # Le seul fichier de poids publié par le dépôt.
+        "weights_file": "model.safetensors",
+    },
+}
+
+
 # Versioned embedding models (logical version -> model id). Revisions resolve
 # from MODELS via get_verified_revision — never duplicated here.
 EMBEDDING_VERSIONS: dict[str, dict[str, str]] = {
