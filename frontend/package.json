@@ -48,7 +48,7 @@
     "react-router-dom": "^7.15.1",
     "three": "^0.182.0",
     "zod": "^4.4.3",
-    "zustand": "^5.0.13"
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
