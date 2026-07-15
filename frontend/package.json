@@ -83,7 +83,7 @@
     "lint-staged": "^17.0.5",
     "openapi-typescript": "^7.13.0",
     "playwright": "^1.60.0",
-    "plotly.js": "^3.6.0",
+    "plotly.js": "^3.7.0",
     "postcss": "^8.5.15",
     "prettier": "^3.8.4",
     "rollup-plugin-visualizer": "^7.0.1",
