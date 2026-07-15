@@ -3,72 +3,22 @@ from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, response, status, views
 
 from ..containers import Container
-from ..models import (
-    MediaItem,
-    UserRecommendation,
-)
+from ..models import MediaItem
 
 logger = get_logger("animetix.explore")
 
 
 class MediaExploreView(views.APIView):
-    """Explore le catalogue par popularité et catégories."""
+    """Feed personnalisé IA de la page Explorer (cascade de fallback)."""
 
     permission_classes = [permissions.AllowAny]
 
     @inject
-    def get(self, request, catalog_service=Provide[Container.core.catalog_service]):
+    def get(self, request, feed_composer=Provide[Container.core.feed_composer]):
         media_type = request.query_params.get("media_type", "Anime")
-        limit = int(request.query_params.get("limit", 20))
-
         try:
-            catalog = catalog_service.get_catalog(media_type)
-            items = catalog.get("db", [])[:limit]
-
-            # 1. Recommandations personnalisées (IA)
-            recommendations = []
-            if request.user.is_authenticated:
-                user_recs = (
-                    UserRecommendation.objects.filter(
-                        user=request.user, media_item__media_type=media_type
-                    )
-                    .select_related("media_item")
-                    .order_by("rank")[:10]
-                )
-
-                recommendations = [
-                    {
-                        "id": rec.media_item.external_id,
-                        "title": rec.media_item.title,
-                        "image": rec.media_item.image_url,
-                        "synopsis_fr": rec.media_item.synopsis_fr,
-                        "is_recommendation": True,
-                    }
-                    for rec in user_recs
-                ]
-
-            # 2. Catégories populaires (ex: Action, Romance, etc.)
-            categories = {}
-            for item in catalog.get("db", []):
-                genres = item.get("genres", [])
-                for g in genres:
-                    if g not in categories:
-                        categories[g] = []
-                    if len(categories[g]) < 10:
-                        categories[g].append(item)
-
-            return response.Response(
-                {
-                    "trending": items,
-                    "recommendations": recommendations,
-                    "categories": [
-                        {"name": name, "items": items[:limit]}
-                        for name, items in categories.items()
-                        if len(items) >= 5
-                    ][:10],
-                }
-            )
-
+            feed = feed_composer.compose(request.user, media_type)
+            return response.Response(feed)
         except Exception:
             logger.exception("Error in MediaExploreView")
             return response.Response(

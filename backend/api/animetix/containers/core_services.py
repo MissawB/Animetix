@@ -141,6 +141,12 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         ),
     )
 
+    feed_composer = providers.Factory(
+        LazyClass("core.domain.services.explore.feed_composer", "FeedComposer"),
+        catalog_service=catalog_service,
+        graph_port=persistence.graph_persistence_port,
+    )
+
     similarity_service = providers.Singleton(
         LazyClass("core.domain.services.similarity_service", "SimilarityService"),
         repository=persistence.repository,

@@ -8,13 +8,16 @@ import { apiClient } from '../../../utils/apiClient';
 vi.mock('../../../utils/apiClient', () => ({ apiClient: vi.fn() }));
 const mockedApiClient = vi.mocked(apiClient);
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-    },
-  },
-});
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+const renderPage = () =>
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <ExplorePage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
 
 describe('ExplorePage', () => {
   beforeEach(() => {
@@ -22,76 +25,67 @@ describe('ExplorePage', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the explore page title and sections', () => {
-    mockedApiClient.mockResolvedValue({ trending: [] });
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <ExplorePage />
-        </MemoryRouter>
-      </QueryClientProvider>
-    );
-    expect(screen.getByText(/Tendances Actuelles/i)).toBeInTheDocument();
-  });
-
   it('requests the versioned explore endpoint with the media type', async () => {
-    // Régression : la page appelait /api/explore/ (sans v1) → 404 permanent,
-    // aucune donnée ne s'affichait. L'endpoint réel est /api/v1/explore/.
-    mockedApiClient.mockResolvedValue({ trending: [] });
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <ExplorePage />
-        </MemoryRouter>
-      </QueryClientProvider>
-    );
-
+    mockedApiClient.mockResolvedValue({ rows: [], personalized: false });
+    renderPage();
     await waitFor(() =>
-      expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/explore/?media_type=Anime')
+      expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/explore/?media_type=Anime'),
     );
   });
 
-  it('renders media type filters', () => {
-    mockedApiClient.mockResolvedValue({ trending: [] });
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <ExplorePage />
-        </MemoryRouter>
-      </QueryClientProvider>
-    );
-    expect(screen.getByText(/Animes/i)).toBeInTheDocument();
-    expect(screen.getByText(/Mangas/i)).toBeInTheDocument();
-  });
-
-  it('renders recommendations row when data is present', async () => {
-    const mockData = {
-      recommendations: [
-        { id: 1, title: 'Recommended Item 1', image: '' }
+  it('renders a because_you_liked row with its reason chip', async () => {
+    mockedApiClient.mockResolvedValue({
+      personalized: true,
+      rows: [
+        {
+          kind: 'because_you_liked',
+          title: 'Parce que tu as aimé One Piece',
+          reason: 'Basé sur tes favoris et tes duels',
+          seed: { id: '1', title: 'One Piece' },
+          items: [{ id: '10', title: 'Neighbour', media_type: 'Anime', image: '' }],
+        },
       ],
-      trending: []
-    };
-
-    mockedApiClient.mockResolvedValue(mockData);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <ExplorePage />
-        </MemoryRouter>
-      </QueryClientProvider>
-    );
-
+    });
+    renderPage();
     await waitFor(() => {
-      expect(screen.getByText(/Choisi pour vous/i)).toBeInTheDocument();
-      expect(screen.getByText(/IA : SUGGESTION/i)).toBeInTheDocument();
-      expect(screen.getByText(/Recommended Item 1/i)).toBeInTheDocument();
+      expect(screen.getByText(/Parce que tu as aimé One Piece/i)).toBeInTheDocument();
+      expect(screen.getByText(/Basé sur tes favoris/i)).toBeInTheDocument();
+      expect(screen.getByText(/Neighbour/i)).toBeInTheDocument();
     });
   });
+
+  it('shows the cold-start banner when the feed is not personalized', async () => {
+    mockedApiClient.mockResolvedValue({
+      personalized: false,
+      rows: [
+        {
+          kind: 'top_rated',
+          title: 'Les mieux notés',
+          reason: 'Populaire',
+          seed: null,
+          items: [{ id: '1', title: 'Top', media_type: 'Anime', image: '' }],
+        },
+      ],
+    });
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/personnalise/i)).toBeInTheDocument());
+  });
+
+  it('does not render fake streaming buttons', async () => {
+    mockedApiClient.mockResolvedValue({
+      personalized: false,
+      rows: [
+        {
+          kind: 'top_rated',
+          title: 'Les mieux notés',
+          reason: 'Populaire',
+          seed: null,
+          items: [{ id: '1', title: 'Top', media_type: 'Anime', image: '' }],
+        },
+      ],
+    });
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/Top/i)).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /commencer/i })).toBeNull();
+  });
 });
-
-
-
