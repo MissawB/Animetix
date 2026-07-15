@@ -43,6 +43,11 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         inference_engine=inference.inference_engine,
     )
 
+    multiverse_service = providers.Factory(
+        LazyClass("core.domain.services.multiverse_service", "MultiverseService"),
+        neo4j_manager=persistence.graph_persistence_port,
+    )
+
     graph_builder = providers.Singleton(
         LazyClass(
             "core.domain.services.graph_construction_service",

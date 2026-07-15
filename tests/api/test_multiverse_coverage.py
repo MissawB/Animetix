@@ -267,3 +267,70 @@ def test_export_pdf_sanitizes_empty_filename(api_client, authenticated_user):
     assert response.status_code == 200
     # safe_filename empty -> "multiverse_lore"
     assert "wiki_multiverse_lore.pdf" in response["Content-Disposition"]
+
+
+def test_multiverse_service_methods():
+    from core.domain.services.multiverse_service import MultiverseService
+
+    neo4j = MagicMock()
+    service = MultiverseService(neo4j)
+
+    # test gallery
+    service.get_gallery_raw_data()
+    assert neo4j.execute_query.call_count == 1
+
+    # test catalog
+    neo4j.execute_query.side_effect = [[{"total": 1}], [{"media": {}}], [{"name": "G"}]]
+    service.get_catalog_raw_data()
+    assert neo4j.execute_query.call_count == 4  # 1 previous + 3 for catalog
+
+    # test pdf raw data
+    neo4j.execute_query.side_effect = [
+        [{"media": {}}],
+        [{"character": {}}],
+        [{"properties": {}}],
+    ]
+    service.get_universe_pdf_raw_data("Test")
+    assert neo4j.execute_query.call_count == 7
+
+
+def test_multiverse_presenter_methods():
+    from animetix.presenters import MultiversePresenter
+
+    # test format gallery
+    res_gallery = MultiversePresenter.format_gallery_data(
+        [{"m": {"name": "M"}, "g": {"name": "G"}}]
+    )
+    assert len(res_gallery["nodes"]) == 2
+
+    # test format catalog
+    res_catalog = MultiversePresenter.format_catalog_data(
+        results=[{"media": {"name": "M"}, "genre": {"name": "G"}}],
+        total=1,
+        page=1,
+        page_size=10,
+        search="",
+        genre_filter="",
+        sort_by="newest",
+        genre_results=[{"name": "G", "count": 1}],
+    )
+    assert res_catalog["results"][0]["name"] == "M"
+
+    # test generate PDF
+    pdf_buffer = MultiversePresenter.generate_lore_pdf(
+        "Test",
+        {
+            "media": {"name": "Test", "description": "Desc", "cosmology": "Cosmo"},
+            "genre": {"name": "G"},
+            "characters": [{"name": "Char", "role": "Role", "power_level": 100}],
+            "relations": [
+                {
+                    "rel_type": "T",
+                    "labels": ["L"],
+                    "properties": {"name": "N"},
+                    "is_outgoing": True,
+                }
+            ],
+        },
+    )
+    assert pdf_buffer.getvalue().startswith(b"%PDF")
