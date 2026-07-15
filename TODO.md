@@ -30,8 +30,8 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Infra — durcir `Dockerfile.brain` et `Dockerfile.dataflow`** _(audit dette 2026-07-11)_
-  - `Dockerfile.brain` : single-stage (build-essential/gcc conservés), **root** (aucune directive `USER`), base `python:3.11-slim` vs 3.12 ailleurs, pas de HEALTHCHECK. [Dockerfile.dataflow:19](deploy/Dockerfile.dataflow#L19) : `USER root` jamais redescendu, launcher `:latest` non épinglé (build non reproductible).
+- [x] **~~Infra — durcir `Dockerfile.brain` et `Dockerfile.dataflow`~~** _(audit dette 2026-07-11 ; sous-ensemble sûr appliqué 2026-07-15)_
+  - `Dockerfile.brain` : déjà multi-stage + HEALTHCHECK depuis l'audit ; runtime bumpé `python:3.12-slim` (stages de bake laissés en 3.11 — outillage jetable, cache de merge ~90 min préservé). **Root conservé à dessein** : Ollama s'installe sous root, le chemin GPU est non testable et la CI ne rebuild jamais le brain. `Dockerfile.dataflow` : drop non-root via `appuser` après apt/pip (**non vérifié** contre une soumission Dataflow — à confirmer, sinon retirer le bloc `USER`). Launcher `:latest` laissé (forme recommandée par Google, instructions de pin-par-digest déjà en commentaire).
 - [x] **~~Covertest — sortir les covers du blob JSON~~** _(suite de l'ingestion complète 2026-07-12)_
   - La base passe de 90 à ~4 000 mangas : [manga_covers.json](data/processed/manga_covers.json) grossit de 0,5 à ~25 Mo, chargé **intégralement en RAM** par le singleton ([pgvector_repository_adapter.py:199](backend/adapters/persistence/pgvector_repository_adapter.py#L199)) au premier appel, et `list_entries()` sérialise tout le référentiel vers le front à chaque partie. À cette taille ça doit passer en Postgres (ou au minimum : un index allégé `{id, title, aliases}` pour l'autocomplétion + les covers servies à la demande). Blob LFS lu au cold start Cloud Run = mauvais compromis au-delà de quelques Mo.
 - [ ] **Tests — hygiène : fixtures dupliquées, snapshot `sys.modules`, env forcé à l'import** _(audit dette 2026-07-11)_
