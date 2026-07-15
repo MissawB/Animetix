@@ -2,6 +2,14 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-15] Session: Technical-debt sweep — hardcoded config & data externalized, duplicated logic unified
+
+Closure of five 🟡 items from the *audit dette 2026-07-11*.
+
+- **Hardcoded config & data externalized.** The hardcoded HF prod URL in `workflows_client.py` — which already read `BRAIN_API_URL` from env two lines above, an inconsistency — now flows entirely through `get_config()`; VS-battle's ~85-line tier table → `vs_battle_tiers.json`; model ids (`clip-ViT-B-32`, `imagen-3.0-generate-001`, `jina-embeddings-v3`) → `core/config.py` / `model_registry.py`; and the 2,459-line `otaku_concepts.py` data dictionary → `otaku_concepts.json`, loaded with a logged fallback.
+- **Duplicated logic unified.** JSON extraction — reimplemented four times with divergent behavior across `agentic_rag_service`, `vs_battle_service`, `orchestrator_agent_service` and `llm_service` — collapsed into a single `core/utils/json_utils.py`. The doubled `dpo_feedback_loop` module (core vs pipeline) reconciled to one canonical implementation. A shared `useSSE` hook extracted from `TreeOfThoughtsPage` and `ExpertNexusPage`, mirroring the existing `useSocket` WS hook.
+- **Broken pipeline secrets aligned.** `eval_ragas`, `compare_models_wandb` and `data_intelligence` defaulted `BRAIN_API_KEY` to `"dev-secret-key"` while the app default is `"dev-insecure-key-animetix-2026"` — silently broken auth for those scripts, now consistent.
+
 ## [2026-07-14→15] Session: Visual search built for real, dead surface removed, and hybrid_search's "semantic" half measured then reverted
 
 **Visual search — the index that never existed.** `MediaSearchView` had been reading the pgvector collection `unified_clip_space` for months; that string appeared exactly once in the repo — this read — and **no code ever wrote it** (0 vectors for 44,761 rows; the Bx ledger showed the feature was never used). Built it end to end: an anime-tuned CLIP (`dudcjs2779/anime-style-tag-clip`, EVA02-B-16) for covers (target `work` → `unified_clip_space`), CCIP (`deepghs/ccip_onnx`, "is it the SAME character") for portraits (target `character` → `character_ccip_space`) — two models, two spaces, two collections, bound indivisibly. A resumable `build_visual_index` management command, a per-target 503 billing guard **before** any `deduct_berrix`, an honest « jaquette / personnage » selector that never promises screenshot→anime. **9,165 covers indexed in prod** (Anime/Manga/Movie/Game), 0 dead images, round-trip proven (post DEATH NOTE's cover → DEATH NOTE first, link resolves).
