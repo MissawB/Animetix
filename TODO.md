@@ -32,7 +32,7 @@ _Aucun item ouvert._
 
 - [x] **~~Backend — extraction JSON réimplémentée 4× avec logiques divergentes~~** _(audit dette 2026-07-11)_
   - [agentic_rag_service.py:671](backend/core/domain/services/agentic_rag_service.py#L671) `_extract_json`, [vs_battle_service.py:121](backend/core/domain/services/creative/vs_battle_service.py#L121) `_extract_json`, [orchestrator_agent_service.py:145](backend/core/domain/services/orchestrator_agent_service.py#L145) `_safe_json_generate`, [llm_service.py:214](backend/core/domain/services/llm_service.py#L214) `_parse_json`. **Reco** : un utilitaire unique dans `core/utils/`.
-- [ ] **Backend — module `dpo_feedback_loop` en double (core vs pipeline)** _(audit dette 2026-07-11)_
+- [x] **~~Backend — module `dpo_feedback_loop` en double (core vs pipeline)~~** _(audit dette 2026-07-11)_
   - [core/domain/services/dpo_feedback_loop.py](backend/core/domain/services/dpo_feedback_loop.py) (225 l., câblé au container) et [pipeline/mlops/dpo_feedback_loop.py](backend/pipeline/mlops/dpo_feedback_loop.py) (246 l.) — même nom, deux implémentations proches, risque de divergence. Trancher lequel est canonique.
 - [ ] **Frontend — extraire un hook `useSSE` partagé** _(audit dette 2026-07-11)_
   - [TreeOfThoughtsPage.tsx:57-113](frontend/src/pages/labs/TreeOfThoughtsPage.tsx#L57-L113) et [ExpertNexusPage.tsx:79-249](frontend/src/pages/search/ExpertNexusPage.tsx#L79-L249) réimplémentent chacune le cycle de vie EventSource (ref, cleanup, contournement 401/402) avec des commentaires quasi identiques. Le streaming est central au projet ; `hooks/useSocket.ts` existe déjà pour les WS — faire l'équivalent SSE.
