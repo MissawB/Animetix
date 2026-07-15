@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSSE, type SSEEvent } from '../../hooks/useSSE';
 import {
   Brain,
   Search,
@@ -11,7 +12,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
+
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import ForceGraph2D, {
@@ -59,13 +60,9 @@ const ExpertNexusPage: React.FC = () => {
   const { t } = useTranslation();
   const initialQuery = searchParams.get('q') || '';
   const [query, setQuery] = useState(initialQuery);
-  const [isStreaming, setIsStreaming] = useState(false);
   const [, setSteps] = useState<Step[]>([]);
   const [finalAnswer, setFinalAnswer] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [errorKind, setErrorKind] = useState<'auth' | 'payment' | 'generic' | null>(null);
   const [xaiReport, setXaiReport] = useState<XaiReport | null>(null);
-  const receivedAnyRef = useRef(false);
 
   // Graph state
   const [graphData, setGraphData] = useState<{ nodes: GraphNode[]; links: GraphLink[] }>({
@@ -76,15 +73,8 @@ const ExpertNexusPage: React.FC = () => {
     ForceGraphMethods<NodeObject<GraphNode>, LinkObject<GraphNode, GraphLink>> | undefined
   >(undefined);
 
-  const eventSourceRef = useRef<EventSource | null>(null);
-
-  const stopStreaming = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
-    setIsStreaming(false);
-  }, []);
+  // Mutable ref to track last graph node id across SSE events
+  const lastNodeIdRef = useRef('root');
 
   const getAgentColorCode = (agent?: string) => {
     switch (agent) {
@@ -107,162 +97,136 @@ const ExpertNexusPage: React.FC = () => {
     }
   };
 
+  const [sseUrl, setSseUrl] = useState('');
+
+  const handleSSEEvent = useCallback((data: SSEEvent) => {
+    if (data.type === 'token') {
+      setFinalAnswer((prev) => prev + (data.content as string));
+    } else if (data.type === 'thought') {
+      const raw = data.content as string;
+      const agentMatch = raw.match(/^\[(.*?)\]/);
+      const agent = agentMatch ? agentMatch[1] : 'System';
+      const content = agentMatch ? raw.replace(/^\[.*?\]\s*/, '') : raw;
+      const newId = Math.random().toString(36).substr(2, 9);
+
+      setSteps((prev) => [
+        ...prev,
+        {
+          id: newId,
+          type: 'thought',
+          content,
+          agent,
+          timestamp: Date.now(),
+          parentId: lastNodeIdRef.current,
+        },
+      ]);
+
+      setGraphData((prev) => ({
+        nodes: [
+          ...prev.nodes,
+          {
+            id: newId,
+            label: content,
+            agent,
+            type: 'thought',
+            val: 10,
+            color: getAgentColorCode(agent),
+          },
+        ],
+        links: [
+          ...prev.links,
+          { source: lastNodeIdRef.current, target: newId, color: 'rgba(255, 255, 255, 0.2)' },
+        ],
+      }));
+      lastNodeIdRef.current = newId;
+    } else if (data.type === 'eval') {
+      const newId = Math.random().toString(36).substr(2, 9);
+      setSteps((prev) => [
+        ...prev,
+        {
+          id: newId,
+          type: 'eval',
+          content: data.content as string,
+          agent: 'Judge',
+          timestamp: Date.now(),
+          parentId: lastNodeIdRef.current,
+        },
+      ]);
+
+      setGraphData((prev) => ({
+        nodes: [
+          ...prev.nodes,
+          {
+            id: newId,
+            label: '\u00c9valuation',
+            agent: 'Judge',
+            type: 'eval',
+            val: 12,
+            color: getAgentColorCode('Judge'),
+          },
+        ],
+        links: [
+          ...prev.links,
+          { source: lastNodeIdRef.current, target: newId, color: 'rgba(255, 255, 255, 0.2)' },
+        ],
+      }));
+      lastNodeIdRef.current = newId;
+    } else if (data.type === 'error') {
+      return 'close' as const;
+    } else if (data.type === 'done') {
+      return 'close' as const;
+    } else if (data.type === 'xai_report') {
+      setXaiReport(data.content as XaiReport);
+    }
+  }, []);
+
+  const {
+    start: sseStart,
+    stop: sseStop,
+    isStreaming,
+    error,
+    errorKind,
+  } = useSSE({
+    url: sseUrl,
+    onEvent: handleSSEEvent,
+    authErrorMessage: t(
+      'search.expert.auth_error',
+      "Ce mode utilise l'IA (GPU) et co\u00fbte des Berrix. Connecte-toi pour lancer une analyse.",
+    ),
+    paymentErrorMessage: t(
+      'search.expert.payment_error',
+      'Analyse refus\u00e9e. V\u00e9rifie ton solde de Berrix (ce mode IA en consomme) puis r\u00e9essaie.',
+    ),
+  });
+
   const handleSearch = useCallback(
     (searchQuery: string) => {
       if (!searchQuery.trim()) return;
 
-      // Ce mode utilise l'IA (GPU) et consomme des Bx → login requis. On le détecte
-      // en amont car EventSource ne peut pas lire un statut HTTP 401/402.
-      if (!useAuthStore.getState().isAuthenticated) {
-        setError(
-          t(
-            'search.expert.auth_error',
-            "Ce mode utilise l'IA (GPU) et coûte des Berrix. Connecte-toi pour lancer une analyse.",
-          ),
-        );
-        setErrorKind('auth');
-        setIsStreaming(false);
-        return;
-      }
-
       setSearchParams({ q: searchQuery });
       setSteps([]);
       setFinalAnswer('');
-      setError(null);
-      setErrorKind(null);
-      receivedAnyRef.current = false;
-      setIsStreaming(true);
+      lastNodeIdRef.current = 'root';
 
       // Initialize Root node
-      const rootId = 'root';
-      const initNodes: GraphNode[] = [
-        {
-          id: rootId,
-          label: 'Question',
-          agent: 'Root',
-          type: 'root',
-          val: 20,
-          color: '#ffffff',
-        },
-      ];
-      setGraphData({ nodes: initNodes, links: [] });
+      setGraphData({
+        nodes: [
+          { id: 'root', label: 'Question', agent: 'Root', type: 'root', val: 20, color: '#ffffff' },
+        ],
+        links: [],
+      });
 
-      const url = `/api/v1/stream/agentic-rag/?q=${encodeURIComponent(searchQuery)}`;
-      const eventSource = new EventSource(url);
-      eventSourceRef.current = eventSource;
-
-      let lastNodeId = rootId;
-
-      eventSource.onmessage = (event) => {
-        try {
-          receivedAnyRef.current = true;
-          const data = JSON.parse(event.data);
-
-          if (data.type === 'token') {
-            setFinalAnswer((prev) => prev + data.content);
-          } else if (data.type === 'thought') {
-            const agentMatch = data.content.match(/^\[(.*?)\]/);
-            const agent = agentMatch ? agentMatch[1] : 'System';
-            const content = agentMatch ? data.content.replace(/^\[.*?\]\s*/, '') : data.content;
-            const newId = Math.random().toString(36).substr(2, 9);
-
-            setSteps((prev) => [
-              ...prev,
-              {
-                id: newId,
-                type: 'thought',
-                content,
-                agent,
-                timestamp: Date.now(),
-                parentId: lastNodeId,
-              },
-            ]);
-
-            setGraphData((prev) => {
-              const newNode = {
-                id: newId,
-                label: content,
-                agent: agent,
-                type: 'thought',
-                val: 10,
-                color: getAgentColorCode(agent),
-              };
-              const newLink = {
-                source: lastNodeId,
-                target: newId,
-                color: 'rgba(255, 255, 255, 0.2)',
-              };
-              return {
-                nodes: [...prev.nodes, newNode],
-                links: [...prev.links, newLink],
-              };
-            });
-            lastNodeId = newId;
-          } else if (data.type === 'eval') {
-            const newId = Math.random().toString(36).substr(2, 9);
-            setSteps((prev) => [
-              ...prev,
-              {
-                id: newId,
-                type: 'eval',
-                content: data.content,
-                agent: 'Judge',
-                timestamp: Date.now(),
-                parentId: lastNodeId,
-              },
-            ]);
-
-            setGraphData((prev) => {
-              const newNode = {
-                id: newId,
-                label: 'Évaluation',
-                agent: 'Judge',
-                type: 'eval',
-                val: 12,
-                color: getAgentColorCode('Judge'),
-              };
-              const newLink = {
-                source: lastNodeId,
-                target: newId,
-                color: 'rgba(255, 255, 255, 0.2)',
-              };
-              return {
-                nodes: [...prev.nodes, newNode],
-                links: [...prev.links, newLink],
-              };
-            });
-            lastNodeId = newId;
-          } else if (data.type === 'error') {
-            setError(data.content);
-            stopStreaming();
-          } else if (data.type === 'done') {
-            stopStreaming();
-          } else if (data.type === 'xai_report') {
-            setXaiReport(data.content);
-          }
-        } catch (e) {
-          console.error('Failed to parse event data', e);
-        }
-      };
-
-      eventSource.onerror = () => {
-        // EventSource ne donne ni statut ni corps. Si le flux échoue sans qu'aucun
-        // évènement n'ait été reçu, c'est presque toujours un refus 402 (solde de Bx
-        // insuffisant), l'utilisateur étant déjà authentifié à ce stade.
-        if (!receivedAnyRef.current) {
-          setError(
-            t(
-              'search.expert.payment_error',
-              'Analyse refusée. Vérifie ton solde de Berrix (ce mode IA en consomme) puis réessaie.',
-            ),
-          );
-          setErrorKind('payment');
-        }
-        stopStreaming();
-      };
+      setSseUrl(`/api/v1/stream/agentic-rag/?q=${encodeURIComponent(searchQuery)}`);
     },
-    [setSearchParams, stopStreaming, t],
+    [setSearchParams],
   );
+
+  // Start SSE when URL is set
+  useEffect(() => {
+    if (sseUrl) {
+      sseStart();
+    }
+  }, [sseUrl, sseStart]);
 
   useEffect(() => {
     let isMounted = true;
@@ -274,9 +238,9 @@ const ExpertNexusPage: React.FC = () => {
     startInitialSearch();
     return () => {
       isMounted = false;
-      stopStreaming();
+      sseStop();
     };
-  }, [initialQuery, handleSearch, stopStreaming]);
+  }, [initialQuery, handleSearch, sseStop]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
