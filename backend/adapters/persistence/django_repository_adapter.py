@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, List, Optional
 
-from animetix.models import MediaItem
+from animetix.models import MangaCover, MediaItem
 from core.ports.repository_port import RepositoryPort
 from django.db.models import Q
 
@@ -209,3 +209,52 @@ class DjangoRepositoryAdapter(RepositoryPort):
         if item.metadata:
             data.update(item.metadata)
         return data
+
+    def get_manga_covers_metadata(self) -> List[Dict]:
+        covers_qs = MangaCover.objects.all()
+        metadata = []
+        for c in covers_qs:
+            has_ja = bool(c.covers.get("ja"))
+            has_fr = bool(c.covers.get("fr"))
+            metadata.append(
+                {
+                    "id": c.manga_id,
+                    "title": c.title,
+                    "title_english": c.title_english,
+                    "title_native": c.title_native,
+                    "synonyms": c.synonyms,
+                    "author": c.author,
+                    "has_ja": has_ja,
+                    "has_fr": has_fr,
+                }
+            )
+        return metadata
+
+    def get_manga_cover_by_id(self, manga_id: str) -> Optional[Dict]:
+        try:
+            c = MangaCover.objects.get(manga_id=manga_id)
+            return {
+                "title": c.title,
+                "mangadex_id": c.mangadex_id,
+                "covers": c.covers,
+                "title_english": c.title_english,
+                "title_native": c.title_native,
+                "synonyms": c.synonyms,
+                "author": c.author,
+            }
+        except MangaCover.DoesNotExist:
+            return None
+
+    def get_manga_cover_by_title(self, title: str) -> Optional[Dict]:
+        c = MangaCover.objects.filter(title=title).first()
+        if not c:
+            return None
+        return {
+            "title": c.title,
+            "mangadex_id": c.mangadex_id,
+            "covers": c.covers,
+            "title_english": c.title_english,
+            "title_native": c.title_native,
+            "synonyms": c.synonyms,
+            "author": c.author,
+        }

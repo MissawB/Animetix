@@ -307,6 +307,114 @@ class PGVectorRepositoryAdapter(RepositoryPort):
                 return orjson.loads(f.read())
         return {}
 
+    def get_manga_covers_metadata(self) -> List[Dict]:
+        try:
+            from animetix.models import MangaCover
+
+            covers_qs = MangaCover.objects.all()
+            if covers_qs.exists():
+                metadata = []
+                for c in covers_qs:
+                    has_ja = bool(c.covers.get("ja"))
+                    has_fr = bool(c.covers.get("fr"))
+                    metadata.append(
+                        {
+                            "id": c.manga_id,
+                            "title": c.title,
+                            "title_english": c.title_english,
+                            "title_native": c.title_native,
+                            "synonyms": c.synonyms,
+                            "author": c.author,
+                            "has_ja": has_ja,
+                            "has_fr": has_fr,
+                        }
+                    )
+                return metadata
+        except Exception:
+            pass
+
+        covers = self.load_covers()
+        metadata = []
+        for mid, info in covers.items():
+            has_ja = bool(info.get("covers", {}).get("ja"))
+            has_fr = bool(info.get("covers", {}).get("fr"))
+            metadata.append(
+                {
+                    "id": str(mid),
+                    "title": info.get("title", ""),
+                    "title_english": info.get("title_english"),
+                    "title_native": info.get("title_native"),
+                    "synonyms": info.get("synonyms", []),
+                    "author": info.get("author"),
+                    "has_ja": has_ja,
+                    "has_fr": has_fr,
+                }
+            )
+        return metadata
+
+    def get_manga_cover_by_id(self, manga_id: str) -> Optional[Dict]:
+        try:
+            from animetix.models import MangaCover
+
+            c = MangaCover.objects.get(manga_id=manga_id)
+            return {
+                "title": c.title,
+                "mangadex_id": c.mangadex_id,
+                "covers": c.covers,
+                "title_english": c.title_english,
+                "title_native": c.title_native,
+                "synonyms": c.synonyms,
+                "author": c.author,
+            }
+        except Exception:
+            pass
+
+        covers = self.load_covers()
+        info = covers.get(manga_id)
+        if not info:
+            return None
+        return {
+            "title": info.get("title", ""),
+            "mangadex_id": info.get("mangadex_id"),
+            "covers": info.get("covers", {}),
+            "title_english": info.get("title_english"),
+            "title_native": info.get("title_native"),
+            "synonyms": info.get("synonyms", []),
+            "author": info.get("author"),
+        }
+
+    def get_manga_cover_by_title(self, title: str) -> Optional[Dict]:
+        try:
+            from animetix.models import MangaCover
+
+            c = MangaCover.objects.filter(title=title).first()
+            if c:
+                return {
+                    "title": c.title,
+                    "mangadex_id": c.mangadex_id,
+                    "covers": c.covers,
+                    "title_english": c.title_english,
+                    "title_native": c.title_native,
+                    "synonyms": c.synonyms,
+                    "author": c.author,
+                }
+        except Exception:
+            pass
+
+        covers = self.load_covers()
+        for mid, info in covers.items():
+            if info.get("title") == title:
+                return {
+                    "title": info.get("title", ""),
+                    "mangadex_id": info.get("mangadex_id"),
+                    "covers": info.get("covers", {}),
+                    "title_english": info.get("title_english"),
+                    "title_native": info.get("title_native"),
+                    "synonyms": info.get("synonyms", []),
+                    "author": info.get("author"),
+                }
+        return None
+
     def search_media_items(
         self,
         query: str,

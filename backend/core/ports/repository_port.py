@@ -115,3 +115,18 @@ class RepositoryPort(ABC):
     def get_user_creative_history(self, user_id: int, limit: int = 10) -> List[Dict]:
         """Récupère l'historique des fusions créatives d'un utilisateur."""
         pass
+
+    @abstractmethod
+    def get_manga_covers_metadata(self) -> List[Dict]:
+        """Récupère les métadonnées (id, title, aliases, et indicateurs de langue) de toutes les covers de manga."""
+        pass
+
+    @abstractmethod
+    def get_manga_cover_by_id(self, manga_id: str) -> Optional[Dict]:
+        """Récupère l'objet cover d'un manga (avec ses tomes/URLs) par son ID unique."""
+        pass
+
+    @abstractmethod
+    def get_manga_cover_by_title(self, title: str) -> Optional[Dict]:
+        """Récupère l'objet cover d'un manga (avec ses tomes/URLs) par son titre."""
+        pass

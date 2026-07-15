@@ -18,6 +18,54 @@ def mock_repository():
             },
         }
     }
+
+    def get_metadata_side_effect():
+        catalog = repo.load_covers.return_value or {}
+        metadata = []
+        for mid, info in catalog.items():
+            metadata.append(
+                {
+                    "id": str(mid),
+                    "title": info.get("title", ""),
+                    "title_english": info.get("title_english"),
+                    "title_native": info.get("title_native"),
+                    "synonyms": info.get("synonyms", []),
+                    "author": info.get("author"),
+                    "has_ja": bool(info.get("covers", {}).get("ja")),
+                    "has_fr": bool(info.get("covers", {}).get("fr")),
+                }
+            )
+        return metadata
+
+    repo.get_manga_covers_metadata.side_effect = get_metadata_side_effect
+
+    def get_by_id_side_effect(manga_id):
+        catalog = repo.load_covers.return_value or {}
+        mid = str(manga_id)
+        if mid not in catalog:
+            return None
+        info = catalog[mid]
+        return {
+            "title": info.get("title", ""),
+            "mangadex_id": info.get("mangadex_id"),
+            "covers": info.get("covers", {}),
+            "title_english": info.get("title_english"),
+            "title_native": info.get("title_native"),
+            "synonyms": info.get("synonyms", []),
+            "author": info.get("author"),
+        }
+
+    repo.get_manga_cover_by_id.side_effect = get_by_id_side_effect
+
+    def get_by_title_side_effect(title):
+        catalog = repo.load_covers.return_value or {}
+        for mid, info in catalog.items():
+            if info.get("title") == title:
+                return get_by_id_side_effect(mid)
+        return None
+
+    repo.get_manga_cover_by_title.side_effect = get_by_title_side_effect
+
     return repo
 
 

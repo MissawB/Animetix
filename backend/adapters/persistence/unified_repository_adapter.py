@@ -118,3 +118,12 @@ class UnifiedRepositoryAdapter(RepositoryPort):
     def get_user_creative_history(self, user_id: int, limit: int = 10) -> List[Dict]:
         """Récupère l'historique des fusions créatives via Django."""
         return self.django.get_user_creative_history(user_id, limit)
+
+    def get_manga_covers_metadata(self) -> List[Dict]:
+        return self.vectors.get_manga_covers_metadata()
+
+    def get_manga_cover_by_id(self, manga_id: str) -> Optional[Dict]:
+        return self.vectors.get_manga_cover_by_id(manga_id)
+
+    def get_manga_cover_by_title(self, title: str) -> Optional[Dict]:
+        return self.vectors.get_manga_cover_by_title(title)

@@ -984,3 +984,22 @@ class SiteConfiguration(models.Model):
     def get_solo(cls) -> "SiteConfiguration":
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+# --- COVERTEST COVERS ---
+class MangaCover(models.Model):
+    manga_id = models.CharField(max_length=50, unique=True, db_index=True)
+    title = models.CharField(max_length=255)
+    mangadex_id = models.CharField(max_length=100, null=True, blank=True)
+    covers = models.JSONField(default=dict)  # format: {"ja": [...], "fr": [...]}
+    title_english = models.CharField(max_length=255, null=True, blank=True)
+    title_native = models.CharField(max_length=255, null=True, blank=True)
+    synonyms = models.JSONField(default=list, null=True, blank=True)
+    author = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Manga Cover"
+        verbose_name_plural = "Manga Covers"
+
+    def __str__(self):
+        return self.title
