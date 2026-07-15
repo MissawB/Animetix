@@ -16,7 +16,7 @@ jobs:
     name: Backend Security Audit
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
@@ -50,7 +50,7 @@ jobs:
     name: Frontend Security Audit
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
@@ -70,7 +70,7 @@ jobs:
     name: Container Image Audit
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Scan Dockerfile
       uses: hadolint/hadolint-action@v3.1.0
