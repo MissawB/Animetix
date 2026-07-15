@@ -45,6 +45,13 @@ ENV PYTHONPATH="/template/backend:/template/backend/api:$PYTHONPATH"
 # seul pipeline Beam (lore_ingestion_beam). Ce n'est donc pas un "figement" subi.
 ENV FLEX_TEMPLATE_PYTHON_PY_FILE=/template/backend/pipeline/mlops/lore_ingestion_beam.py
 
+# Redescendre de root pour l'exécution (audit dette 2026-07-11). Les étapes apt/pip
+# ci-dessus exigent root ; à l'exécution, le launcher et le worker harness ne font
+# que lire /template et les site-packages. NOTE : non vérifié contre une soumission
+# Dataflow réelle — si le runner refuse un Flex Template non-root, retirer ce bloc.
+RUN useradd --create-home --uid 1000 appuser && chown -R appuser /template
+USER appuser
+
 # Pas de HEALTHCHECK : ce conteneur est un worker Dataflow Flex Template, orchestré
 # et supervisé par le runner Dataflow — le HEALTHCHECK Docker n'est pas utilisé pour
 # ce type d'image (il n'aurait aucun effet).
