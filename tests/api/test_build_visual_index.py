@@ -192,15 +192,19 @@ class _FakeVectorSpace:
         for i, item_id in enumerate(ids):
             self.rows[(collection_name, item_id)] = (embeddings[i], metadatas[i])
 
-    def search_by_vector(self, collection_name, query_vector, limit=10):
+    def search_by_vector(self, collection_name, query_vector, limit=10, where=None):
         def distance(vector):
             return sum((a - b) ** 2 for a, b in zip(vector, query_vector))
+
+        def matches(metadata):
+            # Comme `metadata @> jsonb` : tous les couples de `where` sont présents.
+            return not where or all(metadata.get(k) == v for k, v in where.items())
 
         found = sorted(
             (
                 (distance(vector), item_id, metadata)
                 for (coll, item_id), (vector, metadata) in self.rows.items()
-                if coll == collection_name
+                if coll == collection_name and matches(metadata)
             ),
             key=lambda row: row[0],
         )
