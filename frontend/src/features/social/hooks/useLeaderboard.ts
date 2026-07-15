@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { getLeaderboard } from '../../../api';
+import { socialService } from '../services/socialService';
 
 export const useLeaderboard = () => {
   return useQuery({
     queryKey: ['leaderboard'],
-    queryFn: getLeaderboard,
+    queryFn: socialService.getLeaderboard,
   });
 };

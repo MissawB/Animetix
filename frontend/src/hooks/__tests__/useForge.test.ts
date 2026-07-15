@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useForge } from '../useForge';
 import { useAuthStore } from '../../store/authStore';
-import { startFusion, getFusionStatus } from '../../api';
-import type { FusionResponse, FusionStatus } from '../../api';
+import { forgeService } from '../../features/labs/services/forgeService';
+import type { FusionResponse, FusionStatus } from '../../features/labs/services/forgeService';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -16,9 +16,11 @@ vi.mock('../../store/authStore', () => ({
   useAuthStore: vi.fn(),
 }));
 
-vi.mock('../../api', () => ({
-  startFusion: vi.fn(),
-  getFusionStatus: vi.fn(),
+vi.mock('../../features/labs/services/forgeService', () => ({
+  forgeService: {
+    startFusion: vi.fn(),
+    getFusionStatus: vi.fn(),
+  },
 }));
 
 // The selector param type of the (overloaded) zustand hook, extracted structurally
@@ -92,11 +94,11 @@ describe('useForge hook', () => {
     );
 
     const mockStartRes = { task_id: 'task-123', fusion_id: 99 };
-    vi.mocked(startFusion).mockResolvedValue(mockStartRes as FusionResponse);
+    vi.mocked(forgeService.startFusion).mockResolvedValue(mockStartRes as FusionResponse);
 
     const mockStatusPending = { completed: false, status: 'processing' };
     const mockStatusComplete = { completed: true, status: 'success', output: 'result_url' };
-    vi.mocked(getFusionStatus)
+    vi.mocked(forgeService.getFusionStatus)
       .mockResolvedValueOnce(mockStatusPending as FusionStatus)
       .mockResolvedValueOnce(mockStatusComplete as unknown as FusionStatus);
 
@@ -106,7 +108,7 @@ describe('useForge hook', () => {
       await result.current.handleStartFusion();
     });
 
-    expect(startFusion).toHaveBeenCalled();
+    expect(forgeService.startFusion).toHaveBeenCalled();
     expect(result.current.isGenerating).toBe(true);
     expect(result.current.fusionData).toEqual(mockStartRes);
 
@@ -115,7 +117,7 @@ describe('useForge hook', () => {
       await vi.advanceTimersByTimeAsync(3000);
     });
 
-    expect(getFusionStatus).toHaveBeenCalledWith('task-123', 99);
+    expect(forgeService.getFusionStatus).toHaveBeenCalledWith('task-123', 99);
     expect(result.current.isGenerating).toBe(true);
 
     // Second poll (completes)

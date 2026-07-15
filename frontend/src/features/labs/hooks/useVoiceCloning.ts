@@ -1,16 +1,16 @@
 import { useMutation } from '@tanstack/react-query';
-import { cloneVoice } from '../../../api';
+import { labService } from '../services/labService';
 
 export const useVoiceCloning = () => {
   const mutation = useMutation({
-    mutationFn: ({ text, audioFile, pitch }: { text: string, audioFile: File, pitch: number }) => 
-      cloneVoice(text, audioFile, pitch),
+    mutationFn: ({ text, audioFile, pitch }: { text: string; audioFile: File; pitch: number }) =>
+      labService.cloneVoice(text, audioFile, pitch),
   });
 
   return {
     clone: mutation.mutateAsync,
     loading: mutation.isPending,
     result: mutation.data,
-    error: mutation.error
+    error: mutation.error,
   };
 };

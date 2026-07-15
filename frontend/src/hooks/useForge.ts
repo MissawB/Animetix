@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
-import { startFusion, getFusionStatus, FusionResponse, FusionStatus } from '../api';
+import { forgeService } from '../features/labs/services/forgeService';
+import type { FusionResponse, FusionStatus } from '../features/labs/services/forgeService';
 import { SearchItem } from '../types';
 
 export const FUSION_COST = 78;
@@ -24,8 +25,14 @@ export function useForge() {
   const [error, setError] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const errLoginRequired = t('games.forge.errors.login_required', 'Connexion requise pour forger une réalité.');
-  const errInsufficientBx = t('games.forge.errors.insufficient_bx', { defaultValue: 'Berrix insuffisants — la fusion coûte {{cost}} Bx.', cost: FUSION_COST });
+  const errLoginRequired = t(
+    'games.forge.errors.login_required',
+    'Connexion requise pour forger une réalité.',
+  );
+  const errInsufficientBx = t('games.forge.errors.insufficient_bx', {
+    defaultValue: 'Berrix insuffisants — la fusion coûte {{cost}} Bx.',
+    cost: FUSION_COST,
+  });
 
   const handleStartFusion = async () => {
     if (!isAuthenticated) {
@@ -35,12 +42,12 @@ export function useForge() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await startFusion({
+      const res = await forgeService.startFusion({
         title_A: itemA?.title || itemA?.name,
         title_B: itemB?.title || itemB?.name,
         chaos_level: chaosLevel,
         universe_balance: balance,
-        art_style: artStyle
+        art_style: artStyle,
       });
       setFusionData(res);
     } catch (err) {
@@ -50,7 +57,12 @@ export function useForge() {
       } else if (httpStatus === 402) {
         setError(errInsufficientBx);
       } else {
-        setError(t('games.forge.errors.reactor_overheat', 'Le réacteur de fusion a surchauffé. Réessayez plus tard.'));
+        setError(
+          t(
+            'games.forge.errors.reactor_overheat',
+            'Le réacteur de fusion a surchauffé. Réessayez plus tard.',
+          ),
+        );
       }
       setIsLoading(false);
     }
@@ -61,7 +73,7 @@ export function useForge() {
     if (fusionData && !status?.completed) {
       interval = setInterval(async () => {
         try {
-          const res = await getFusionStatus(fusionData.task_id, fusionData.fusion_id);
+          const res = await forgeService.getFusionStatus(fusionData.task_id, fusionData.fusion_id);
           setStatus(res);
           if (res.completed) {
             setIsLoading(false);
@@ -69,7 +81,7 @@ export function useForge() {
             clearInterval(interval);
           }
         } catch (err) {
-          console.error("Polling error:", err);
+          console.error('Polling error:', err);
         }
       }, 3000);
     }
@@ -92,12 +104,18 @@ export function useForge() {
   };
 
   return {
-    itemA, setItemA,
-    itemB, setItemB,
-    chaosLevel, setChaosLevel,
-    balance, setBalance,
-    artStyle, setArtStyle,
-    styleDir, setStyleDir,
+    itemA,
+    setItemA,
+    itemB,
+    setItemB,
+    chaosLevel,
+    setChaosLevel,
+    balance,
+    setBalance,
+    artStyle,
+    setArtStyle,
+    styleDir,
+    setStyleDir,
     isGenerating,
     fusionData,
     status,
@@ -106,6 +124,6 @@ export function useForge() {
     walletBalance,
     isAuthenticated,
     handleStartFusion,
-    resetForge
+    resetForge,
   };
 }

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { searchMedia, searchByImage } from '../api';
+import { searchService } from '../features/search/services/searchService';
 import { Search, X, Camera, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Input } from './ui/Input';
@@ -93,7 +93,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id 
     debounceRef.current = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const data = await searchMedia(val);
+        const data = await searchService.searchMedia(val);
         // data is already MediaItem[] which is compatible with SearchItem
         setResults(data);
         setIsOpen(true);
@@ -122,7 +122,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id 
     setSearchError(null);
 
     try {
-      const data = await searchByImage(file, target);
+      const data = await searchService.searchByImage(file, target);
       setResults(data);
     } catch (err) {
       // apiClient already surfaced the error via a toast. On branche sur le

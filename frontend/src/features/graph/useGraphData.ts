@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getGraphNeighborhood } from '../../api';
+import { graphService } from './services/graphService';
 import { GraphData } from '../../types';
-
 
 export function useGraphData(id: string, type: string, depth: number) {
   const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
@@ -16,9 +15,9 @@ export function useGraphData(id: string, type: string, depth: number) {
 
       setIsLoading(true);
       setError(null);
-      
+
       try {
-        const result = await getGraphNeighborhood(id, type, depth);
+        const result = await graphService.getGraphNeighborhood(id, type, depth);
         if (isMounted) {
           setData(result);
         }

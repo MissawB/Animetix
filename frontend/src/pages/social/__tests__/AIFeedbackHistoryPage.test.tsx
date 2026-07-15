@@ -4,20 +4,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AIFeedbackHistoryPage from '../AIFeedbackHistoryPage';
-import { getAIFeedbackHistory } from '../../../api';
+import { labService } from '../../../features/labs/services/labService';
 import { AIFeedback } from '../../../types';
 
-vi.mock('../../../api', () => ({
-  getAIFeedbackHistory: vi.fn(),
+vi.mock('../../../features/labs/services/labService', () => ({
+  labService: {
+    getAIFeedbackHistory: vi.fn(),
+  },
 }));
 
-const mockedGetHistory = vi.mocked(getAIFeedbackHistory);
+const mockedGetHistory = vi.mocked(labService.getAIFeedbackHistory);
 
 const renderPage = () =>
   render(
     <MemoryRouter>
       <AIFeedbackHistoryPage />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 
 const feedback = (overrides: Partial<AIFeedback>): AIFeedback => ({
@@ -47,7 +49,7 @@ describe('AIFeedbackHistoryPage', () => {
     mockedGetHistory.mockResolvedValue([]);
     renderPage();
     expect(
-      await screen.findByText(/Vous n'avez pas encore soumis de feedback/i)
+      await screen.findByText(/Vous n'avez pas encore soumis de feedback/i),
     ).toBeInTheDocument();
   });
 
@@ -67,7 +69,7 @@ describe('AIFeedbackHistoryPage', () => {
     mockedGetHistory.mockRejectedValue(new Error('boom'));
     renderPage();
     expect(
-      await screen.findByText(/Vous n'avez pas encore soumis de feedback/i)
+      await screen.findByText(/Vous n'avez pas encore soumis de feedback/i),
     ).toBeInTheDocument();
     errorSpy.mockRestore();
   });

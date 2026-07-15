@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { interactWithCompanion } from '../../api';
+import { companionService } from './services/companionService';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -36,38 +36,38 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
 
   sendMessage: async (message, contextUrl) => {
     const { activeMentor, customPersona } = get();
-    
+
     // Automatically capture current URL and Title if not provided
     const effectiveContextUrl = contextUrl || `${window.location.href} (Page: ${document.title})`;
-    
+
     // Add user message to history immediately
     const newUserMessage: Message = { role: 'user', content: message };
-    set((state) => ({ 
+    set((state) => ({
       history: [...state.history, newUserMessage],
       isLoading: true,
-      error: null 
+      error: null,
     }));
 
     try {
-      const response = await interactWithCompanion(
+      const response = await companionService.interact(
         activeMentor,
         message,
         effectiveContextUrl,
         activeMentor === 'custom' ? customPersona : undefined,
       );
-      
+
       // Update history with the full history returned by the API
       // (or just append the response if the API only returns the new history)
       // The API we saw returns the full history (last 5 entries)
-      set({ 
+      set({
         history: response.history as Message[],
-        isLoading: false 
+        isLoading: false,
       });
     } catch (err) {
       const error = err as Error;
-      set({ 
-        isLoading: false, 
-        error: error.message || 'Failed to get response from companion' 
+      set({
+        isLoading: false,
+        error: error.message || 'Failed to get response from companion',
       });
     }
   },

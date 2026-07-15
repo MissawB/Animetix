@@ -6,9 +6,10 @@ import PricingPage from '../PricingPage';
 import { useAuthStore } from '../../../store/authStore';
 
 vi.mock('../../../store/authStore');
-vi.mock('../../../api', () => ({
-  updateAccountSettings: vi.fn().mockResolvedValue({ status: 'updated' }),
-  apiClient: vi.fn().mockResolvedValue({ status: 'refilled' })
+vi.mock('../../../features/social/services/socialService', () => ({
+  socialService: {
+    updateAccountSettings: vi.fn().mockResolvedValue({ status: 'updated' }),
+  },
 }));
 
 const mockNavigate = vi.fn();
@@ -16,7 +17,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
   return {
     ...actual,
-    useNavigate: () => mockNavigate
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -29,13 +30,13 @@ describe('PricingPage (Espace Sponsors)', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
-      checkAuth: vi.fn()
+      checkAuth: vi.fn(),
     } as unknown as ReturnType<typeof useAuthStore>);
 
     render(
       <BrowserRouter>
         <PricingPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     expect(screen.getByText(/Sponsoring & Boost/i)).toBeInTheDocument();
@@ -47,13 +48,13 @@ describe('PricingPage (Espace Sponsors)', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
-      checkAuth: vi.fn()
+      checkAuth: vi.fn(),
     } as unknown as ReturnType<typeof useAuthStore>);
 
     render(
       <BrowserRouter>
         <PricingPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const boostButton = screen.getByText('ACTIVER LE BOOST');

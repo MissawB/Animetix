@@ -1,22 +1,27 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, Mock, beforeEach } from 'vitest';
 import { useVoiceCloning } from './useVoiceCloning';
-import { cloneVoice } from '../../../api';
+import { labService } from '../services/labService';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
-vi.mock('../../../api');
-
-const createQueryClient = () => new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-    },
-    mutations: {
-      retry: false,
-    }
+vi.mock('../services/labService', () => ({
+  labService: {
+    cloneVoice: vi.fn(),
   },
-});
+}));
+
+const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <QueryClientProvider client={createQueryClient()}>{children}</QueryClientProvider>
@@ -29,7 +34,7 @@ describe('useVoiceCloning Hook', () => {
 
   it('should call cloneVoice and return the result', async () => {
     const mockResult = { audio_data: 'mock-audio-base64' };
-    (cloneVoice as Mock).mockResolvedValue(mockResult);
+    (labService.cloneVoice as Mock).mockResolvedValue(mockResult);
 
     const { result } = renderHook(() => useVoiceCloning(), { wrapper });
 
@@ -41,12 +46,12 @@ describe('useVoiceCloning Hook', () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.result).toEqual(mockResult);
-    expect(cloneVoice).toHaveBeenCalledWith(text, audioFile, pitch);
+    expect(labService.cloneVoice).toHaveBeenCalledWith(text, audioFile, pitch);
   });
 
   it('should handle errors', async () => {
     const errorMessage = 'API Error';
-    (cloneVoice as Mock).mockRejectedValue(new Error(errorMessage));
+    (labService.cloneVoice as Mock).mockRejectedValue(new Error(errorMessage));
 
     const { result } = renderHook(() => useVoiceCloning(), { wrapper });
 

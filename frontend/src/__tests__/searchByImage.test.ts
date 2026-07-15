@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiClient } from '../utils/apiClient';
-import { searchByImage } from '../api';
+import { searchService } from '../features/search/services/searchService';
 
 vi.mock('../utils/apiClient', () => ({ apiClient: vi.fn() }));
 
@@ -14,7 +14,7 @@ describe('searchByImage', () => {
     mocked.mockResolvedValue(results);
     const file = new File(['x'], 'cover.png', { type: 'image/png' });
 
-    const out = await searchByImage(file);
+    const out = await searchService.searchByImage(file);
 
     expect(mocked).toHaveBeenCalledTimes(1);
     const [url, options] = mocked.mock.calls[0];
@@ -33,7 +33,7 @@ describe('searchByImage', () => {
     mocked.mockResolvedValue([]);
     const file = new File(['x'], 'portrait.png', { type: 'image/png' });
 
-    await searchByImage(file, 'character');
+    await searchService.searchByImage(file, 'character');
 
     const body = mocked.mock.calls[0][1]!.body as FormData;
     expect(body.get('target')).toBe('character');

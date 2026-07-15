@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Sparkles, Image as ImageIcon, Heart, Share2, Film, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SearchItem } from '../../types';
-import { FusionResponse, FusionStatus } from '../../api';
+import type { FusionResponse, FusionStatus } from '../../features/labs/services/forgeService';
 
 interface ForgeResultDisplayProps {
   status: FusionStatus;
@@ -68,7 +68,8 @@ export const ForgeResultDisplay: React.FC<ForgeResultDisplayProps> = ({
               </span>
             </div>
             <h3 className="text-xl font-black italic manga-font leading-tight">
-              {itemA?.title || itemA?.name} <span className="text-yellow-400 text-sm">×</span> {itemB?.title || itemB?.name}
+              {itemA?.title || itemA?.name} <span className="text-yellow-400 text-sm">×</span>{' '}
+              {itemB?.title || itemB?.name}
             </h3>
           </div>
         </div>
@@ -77,7 +78,9 @@ export const ForgeResultDisplay: React.FC<ForgeResultDisplayProps> = ({
           <div>
             <h1 className="text-7xl font-black italic manga-font leading-[0.8] tracking-tighter uppercase mb-4">
               {t('games.forge.result_title_part1', 'FUSION')}{' '}
-              <span className="text-yellow-400">{t('games.forge.result_title_part2', 'RÉUSSIE')}</span>
+              <span className="text-yellow-400">
+                {t('games.forge.result_title_part2', 'RÉUSSIE')}
+              </span>
             </h1>
             <p className="text-xl font-bold opacity-30 uppercase tracking-[0.2em]">
               {t('games.forge.result_subtitle', 'Une nouvelle réalité a été forgée dans le nexus.')}
