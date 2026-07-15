@@ -24,6 +24,25 @@ class Settings(BaseSettings):
     SUWAYOMI_URL: str = "http://127.0.0.1:4567"
     SUWAYOMI_PASSWORD: Optional[str] = None
 
+    # Google Cloud
+    GCP_PROJECT_ID: str = "animetix-prod"
+    GCP_LOCATION: str = "europe-west1"
+    GCP_WORKFLOW_ID: str = "manga-voice-pipeline"
+    GCS_MEDIA_BUCKET: str = "animetix-media-bucket"
+    GCP_TASKS_QUEUE_NAME: str = "animetix-queue"
+    GCP_TASKS_LOCATION: str = "europe-west1"
+    GCP_TASKS_WORKER_URL: str = "https://missawb-animetix-web.hf.space/api/tasks/run/"
+    GCP_TASKS_SERVICE_ACCOUNT: str = (
+        "animetix-tasks-invoker@animetix.iam.gserviceaccount.com"
+    )
+
+    # Inference / Models
+    CLIP_MODEL_NAME: str = "clip-ViT-B-32"
+    IMAGEN_MODEL_NAME: str = "imagen-3.0-generate-001"
+    MODEL_VERSION_TEXT: str = "v3"
+    STRICT_MODEL_SECURITY: str = "true"
+    STRICT_MODEL_VERIFICATION: bool = False
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 # Focused Mixin imports
 from adapters.inference.depth_estimation import DepthEstimationMixin
 from adapters.inference.reachability_health_mixin import ReachabilityHealthCheckMixin
+from core.config import get_config
 from core.domain.entities.ai_schemas import (
     InferenceMetadata,
     InferenceResponse,
@@ -681,8 +682,11 @@ class GoogleGenAIAdapter(
             raise InferenceNotImplementedError("generate_image requires Vertex AI")
         try:
             # Note: Imagen generation requires specific model name, usually 'imagen-3' or similar
+            model_name = get_config().get(
+                "IMAGEN_MODEL_NAME", "imagen-3.0-generate-001"
+            )
             res = self.client.models.generate_image(
-                model="imagen-3.0-generate-001",
+                model=model_name,
                 prompt=f"{prompt}, {style}",
                 config=types.GenerateImageConfig(
                     number_of_images=1, include_rai_reason=True

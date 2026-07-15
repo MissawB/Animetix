@@ -14,7 +14,6 @@ The former 404 ids `unsloth/DeepSeek-R1-Distill-Qwen-8B` and
 """
 
 import logging
-import os
 from typing import Optional
 
 from core.config import get_config
@@ -196,7 +195,7 @@ def resolve_text_embedding_version() -> str:
     (``PGVectorRepositoryAdapter.embedding_fn`` via
     ``resolve_text_embedding_model_id``) move together.
     """
-    return os.getenv("MODEL_VERSION_TEXT", "v3")
+    return get_config().get("MODEL_VERSION_TEXT", "v3")
 
 
 def resolve_text_embedding_model_id(version: Optional[str] = None) -> str:
@@ -271,7 +270,7 @@ class ModelIntegrityVerifier:
                 logger.error(
                     f"❌ Sécurité: Le modèle {model_id} ne contient pas de fichiers .safetensors (Risque RCE via Pickle)."
                 )
-                if os.getenv("STRICT_MODEL_SECURITY", "true") == "true":
+                if get_config().get("STRICT_MODEL_SECURITY", "true") == "true":
                     raise ValueError(f"Blocking insecure model: {model_id}")
 
             logger.info(f"✅ Modèle vérifié: {model_id} (Revision: {info.sha[:8]})")
@@ -280,6 +279,6 @@ class ModelIntegrityVerifier:
             logger.error(
                 f"❌ Échec de la vérification d'intégrité pour {model_id}: {e}"
             )
-            if os.getenv("STRICT_MODEL_SECURITY", "true") == "true":
+            if get_config().get("STRICT_MODEL_SECURITY", "true") == "true":
                 raise
             return revision or "main"

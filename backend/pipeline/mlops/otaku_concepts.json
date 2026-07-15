@@ -1,0 +1,2745 @@
+{
+  "Tsundere": {
+    "definition": "Personnage distant et agressif ('tsun-tsun') qui s'adoucit et devient aimant ('dere-dere') avec le temps.",
+    "origin": "Fusion de 'tsun-tsun' (se détourner avec dégoût) et 'dere-dere' (devenir affectueux).",
+    "examples": "Taiga Aisaka (*Toradora!*), Rin Tohsaka (*Fate*), Kurisu Makise (*Steins;Gate*).",
+    "impact": "Trope de romance 'slow-burn' le plus populaire et rentable de l'animation japonaise."
+  },
+  "Yandere": {
+    "definition": "Personnage d'apparence douce qui devient obsessionnel, jaloux et extrêmement violent pour conserver l'être aimé.",
+    "origin": "Fusion de 'yanderu' (être malade mentalement) et 'dere-dere'.",
+    "examples": "Yuno Gasai (*Mirai Nikki*), Kotonoha Katsura (*School Days*).",
+    "impact": "Explore les dérives psychologiques de l'obsession amoureuse extrême dans les thrillers."
+  },
+  "Kuudere": {
+    "definition": "Personnage stoïque, froid, calme et dénué d'émotions apparentes, cachant une grande affection secrète.",
+    "origin": "Prononciation japonaise de 'cool' ('kūru') fusionné avec 'dere-dere'.",
+    "examples": "Rei Ayanami (*Evangelion*), Kanade Tachibana (*Angel Beats!*).",
+    "impact": "Crée une aura de mystère et rend chaque manifestation d'émotion marquante."
+  },
+  "Dandere": {
+    "definition": "Personnage extrêmement timide, silencieux et asocial, exprès de la douceur une fois mis en confiance.",
+    "origin": "Fusion de 'danmari' (silencieux) et 'dere-dere'.",
+    "examples": "Hinata Hyūga (*Naruto*), Yuki Nagato (*Haruhi Suzumiya*).",
+    "impact": "Suscite un fort sentiment de protection et d'empathie chez le spectateur."
+  },
+  "Deredere": {
+    "definition": "Personnage entièrement doux, affectueux, positif et énergique avec tout le monde, sans facette froide.",
+    "origin": "Répétition de 'dere-dere' (affectueux).",
+    "examples": "Chika Fujiwara (*Kaguya-sama*), Tohru (*Miss Kobayashi's Dragon Maid*).",
+    "impact": "Source constante de comique de situation bienveillant et d'énergie positive."
+  },
+  "Kamidere": {
+    "definition": "Personnage doté d'un complexe divin de supériorité, arrogant et exigeant la soumission absolue.",
+    "origin": "Fusion de 'kami' (dieu) et 'dere-dere'.",
+    "examples": "Light Yagami (*Death Note*), Lelouch vi Britannia (*Code Geass*).",
+    "impact": "Moteur d'intrigues dramatiques de grande envergure par ses ambitions impériales ou morales."
+  },
+  "Himedere": {
+    "definition": "Personnage féminin exigeant d'être traité comme une princesse, hautain et capricieux.",
+    "origin": "Fusion de 'hime' (princesse) et 'dere-dere'.",
+    "examples": "Erina Nakiri (*Food Wars!*), Noelle Silva (*Black Clover*).",
+    "impact": "Introduit des dynamiques de domination sociale comiques ou de fierté de classe."
+  },
+  "Oujidere": {
+    "definition": "Personnage masculin exigeant d'être traité comme un prince, commandant son entourage avec morgue.",
+    "origin": "Fusion de 'ouji' (prince) et 'dere-dere'.",
+    "examples": "Ciel Phantomhive (*Black Butler*), Lelouch vi Britannia.",
+    "impact": "Renforce le charisme aristocratique et l'autorité naturelle du protagoniste."
+  },
+  "Sadodere": {
+    "definition": "Personnage sadique qui prend du plaisir à manipuler, taquiner ou dominer psychologiquement l'être aimé.",
+    "origin": "Fusion de 'sadisme' et 'dere-dere'.",
+    "examples": "Senjougahara Hitagi (*Monogatari*), Nagatoro (*Nagatoro-san*).",
+    "impact": "Établit des dynamiques de couple provocatrices et basées sur la taquinerie psychologique."
+  },
+  "Bakadere": {
+    "definition": "Personnage maladroit, stupide ou naïf, dont le manque de logique renforce l'aspect mignon.",
+    "origin": "Fusion de 'baka' (idiot) et 'dere-dere'.",
+    "examples": "Yoshiko Hanabatake (*Aho Girl*), Aqua (*Konosuba*).",
+    "impact": "Ressort comique et parodique très puissant pour détendre l'atmosphère."
+  },
+  "Shunbere": {
+    "definition": "Personnage mélancolique et déprimé de nature, exprimant son affection à travers sa vulnérabilité.",
+    "origin": "Fusion de 'shun' (onomatopée de la déprime) et 'dere-dere'.",
+    "examples": "Meiko Honma (*Anohana*), Rei Kiriyama (*March Comes in Like a Lion*).",
+    "impact": "Accentue la charge dramatique, l'empathie et la nostalgie émotionnelle de l'œuvre."
+  },
+  "Bodere": {
+    "definition": "Personnage timide qui exprime son embarras amoureux par de la violence physique involontaire.",
+    "origin": "Fusion de 'bo' (s'emporter/brutal) et 'dere-dere'.",
+    "examples": "Chitoge Kirisaki (*Nisekoi*), Mahiru Inami (*Working!!*).",
+    "impact": "Variante active de la Tsundere, générant un comique de situation basé sur la force brute."
+  },
+  "Undere": {
+    "definition": "Personnage extrêmement dévoué et soumis qui dit oui à absolument tout ce que demande son aimé.",
+    "origin": "Fusion de 'un' (oui) et 'dere-dere'.",
+    "examples": "Misa Amane (*Death Note*), Albedo (*Overlord*).",
+    "impact": "Met en valeur la loyauté absolue ou l'obsession romantique poussée à l'extrême."
+  },
+  "Nyandere": {
+    "definition": "Personnage exprimant son affection avec des attributs ou des tics de langage félins ('nya').",
+    "origin": "Fusion de 'nya' (miaulement) et 'dere-dere'.",
+    "examples": "Tsubasa Hanekawa (*Monogatari*), Felix Argyle (*Re:Zero*).",
+    "impact": "Trope de mignonnerie ('moe') féline extrêmement populaire et codifié."
+  },
+  "Goudere": {
+    "definition": "Personnage d'une affection obsessionnelle et implacable envers son maître, mais non violent envers les autres.",
+    "origin": "Fusion de 'gou' (fort/vigoureux) et 'dere-dere'.",
+    "examples": "Albedo (*Overlord*), Juvia Lockser (*Fairy Tail*).",
+    "impact": "Crée un comique basé sur le dévouement excessif et le harcèlement romantique."
+  },
+  "Mayodere": {
+    "definition": "Personnage amoureux qui hésite constamment sur ses sentiments, restant neutre ou indécis par timidité.",
+    "origin": "Fusion de 'mayou' (hésiter) et 'dere-dere'.",
+    "examples": "Kosaki Onodera (*Nisekoi*), Hinata Hyūga (début).",
+    "impact": "Trope classique d'indécision sentimentale prolongeant les intrigues de triangles amoureux."
+  },
+  "Kanekane": {
+    "definition": "Personnage obsédé par l'argent et le gain matériel, n'agissant que par intérêt financier.",
+    "origin": "Répétition de 'kane' (argent/métal).",
+    "examples": "Nami (*One Piece*), Yato (*Noragami*).",
+    "impact": "Génère des gags récurrents de corruption comique ou de négociation d'intérêts."
+  },
+  "Hiyakasudere": {
+    "definition": "Personnage moqueur et taquin qui exprime son amour en taquinant constamment l'autre.",
+    "origin": "Fusion de 'hiyakasu' (taquiner/se moquer) et 'dere-dere'.",
+    "examples": "Takagi (*Karakai Jouzu no Takagi-san*), Nagatoro.",
+    "impact": "Pilier des comédies romantiques modernes de type 'jeu du chat et de la souris'."
+  },
+  "Daradere": {
+    "definition": "Personnage extrêmement paresseux et slacker, qui montre son affection de manière léthargique.",
+    "origin": "Fusion de 'dara-dara' (flâner/être paresseux) et 'dere-dere'.",
+    "examples": "Gabriel White (*Gabriel DropOut*), Umaru Doma (*Himouto! Umaru-chan*).",
+    "impact": "Crée un comique basé sur le contraste entre de grands talents et une paresse légendaire."
+  },
+  "Guresudere": {
+    "definition": "Personnage délinquant ou rebelle qui cache un cœur d'or et une grande affection sentimentale.",
+    "origin": "Fusion de 'gureru' (dévier/devenir délinquant) et 'dere-dere'.",
+    "examples": "Ryuko Matoi (*Kill la Kill*), Kenji Harima (*School Rumble*).",
+    "impact": "Trope classique de réhabilitation morale par l'amour ou l'amitié."
+  },
+  "Megadere": {
+    "definition": "Personnage dont l'amour est d'une intensité méga-forte, exubérante et étouffante au quotidien.",
+    "origin": "Fusion de 'mega' (grand) et 'dere-dere'.",
+    "examples": "Juvia Lockser (*Fairy Tail*), Boa Hancock (*One Piece*).",
+    "impact": "Ressort comique et romantique de démesure passionnelle unilatérale."
+  },
+  "Shodore": {
+    "definition": "Personnage timide et extrêmement économe de ses mots, s'exprimant par des syllabes courtes.",
+    "origin": "Fusion de 'short' (court) et 'dere-dere'.",
+    "examples": "Yuki Nagato, Mashiro Shiina (*The Pet Girl of Sakurasou*).",
+    "impact": "Accentue le mystère et l'innocence pure du personnage."
+  },
+  "Utsudere": {
+    "definition": "Personnage profondément blessé par la vie ou déprimé, qui s'ouvre lentement grâce à la bienveillance de l'autre.",
+    "origin": "Fusion de 'utsutsu' (mélancolie/dépression) et 'dere-dere'.",
+    "examples": "Rei Kiriyama, Kousei Arima (*Your Lie in April*).",
+    "impact": "Sert de vecteur émotionnel majeur pour des récits de reconstruction de soi et de résilience."
+  },
+  "Yangire": {
+    "definition": "Personnage mignon et affectueux qui bascule soudainement dans la folie meurtrière, mais SANS motivation amoureuse.",
+    "origin": "Fusion de 'yanderu' (malade) et 'kire' (se couper/péter un plomb).",
+    "examples": "Rena Ryuugu (*Higurashi*), Kurumi Tokisaki (*Date A Live*).",
+    "impact": "Trope horrifique psychologique imprévisible et marquant."
+  },
+  "Dojikko": {
+    "definition": "Personnage féminin d'une maladresse extrême et adorable, qui trébuche ou commet des gaffes en permanence.",
+    "origin": "Dérivé de 'doji' (maladroit) et 'ko' (enfant/fille).",
+    "examples": "Mikuru Asahina (*Haruhi Suzumiya*), Wendy Marvell (*Fairy Tail*).",
+    "impact": "Renforce le sentiment 'moe' de vulnérabilité protectrice et l'humour physique."
+  },
+  "Genki": {
+    "definition": "Personnage débordant d'énergie, d'enthousiasme, d'optimisme et de dynamisme physique constant.",
+    "origin": "Signifie 'en bonne santé/énergique' en japonais.",
+    "examples": "Haruhi Suzumiya, Luffy, Minori Kushieda (*Toradora!*).",
+    "impact": "Moteur d'action et leader naturel qui pousse l'intrigue vers l'avant."
+  },
+  "Bokukko": {
+    "definition": "Jeune fille s'exprimant en utilisant le pronom masculin informel 'boku', affirmant un côté garçon manqué.",
+    "origin": "Fusion de 'boku' (pronom masculin) et 'ko' (fille).",
+    "examples": "Kino (*L'Odyssée de Kino*), Naoto Shirogane (*Persona 4*).",
+    "impact": "Brouille les genres esthétiques et marque l'indépendance de caractère."
+  },
+  "Oresama": {
+    "definition": "Personnage masculin extrêmement arrogant qui s'auto-désigne par le pronom impérial 'Ore-sama'.",
+    "origin": "Fusion de 'ore' (je vulgaire) et 'sama' (suffixe honorifique suprême).",
+    "examples": "Bakugo Katsuki (*My Hero Academia*), Gilgamesh (*Fate*).",
+    "impact": "Souligne un orgueil démesuré et une assurance royale insolente."
+  },
+  "Yamato Nadeshiko": {
+    "definition": "L'incarnation de la femme japonaise idéale traditionnelle : douce, polie, dévouée, mais dotée d'une force d'âme d'acier.",
+    "origin": "Nom d'une fleur d'œillet sauvage symbolisant la beauté nationale.",
+    "examples": "Belldandy (*Oh My Goddess!*), Chichi (*Dragon Ball* - dans sa droiture).",
+    "impact": "Représente les vertus classiques shintoïstes et familiales en opposition à la modernité."
+  },
+  "Ojousama": {
+    "definition": "Jeune fille riche, noble ou de haute société, caractérisée par un rire moqueur typique ('Ohohoho!').",
+    "origin": "Signifie 'demoiselle de bonne famille'.",
+    "examples": "Kaguya Shinomiya, Satsuki Kiryuin (*Kill la Kill*).",
+    "impact": "Trope comique d'autorité sociale ou de décalage avec le quotidien ordinaire."
+  },
+  "Shonen": {
+    "definition": "Ligne éditoriale de manga ciblant les jeunes garçons adolescents, axée sur les combats, l'aventure et l'amitié.",
+    "origin": "Littéralement 'jeune garçon' en japonais.",
+    "examples": "*One Piece*, *Naruto*, *Jujutsu Kaisen*.",
+    "impact": "Le genre le plus dominant commercialement à l'échelle internationale."
+  },
+  "Seinen": {
+    "definition": "Ligne éditoriale de manga destinée aux hommes adultes, traitant de sujets sombres, complexes et philosophiques.",
+    "origin": "Littéralement 'jeune homme' en japonais.",
+    "examples": "*Berserk*, *Monster*, *Vinland Saga*.",
+    "impact": "Offre des récits d'une grande profondeur artistique, libérés des censures adolescentes."
+  },
+  "Shojo": {
+    "definition": "Ligne éditoriale ciblant les jeunes filles adolescentes, axée sur les relations, la romance et la sensibilité.",
+    "origin": "Littéralement 'jeune fille' en japonais.",
+    "examples": "*Fruits Basket*, *Ao Haru Ride*.",
+    "impact": "Développe une esthétique visuelle propre de douceur et de focus psychologique."
+  },
+  "Josei": {
+    "definition": "Ligne éditoriale ciblant les femmes adultes, dépeignant des romances et des parcours de vie réalistes.",
+    "origin": "Littéralement 'femme' en japonais.",
+    "examples": "*Nana*, *Showwa Genroku Rakugo*.",
+    "impact": "Propose des portraits de vie authentiques et matures, sans idéalisme adolescent."
+  },
+  "Isekai": {
+    "definition": "Genre de fantasy où le protagoniste est transporté, réincarné ou piégé dans un autre monde fantastique.",
+    "origin": "Littéralement 'autre monde' en japonais.",
+    "examples": "*Mushoku Tensei*, *Re:Zero*, *Sword Art Online*.",
+    "impact": "Le genre d'évasion sociale le plus prolifique de la décennie."
+  },
+  "Reverse Isekai": {
+    "definition": "Genre inverse de l'Isekai, où des personnages de fantasy sont projetés dans notre monde moderne.",
+    "origin": "Combinaison de 'Reverse' et 'Isekai'.",
+    "examples": "*The Devil is a Part-Timer!*, *Re:Creators*.",
+    "impact": "Génère de l'humour absurde et des situations de décalage de vie au quotidien."
+  },
+  "Slice of Life": {
+    "definition": "Genre tranche de vie décrivant le quotidien ordinaire de personnages de manière réaliste.",
+    "origin": "Traduction de l'anglais.",
+    "examples": "*Lucky Star*, *Clannad*, *Hyouka*.",
+    "impact": "Permet de s'attacher profondément aux personnages à travers les détails simples de la vie."
+  },
+  "Iyashikei": {
+    "definition": "Sous-genre du Tranche de vie conçu pour son effet thérapeutique, relaxant et apaisant.",
+    "origin": "Littéralement 'thérapeutique' ou 'qui guérit' en japonais.",
+    "examples": "*Yuru Camp*, *Aria*, *Non Non Biyori*.",
+    "impact": "Apporte un sentiment de réconfort et de paix face au stress moderne."
+  },
+  "CGDCT": {
+    "definition": "Sous-genre du Tranche de vie centré sur le quotidien mignon d'un groupe d'héroïnes.",
+    "origin": "Acronyme de 'Cute Girls Doing Cute Things'.",
+    "examples": "*K-On!*, *GochiUsa*, *Comic Girls*.",
+    "impact": "Valorise l'esthétique 'moe' et les dynamiques de groupe bienveillantes."
+  },
+  "Mecha": {
+    "definition": "Genre mettant en scène des robots géants pilotés et des conflits militaires ou technologiques.",
+    "origin": "Dérivé du mot 'mécanique'.",
+    "examples": "*Evangelion*, *Mobile Suit Gundam*, *Code Geass*.",
+    "impact": "Un des genres fondateurs de l'animation japonaise, interrogeant le rapport homme-machine."
+  },
+  "Super Robot": {
+    "definition": "Sous-genre du Mecha mettant en scène des robots géants dotés de pouvoirs magiques et défiant la physique.",
+    "origin": "Opposition historique au genre 'Real Robot'.",
+    "examples": "*Gurren Lagann*, *Mazinger Z*.",
+    "impact": "Privilégie l'action spectaculaire, la passion héroïque et le spectacle."
+  },
+  "Real Robot": {
+    "definition": "Sous-genre du Mecha où les robots sont des armes militaires réalistes soumises aux lois de la physique.",
+    "origin": "Initié par la série *Gundam* en 1979.",
+    "examples": "*Mobile Suit Gundam*, *Patlabor*.",
+    "impact": "Met l'accent sur les tactiques militaires, la politique et la dramaturgie humaine."
+  },
+  "Cyberpunk": {
+    "definition": "Genre de science-fiction dystopique dépeignant une société technologique hyper-développée mais socialement décadente.",
+    "origin": "Mouvement littéraire occidental adapté en anime.",
+    "examples": "*Ghost in the Shell*, *Cyberpunk: Edgerunners*.",
+    "impact": "Sert de critique philosophique de l'identité humaine à l'ère numérique."
+  },
+  "Steampunk": {
+    "definition": "Récit rétro-futuriste se déroulant dans une époque victorienne dominée par la technologie de la vapeur.",
+    "origin": "Esthétique rétro-futuriste.",
+    "examples": "*Le Château dans le Ciel*, *Kabaneri*.",
+    "impact": "Offre des visuels architecturaux et mécaniques grandioses basés sur le cuivre."
+  },
+  "Dieselpunk": {
+    "definition": "Esthétique rétro-futuriste basée sur la technologie industrielle des années 1920 à 1950 (moteur diesel).",
+    "origin": "Variante technologique du Steampunk.",
+    "examples": "*Porco Rosso*, *Metropolis* (2001).",
+    "impact": "Propose une ambiance industrielle brute et aéronautique nostalgique."
+  },
+  "Biopunk": {
+    "definition": "Genre centré sur les dérives des manipulations génétiques et de la biotechnologie.",
+    "origin": "Variante biologique du Cyberpunk.",
+    "examples": "*Akira*, *Elfen Lied*.",
+    "impact": "Explore l'horreur corporelle et l'éthique de la science moderne."
+  },
+  "Space Opera": {
+    "definition": "Récit de science-fiction épique se déroulant à l'échelle de galaxies, impliquant des guerres spatiales.",
+    "origin": "Genre théâtral appliqué à l'espace.",
+    "examples": "*Les Héros de la Galaxie*, *Space Battleship Yamato*.",
+    "impact": "Propose des fresques politiques et géopolitiques monumentales."
+  },
+  "Mahou Shoujo": {
+    "definition": "Genre mettant en scène de jeunes filles (Magical Girls) dotées de pouvoirs magiques combattant le mal.",
+    "origin": "Signifie 'Fille Magique' en japonais.",
+    "examples": "*Sailor Moon*, *Madoka Magica*.",
+    "impact": "Historiquement naïf, le genre a été réinventé par la déconstruction sombre de *Madoka*."
+  },
+  "Harem": {
+    "definition": "Genre où le protagoniste ordinaire est entouré et courtisé par de nombreux personnages d'autres genres.",
+    "origin": "Emprunt culturel désignant le groupe de compagnes.",
+    "examples": "*Nisekoi*, *High School DxD*.",
+    "impact": "Hautement commercial, il permet au spectateur de choisir son héroïne préférée."
+  },
+  "Reverse Harem": {
+    "definition": "Genre inverse du Harem, où une protagoniste féminine est entourée et courtisée par de nombreux personnages masculins.",
+    "origin": "Variante féminine du Harem.",
+    "examples": "*Ouran High School Host Club*, *Uta no Prince-sama*.",
+    "impact": "Très populaire auprès du lectorat Shojo/Josei, caractérisé par des designs séduisants."
+  },
+  "Ecchi": {
+    "definition": "Genre comportant des situations érotiques légères, comiques et suggestives, sans aller jusqu'à la pornographie.",
+    "origin": "Prononciation de la lettre 'H' signifiant 'pervers' en japonais.",
+    "examples": "*To Love-Ru*, *No Game No Life*.",
+    "impact": "Sert d'élément de divertissement et de stimulation visuelle."
+  },
+  "Yuri": {
+    "definition": "Genre décrivant des relations romantiques ou affectives intimes entre femmes (Girls' Love).",
+    "origin": "Signifie 'lis' en japonais.",
+    "examples": "*Bloom Into You*, *Citrus*.",
+    "impact": "Explore les sentiments féminins avec délicatesse, s'émancipant des stéréotypes."
+  },
+  "Yaoi": {
+    "definition": "Genre centré sur les romances sentimentales ou sexuelles masculines (Boys' Love), majoritairement destiné à un public féminin.",
+    "origin": "Acronyme de 'Yama nashi, Ochi nashi, Imi nashi'.",
+    "examples": "*Given*, *Sasaki and Miyano*.",
+    "impact": "Un marché gigantesque dépeignant l'amour homosexuel de manière esthétique."
+  },
+  "Spokon": {
+    "definition": "Genre centré sur le sport, caractérisé par le dépassement de soi, l'effort intense et l'esprit d'équipe.",
+    "origin": "Contraction de 'sports' et 'konyo' (volonté/courage).",
+    "examples": "*Haikyuu!*, *Kuroko no Basket*, *Slam Dunk*.",
+    "impact": "Véhicule des valeurs d'effort et suscite de grandes passions pour les disciplines sportives."
+  },
+  "Tokusatsu": {
+    "definition": "Production en prise de vue réelle utilisant des effets spéciaux physiques importants (costumes de monstres, maquettes).",
+    "origin": "Signifie 'effets spéciaux' en japonais.",
+    "examples": "*Ultraman*, *Kamen Rider*, *Godzilla*.",
+    "impact": "Genre fondateur de la pop-culture japonaise, influençant de nombreux animes d'action."
+  },
+  "Idol": {
+    "definition": "Genre centré sur la carrière musicale, l'entraînement et la performance scénique de jeunes chanteuses/chanteurs populaires.",
+    "origin": "Dérivé de l'anglais 'idol'.",
+    "examples": "*Love Live!*, *Idolmaster*, *Oshi no Ko*.",
+    "impact": "Marché transmédia colossal associant disques, concerts réels et jeux vidéo mobiles."
+  },
+  "Dark Fantasy": {
+    "definition": "Genre de fantasy caractérisé par une atmosphère sombre, désespérée, cruelle et des enjeux de survie intenses.",
+    "origin": "Esthétique littéraire occidentale.",
+    "examples": "*Berserk*, *Claymore*, *Goblin Slayer*.",
+    "impact": "Explore la noirceur humaine et la résilience face à des monstres terrifiants."
+  },
+  "Urban Fantasy": {
+    "definition": "Genre fantastique où des éléments magiques, divins ou occultes se manifestent dans une ville moderne réaliste.",
+    "origin": "Esthétique fantastique moderne.",
+    "examples": "*Fate/stay night*, *Durarara!!*, *Tokyo Ghoul*.",
+    "impact": "Crée un fort sentiment de mystère urbain caché juste sous nos yeux au quotidien."
+  },
+  "High Fantasy": {
+    "definition": "Genre se déroulant dans un monde fictif totalement distinct du nôtre, doté de ses propres règles magiques et mythologiques.",
+    "origin": "Tiré des standards littéraires (Tolkien).",
+    "examples": "*Mushoku Tensei*, *Frieren*, *Record of Lodoss War*.",
+    "impact": "Offre des opportunités de 'world-building' et d'aventures épiques monumentales."
+  },
+  "Cyber-Diva": {
+    "definition": "Genre centré sur les chanteuses virtuelles, intelligences artificielles ou idoles numériques douées de conscience.",
+    "origin": "Né de l'impact culturel de Vocaloid/Hatsune Miku.",
+    "examples": "*Vivy: Fluorite Eye's Song*, *Macross Plus*.",
+    "impact": "Interroge la nature des émotions artificielles et l'avenir de l'art à travers la technologie."
+  },
+  "Sengoku Jidai": {
+    "definition": "Œuvres se déroulant durant l'époque des Provinces en guerre du Japon, impliquant des samouraïs et des seigneurs de guerre.",
+    "origin": "Période historique réelle du Japon (1467-1603).",
+    "examples": "*Sengoku Basara*, *Inuyasha*, *Dororo*.",
+    "impact": "Cadre historique favori pour des duels au sabre héroïques et des récits d'honneur militaire."
+  },
+  "Jidaigeki": {
+    "definition": "Genre dramatique historique se déroulant durant l'époque d'Edo (1603-1868), centré sur les samouraïs, les ninjas et les paysans.",
+    "origin": "Signifie 'théâtre d'époque' en japonais.",
+    "examples": "*Kenshin le Vagabond*, *Samurai Champloo*.",
+    "impact": "Explore l'esprit du Bushido, le déclin des samouraïs et la culture traditionnelle japonaise."
+  },
+  "Gekiga": {
+    "definition": "Style de manga réaliste, sombre et mature né à la fin des années 1950, précurseur historique du genre Seinen.",
+    "origin": "Signifie 'dessins dramatiques' en japonais, créé par Yoshihiro Tatsumi.",
+    "examples": "*L'Habitant de l'infini* (descendant du style), *Kamui-den*.",
+    "impact": "A permis de légitimer le manga comme un art sérieux et littéraire pour adultes au Japon."
+  },
+  "Kodomo": {
+    "definition": "Ligne éditoriale visant spécifiquement les enfants en bas âge (moins de 10 ans), axée sur l'éducation et l'aventure simple.",
+    "origin": "Littéralement 'enfant' en japonais.",
+    "examples": "*Doraemon*, *Pokémon*, *Hamtaro*.",
+    "impact": "Premier point de contact culturel de l'enfance avec le monde des animes à l'échelle mondiale."
+  },
+  "Parody": {
+    "definition": "Genre comique centré sur la caricature, le détournement et la moquerie des codes des autres séries populaires.",
+    "origin": "Ressort comique universel.",
+    "examples": "*Gintama*, *One Punch Man*, *Saiki K.*.",
+    "impact": "Offre un regard méta amusant sur l'industrie et plaît énormément aux fans expérimentés."
+  },
+  "Gag Manga": {
+    "definition": "Genre de manga comique structuré uniquement autour de blagues ultra-rapides, absurdes et de gags par page.",
+    "origin": "Style comique de presse.",
+    "examples": "*Nichijou*, *Bobobo-bo Bo-bobo*.",
+    "impact": "Repousse les limites de l'absurdité visuelle et du non-sens comique."
+  },
+  "Slow Life": {
+    "definition": "Sous-genre de l'Isekai ou de la Fantasy centré sur une vie rurale, agricole et paisible du héros sans conflit épique.",
+    "origin": "Mouvement de décompression sociale appliqué à la fantasy.",
+    "examples": "*Farming Life in Another World*, *Banished from the Hero's Party*.",
+    "impact": "Exprime le besoin de décompression du public face au stress professionnel moderne."
+  },
+  "Cheat Isekai": {
+    "definition": "Sous-genre de l'Isekai caractérisé par un protagoniste doté dès le départ de pouvoirs ('cheat') démesurés et ridicules.",
+    "origin": "Argot des jeux vidéo appliqué aux LN.",
+    "examples": "*Overlord*, *Slime Datta Ken*.",
+    "impact": "Privilégie le plaisir de la domination comique du héros ('power fantasy') plutôt que la tension du défi."
+  },
+  "Grimdark": {
+    "definition": "Genre de fantasy ou de science-fiction caractérisé par un univers particulièrement cruel, amoral et sans espoir d'amélioration.",
+    "origin": "Inspiré de l'anglais 'grim' et 'dark'.",
+    "examples": "*Berserk*, *Claymore*.",
+    "impact": "Met en valeur la persévérance brute du héros face à un destin inéluctable."
+  },
+  "Tokusatsu-Anime": {
+    "definition": "Animés qui adoptent et parodient directement les codes des séries Tokusatsu (transformations, poses de combat, explosions colorées).",
+    "origin": "Adaptation animée du genre Tokusatsu.",
+    "examples": "*Samurai Flamenco*, *SSSS.Gridman*.",
+    "impact": "Célèbre la nostalgie des héros en costume de l'enfance japonaise."
+  },
+  "Otome Game Anime": {
+    "definition": "Adaptation en anime de jeux vidéo de drague pour public féminin, ou récits où l'héroïne est réincarnée dans un Otome Game.",
+    "origin": "Inspiré des jeux vidéo Otome.",
+    "examples": "*My Next Life as a Villainess!*, *Hakuoki*.",
+    "impact": "Genre extrêmement populaire et créatif, jouant sur l'inversion comique des rôles de méchante."
+  },
+  "Cyber-Goth": {
+    "definition": "Mélange d'esthétique gothique sombre et d'éléments informatiques/futuristes dans les visuels ou les vêtements des personnages.",
+    "origin": "Mélange des cultures alternatives de Harajuku.",
+    "examples": "*Ergo Proxy*, *Serial Experiments Lain*.",
+    "impact": "Crée une atmosphère technologique mélancolique, froide et profondément mystérieuse."
+  },
+  "Mecha Musume": {
+    "definition": "Trope esthétique de design représentant des jeunes filles fusionnées avec de l'armement militaire ou mécanique.",
+    "origin": "Aussi appelé 'Armor Girls'.",
+    "examples": "*Kantai Collection*, *Azur Lane*, *Strike Witches*.",
+    "impact": "Un marché d'objets dérivés et de jeux de collection extrêmement lucratif au Japon."
+  },
+  "Cyberpunk Dystopia": {
+    "definition": "Genre dépeignant un avenir où le contrôle social, corporatiste et technologique a détruit les libertés humaines.",
+    "origin": "Sous-genre de science-fiction.",
+    "examples": "*Psycho-Pass*, *Akira*.",
+    "impact": "Offre des récits d'enquêtes policières sombres et d'action politique sur la justice."
+  },
+  "Historical Fiction": {
+    "definition": "Récit fictif se déroulant dans un cadre historique réel fidèlement reconstitué (Chine antique, Europe médiévale).",
+    "origin": "Reconstitution historique.",
+    "examples": "*Vinland Saga*, *Kingdom*, *Le Pavillon des hommes*.",
+    "impact": "Allie la rigueur éducative à la puissance dramatique des grands événements passés."
+  },
+  "Biopunk Horror": {
+    "definition": "Genre d'épouvante biologique centré sur les monstres issus de manipulations génétiques ratées ou d'épidémies.",
+    "origin": "Fusion d'horreur et de biotechnologie.",
+    "examples": "*Parasyte*, *Terra Formars*.",
+    "impact": "Génère de la tension dramatique à travers le thème de l'invasion ou de la mutation physique."
+  },
+  "Chanbara": {
+    "definition": "Genre centré sur l'art du combat au sabre japonais des samouraïs, mettant l'accent sur les duels cinématographiques.",
+    "origin": "Onomatopée japonaise du bruit des sabres s'entrechoquant ('chan-chan bara-bara').",
+    "examples": "*Sword of the Stranger*, *Kenshin*.",
+    "impact": "Représente le summum technique de la chorégraphie d'action en animation 2D (Sakuga)."
+  },
+  "Urban Mystery": {
+    "definition": "Récit d'enquête et de mystère se déroulant au cœur d'une métropole moderne, impliquant des secrets locaux ou des gangs.",
+    "origin": "Structure de roman policier urbain.",
+    "examples": "*Durarara!!*, *Odd Taxi*, *Bungou Stray Dogs*.",
+    "impact": "Met en place des intrigues chorales complexes où les destins de nombreux personnages s'entrecroisent."
+  },
+  "Steampunk Fantasy": {
+    "definition": "Genre de fantasy incorporant des éléments technologiques industriels basés sur le charbon et la vapeur dans un monde magique.",
+    "origin": "Fusion esthétique.",
+    "examples": "*Last Exile*, *Kabaneri*.",
+    "impact": "Propose des univers visuels d'une grande richesse, mêlant magie ancienne et machines volantes."
+  },
+  "Comedy Romance": {
+    "definition": "Genre comique et sentimental (Rom-Com) centré sur les quiproquos amoureux de personnages lycéens ou étudiants.",
+    "origin": "Standard scénaristique universel.",
+    "examples": "*Kaguya-sama*, *Toradora!*, *Horimiya*.",
+    "impact": "Le genre le plus réconfortant et populaire pour suivre le développement émotionnel quotidien."
+  },
+  "Detective Anime": {
+    "definition": "Genre d'enquêtes policières et de résolutions d'énigmes criminelles complexes par un détective brillant.",
+    "origin": "Inspiré de la littérature policière (Sherlock Holmes).",
+    "examples": "*Détective Conan*, *Monster*, *Psycho-Pass*.",
+    "impact": "Stimule l'esprit logique du spectateur et propose des duels intellectuels mémorables."
+  },
+  "Supernatural Thriller": {
+    "definition": "Thriller psychologique où des phénomènes surnaturels ou magiques servent de base à des jeux d'esprit mortels.",
+    "origin": "Fusion du fantastique et du suspense.",
+    "examples": "*Death Note*, *Mirai Nikki*, *Another*.",
+    "impact": "Génère une immense tension dramatique grâce à des règles magiques strictes détournées par les héros."
+  },
+  "Music Anime": {
+    "definition": "Genre centré sur la pratique d'un instrument, la création d'un groupe de musique ou la passion du chant classique ou rock.",
+    "origin": "Standard de divertissement artistique.",
+    "examples": "*Beck*, *K-On!*, *Your Lie in April*, *Bocchi the Rock!*.",
+    "impact": "Met en valeur la bande-originale (OST) et suscite de grandes vocations musicales réelles chez les fans."
+  },
+  "Mythological Fantasy": {
+    "definition": "Récit de fantasy s'appuyant directement sur les mythologies et folklores shintoïstes ou bouddhistes du Japon.",
+    "origin": "Folklore traditionnel japonais.",
+    "examples": "*Le Voyage de Chihiro*, *Inuyasha*, *Kamisama Kiss*.",
+    "impact": "Préserve et diffuse le patrimoine culturel et spirituel traditionnel du Japon."
+  },
+  "Parody Isekai": {
+    "definition": "Sous-genre de l'Isekai parodiant et déconstruisant de manière comique tous les clichés du genre (réincarnation, pouvoirs).",
+    "origin": "Variante satirique de l'Isekai.",
+    "examples": "*Konosuba*, *Uncle from Another World*.",
+    "impact": "Désamorce le sérieux de la fantasy pour offrir des ressorts comiques absurdes irrésistibles."
+  },
+  "Slice of Life Comedy": {
+    "definition": "Tranche de vie centré uniquement sur l'humour absurde du quotidien ordinaire de collégiens ou lycéens.",
+    "origin": "Style comique quotidien.",
+    "examples": "*Nichijou*, *Danshi Koukousei no Nichijou*.",
+    "impact": "Offre des scènes courtes d'une drôlerie visuelle marquante, souvent virales sur le web."
+  },
+  "Survival Game": {
+    "definition": "Genre où les personnages sont contraints de s'entretuer ou de résoudre des jeux mortels sous peine de mort immédiate.",
+    "origin": "Inspiré de *Battle Royale* de Koushun Takami.",
+    "examples": "*Mirai Nikki*, *Darwin's Game*, *Btooom!*.",
+    "impact": "Génère une tension de survie brute et pousse les personnages dans leurs derniers retranchements moraux."
+  },
+  "School Life": {
+    "definition": "Genre se déroulant au sein du cadre scolaire japonais (collège, lycée), pilier de la majorité des productions.",
+    "origin": "Importance sociale de la scolarité au Japon.",
+    "examples": "*Horimiya*, *Great Teacher Onizuka*, *Assassination Classroom*.",
+    "impact": "Permet de s'adresser directement au public jeune en s'appuyant sur un cadre quotidien familier."
+  },
+  "Aeronautical Steampunk": {
+    "definition": "Genre steampunk centré sur les navires volants, l'aviation rétro-futuriste et les batailles dans les nuages.",
+    "origin": "Esthétique de l'aviation ancienne.",
+    "examples": "*Last Exile*, *Porco Rosso* (influences).",
+    "impact": "Offre des sensations de liberté visuelle grandioses à travers les paysages nuageux."
+  },
+  "Hentai": {
+    "definition": "Genre d'animés et de mangas à caractère explicitement pornographique ou sexuel.",
+    "origin": "Signifie littéralement 'pervers' ou 'anormal' en japonais.",
+    "examples": "Diverses productions réservées aux adultes de plus de 18 ans.",
+    "impact": "Secteur de niche très lucratif de l'industrie, soumis à une censure stricte par mosaïque au Japon."
+  },
+  "Galge": {
+    "definition": "Genre de jeu vidéo de simulation de drague ou de roman visuel axé sur l'interaction avec des personnages féminins séduisants.",
+    "origin": "Contraction de 'Gal' (fille) et 'Game' (jeu).",
+    "examples": "*Clannad*, *Fate/stay night* (à l'origine), *Steins;Gate*.",
+    "impact": "Source majeure d'adaptations en animés dramatiques ou comédies de harem."
+  },
+  "Otome game": {
+    "definition": "Genre de jeu vidéo de simulation de drague destiné à un public féminin, où l'héroïne interagit avec des prétendants masculins.",
+    "origin": "Signifie littéralement 'jeu pour jeunes filles'.",
+    "examples": "*Hakuoki*, *Uta no Prince-sama*.",
+    "impact": "Donne lieu à de nombreuses adaptations en animés de harem inversé très populaires."
+  },
+  "Gundam": {
+    "definition": "Franchise de science-fiction pionnière qui a redéfini le genre mecha en introduisant le concept réaliste de 'Real Robot'.",
+    "origin": "Créé par Yoshiyuki Tomino et le studio Sunrise en 1979.",
+    "examples": "*Mobile Suit Gundam*, *Gundam Wing*, *Gundam: The Witch from Mercury*.",
+    "impact": "Monument de la culture Otaku, générant des milliards de yens en ventes de maquettes plastiques (Gunpla)."
+  },
+  "Netorare": {
+    "definition": "Trope narratif impliquant l'infidélité, le vol du partenaire ou la trahison amoureuse d'un personnage principal.",
+    "origin": "Souvent abrégé en 'NTR', dérivé du verbe 'netoru' (voler le partenaire de quelqu'un).",
+    "examples": "Intrigues dramatiques de triangles amoureux ou drames adultes.",
+    "impact": "Trope extrêmement controversé suscitant des réactions passionnées et de forte tension dramatique chez les lecteurs."
+  },
+  "Kaiju": {
+    "definition": "Sous-genre de science-fiction et fantastique centré sur des monstres géants attaquant des métropoles.",
+    "origin": "Signifie littéralement 'bête étrange' ou 'monstre géant' en japonais.",
+    "examples": "*Godzilla*, *Kaiju No. 8*, *Neon Genesis Evangelion* (les Anges).",
+    "impact": "Trope fondateur du cinéma à effets spéciaux (Tokusatsu) et de l'imaginaire des menaces apocalyptiques d'animes."
+  },
+  "Ahoge": {
+    "definition": "Mèche de cheveux rebelle qui dépasse du haut de la tête d'un personnage, symbolisant sa naïveté.",
+    "origin": "Signifie 'cheveux stupides' en japonais.",
+    "examples": "Saber (*Fate*), Edward Elric (*Fullmetal Alchemist*).",
+    "impact": "Indicateur visuel instantané d'une personnalité innocente ou gaffeuse."
+  },
+  "Megane": {
+    "definition": "L'attribut des lunettes sur un personnage, souvent synonyme d'intelligence ou de sérieux.",
+    "origin": "Signifie 'lunettes' en japonais.",
+    "examples": "Shinpachi (*Gintama*), Mirai Kuriyama (*Beyond the Boundary*).",
+    "impact": "Un trope esthétique fort, générant des communautés de fans dédiées."
+  },
+  "Maid": {
+    "definition": "L'archétype de la servante en uniforme victorien/français, dévouée et élégante.",
+    "origin": "Inspiré des domestiques occidentaux, réapproprié par Harajuku.",
+    "examples": "Rem (*Re:Zero*), Roberta (*Black Lagoon*).",
+    "impact": "Symbole de dévouement extrême et pilier de l'économie des Maid Cafés d'Akihabara."
+  },
+  "Butler": {
+    "definition": "L'archétype du majordome distingué, protecteur et possédant des talents de combat démesurés.",
+    "origin": "Figure du majordome anglais ('Shitsuji').",
+    "examples": "Sebastian Michaelis (*Black Butler*), Walter (*Hellsing*).",
+    "impact": "Incarne la classe absolue, la loyauté aristocratique et l'autorité martiale secrète."
+  },
+  "Miko": {
+    "definition": "Jeune prêtresse gardienne d'un sanctuaire shintoïste, portant l'habit traditionnel blanc et rouge.",
+    "origin": "Prêtresse Shinto historique.",
+    "examples": "Kikyo (*Inuyasha*), Reimu Hakurei (*Touhou*).",
+    "impact": "Incorpore les éléments mystiques, spirituels et légendaires du shintoïsme traditionnel."
+  },
+  "Onii-chan": {
+    "definition": "Expression affectueuse utilisée par un cadet pour appeler son grand frère.",
+    "origin": "Honorifique familial japonais.",
+    "examples": "Tanjiro (*Demon Slayer*), Lelouch (*Code Geass*).",
+    "impact": "Symbole de dévouement fraternel protecteur absolu."
+  },
+  "Onee-chan": {
+    "definition": "Expression respectueuse utilisée pour appeler sa grande sœur.",
+    "origin": "Honorifique familial japonais.",
+    "examples": " Sinon (*Sword Art Online* - figure de sœur).",
+    "impact": "Représente la maturité protectrice féminine réconfortante."
+  },
+  "Imouto": {
+    "definition": "Trope de la petite sœur, souvent mignonne, jalouse ou ayant un complexe fraternel.",
+    "origin": "Signifie 'petite sœur' en japonais.",
+    "examples": "Kirino (*Oreimo*), Umaru-chan.",
+    "impact": "Sous-genre éditoriale entier axé sur la comédie et la romance fraternelle platonique."
+  },
+  "Otouto": {
+    "definition": "Trope du petit frère, souvent dépeint comme rebelle ou cherchant à égaler son grand frère.",
+    "origin": "Signifie 'petit frère' en japonais.",
+    "examples": "Alphonse Elric (*Fullmetal Alchemist*), Sasuke Uchiha (*Naruto*).",
+    "impact": "Moteur dramatique de rivalité ou de quête de protection fraternelle."
+  },
+  "Senpai": {
+    "definition": "Aîné d'école ou de club respecté par ses cadets ('Kohai').",
+    "origin": "Relation confucéenne traditionnelle de respect des anciens.",
+    "examples": "Mai Sakurajima (*Bunny Girl Senpai*).",
+    "impact": "Pilier des dynamiques relationnelles scolaires et des Rom-Coms d'admiration."
+  },
+  "Kohai": {
+    "definition": "Cadet d'école sous la tutelle de son 'Senpai'.",
+    "origin": "Relation confucéenne traditionnelle.",
+    "examples": "Mash Kyrielight (*Fate*), Nagatoro.",
+    "impact": "Incarne la jeunesse désireuse d'apprendre ou la taquinerie affectueuse vers l'aîné."
+  },
+  "Sensei": {
+    "definition": "Figure de l'enseignant, du mentor ou du médecin, respectée pour son savoir.",
+    "origin": "Littéralement 'né avant' en japonais.",
+    "examples": "Kakashi Hatake (*Naruto*), Satoru Gojo (*Jujutsu Kaisen*).",
+    "impact": "Guide moral ou figure de puissance transmettant ses techniques aux héros."
+  },
+  "Waifu": {
+    "definition": "Personnage féminin fictif pour lequel un fan éprouve une affection romantique forte.",
+    "origin": "Déformation de l'anglais 'wife'.",
+    "examples": "Rem, Kurisu Makise, Asuka Langley.",
+    "impact": "Concept marketing et communautaire central de la culture Otaku internationale."
+  },
+  "Husbando": {
+    "definition": "Personnage masculin fictif pour lequel un fan éprouve une affection romantique forte.",
+    "origin": "Déformation de l'anglais 'husband'.",
+    "examples": "Levi Ackerman, Satoru Gojo.",
+    "impact": "Équivalent masculin de la Waifu pour l'engagement des fans."
+  },
+  "Moe": {
+    "definition": "Sentiment intense d'affection et d'adoration envers un personnage jugé adorable.",
+    "origin": "Du verbe 'moeru' (bourgeonner ou brûler de passion).",
+    "examples": "Anya Forger (*Spy x Family*).",
+    "impact": "Esthétique de mignonnerie qui a redessiné le design industriel des animés."
+  },
+  "Truck-kun": {
+    "definition": "Le camion récurrent percutant le héros au début de l'histoire pour l'envoyer dans un Isekai.",
+    "origin": "Mème internet devenu un trope auto-référencé.",
+    "examples": "*Mushoku Tensei*, *Konosuba*.",
+    "impact": "Symbole comique incontournable du déclencheur de la réincarnation fantastique."
+  },
+  "Nakama": {
+    "definition": "Concept de camarades ou d'amis si proches qu'ils forment une famille prête à tout l'un pour l'autre.",
+    "origin": "Signifie 'compagnon' ou 'membre d'un groupe'.",
+    "examples": "L'équipage de Chapeau de Paille (*One Piece*).",
+    "impact": "Moteur émotionnel majeur justifiant la victoire finale dans les Shonens de combat."
+  },
+  "Power of Friendship": {
+    "definition": "Trope narratif où le héros puise sa force dans la pensée et le soutien de ses camarades.",
+    "origin": "Axe d'écriture moral du Shonen Jump.",
+    "examples": "*Fairy Tail*, *Yu-Gi-Oh!*.",
+    "impact": "Ressort dramatique populaire permettant des victoires émotionnelles épiques."
+  },
+  "Training Arc": {
+    "definition": "Segment scénaristique dédié à l'entraînement intensif des héros pour surmonter un défi.",
+    "origin": "Structure narrative Shonen classique.",
+    "examples": "L'entraînement de Tanjiro au Mont Sagiri.",
+    "impact": "Crédibilise la montée en puissance du héros et prépare ses nouvelles techniques."
+  },
+  "Beach Episode": {
+    "definition": "Épisode de pause (souvent hors-série) où les personnages se détendent à la plage en maillots de bain.",
+    "origin": "Standard de production destiné au fanservice et au relâchement dramatique.",
+    "examples": "Présent dans presque toutes les séries de romance ou de Slice of Life.",
+    "impact": "Outil commercial fort pour la vente de figurines et de produits dérivés."
+  },
+  "Hot Springs Episode": {
+    "definition": "Épisode de détente se déroulant dans des sources chaudes traditionnelles japonaises (Onsen).",
+    "origin": "Tradition culturelle du Onsen.",
+    "examples": "Trope récurrent dans les animés comiques ou de fantasy.",
+    "impact": "Pause narrative propice aux quiproquos comiques et à la mise en valeur des traditions."
+  },
+  "Culture Festival": {
+    "definition": "Arc centré sur le festival culturel annuel de l'école (Bunkasai).",
+    "origin": "Événement scolaire réel au Japon.",
+    "examples": "*Kaguya-sama*, *My Hero Academia*.",
+    "impact": "Moment dramatique clé pour les déclarations d'amour et les performances scéniques."
+  },
+  "Tournament Arc": {
+    "definition": "Arc narratif structuré autour d'une compétition de combats par élimination directe.",
+    "origin": "Initié par *Dragon Ball* (Tenkaichi Budokai).",
+    "examples": "L'examen Chūnin (*Naruto*), le tournoi de Yuei (*My Hero Academia*).",
+    "impact": "Un des arcs les plus populaires, introduisant de nombreux rivaux charismatiques."
+  },
+  "Filler": {
+    "definition": "Épisodes ou arcs n'existant pas dans le manga original, pour éviter de rattraper sa parution.",
+    "origin": "Signifie 'remplissage' (Hors-série).",
+    "examples": "L'arc des Bounts (*Bleach*).",
+    "impact": "Indispensable pour maintenir une diffusion hebdomadaire sans interruption."
+  },
+  "Fan Service": {
+    "definition": "Contenu visuel suggestif ou mignon non indispensable, conçu pour flatter l'œil du spectateur.",
+    "origin": "Signifie 'service rendu aux fans'.",
+    "examples": "*Fairy Tail*, *Highschool of the Dead*.",
+    "impact": "Outil commercial puissant, parfois controversé selon sa pertinence narrative."
+  },
+  "Red Thread of Fate": {
+    "definition": "Croyance selon laquelle les âmes sœurs sont liées par un fil rouge invisible au petit doigt.",
+    "origin": "Mythologie classique d'Asie de l'Est.",
+    "examples": "*Your Name.*.",
+    "impact": "Symbole romantique absolu de la fatalité amoureuse inéluctable."
+  },
+  "Childhood Friend": {
+    "definition": "L'ami d'enfance amoureux du protagoniste, souffrant souvent de la malédiction de perdre la romance.",
+    "origin": "Cliché d'écriture romantique.",
+    "examples": "Eriri Spencer Sawamura (*Saekano*).",
+    "impact": "Génère une grande nostalgie et de la sympathie auprès du public."
+  },
+  "Transfer Student": {
+    "definition": "L'élève mystérieux qui rejoint la classe du héros, déclenchant l'intrigue avec ses secrets.",
+    "origin": "Ressort d'écriture pour briser le quotidien.",
+    "examples": "Homura Akemi (*Madoka Magica*), Ryuko Matoi.",
+    "impact": "Déclencheur scénaristique idéal pour introduire de nouveaux éléments fantastiques."
+  },
+  "Student Council President": {
+    "definition": "Le président du conseil des élèves (Seitokai Kaichou), figure de perfection stricte.",
+    "origin": "Importance réelle du Seitokai au Japon.",
+    "examples": "Miyuki Shirogane (*Kaguya-sama*), Misaki Ayuzawa (*Maid Sama!*).",
+    "impact": "Incarne l'autorité scolaire, souvent tiraillée entre responsabilités et sentiments."
+  },
+  "Delinquent": {
+    "definition": "Élève rebelle au grand cœur (Yanki) ou chef de gang scolaire (Sukeban) défiant le système.",
+    "origin": "Culture de rébellion juvénile réelle des années 70-80 au Japon.",
+    "examples": "Ryuko Matoi, Yusuke Urameshi (*Yu Yu Hakusho*).",
+    "impact": "Représente la liberté individuelle contre l'oppression de l'uniformité sociale."
+  },
+  "Kemonomimi": {
+    "definition": "Trope esthétique de personnage humain doté d'oreilles et d'une queue d'animal.",
+    "origin": "Signifie 'oreilles d'animaux'.",
+    "examples": "Raphtalia (*Shield Hero*), Holo (*Spice and Wolf*).",
+    "impact": "Renforce massivement l'esthétique mignonne et sauvage des designs ('moe')."
+  },
+  "Nekomimi": {
+    "definition": "Personnage doté d'oreilles et queue de chat, l'attribut animal le plus populaire d'Akihabara.",
+    "origin": "Signifie 'oreilles de chat'.",
+    "examples": "Tsubasa Hanekawa, Blair (*Soul Eater*).",
+    "impact": "Génère des tics comiques ('nya') et symbolise la souplesse ou l'espièglerie."
+  },
+  "Kitsunemimi": {
+    "definition": "Personnage doté d'oreilles de renard, lié au folklore mythologique des esprits Kitsune.",
+    "origin": "Signifie 'oreilles de renard'.",
+    "examples": "Senko-san, Tomoe (*Kamisama Kiss*).",
+    "examples_2": "Senko-san, Tomoe (*Kamisama Kiss*).",
+    "impact": "Associe le personnage à la malice légendaire et au folklore shintoïste."
+  },
+  "Usagimimi": {
+    "definition": "Personnage doté d'oreilles de lapin, symbole de mignonnerie fragile ou provocatrice.",
+    "origin": "Signifie 'oreilles de lapin'.",
+    "examples": "Reisen Inaba (*Touhou*), Mai Sakurajima (bunny girl).",
+    "impact": "Utilisé pour accentuer la timidité enfantine ou une sensualité assumée."
+  },
+  "Inumimi": {
+    "definition": "Personnage doté d'oreilles et queue de chien, caractérisé par une loyauté et une affection sans borne.",
+    "origin": "Signifie 'oreilles de chien'.",
+    "examples": "Inuyasha.",
+    "impact": "Symbolise la fidélité, la spontanéité comique et l'attachement protecteur."
+  },
+  "Ookamimimi": {
+    "definition": "Personnage doté d'oreilles et queue de loup, symbolisant la fierté sauvage, la solitude et la noblesse.",
+    "origin": "Signifie 'oreilles de loup'.",
+    "examples": "Holo (*Spice and Wolf*).",
+    "impact": "Apporte une aura de sagesse sauvage, de fierté indomptable et de noblesse d'esprit."
+  },
+  "Kumamimi": {
+    "definition": "Personnage doté d'oreilles et queue d'ours, souvent caractérisé par une force brute cachée sous une apparence mignonne.",
+    "origin": "Signifie 'oreilles d'ours'.",
+    "examples": "Yuna (*Kuma Kuma Kuma Bear*).",
+    "impact": "Joue sur le contraste entre la mignonnerie d'un ourson et la puissance protectrice de la bête."
+  },
+  "Half-Demon": {
+    "definition": "Personnage né de l'union d'un humain et d'un démon, tiraillé entre ses deux natures.",
+    "origin": "Concept de 'Hanyou' dans le folklore.",
+    "examples": "Inuyasha, Rin Okumura (*Ao no Exorcist*).",
+    "impact": "Sert de moteur psychologique sur la quête d'identité et l'acceptation de sa différence."
+  },
+  "Tenshi": {
+    "definition": "Personnage doté d'ailes blanches, de pureté morale ou de pouvoirs divins (figure de l'ange).",
+    "origin": "Signifie 'ange/messager céleste' en japonais.",
+    "examples": "Kanade Tachibana (*Angel Beats!*).",
+    "impact": "Incarne le calme absolu, la justice divine ou une pureté mystique intouchable."
+  },
+  "Akuma": {
+    "definition": "Personnage démoniaque, doté de cornes, d'ailes sombres et de pouvoirs maléfiques ou de tentation.",
+    "origin": "Signifie 'démon/diable' en japonais.",
+    "examples": "Sebastian Michaelis, Albedo.",
+    "impact": "Représente la tentation, la puissance occulte brute et le pacte moral tragique."
+  },
+  "Shinigami": {
+    "definition": "Dieu ou esprit de la mort chargé de guider les âmes des défunts vers l'au-delà ou de faucher les vies.",
+    "origin": "Dieu de la mort dans le shintoïsme et la culture populaire.",
+    "examples": "Ryuk (*Death Note*), Ichigo Kurosaki (*Bleach*).",
+    "impact": "Personnifie la faucheuse, créant des univers sombres d'enquêtes ou de combats spirituels."
+  },
+  "Vampire": {
+    "definition": "Créature de la nuit immortelle se nourrissant de sang humain, alliant charisme gothique et soif destructrice.",
+    "origin": "Mythe occidental adapté avec succès en anime.",
+    "examples": "Alucard (*Hellsing*), Shinobu Oshino (*Monogatari*).",
+    "impact": "Symbole de noblesse maudite, d'érotisme sombre et de violence gore très populaire."
+  },
+  "Werewolf": {
+    "definition": "Personnage capable de se métamorphoser en loup-garou sous la pleine lune, tiraillé par ses instincts sauvages.",
+    "origin": "Mythe occidental du lycanthrope.",
+    "examples": "Wolf (*Spice and Wolf* - influences), Akira Inugami.",
+    "impact": "Représente la force physique brute, la dualité humaine/sauvage et la tragédie de la bête."
+  },
+  "Zombie": {
+    "definition": "Cadavre réanimé dénué de conscience ou personnage ressuscité luttant pour conserver son humanité.",
+    "origin": "Mythe du mort-vivant réinventé de façon comique ou dramatique.",
+    "examples": "Sakura Minamoto (*Zombieland Saga*), Rea Sanka (*Sankarea*).",
+    "impact": "Détourné en comédie d'idols ou en romances dramatiques macabres et comiques."
+  },
+  "Jiangshi": {
+    "definition": "Cadavre bondissant issu du folklore chinois, contrôlé par des talismans sacrés en papier sur le front.",
+    "origin": "Vampire bondissant de la mythologie chinoise.",
+    "examples": "Qiqi (influence), Hsien-Ko.",
+    "impact": "Apporte une touche de folklore ésotérique taoïste chinois et de comique corporel."
+  },
+  "Yokai": {
+    "definition": "Créature, esprit ou monstre surnaturel issu du folklore traditionnel japonais shintoïste.",
+    "origin": "Signifie 'apparition/esprit' en japonais.",
+    "examples": "Holo, Natsume (*Le Pacte des yôkai*).",
+    "impact": "Pilier absolu du fantastique shintoïste, offrant une immense variété de designs."
+  },
+  "Kami": {
+    "definition": "Divinité ou esprit shintoïste vénéré dans un sanctuaire, personnifiant une force de la nature.",
+    "origin": "Dieu shintoïste historique.",
+    "examples": "Holo, Nanami Momozono (devenue déesse dans *Kamisama Kiss*).",
+    "impact": "Incorpore la dimension spirituelle et le respect de la nature au cœur du récit."
+  },
+  "Oni": {
+    "definition": "Démon ou ogre du folklore japonais doté de cornes, d'une force herculéenne et maniant une massue en fer.",
+    "origin": "Ogre de la mythologie shintoïste.",
+    "examples": "Nezuko Kamado, Ram et Rem (*Re:Zero*).",
+    "impact": "Figure classique du monstre redoutable, souvent réinterprétée sous des traits héroïques."
+  },
+  "Tengu": {
+    "definition": "Créature mythologique mi-homme mi-oiseau dotée d'un long nez rouge ou d'ailes noires, gardienne des montagnes.",
+    "origin": "Esprit de la montagne shintoïste.",
+    "examples": "Karong, divers boss d'animes.",
+    "impact": "Représente la fierté martiale sauvage, la maîtrise du vent et l'ascétisme montagnard."
+  },
+  "Kitsune": {
+    "definition": "Esprit renard mystique doté de plusieurs queues, de pouvoirs d'illusion et de métamorphose humaine.",
+    "origin": "Renard messager d'Inari shintoïste.",
+    "examples": "Hagoromo Gitsune, Tomoe.",
+    "impact": "Incarne la ruse séductrice et la magie de transformation dans les romances fantastiques."
+  },
+  "Tanuki": {
+    "definition": "Chien viverrin farceur doté de pouvoirs de métamorphose et de grands attributs comiques.",
+    "origin": "Animal mythologique farceur shintoïste.",
+    "examples": "Pompoko (Studio Ghibli).",
+    "impact": "Symbole de malice comique populaire, de maladresse enfantine et de transformation absurde."
+  },
+  "Kappa": {
+    "definition": "Créature aquatique farceuse avec une carapace de tortue et une coupelle d'eau sur la tête.",
+    "origin": "Génie des eaux shintoïste.",
+    "examples": "Sarzani (*Sarazanmai*).",
+    "impact": "Incorpore des éléments comiques absurdes et des leçons morales sur la politesse traditionnelle."
+  },
+  "Tsukumogami": {
+    "definition": "Objet ordinaire (parapluie, lanterne, sabre) qui prend vie après avoir atteint ses 100 ans.",
+    "origin": "Croyance shintoïste sur l'esprit des objets.",
+    "examples": "Kogasa Tatara (*Touhou*).",
+    "impact": "Permet de personnifier les objets du quotidien pour des récits fantastiques poétiques."
+  },
+  "Harem Protagonist": {
+    "definition": "Le héros masculin d'un Harem, souvent dépeint comme désespérément ordinaire, gentil et d'une passivité totale.",
+    "origin": "Standard scénaristique de Rom-Com.",
+    "examples": "Keitaro Urashima (*Love Hina*), Rito Yuuki (*To Love-Ru*).",
+    "impact": "Sert de coquille vide d'identification pour que le spectateur s'imagine à sa place."
+  },
+  "Dense Protagonist": {
+    "definition": "Héros totalement incapable de remarquer les signaux amoureux évidents que lui envoient les filles autour de lui.",
+    "origin": "Ressort d'écriture pour prolonger les séries romantiques.",
+    "examples": "Ash Ketchum (*Pokémon*), Ichika Orimura (*IS*).",
+    "impact": "Ressort humoristique qui exaspère comiquement la communauté mais préserve le statu quo romantique."
+  },
+  "OP MC": {
+    "definition": "Protagoniste doté dès le début de pouvoirs magiques ou physiques si démesurés qu'aucun ennemi ne fait le poids.",
+    "origin": "Abréviation de 'Overpowered Main Character'.",
+    "examples": "Saitama (*One Punch Man*), Anos Voldigoad.",
+    "impact": "Inverse la tension dramatique pour se concentrer sur l'humour, la psychologie ou la pure démonstration de force."
+  },
+  "Reincarnated Hero": {
+    "definition": "Héros mort dans notre monde et réincarné dans un univers de fantasy avec ses souvenirs et des pouvoirs bonus.",
+    "origin": "Structure narrative pilier de l'Isekai.",
+    "examples": "Rudeus Greyrat (*Mushoku Tensei*), Rimuru Tempest.",
+    "impact": "Permet une métaphore de la seconde chance sociale dans un univers régi par des règles ludiques."
+  },
+  "Demon King": {
+    "definition": "L'antagoniste suprême régnant sur les forces démoniaques (Maou), parfois dépeint comme ayant de bonnes raisons politiques.",
+    "origin": "Figure du boss final du JRPG (Dragon Quest).",
+    "examples": "Anos Voldigoad, Mao (*The Devil is a Part-Timer!*).",
+    "impact": "Figure classique d'opposition de fantasy, de plus en plus déconstruite sous des traits pacifiques."
+  },
+  "Hero": {
+    "definition": "Le guerrier choisi par le destin ou convoqué (Yuusha) pour terrasser le Roi Démon et sauver le monde.",
+    "origin": "Figure héroïque mythologique du JRPG.",
+    "examples": "Hero (*Maoyuu Maou Yuusha*).",
+    "impact": "Incarne la justice absolue, mais fait souvent l'objet de déconstructions cyniques."
+  },
+  "Mentor": {
+    "definition": "Le maître d'arts martiaux ou de magie âgé, sage et parfois excentrique qui guide le héros vers son potentiel.",
+    "origin": "Figure classique de la transmission.",
+    "examples": "Jiraiya (*Naruto*), Master Roshi (*Dragon Ball*).",
+    "impact": "Sa mort ou sa retraite marque souvent le passage dramatique du héros à l'âge adulte."
+  },
+  "Rival": {
+    "definition": "Le personnage qui poursuit le même but que le héros, le poussant à se dépasser par sa propre force.",
+    "origin": "Axe de rivalité Shonen classique.",
+    "examples": "Sasuke Uchiha, Vegeta (*Dragon Ball Z*).",
+    "impact": "Dynamise l'intrigue en offrant un miroir sombre ou opposé aux valeurs du héros."
+  },
+  "Class Representative": {
+    "definition": "Le délégué de classe (委员长 - Iincho), généralement un élève strict aux cheveux soignés et portant des lunettes.",
+    "origin": "Rôle de délégué confucéen au Japon.",
+    "examples": "Tsubasa Hanekawa, Tenya Iida (*My Hero Academia*).",
+    "impact": "Représente le respect de la règle, souvent tiraillé entre devoir et liberté individuelle."
+  },
+  "School Idol": {
+    "definition": "L'élève la plus belle, intelligente et populaire du lycée, adulée par tous et inaccessible.",
+    "origin": "Standard de Rom-Com scolaire.",
+    "examples": "Komi Shouko (*Komi cherche ses mots*), Teruhashi Kokomi (*Saiki K.*).",
+    "impact": "Sert d'idéal romantique, dont la perfection apparente cache souvent de grandes insécurités."
+  },
+  "Gyaru": {
+    "definition": "Jeune fille extravertie à la mode, aux cheveux colorés et à l'attitude rebelle mais au cœur d'or.",
+    "origin": "Sous-culture de mode Gyaru des années 90-2000.",
+    "examples": "Marin Kitagawa, Akari Watanabe.",
+    "impact": "Brise les stéréotypes de superficialité en se révélant souvent passionnée et fidèle."
+  },
+  "Yanki": {
+    "definition": "Jeune délinquant de quartier, arborant une coupe banane, une attitude agressive mais loyal en amitié.",
+    "origin": "Sous-culture de délinquance juvénile japonaise.",
+    "examples": "Yusuke Urameshi, Kuwabara (*Yu Yu Hakusho*).",
+    "impact": "Figure classique de comédie d'action urbaine, incarnant la rébellion juvénile."
+  },
+  "Bosozoku": {
+    "definition": "Membre d'un gang de motards japonais caractérisé par des motos modifiées bruyantes et des vestes à broderies.",
+    "origin": "Mouvement de gangs de motards réels des années 80.",
+    "examples": "Onizuka (*GTO*), Kaneda (*Akira*).",
+    "impact": "Incarne la rébellion motorisée, la liberté sauvage et l'esprit de gang de quartier."
+  },
+  "Salaryman": {
+    "definition": "L'employé de bureau japonais ordinaire, symbole du sacrifice professionnel et du surmenage (Karoshi).",
+    "origin": "Société salariale japonaise de l'après-guerre.",
+    "examples": "Hirotaka Nifuji, Nanami Kento (*Jujutsu Kaisen*).",
+    "impact": "Figure de base réaliste représentant le stress social, souvent réincarnée en Isekai pour souffler."
+  },
+  "OL": {
+    "definition": "Jeune employée de bureau effectuant des tâches administratives ('Office Lady'), faisant face aux pressions professionnelles.",
+    "origin": "Terme sociologique corporatiste japonais.",
+    "examples": "Narumi Momose (*Wotakoi*).",
+    "impact": "Incarne le quotidien réaliste de la femme active moderne au Japon."
+  },
+  "Ronin": {
+    "definition": "Samouraï sans maître, errant dans le Japon féodal et louant ses services pour survivre.",
+    "origin": "Samouraï déclassé historique.",
+    "examples": "Mugen (*Samurai Champloo*), Himura Kenshin.",
+    "impact": "Figure romantique de liberté tragique, de solitude et de maîtrise absolue du sabre."
+  },
+  "Loli": {
+    "definition": "Archétype de personnage féminin d'apparence pré-pubère ou enfantine.",
+    "origin": "Tiré du roman 'Lolita' de Nabokov.",
+    "examples": "Tatsumaki (*One Punch Man*), Beatrice (*Re:Zero*).",
+    "impact": "Trope esthétique de mignonnerie extrême, sujet de débats à l'international."
+  },
+  "Shota": {
+    "definition": "Archétype de personnage masculin d'apparence pré-pubère ou enfantine.",
+    "origin": "Inspiré du personnage Shotaro Kaneda du manga *Tetsujin 28-go*.",
+    "examples": "Ciel Phantomhive, Gon Freecss (début).",
+    "impact": "Équivalent masculin de la Loli pour la représentation de la fragilité enfantine masculine."
+  },
+  "Chuunibyou": {
+    "definition": "Syndrome de l'adolescent de seconde année de collège qui s'invente des super-pouvoirs, un œil maudit ou un destin tragique.",
+    "origin": "Créé par le comédien Hikaru Ijuin en 1999 pour décrire la crise d'identité fantasque de l'adolescence.",
+    "examples": "Rikka Takanashi (*Love, Chunibyo & Other Delusions*), Kaidou Shun (*Saiki K.*).",
+    "impact": "Ressort comique et psychologique extrêmement récurrent pour illustrer la transition difficile vers l'âge adulte."
+  },
+  "Ouji-sama": {
+    "definition": "Archétype de personnage masculin royal, noble, poli et charmant, représentant l'idéal masculin parfait.",
+    "origin": "Signifie littéralement 'prince' ou 'seigneur' en japonais.",
+    "examples": "Tamaki Suoh (*Ouran High School Host Club*), Yuki Sohma (*Fruits Basket*).",
+    "impact": "Pilier des shojo et des simulations de drague, créateur de fantasmes romantiques majeurs."
+  },
+  "Onee-sama": {
+    "definition": "Archétype de la grande sœur protectrice, élégante et mature, inspirant le respect ou l'admiration passionnée.",
+    "origin": "Forme honorifique respectueuse pour désigner une sœur aînée.",
+    "examples": "Mikoto Misaka (*A Certain Scientific Railgun*), Haruka Tenou (*Sailor Moon*).",
+    "impact": "Figure d'autorité charismatique et protectrice, très populaire dans les genres yuri et tranches de vie."
+  },
+  "Kouhai": {
+    "definition": "Personne d'un rang ou d'une classe inférieure dans une organisation, counterpart naturel du Senpai.",
+    "origin": "Système hiérarchique traditionnel japonais d'aînesse et de respect.",
+    "examples": "Nagatoro-san (*Nagatoro-san*), Mash Kyrielight (*Fate/Grand Order*).",
+    "impact": "Trope relationnel clé générant des dynamiques de taquineries, d'apprentissage ou d'affection respectueuse."
+  },
+  "Gaijin": {
+    "definition": "Personnage d'origine étrangère (souvent blonde aux yeux bleus), représenté avec des stéréotypes culturels exubérants.",
+    "origin": "Contraction de 'gaikokujin' (personne d'un pays extérieur) en japonais.",
+    "examples": "Alice Cartelet (*Kin-iro Mosaic*), Chitoge Kirisaki (*Nisekoi*).",
+    "impact": "Génère un comique de situation basé sur les barrières linguistiques et le décalage culturel avec le quotidien japonais."
+  },
+  "Chibi": {
+    "definition": "Style de dessin caricatural où les personnages ont de grands yeux, une tête énorme et un corps minuscule.",
+    "origin": "Signifie 'petit/nain' en japonais. Aussi appelé SD (Super Deformed).",
+    "examples": "*Re:Zero kara Hajimeru Isekai Seikatsu* (versions chibi), de nombreux gags visuels.",
+    "impact": "Outil comique instantané pour accentuer la mignonnerie ou désamorcer le sérieux."
+  },
+  "Bishounen": {
+    "definition": "Concept esthétique décrivant un jeune homme d'une beauté androgyne, fine et élégante.",
+    "origin": "Signifie 'beau garçon' en japonais.",
+    "examples": "Kurapika (*Hunter x Hunter*), Griffith (*Berserk*).",
+    "impact": "Pilier des mangas Shojo et des récits à forte esthétique dramatique masculine."
+  },
+  "Bishoujo": {
+    "definition": "Concept décrivant une jeune fille d'une beauté parfaite, pure et harmonieuse selon les canons manga.",
+    "origin": "Signifie 'belle fille' en japonais.",
+    "examples": "Angel (*Angel Beats!*), Mai Sakurajima.",
+    "impact": "Moteur d'attachement visuel absolu dans l'industrie pour les fanbases masculines."
+  },
+  "Ikemen": {
+    "definition": "Homme beau, charismatique, stylé et moderne, suscitant l'admiration immédiate.",
+    "origin": "Fusion de 'ikeru' (cool/stylé) et 'men' (visage/homme).",
+    "examples": "Satoru Gojo, Levi Ackerman.",
+    "impact": "Figure majeure de séduction commerciale auprès du public."
+  },
+  "Meganekko": {
+    "definition": "Jeune fille portant des lunettes, fétichisée pour son apparence intellectuelle, mignonne et réservée.",
+    "origin": "Fusion de 'megane' (lunettes) et 'ko' (fille).",
+    "examples": "Mirai Kuriyama.",
+    "impact": "Niche esthétique majeure dotée de cercles de fans extrêmement dévoués."
+  },
+  "Yamato Nadeshiko Style": {
+    "definition": "L'esthétique vestimentaire de la femme portant le kimono traditionnel avec élégance et port altier.",
+    "origin": "Idéal féminin traditionnel.",
+    "examples": "Chichi, Belldandy.",
+    "impact": "Véhicule la nostalgie esthétique du Japon féodal ou de l'époque d'Edo."
+  },
+  "Zettai Ryouiki": {
+    "definition": "La zone de peau nue visible sur la cuisse entre le bas de la jupe et le haut des chaussettes montantes.",
+    "origin": "Signifie 'territoire absolu' en japonais, tiré du concept d'AT Field de *Evangelion*.",
+    "examples": "Rin Tohsaka (l'exemple canonique de ratio 4:1:2.5).",
+    "impact": "Trope esthétique de chara-design extrêmement codifié et populaire chez les dessinateurs."
+  },
+  "Sweat Drop": {
+    "definition": "Grosse goutte de sueur dessinée à l'arrière de la tête d'un personnage pour exprimer l'embarras.",
+    "origin": "Ressort graphique de bande dessinée japonaise.",
+    "examples": "Trope omniprésent dans les comédies d'anime.",
+    "impact": "Indicateur instantané d'incompréhension ou d'embarras comique face à l'absurdité."
+  },
+  "Nosebleed": {
+    "definition": "Saignement de nez spectaculaire et comique d'un personnage masculin lorsqu'il ressent une forte excitation érotique.",
+    "origin": "Croyance populaire japonaise selon laquelle l'excitation augmente la pression sanguine.",
+    "examples": "Sanji (*One Piece*), Master Roshi.",
+    "impact": "Ressort comique d'exagération absolue pour exprimer la frustration ou l'excitation sexuelle."
+  },
+  "Vein Pop": {
+    "definition": "Petite croix rouge dessinée sur la tempe ou le front d'un personnage pour illustrer sa colère contenue.",
+    "origin": "Ressort graphique classique d'expression faciale.",
+    "examples": "Taiga Aisaka, Edward Elric.",
+    "impact": "Exprime instantanément la fureur prête à éclater de manière comique."
+  },
+  "Blank Eyes": {
+    "definition": "Yeux entièrement blancs ou vides dessinés sur un personnage pour exprimer un état de choc, de désespoir.",
+    "origin": "Style graphique de choc émotionnel.",
+    "examples": "Shinji Ikari (*Evangelion*), Saitama.",
+    "impact": "Traduit visuellement la défaite psychologique complète ou le vide spirituel."
+  },
+  "Spiral Eyes": {
+    "definition": "Yeux dessinés avec des spirales concentriques pour illustrer la confusion, le vertige, l'évanouissement ou l'ivresse.",
+    "origin": "Indicateur graphique de désorientation.",
+    "examples": "Aqua (*Konosuba*).",
+    "impact": "Ressort visuel comique très efficace pour illustrer le chaos mental."
+  },
+  "Sparkly Eyes": {
+    "definition": "Yeux scintillants d'étoiles ou de reflets brillants pour exprimer l'excitation, l'admiration ou la cupidité.",
+    "origin": "Héritage des yeux brillants des mangas Shojo des années 70.",
+    "examples": "Anya Forger, Nami (avec des symboles de berry).",
+    "impact": "Traduit visuellement l'émerveillement enfantin ou l'avidité comique."
+  },
+  "Cat Mouth": {
+    "definition": "Bouche d'un personnage dessinée sous la forme d'un '3' ondulé, imitant le museau d'un chat pour exprimer la malice.",
+    "origin": "Ressort esthétique moe.",
+    "examples": "Konata Izumi (*Lucky Star*).",
+    "impact": "Indique instantanément la ruse comique, la taquinerie ou la mignonnerie féline."
+  },
+  "Chibi Transform": {
+    "definition": "Transition visuelle instantanée d'un personnage de son design réaliste vers un design Chibi pour un gag court.",
+    "origin": "Technique d'économie d'animation comique.",
+    "examples": "*Fullmetal Alchemist* (lors des colères d'Edward sur sa taille).",
+    "impact": "Crée un décalage rythmique hilarant et allège instantanément l'ambiance."
+  },
+  "Facefault": {
+    "definition": "Chute dramatique et comique des personnages se retrouvant les jambes en l'air suite à une absurdité dite par un autre.",
+    "origin": "Ressort de comédie physique historique.",
+    "examples": "Trope récurrent dans les animés des années 90 (*Slayers*, *Pokémon*).",
+    "impact": "Traduit visuellement la défaite logique face à une bêtise insurmontable."
+  },
+  "Speed Lines": {
+    "definition": "Lignes de vitesse tracées à l'arrière-plan d'une case ou d'une scène pour simuler un mouvement ultra-rapide ou une tension extrême.",
+    "origin": "Héritage des mangas d'action.",
+    "examples": "Scènes de combat Shonen (*Dragon Ball*).",
+    "impact": "Dynamise l'image statique et focalise le regard sur l'intensité de l'action."
+  },
+  "Impact Frames": {
+    "definition": "Images uniques ou très courtes (souvent en noir et blanc négatif) insérées au moment d'un coup physique pour accentuer l'impact.",
+    "origin": "Technique de pointe de la Sakuga japonaise.",
+    "examples": "Combats animés par Yutaka Nakamura.",
+    "impact": "Procure une sensation de puissance et de violence physique inégalée lors des affrontements."
+  },
+  "Gender-Bender": {
+    "definition": "Ressort scénaristique impliquant le changement de genre physique (temporaire ou permanent) du protagoniste.",
+    "origin": "Trope de métamorphose de genre.",
+    "examples": "*Ranma 1/2*, *Your Name.* (échange de corps).",
+    "impact": "Explore avec humour ou philosophie les différences de perception de genre et les quiproquos sociaux."
+  },
+  "Crossdressing": {
+    "definition": "Personnage portant volontairement ou sous la contrainte des vêtements traditionnellement associés à l'autre genre.",
+    "origin": "Tradition théâtrale (Kabuki) réappropriée.",
+    "examples": "Kurapika (déguisement), Kuranosuke (*Princess Jellyfish*).",
+    "impact": "Ressort de comédie de boulevard ou de libération d'identité de genre très populaire."
+  },
+  "Trap": {
+    "definition": "Personnage masculin d'une apparence si féminine, douce et mignonne qu'il est confondu avec une fille par les autres personnages.",
+    "origin": "Aussi appelé 'Otokonoko' (garçon-fille) au Japon.",
+    "examples": "Astolfo (*Fate*), Hideri Kanzaki (*Blend S*).",
+    "impact": "Trope de comédie basé sur la surprise et le trouble esthétique suscité chez le spectateur."
+  },
+  "Reverse Trap": {
+    "definition": "Personnage féminin d'une apparence si masculine, charismatique et stylée qu'il est confondu avec un garçon.",
+    "origin": "Variante féminine de la Trap.",
+    "examples": "Haruhi Fujioka (*Ouran High School*), Naoto Shirogane.",
+    "impact": "Pilier des romances de harem inversé scolaires, jouant sur le charme androgyne."
+  },
+  "Ogasawara Laugh": {
+    "definition": "Rire hautain et aristocratique en trois temps ('O-ho-ho-ho!') avec le dos de la main placé devant la bouche.",
+    "origin": "Cliché de la noblesse féminine stéréotypée.",
+    "examples": "Luvia Edelfelt (*Fate*), Satsuki Kiryuin (parodie).",
+    "impact": "Ressort comique instantané pour définir l'arrogance d'une Ojousama."
+  },
+  "Gothic Lolita Style": {
+    "definition": "L'esthétique de mode combinant la silhouette Lolita (jupes cloches, rubans) avec les couleurs et motifs gothiques sombres.",
+    "origin": "Sous-culture de Harajuku.",
+    "examples": "Kuroneko (*Oreimo*), Victorique de Blois (*Gosick*).",
+    "impact": "Crée une atmosphère dramatique, mystérieuse et d'une grande beauté plastique sombre."
+  },
+  "Blank Face": {
+    "definition": "Visage dessiné sans aucun trait (ni yeux, ni nez, ni bouche) pour illustrer l'absence de réaction ou le déni psychologique.",
+    "origin": "Simplification graphique comique.",
+    "examples": "Saitama.",
+    "impact": "Désamorce le sérieux d'une situation de tension dramatique par un silence visuel absurde."
+  },
+  "Giant Sweatdrop": {
+    "definition": "Une unique et gigantesque goutte de sueur bleue couvrant la moitié du visage ou du corps du personnage.",
+    "origin": "Exagération du ressort classique 'Sweat Drop'.",
+    "examples": "Trope comique omniprésent.",
+    "impact": "Traduit visuellement un désarroi total ou un sentiment de gêne insurmontable."
+  },
+  "Shadowed Eyes": {
+    "definition": "Le haut du visage du personnage plongé dans l'ombre, cachant ses yeux, pour exprimer la fureur, la folie ou le désespoir.",
+    "origin": "Ressort de drame psychologique.",
+    "examples": "Shinji Ikari, Yuno Gasai.",
+    "impact": "Indique instantanément un basculement psychologique sombre ou une colère noire imminente."
+  },
+  "Glow in the Dark Glasses": {
+    "definition": "Les verres de lunettes d'un personnage qui deviennent entièrement blancs et opaques, réfléchissant la lumière pour masquer ses yeux.",
+    "origin": "Ressort graphique de mystère intellectuel.",
+    "examples": "Gendo Ikari (*Evangelion*), Shiroe (*Log Horizon*).",
+    "impact": "Symbolise la manipulation intellectuelle, le calcul machiavélique ou l'absence de pitié froide."
+  },
+  "Background Flowers": {
+    "definition": "Apparition soudaine de fleurs stylisées (roses, lys) à l'arrière-plan d'une scène de rencontre ou de déclaration amoureuse.",
+    "origin": "Héritage direct de la mise en scène des mangas Shojo.",
+    "examples": "Rencontres amoureuses dans les Rom-Coms.",
+    "impact": "Traduit visuellement l'état d'émerveillement et de romantisme absolu des personnages."
+  },
+  "Visual Metaphor": {
+    "definition": "Utilisation d'éléments graphiques surréalistes (comme un train en marche, des engrenages) pour illustrer l'état mental d'un personnage.",
+    "origin": "Technique de réalisation de pointe.",
+    "examples": "Réalisation de Kunihiko Ikuhara (*Utena*, *Mawaru Penguindrum*).",
+    "impact": "Élève la narration visuelle en évitant les dialogues explicatifs lourds."
+  },
+  "Abstract Backgrounds": {
+    "definition": "Remplacement du décor réaliste par des motifs géométriques, colorés ou abstraits pour exprimer l'état émotionnel immédiat.",
+    "origin": "Technique d'animation classique.",
+    "examples": "Scènes de comédie ou de colère intense.",
+    "impact": "Focalise l'attention du spectateur sur l'émotion brute du personnage en éliminant les distractions."
+  },
+  "Chibi Sweat": {
+    "definition": "Variante de la goutte de sueur dessinée sur la version Chibi d'un personnage.",
+    "origin": "Style comique minimaliste.",
+    "examples": "Trope de comédie omniprésent.",
+    "impact": "Maximise la mignonnerie comique du personnage embarrassé."
+  },
+  "Heart Eyes": {
+    "definition": "Les pupilles d'un personnage dessinées sous la forme de cœurs roses ou rouges pour exprimer un coup de foudre ou une obsession érotique.",
+    "origin": "Exagération comique de l'amour.",
+    "examples": "Sanji, de nombreux personnages de Harem.",
+    "impact": "Indicateur visuel instantané et absurde d'une attirance physique ou romantique incontrôlable."
+  },
+  "Money Eyes": {
+    "definition": "Pupilles dessinées sous forme de symboles monétaires (Yen, Dollar) pour illustrer la cupidité comique immédiate.",
+    "origin": "Ressort graphique de comédie financière.",
+    "examples": "Nami.",
+    "impact": "Traduit instantanément l'intérêt purement cupide du personnage face à une opportunité."
+  },
+  "Flustered Blush": {
+    "definition": "Lignes diagonales rouges tracées sur les joues du personnage pour symboliser un rougissement de honte ou d'amour intense.",
+    "origin": "Ressort d'expression faciale moe.",
+    "examples": "Héroïnes de comédies romantiques.",
+    "impact": "Indique visuellement la gêne sentimentale, la timidité et le trouble amoureux (moe)."
+  },
+  "Drooling Mouth": {
+    "definition": "Fil de bave comique coulant du coin de la bouche d'un personnage endormi, affamé ou fasciné par une vision sexuelle.",
+    "origin": "Exagération comique des besoins physiologiques.",
+    "examples": "Luffy face à de la viande, divers personnages ecchi.",
+    "impact": "Ressort comique illustrant le manque de contrôle de soi face à la tentation."
+  },
+  "Blank Stare": {
+    "definition": "Regard fixe et dénué de vie, souvent sans pupilles dessinées, traduisant la léthargie ou le dégoût moral.",
+    "origin": "Simplification graphique d'état de choc.",
+    "examples": "Saitama.",
+    "impact": "Traduit le décalage absurde ou le dégoût muet face à une situation grotesque."
+  },
+  "Speed Run Animation": {
+    "definition": "Séquence d'animation simplifiée à l'extrême (personnages glissant sur le décor sans bouger les jambes) pour un effet de gag rapide.",
+    "origin": "Technique d'économie budgétaire parodique.",
+    "examples": "*KonoSuba* (gags de déplacement).",
+    "impact": "Crée de l'humour absurde basé sur la médiocrité volontaire de l'animation."
+  },
+  "Impact Lines": {
+    "definition": "Lignes de choc concentriques entourant le point d'impact d'un coup pour en illustrer la force brute de propagation.",
+    "origin": "Héritage visuel du manga d'action.",
+    "examples": "Affrontements Shonen (*Dragon Ball*).",
+    "impact": "Accroît la sensation de puissance et d'énergie physique dégagée par le coup."
+  },
+  "Vein Cross": {
+    "definition": "Variante de la 'Vein Pop' dessinée sous la forme d'un petit symbole de croix à quatre branches sur le front.",
+    "origin": "Style graphique de colère concentré.",
+    "examples": "Edward Elric.",
+    "impact": "Indique visuellement la colère imminente prête à exploser."
+  },
+  "Sparkle Background": {
+    "definition": "Arrière-plan constellé de petites étoiles scintillantes pour accompagner l'apparition d'un personnage jugé parfait ou divin.",
+    "origin": "Esthétique des mangas pour public féminin.",
+    "examples": "Satoru Gojo.",
+    "impact": "Traduit l'admiration esthétique totale suscitée par le personnage auprès de son entourage."
+  },
+  "Speechless Bubble": {
+    "definition": "Bulle de dialogue contenant uniquement trois petits points ('...') pour illustrer le silence embarrassé de l'assemblée.",
+    "origin": "Ressort comique de ponctuation textuelle.",
+    "examples": "Trope de comédie omniprésent.",
+    "impact": "Marque visuellement le blanc comique après une absurdité."
+  },
+  "Giant Sweatdrop Splash": {
+    "definition": "Variante où la goutte de sueur géante finit par éclater ou éclabousser le sol pour exprimer la fin d'un malaise comique.",
+    "origin": "Exagération du resort comique classique.",
+    "examples": "Comédies d'animes.",
+    "impact": "Ressort comique de ponctuation physique d'une situation embarrassante."
+  },
+  "Shadowed Face": {
+    "definition": "Visage d'un personnage plongé dans l'ombre à l'exception de ses pupilles lumineuses, pour exprimer la terreur imminente.",
+    "origin": "Style de thriller psychologique.",
+    "examples": "Yuno Gasai.",
+    "impact": "Provoque un sentiment de tension et de danger psychologique immédiat chez le spectateur."
+  },
+  "Glowing Glasses Reflexion": {
+    "definition": "Le fait que les verres de lunettes d'un personnage brillent d'une lumière blanche intense au moment où il ajuste sa monture du doigt.",
+    "origin": "Trope de charisme de lunettes.",
+    "examples": "Gendo Ikari, Shiroe.",
+    "impact": "Indique visuellement que le personnage vient de comprendre l'intrigue ou de tendre un piège intellectuel."
+  },
+  "Background Sparkles": {
+    "definition": "Arrière-plan brillant de reflets de paillettes pour accompagner la beauté androgyne d'un personnage.",
+    "origin": "Esthétique des mangas pour public féminin.",
+    "examples": "Bishounens dans les Shojos.",
+    "impact": "Met en valeur la beauté pure et le raffinement visuel du chara-design."
+  },
+  "Visual Metaphor Clock": {
+    "definition": "Utilisation récurrente de l'image d'une horloge dont les aiguilles tournent ou s'arrêtent pour symboliser la tension psychologique temporelle.",
+    "origin": "Technique de mise en scène symbolique.",
+    "examples": "*Puella Magi Madoka Magica*, *Steins;Gate*.",
+    "impact": "Installe une urgence dramatique ou un sentiment d'inexorabilité du destin temporel."
+  },
+  "Abstract Geometry Background": {
+    "definition": "Arrière-plan composé de carrés, cercles ou lignes de couleurs vives lors d'une phase de colère comique.",
+    "origin": "Style d'animation géométrique.",
+    "examples": "*Nichijou*.",
+    "impact": "Renforce le dynamisme comique de l'émotion brute par une abstraction colorée."
+  },
+  "Chibi Blush": {
+    "definition": "Rougissement comique dessiné sur les joues rebondies de la version Chibi d'un personnage.",
+    "origin": "Esthétique moe simplifiée.",
+    "examples": "Comédies romantiques d'anime.",
+    "impact": "Maximise le sentiment de mignonnerie attendrissante (moe) du personnage timide."
+  },
+  "Love Heart Pupil": {
+    "definition": "Pupilles en forme de cœurs pour illustrer visuellement le coup de foudre sentimental.",
+    "origin": "Exagération graphique de l'attirance amoureuse.",
+    "examples": "Sanji.",
+    "impact": "Traduit visuellement l'obsession romantique ou érotique comique immédiate."
+  },
+  "Kabedon": {
+    "definition": "Le geste dramatique et romantique de plaquer bruyamment une main contre le mur pour acculer la personne aimée.",
+    "origin": "Fusion de 'kabe' (mur) et du son d'impact 'don'.",
+    "examples": "Scènes de séduction intenses dans les shojo et rom-coms.",
+    "impact": "Trope de tension amoureuse suprême, symbole de domination passionnelle et de rapprochement physique soudain."
+  },
+  "Gijinka": {
+    "definition": "Concept artistique de personnification anthropomorphique d'animaux, d'objets, de pays ou d'éléments abstraits sous forme humaine.",
+    "origin": "Terme japonais pour désigner la personnification.",
+    "examples": "*Hetalia* (pays), *Kemono Friends* (animaux), *Azur Lane* (navires de guerre).",
+    "impact": "Tendance majeure de la culture Otaku de transformer tout concept en personnages de style anime très attractifs."
+  },
+  "Oppai": {
+    "definition": "Trope axé sur la mise en valeur exagérée ou humoristique de la poitrine féminine généreuse.",
+    "origin": "Terme familier et enfantin japonais pour désigner les seins.",
+    "examples": "Productions ecchi comme *High School DxD* ou *To Love-Ru*.",
+    "impact": "Pilier esthétique et comique du genre ecchi et du fan-service masculin classique."
+  },
+  "Goth": {
+    "definition": "Style vestimentaire inspiré de la mode 'Gothic Lolita' combinant dentelles sombres, ombrelles et esthétique victorienne.",
+    "origin": "Sous-culture de mode née dans le quartier de Harajuku à Tokyo.",
+    "examples": "Misa Amane (*Death Note*), Kurumi Tokisaki (*Date A Live*).",
+    "impact": "Confère un charisme sombre, mystérieux et une élégance aristocratique irrésistible aux héroïnes d'animes."
+  },
+  "Gal": {
+    "definition": "Style de personnage féminin rebelle à la mode occidentale, caractérisé par des cheveux teints, du maquillage et une attitude joyeuse.",
+    "origin": "Prononciation japonaise de 'Girl' (Gyaru).",
+    "examples": "Marin Kitagawa (*My Dress-Up Darling*), Galko (*Please Tell Me! Galko-chan*).",
+    "impact": "Trope moderne d'héroïne extravertie, franche et passionnée qui bouscule les normes traditionnelles japonaises."
+  },
+  "Shinobi": {
+    "definition": "Représentation idéalisée et stylisée des ninjas dotés de techniques secrètes, d'agilité extrême et de pouvoirs surnaturels.",
+    "origin": "Autre nom historique pour les espions et guerriers de l'ombre féodaux (Ninjas).",
+    "examples": "*Naruto*, *Basilisk*, *Hell's Paradise*.",
+    "impact": "Thématique mondiale ultra-populaire, alliant combats acrobatiques secrets et codes d'honneur féodaux."
+  },
+  "Seiyuu": {
+    "definition": "Comédien de doublage japonais. Ils possèdent un statut de véritable star au Japon, mêlant doublage, radio et concerts.",
+    "origin": "Contraction de 'seisaku' (voix/acteur).",
+    "examples": "Mamoru Miyano, Rie Takahashi, Hiroshi Kamiya.",
+    "impact": "Garantit l'identité vocale et l'immersion émotionnelle indispensables des productions."
+  },
+  "Mangaka": {
+    "definition": "Auteur et dessinateur de mangas, travaillant sous un rythme de parution hebdomadaire ou mensuel soutenu avec des assistants.",
+    "origin": "Signifie 'créateur de manga'.",
+    "examples": "Eiichiro Oda (*One Piece*), Kentaro Miura (*Berserk*).",
+    "impact": "Le pilier créatif absolu à l'origine de l'immense majorité des franchises d'animation."
+  },
+  "Doujinshi": {
+    "definition": "Œuvres auto-publiées par des cercles d'amateurs ou de professionnels, souvent des fanfictions d'œuvres existantes.",
+    "origin": "Signifie 'revue de personnes partageant les mêmes intérêts'.",
+    "examples": "Vendus massivement lors du festival géant du Comiket à Tokyo.",
+    "impact": "Sert d'incubateur de talents majeurs pour l'industrie professionnelle."
+  },
+  "Comiket": {
+    "definition": "Le plus grand festival de vente de Doujinshi au monde, rassemblant des centaines de milliers de fans deux fois par an à Tokyo.",
+    "origin": "Contraction de 'Comic Market'.",
+    "examples": "Événement géant au Tokyo Big Sight réunissant plus de 500 000 visiteurs.",
+    "impact": "L'événement culturel Otaku le plus important et influent du Japon."
+  },
+  "Fansub": {
+    "definition": "Activité bénévole de traduction et de sous-titrage d'animes par des équipes de fans.",
+    "origin": "Contraction de 'Fan Subtitling'.",
+    "examples": "Les groupes historiques des années 2000 qui diffusaient les épisodes via BitTorrent.",
+    "impact": "A permis l'expansion et la démocratisation mondiale de la culture anime."
+  },
+  "Sub": {
+    "definition": "La version originale d'un anime sous-titrée dans la langue locale du spectateur (VOSTFR).",
+    "origin": "De 'Subtitled'.",
+    "examples": "Les simulcasts officiels sur Crunchyroll.",
+    "impact": "Le mode de consommation favori des passionnés, respectant le jeu d'acteur des Seiyuu."
+  },
+  "Dub": {
+    "definition": "La version doublée d'un anime dans la langue locale (VF en France).",
+    "origin": "De 'Dubbed'.",
+    "examples": "Le doublage français mythique de *Dragon Ball Z* ou *GTO*.",
+    "impact": "Permet une accessibilité maximale pour le grand public sans fatigue de lecture."
+  },
+  "Raw": {
+    "definition": "La vidéo brute d'un épisode d'anime sans aucun sous-titre ni modification, telle que diffusée sur les chaînes japonaises.",
+    "origin": "Signifie 'brut' en anglais.",
+    "examples": "Fichiers capturés depuis Tokyo MX ou BS11 par les traducteurs.",
+    "impact": "Matériau source indispensable pour les équipes de traduction (fansub) et les monteurs d'AMV."
+  },
+  "AMV": {
+    "definition": "Montage vidéo amateur synchronisant des clips d'animes avec une musique externe.",
+    "origin": "Acronyme de 'Anime Music Video'.",
+    "examples": "Les concours géants d'AMV lors des conventions (Japan Expo).",
+    "impact": "Une expression de créativité communautaire forte de la fan-culture depuis les années 90."
+  },
+  "MAD": {
+    "definition": "Équivalent japonais de l'AMV, souvent plus axé sur l'édition technique, les mèmes et la parodie sonore.",
+    "origin": "Origine incertaine, lié au concept de mixage fou ('Mad Movie').",
+    "examples": "Vidéos de parodie virales sur Niconico (Nico Nico Douga).",
+    "impact": "Générateur important de mèmes et de délires collectifs au sein de la communauté japonaise."
+  },
+  "Key Animator": {
+    "definition": "Animateur clé chargé de dessiner les poses principales d'une séquence d'animation ('Genga').",
+    "origin": "Poste de production en animation.",
+    "examples": "Des animateurs légendaires comme Yutaka Nakamura.",
+    "impact": "Détermine la qualité artistique pure, la dynamique et la fluidité d'une scène d'action."
+  },
+  "Sakuga": {
+    "definition": "Moments précis d'un épisode d'anime où la qualité d'animation s'élève soudainement de manière spectaculaire.",
+    "origin": "Signifie 'dessin' en japonais, réapproprié par les fans occidentaux.",
+    "examples": "Le combat de Saitama contre Genos (*One Punch Man*).",
+    "impact": "Fait l'objet de cercles d'analyse technique qui célèbrent le style des animateurs clés."
+  },
+  "CGI": {
+    "definition": "L'utilisation de l'animation 3D par ordinateur dans les productions animées, indispensable pour les scènes complexes.",
+    "origin": "Acronyme de 'Computer Generated Imagery'.",
+    "examples": "*Beastars*, *Land of the Lustrous*.",
+    "impact": "Permet des mouvements de caméra dynamiques impossibles en 2D traditionnelle."
+  },
+  "Cel Animation": {
+    "definition": "Technique d'animation traditionnelle où chaque image est peinte à la main sur des feuilles de celluloïd transparentes.",
+    "origin": "Méthode historique de l'animation mondiale utilisée jusqu'au début des années 2000.",
+    "examples": "*Akira*, *Evangelion* (série originale).",
+    "impact": "Possède une texture organique, granuleuse et imparfaite nostalgique recherchée."
+  },
+  "Cour": {
+    "definition": "Période de diffusion télévisuelle d'environ 3 mois (correspondant à une saison), équivalant généralement à 11-13 épisodes.",
+    "origin": "Du français 'cours' adapté en japonais ('kūru').",
+    "examples": "Les animés modernes sont découpés en 'Split-Cour' (deux parties séparées par une saison de pause).",
+    "impact": "Structure le rythme de production industriel moderne au détriment des formats fleuves historiques."
+  },
+  "OVA": {
+    "definition": "Épisodes ou films d'animation destinés directement au marché de la vidéo sans diffusion préalable au cinéma ou à la télé.",
+    "origin": "Acronyme de 'Original Video Animation' (parfois OAD si vendu avec un manga).",
+    "examples": "*Mobile Suit Gundam 0080*, *Hellsing Ultimate*.",
+    "impact": "Permettait historiquement une liberté de censure et une qualité technique bien supérieure aux standards TV."
+  },
+  "PV": {
+    "definition": "Bande-annonce ou vidéo promotionnelle officielle publiée pour annoncer et promouvoir un anime à venir.",
+    "origin": "Acronyme de 'Promotional Video'.",
+    "examples": "Les vidéos promotionnelles publiées par des studios comme MAPPA ou Ufotable sur YouTube.",
+    "impact": "Générateur d'attente (hype) colossal au sein de la communauté."
+  },
+  "Opening": {
+    "definition": "Générique d'introduction d'un anime, mêlant une chanson marquante (souvent d'un groupe populaire) à une animation soignée résumant l'ambiance de la série.",
+    "origin": "Abrégé en 'OP'.",
+    "examples": "*Cruel Angel's Thesis* (*Evangelion*), *Gurenge* (*Demon Slayer*), *Idol* (*Oshi no Ko*).",
+    "impact": "Véritable vitrine artistique et vecteur de succès majeurs dans l'industrie musicale japonaise."
+  },
+  "Ending": {
+    "definition": "Générique de fin d'un anime, généralement plus calme et mélancolique que l'Opening, servant à clore l'épisode en douceur.",
+    "origin": "Abrégé en 'ED'.",
+    "examples": "*Fly Me to the Moon* (*Evangelion*), *Hare Hare Yukai* (*Haruhi Suzumiya*).",
+    "impact": "Permet de marquer une transition émotionnelle, parfois utilisé pour des danses devenues virales."
+  },
+  "OST": {
+    "definition": "La bande-originale musicale composée spécifiquement pour accompagner et magnifier l'anime.",
+    "origin": "Acronyme de 'Original Soundtrack'.",
+    "examples": "Les compositions de Hiroyuki Sawano (*Attack on Titan*), Yuki Kajiura (*Madoka Magica*), Joe Hisaishi (*Ghibli*).",
+    "impact": "Indispensable pour l'impact émotionnel et dramatique, écoutée massivement en dehors de l'œuvre."
+  },
+  "Visual Novel": {
+    "definition": "Genre de jeu vidéo textuel interactif, très populaire au Japon, basé sur la lecture accompagnée de visuels et de choix menant à plusieurs fins.",
+    "origin": "Signifie 'Roman Visuel'.",
+    "examples": "*Fate/stay night*, *Steins;Gate*, *Clannad*.",
+    "impact": "Source d'adaptation majeure pour les animés romantiques, dramatiques ou de science-fiction."
+  },
+  "Light Novel": {
+    "definition": "Type de roman illustré japonais ciblant un public de jeunes adultes, caractérisé par une écriture simplifiée et des illustrations de style manga.",
+    "origin": "Abrégé en 'LN'.",
+    "examples": "*Sword Art Online*, *Overlord*, *Re:Zero*.",
+    "impact": "Le principal vivier d'adaptation pour les animés modernes de type Isekai et fantasy."
+  },
+  "Scanlation": {
+    "definition": "Le fait de scanner, traduire, éditer et publier des chapitres de mangas non licenciés sur internet par des équipes de fans.",
+    "origin": "Contraction de 'Scan' et 'Translation'.",
+    "examples": "Les plateformes de lecture en ligne amateur.",
+    "impact": "Permet de suivre les sorties hebdomadaires japonaises, mais pose des problèmes majeurs de droit d'auteur, concurrencé par Manga Plus."
+  },
+  "Wotagei": {
+    "definition": "Série de danses, de sauts et de cris rythmés effectués en parfaite synchronisation par des fans lors de concerts d'Idols.",
+    "origin": "Fusion de 'Otaku' et 'Gei' (art/performance).",
+    "examples": "Visible lors des concerts de la franchise *Love Live!* ou dans *Oshi no Ko*.",
+    "impact": "Une expression physique spectaculaire de dévouement extrême des fans envers leurs idoles."
+  },
+  "Cosplay": {
+    "definition": "L'art de concevoir et de porter le costume d'un personnage de fiction (anime, manga, jeu) et d'adopter son comportement.",
+    "origin": "Contraction de 'Costume Play', inventé par Nobuyuki Takahashi en 1984.",
+    "examples": "Activité centrale de conventions comme la Japan Expo ou le Comiket.",
+    "impact": "Un des piliers de la culture de fan à l'échelle mondiale, devenu une profession pour certains."
+  },
+  "Itasha": {
+    "definition": "Voiture décorée avec des autocollants massifs à l'effigie de personnages d'animes ou de mangas (souvent des héroïnes de type 'moe').",
+    "origin": "Signifie littéralement 'voiture douloureuse' (douloureuse pour le portefeuille ou pour le regard des passants).",
+    "examples": "Rassemblements de voitures à Akihabara.",
+    "impact": "Expression ultime et extravagante de la fierté Otaku s'affichant dans l'espace public."
+  },
+  "Hikikomori": {
+    "definition": "Individu vivant totalement coupé du monde, enfermé chez lui pendant plusieurs mois ou années.",
+    "origin": "Du verbe 'hikikomoru' (se retirer à l'intérieur).",
+    "examples": "Tatsuhiro Satō (*Welcome to the N.H.K.*).",
+    "impact": "Enjeu de société majeur, très présent dans la construction de récits de rédemption."
+  },
+  "NEET": {
+    "definition": "Jeune adulte sans emploi, ne poursuivant pas d'études et ne suivant aucune formation.",
+    "origin": "Acronyme anglais de 'Not in Education, Employment, or Training'.",
+    "examples": "Sora et Shiro (*No Game No Life*), Kazuma Satou (*Konosuba*).",
+    "impact": "Figure par excellence du protagoniste d'Isekai avant sa réincarnation."
+  },
+  "ONA": {
+    "definition": "Anime diffusé directement et en exclusivité sur Internet (ex: Netflix, Crunchyroll) sans diffusion télévisuelle préalable au Japon.",
+    "origin": "Acronyme de 'Original Net Animation'.",
+    "examples": "*Devilman Crybaby*, *Cyberpunk: Edgerunners*.",
+    "impact": "Format dominant de la diffusion moderne via les plateformes de streaming mondiales."
+  },
+  "OAD": {
+    "definition": "Épisode spécial d'anime publié directement en bundle sous forme de DVD/Blu-Ray avec un tome relié du manga original.",
+    "origin": "Acronyme de 'Original Animation DVD'.",
+    "examples": "Épisodes bonus de *Shingeki no Kyojin* vendus avec les mangas japonais.",
+    "impact": "Excellent outil de promotion croisée pour stimuler massivement les ventes de mangas reliés."
+  },
+  "In-between Animator": {
+    "definition": "Animateur intermédiaire ('Douga') chargé de dessiner les images de transition entre les poses clés ('Genga') dessinées par le Key Animator.",
+    "origin": "Poste de production en animation.",
+    "examples": "La majorité des jeunes animateurs débutants dans l'industrie.",
+    "impact": "Garantit la fluidité finale du mouvement, poste éprouvant et historiquement sous-payé au Japon."
+  },
+  "Storyboard": {
+    "definition": "Le document dessiné par le réalisateur ('Econte') décrivant plan par plan le découpage scénaristique, le timing et les mouvements de caméra.",
+    "origin": "Signifie 'Econte' en japonais.",
+    "examples": "Les storyboards légendaires d'Hayao Miyazaki ou de Satoshi Kon.",
+    "impact": "La véritable bible de production de l'anime, fixant le rythme visuel final de l'œuvre."
+  },
+  "Director": {
+    "definition": "Le réalisateur principal de l'anime ('Kantoku'), supervisant l'ensemble de la direction artistique, des voix et de l'animation.",
+    "origin": "Signifie 'Kantoku' en japonais.",
+    "examples": "Satoshi Kon, Hayao Miyazaki, Makoto Shinkai, Hideaki Anno.",
+    "impact": "Le maître d'œuvre qui donne sa vision artistique globale et sa signature à la production."
+  },
+  "Character Designer": {
+    "definition": "L'artiste chargé de concevoir et de dessiner les visages et vêtements des personnages pour qu'ils soient animables par l'équipe.",
+    "origin": "Poste de production clé ('Chara-design').",
+    "examples": "Yoshiyuki Sadamoto (*Evangelion*).",
+    "impact": "Fixe l'identité visuelle de la série, déterminant immédiatement l'attrait des fans."
+  },
+  "Color Stylist": {
+    "definition": "L'artiste chargé de définir la palette de couleurs de chaque scène, personnage et décor pour assurer l'harmonie visuelle.",
+    "origin": "Poste de production ('Shikisai Sekkei').",
+    "examples": "Spécialistes de la couleur dans les studios comme Kyoto Animation.",
+    "impact": "Indispensable pour installer l'ambiance lumineuse, de l'éclat joyeux à la noirceur dystopique."
+  },
+  "Background Art": {
+    "definition": "L'art de peindre les décors et arrière-plans sur lesquels se déplacent les personnages animés.",
+    "origin": "Poste de production ('Bijutsu').",
+    "examples": "Les décors ultra-réalistes des films de Makoto Shinkai (*Your Name.*).",
+    "impact": "Procure de la profondeur, du réalisme ou de la poésie visuelle à l'univers de l'anime."
+  },
+  "Sound Director": {
+    "definition": "Le directeur sonore ('Onkyo Kantoku') supervisant le doublage des Seiyuu, le mixage audio et l'insertion des musiques et effets sonores.",
+    "origin": "Poste de production sonore.",
+    "examples": "Directeurs sonores renommés de l'industrie.",
+    "impact": "Garantit la clarté et l'impact dramatique de l'ambiance sonore globale de la série."
+  },
+  "Production Committee": {
+    "definition": "Le consortium d'entreprises (éditeurs, chaînes TV, fabricants de jouets) qui financent conjointement l'anime pour partager les risques financiers.",
+    "origin": "Système de financement 'Seisaku Iinkai' introduit dans les années 90.",
+    "examples": "Le comité de production de la majorité des séries télévisées modernes.",
+    "impact": "Partage les risques mais limite parfois la liberté artistique individuelle du réalisateur au profit des ventes de dérivés."
+  },
+  "Gekiban": {
+    "definition": "La bande-son orchestrale ou instrumentale d'accompagnement dramatique diffusée en arrière-plan des scènes de l'anime.",
+    "origin": "Signifie 'musique de scène' en japonais.",
+    "examples": "Les thèmes épiques de Hiroyuki Sawano.",
+    "impact": "Magnifie instantanément la tension dramatique ou l'action épique des duels."
+  },
+  "Fanbook": {
+    "definition": "Livre officiel publié par l'éditeur contenant des informations exclusives, des interviews d'auteurs et des fiches détaillées de personnages.",
+    "origin": "Produit dérivé éditorial officiel.",
+    "examples": "Les Databooks de *Naruto* ou *One Piece*.",
+    "impact": "La source de référence ultime pour les fans qui cherchent à valider la canonicité des faits."
+  },
+  "Databook": {
+    "definition": "Livre officiel de données regroupant les statistiques de puissance, l'historique et les fiches d'identité des personnages.",
+    "origin": "Variante technique du Fanbook.",
+    "examples": "Les Databooks de combats Shonen.",
+    "impact": "Sert de bible statistique pour les débats communautaires sur la puissance des personnages (versus battles)."
+  },
+  "Tankobon": {
+    "definition": "Le volume relié cartonné individuel compilant environ 8 à 10 chapitres d'un manga préalablement parus dans un magazine hebdomadaire.",
+    "origin": "Format éditorial de manga physique japonais.",
+    "examples": "Les tomes individuels de mangas vendus en librairie.",
+    "impact": "Le format de commercialisation physique de référence à l'origine de l'essentiel des revenus de vente."
+  },
+  "Bunkoban": {
+    "definition": "Édition de manga en format de poche compact, sur papier de haute qualité, compilant généralement deux tomes en un seul.",
+    "origin": "Format de livre de poche de bibliothèque ('Bunko').",
+    "examples": "Rééditions de classiques de mangas en format poche.",
+    "impact": "Idéal pour économiser de la place dans les bibliothèques japonaises tout en proposant des bonus."
+  },
+  "Wideban": {
+    "definition": "Édition de manga grand format imprimée sur du papier de qualité supérieure, regroupant plusieurs tomes originaux.",
+    "origin": "Format de luxe grand format.",
+    "examples": "Éditions collector de mangas cultes.",
+    "impact": "Destiné aux collectionneurs, mettant en valeur la finesse des planches et des détails de dessin."
+  },
+  "Layout": {
+    "definition": "Le dessin technique détaillant précisément le cadrage de la caméra, la position des personnages et le décor pour chaque plan.",
+    "origin": "Étape de production initiée par Hayao Miyazaki.",
+    "examples": "Les Layouts complexes des films du Studio Ghibli.",
+    "impact": "Garantit la cohérence spatiale absolue entre l'animation 2D et le décor d'arrière-plan."
+  },
+  "AOD": {
+    "definition": "Anime diffusé à la demande via les plateformes numériques de vidéo par abonnement.",
+    "origin": "Acronyme de 'Anime On Demand'.",
+    "examples": "Simulcasts Crunchyroll, ADN, Netflix.",
+    "impact": "A supplanté le marché physique des DVD/Blu-Ray pour la consommation quotidienne internationale."
+  },
+  "Web Novel": {
+    "definition": "Roman publié en ligne par des auteurs amateurs sur des plateformes gratuites (ex: Syosetu), souvent adapté plus tard en Light Novel.",
+    "origin": "Abrégé en 'WN'.",
+    "examples": "Les versions originales de *Tensei Shitara Slime* ou *Re:Zero*.",
+    "impact": "Le point de départ créatif le plus accessible pour l'émergence des nouvelles tendances Isekai."
+  },
+  "Melonbooks": {
+    "definition": "Chaîne de magasins japonaise ultra-populaire spécialisée dans la vente de Doujinshi et de produits dérivés de culture Otaku.",
+    "origin": "Enseigne commerciale de référence d'Akihabara.",
+    "examples": "Boutiques géantes situées dans les grandes métropoles japonaises.",
+    "impact": "Le canal de distribution physique majeur pour les créations amateurs de cercles de doujinshis."
+  },
+  "Toranoana": {
+    "definition": "Chaîne de boutiques historique japonaise dédiée à la vente et distribution de mangas amateurs et indépendants.",
+    "origin": "Signifie 'l'antre du tigre' en japonais.",
+    "examples": "Boutiques de référence situées à Akihabara.",
+    "impact": "Canal de distribution historique majeur pour la diffusion des cercles indépendants (doujins)."
+  },
+  "Mandarake": {
+    "definition": "La plus grande chaîne de magasins de seconde main au monde dédiée à la pop-culture, aux mangas d'époque et aux jouets rétro.",
+    "origin": "Fondé par le mangaka Masuzo Furukawa en 1980 à Nakano Broadway.",
+    "examples": "Le magasin Mandarake géant de Nakano Broadway à Tokyo.",
+    "impact": "Le temple absolu pour les collectionneurs cherchant des pièces rares ou historiques d'animation."
+  },
+  "Otaku": {
+    "definition": "Personne consacrant l'essentiel de son temps libre et de ses ressources à une passion dévorante (anime, manga).",
+    "origin": "Utilisation ironique du pronom poli 'otaku' (votre maison/vous) entre fans de SF dans les années 80.",
+    "examples": "Hirotaka Nifuji, Narumi Momose (*Wotakoi*).",
+    "impact": "Autrefois stigmatisé, le terme est aujourd'hui revendiqué fièrement à l'international."
+  },
+  "Wotaku": {
+    "definition": "Variante orthographique du mot Otaku, souvent associée à l'âge adulte et au monde du travail (Salaryman Otaku).",
+    "origin": "Combinaison argotique moderne.",
+    "examples": "Hirotaka Nifuji (*Wotaku ni Koi wa Muzukashii*).",
+    "impact": "Désigne la génération de passionnés insérés professionnellement mais gardant leur passion en secret."
+  },
+  "Weeaboo": {
+    "definition": "Terme argotique occidental désignant une personne obsédée par la culture japonaise, au point d'en rejeter sa propre culture.",
+    "origin": "Issu d'un mot dénué de sens sur le forum 4chan remplaçant le terme péjoratif 'Wapanese'.",
+    "examples": "Stéréotype de fan occidental exubérant.",
+    "impact": "Utilisé de manière parodique ou d'autodérision au sein des communautés occidentales de fans d'animes."
+  },
+  "Japanophile": {
+    "definition": "Personne qui éprouve une immense admiration et un amour prononcé pour le Japon, son histoire et sa culture.",
+    "origin": "Linguistique classique.",
+    "examples": "Fans de culture traditionnelle shintoïste, de gastronomie et de mangas.",
+    "impact": "Vecteur majeur du soft power (Cool Japan) à l'échelle internationale."
+  },
+  "Akihabara": {
+    "definition": "Le quartier légendaire de Tokyo ('Akiba'), capitale mondiale de l'électronique et de la culture Otaku.",
+    "origin": "Nom du quartier historique à Tokyo.",
+    "examples": "Le carrefour principal d'Akiba avec ses boutiques de figurines et Maid Cafés.",
+    "impact": "Le temple de pèlerinage mondial pour tous les passionnés d'animes."
+  },
+  "Nakano Broadway": {
+    "definition": "Complexe commercial de Tokyo célèbre pour ses boutiques rétro, d'objets de collection de seconde main et d'art alternatif.",
+    "origin": "Centre commercial des années 60 réaménagé.",
+    "examples": "Le magasin Mandarake central de Nakano.",
+    "impact": "Alternative moins commerciale et plus vintage à Akihabara pour les collectionneurs de raretés."
+  },
+  "Den Den Town": {
+    "definition": "Le quartier Otaku et d'électronique de la ville d'Osaka, équivalent direct d'Akihabara dans la région du Kansai.",
+    "origin": "Quartier Nipponbashi à Osaka.",
+    "examples": "Boutiques et rassemblements de cosplayeurs à Osaka.",
+    "impact": "Le centre névralgique de la culture pop-culture de l'ouest du Japon."
+  },
+  "Maid Cafe": {
+    "definition": "Café à thème où les serveuses sont costumées en domestiques (Maids) et traitent les clients comme des maîtres de maison.",
+    "origin": "Né à Akihabara au début des années 2000 (Cure Maid Cafe).",
+    "examples": "Les cafés d'Akihabara comme @Home Cafe.",
+    "impact": "Phénomène touristique mondial incarnant la quintessence du service mignon 'moe'."
+  },
+  "Butler Cafe": {
+    "definition": "Café à thème où des serveurs élégants costumés en majordomes (Butlers) servent les clientes comme des princesses nobles.",
+    "origin": "Équivalent féminin du Maid Cafe.",
+    "examples": "Cafés situés dans le quartier d'Ikebukuro à Tokyo.",
+    "impact": "Niche commerciale très populaire auprès du public féminin amateur d'esthétique Shojo."
+  },
+  "Anime Convention": {
+    "definition": "Rassemblement public de grande envergure dédié aux animés, aux mangas et aux jeux vidéo, mêlant stands et cosplay.",
+    "origin": "Mouvement de rassemblement de fans.",
+    "examples": "Japan Expo à Paris, Anime Expo à Los Angeles.",
+    "impact": "Le point de ralliement annuel majeur pour la communauté des fans et l'industrie."
+  },
+  "Oshi": {
+    "definition": "Le personnage d'anime ou le membre d'un groupe d'idols pour lequel un fan éprouve un soutien inconditionnel.",
+    "origin": "Vient de 'oshisu' (soutenir/pousser en avant).",
+    "examples": "Ai Hoshino (*Oshi no Ko*).",
+    "impact": "Concept clé dictant les activités d'engagement des fans ('Oshi-katsu')."
+  },
+  "Oshi-katsu": {
+    "definition": "L'ensemble des activités concrètes qu'un fan entreprend pour soutenir son personnage ou idol favori.",
+    "origin": "Fusion de 'Oshi' (favori) et 'katsu' (activités/actions).",
+    "examples": "Acheter des produits dérivés, voter lors de concours, aller aux concerts, décorer des sacs ('Ita-bag').",
+    "impact": "Moteur économique et culturel central de la fan-culture contemporaine au Japon."
+  },
+  "Waifu War": {
+    "definition": "Débats passionnés et parfois agressifs au sein des communautés de fans pour déterminer quelle héroïne est la meilleure.",
+    "origin": "Concept de débats de forums web.",
+    "examples": "Les débats éternels entre partisans de Rem et de Emilia dans *Re:Zero*.",
+    "impact": "Stimule l'engagement communautaire et stimule massivement les ventes de produits dérivés concurrents."
+  },
+  "Shipping": {
+    "definition": "L'activité des fans consistant à soutenir et à imaginer une relation romantique entre deux personnages d'une œuvre.",
+    "origin": "Abréviation de 'relationship'.",
+    "examples": "Le soutien des fans pour le couple Kirito et Asuka (*Sword Art Online*).",
+    "impact": "Génère une immense création de fanarts, de fanfictions et de débats communautaires intenses."
+  },
+  "OTP": {
+    "definition": "Le couple fictif qu'un fan considère comme la relation romantique ultime et parfaite par-dessus tout.",
+    "origin": "Acronyme de 'One True Pairing' (Le seul vrai couple).",
+    "examples": "Le couple Okabe et Kurisu dans *Steins;Gate*.",
+    "impact": "Représente le summum du dévouement d'un fan envers une dynamique romantique spécifique."
+  },
+  "Canon": {
+    "definition": "L'ensemble des faits, événements et relations officiellement validés et écrits par l'auteur original de l'œuvre.",
+    "origin": "Linguistique critique.",
+    "examples": "Les événements du manga original par rapport aux épisodes 'Filler' inventés par le studio.",
+    "impact": "Sert de loi de référence pour les débats sur le scénario et l'analyse de l'œuvre."
+  },
+  "Fandom": {
+    "definition": "La sous-culture globale formée par la communauté des fans dévoués d'une œuvre, d'un genre ou de la pop-culture japonaise.",
+    "origin": "Contraction de 'fan' et 'kingdom' (royaume des fans).",
+    "examples": "Le fandom mondial de *One Piece* ou de *Touhou Project*.",
+    "impact": "Détermine la longévité commerciale et culturelle d'une franchise à travers sa créativité active."
+  },
+  "Fanfiction": {
+    "definition": "Récit écrit par un fan se déroulant dans l'univers de son œuvre favorite, mettant en scène ses personnages.",
+    "origin": "Littérature de fan.",
+    "examples": "Récits amateurs publiés sur des plateformes dédiées (Wattpad, Ao3).",
+    "impact": "Permet aux fans de prolonger l'œuvre ou d'explorer des scénarios alternatifs de leur choix."
+  },
+  "Fanart": {
+    "definition": "Dessin ou peinture réalisé par un fan représentant des personnages de son œuvre favorite.",
+    "origin": "Art de fan.",
+    "examples": "Illustrations publiées sur la plateforme Pixiv ou Twitter.",
+    "impact": "Vecteur visuel majeur de promotion de l'œuvre au sein des réseaux communautaires."
+  },
+  "Doujin Game": {
+    "definition": "Jeu vidéo indépendant auto-produit par des développeurs amateurs ou de petits cercles au Japon.",
+    "origin": "Aussi appelé 'Dōjin soft'.",
+    "examples": "Les jeux originaux de la franchise *Touhou Project* créés par ZUN.",
+    "impact": "Incubateur de créativité ludique extraordinaire, ayant donné naissance à des franchises mondiales."
+  },
+  "Touhou Project": {
+    "definition": "Franchise japonaise indépendante de shoot'em up (danmaku) créée par un unique développeur (ZUN).",
+    "origin": "Cercle de doujin 'Team Shanghai Alice' fondé à la fin des années 90.",
+    "examples": "Jeux, musiques et des milliers de fan-games dérivés vendus au Comiket.",
+    "impact": "Le plus grand écosystème de création amateur (doujin) au monde, avec des millions d'œuvres dérivées autorisées."
+  },
+  "Vocaloid": {
+    "definition": "Logiciel de synthèse vocale développé par Yamaha permettant de créer des chansons en saisissant des notes et des paroles.",
+    "origin": "Technique de synthèse vocale.",
+    "examples": "La chanteuse virtuelle Hatsune Miku, Kagamine Rin/Len.",
+    "impact": "A révolutionné la création musicale indépendante sur le web, créant des icônes pop mondiales."
+  },
+  "Utaite": {
+    "definition": "Chanteur amateur japonais qui publie des reprises de chansons de Vocaloid ou d'animes sur des plateformes comme Niconico.",
+    "origin": "Signifie 'chanteur' de manière informelle en japonais.",
+    "examples": "Des artistes devenus des stars professionnelles de premier plan comme Ado.",
+    "impact": "Vivier de talents exceptionnels pour l'industrie musicale japonaise contemporaine."
+  },
+  "VTuber": {
+    "definition": "Vidéaste ou streameur du web utilisant un avatar numérique animé en 2D ou 3D en temps réel pour interagir.",
+    "origin": "Acronyme de 'Virtual YouTuber', popularisé par Kizuna AI en 2016.",
+    "examples": "Les talents des agences hololive (Gawr Gura) ou Nijisanji.",
+    "impact": "Le phénomène de streaming le plus lucratif et en plus forte croissance de la décennie."
+  },
+  "Niconico": {
+    "definition": "Le site d'hébergement de vidéos japonais le plus populaire auprès de la communauté Otaku (autrefois Nico Nico Douga).",
+    "origin": "Signifie 'sourire' de manière onomatopéique en japonais.",
+    "examples": "La plateforme de lancement de la majorité des chansons Vocaloid historiques.",
+    "impact": "A structuré l'humour, les mèmes vidéo et la culture musicale du web japonais des années 2000."
+  },
+  "Pixiv": {
+    "definition": "La plus grande plateforme communautaire en ligne japonaise dédiée à la publication d'illustrations d'artistes amateurs.",
+    "origin": "Réseau social d'artistes japonais.",
+    "examples": "Des millions d'illustrations de fanarts et de mangas originaux publiés quotidiennement.",
+    "impact": "La vitrine mondiale de référence pour suivre les tendances de styles de chara-design."
+  },
+  "Comic Market": {
+    "definition": "Nom officiel complet du Comiket, l'événement biannuel de référence des passionnés de création indépendante à Tokyo.",
+    "origin": "Comic Market.",
+    "examples": "Rassemblement géant biannuel à Tokyo Big Sight.",
+    "impact": "Le baromètre absolu de la popularité des franchises de culture pop au Japon."
+  },
+  "Ita-bag": {
+    "definition": "Sacoche ou sac à dos abondamment décoré et recouvert de badges, porte-clés et peluches à l'effigie d'un personnage d'anime unique.",
+    "origin": "Signifie 'sac douloureux' (douloureux à regarder ou pour le portefeuille, comme Itasha).",
+    "examples": "Sacs portés par les fans lors de conventions ou de concerts.",
+    "impact": "Expression physique de dévouement extrême et de fierté de fan envers son personnage favori."
+  },
+  "Anisong": {
+    "definition": "Le genre musical des chansons de génériques d'animes, interprétées par des artistes de J-Pop ou des Seiyuu.",
+    "origin": "Contraction de 'Anime' et 'Song'.",
+    "examples": "*A Cruel Angel's Thesis* (*Evangelion*).",
+    "impact": "Un marché d'édition musical colossal en tête des charts japonais."
+  },
+  "Gachapon": {
+    "definition": "Distributeur automatique de jouets en capsules contenant des figurines miniatures de personnages d'animes.",
+    "origin": "Onomatopée du bruit de la manivelle ('gacha') et de la capsule tombant ('pon').",
+    "examples": "Les allées entières de machines gachapons à Akihabara.",
+    "impact": "Symbole de la collectionnite Otaku, décliné sous forme de mécanique de jeu vidéo mobile (Gacha)."
+  },
+  "Melonbooks Shop": {
+    "definition": "Le point de vente physique privilégié par les cercles amateurs de Doujinshis d'Akihabara.",
+    "origin": "Enseigne commerciale.",
+    "examples": "Magasins d'Akiba.",
+    "impact": "Canal de distribution physique incontournable pour la survie des cercles indépendants."
+  },
+  "Mandarake Nakano": {
+    "definition": "La boutique de seconde main mythique de Nakano Broadway spécialisée dans les objets de collection d'animation rétro.",
+    "origin": "Le magasin fondateur de l'enseigne Mandarake.",
+    "examples": "Boutique de Nakano Broadway.",
+    "impact": "Le lieu de pèlerinage pour tous les archivistes et passionnés d'animes vintage."
+  },
+  "Comitia": {
+    "definition": "Festival biannuel de vente de Doujinshis à Tokyo, réservé exclusivement aux œuvres 100% originales (fanfictions interdites).",
+    "origin": "Variante du Comiket réservée à la création pure.",
+    "examples": "Événement de vente de créations de mangas originaux.",
+    "impact": "Sert de tremplin majeur pour les mangakas indépendants qui veulent se faire repérer par les éditeurs."
+  },
+  "Nendoroid": {
+    "definition": "Gamme culte de figurines en plastique de style chibi et super-déformé, dotées de visages et d'accessoires interchangeables.",
+    "origin": "Créée par le fabricant japonais Good Smile Company en 2006.",
+    "examples": "Figurines de collection de personnages d'animes populaires.",
+    "impact": "Le produit dérivé phare des collectionneurs d'otakus, symbole de la mignonnerie exposée sur étagère."
+  },
+  "Gashapon": {
+    "definition": "Distributeurs de jouets en capsules surprises de collection à bas coût fonctionnant avec des pièces de monnaie.",
+    "origin": "Onomatopée combinant le tournage de la manivelle ('Gasha') et la chute de la capsule ('Pon').",
+    "examples": "Allées entières de machines gashapon à Akihabara.",
+    "impact": "Vecteur ludique de collection compulsive, attirant autant les locaux que les touristes."
+  },
+  "Dakimakura": {
+    "definition": "Grand oreiller de corps de forme rectangulaire, imprimé de chaque côté avec une illustration grandeur nature d'un personnage.",
+    "origin": "Signifie littéralement 'oreiller à enlacer' en japonais.",
+    "examples": "Oreillers à l'effigie d'héroïnes de comédies romantiques ou de harem.",
+    "impact": "L'objet de fan-service suprême, symbolisant le confort affectif et l'attachement obsessionnel à un personnage fictif."
+  },
+  "Itabag": {
+    "definition": "Sac à main ou sac à dos transparent décoré de manière saturée de badges, peluches et porte-clés à l'effigie d'un seul oshi.",
+    "origin": "Signifie littéralement 'sac douloureux' (ita-bag) car pénible à regarder ou lourd à porter.",
+    "examples": "Sacs portés par les fans lors de conventions d'anime.",
+    "impact": "Moyen d'expression visuel spectaculaire permettant d'afficher publiquement et fièrement sa dévotion à un personnage."
+  },
+  "Fudanshi": {
+    "definition": "Fan masculin qui apprécie les récits romantiques ou érotiques impliquant des hommes (genre Yaoi ou Boys' Love).",
+    "origin": "Signifie littéralement 'garçon pourri' en japonais, pendant masculin de la Fujoshi.",
+    "examples": "Lecteurs masculins de mangas BL.",
+    "impact": "Niche démographique en croissance qui brise les stéréotypes de genre sur la consommation d'œuvres romantiques."
+  },
+  "Fujoshi": {
+    "definition": "Fan féminine passionnée par les relations romantiques ou érotiques masculines fictives (genre Yaoi ou Boys' Love).",
+    "origin": "Signifie littéralement 'fille pourrie' (terme ironique et autodérisoire utilisé par les fans elles-mêmes).",
+    "examples": "Lectrices dévouées de mangas BL lors des conventions.",
+    "impact": "Communauté de fans dotée d'un pouvoir d'achat massif, influençant de nombreuses productions animées de type 'service'."
+  },
+  "Otaku Room": {
+    "definition": "Chambre personnelle d'un passionné entièrement tapissée et saturée d'affiches, de mangas, de figurines et de produits dérivés.",
+    "origin": "Pratique décorative poussée à l'extrême par les fans dévoués.",
+    "examples": "Chambres de personnages otaku comme Umaru Doma (*Umaru-chan*).",
+    "impact": "Le sanctuaire domestique par excellence de l'otaku, lieu d'affirmation esthétique et de repli confortable."
+  },
+  "Dakimakura Cover": {
+    "definition": "Taie d'oreiller imprimée amovible pour dakimakura, souvent vendue séparément comme objet de collection de luxe à tirage limité.",
+    "origin": "Marché dérivé haut de gamme du textile d'anime.",
+    "examples": "Taies imprimées vendues lors de conventions comme le Comiket.",
+    "impact": "Génère un marché secondaire de spéculation intense sur les illustrations exclusives d'artistes célèbres."
+  },
+  "Manga Cafe": {
+    "definition": "Établissement ouvert 24h/24 offrant des boxes individuels, du thé gratuit, une connexion internet et des milliers de mangas en libre accès.",
+    "origin": "Appelé 'Manga Kissa' au Japon.",
+    "examples": "Lieux de refuge nocturne pour les personnages sans-abri ou en voyage.",
+    "impact": "Sert de logement d'appoint économique et de refuge urbain typique pour les aventuriers ou les salarymen fatigués."
+  },
+  "Omake": {
+    "definition": "Bonus scénaristiques courts sous forme de pages additionnelles dans un manga, ou de sketchs à la fin d'un épisode d'anime.",
+    "origin": "Signifie 'bonus' ou 'cadeau' en japonais commercial.",
+    "examples": "Les 'académies' de fin de volume de *Demon Slayer*.",
+    "impact": "Apporte un éclairage comique hors-série ou des explications de l'auteur très appréciées pour détendre l'ambiance."
+  },
+  "Onsen": {
+    "definition": "Bain thermal chaud naturel japonais issu de sources volcaniques, caractérisé par des règles strictes de nudité.",
+    "origin": "Source chaude thermale volcanique réelle du Japon.",
+    "examples": "Épisodes récurrents de détente et de quiproquos à la montagne.",
+    "impact": "Lieu de pause scénaristique incontournable pour resserrer les liens d'amitié entre les personnages."
+  },
+  "Yukata": {
+    "definition": "Kimono d'été léger en coton porté par les personnages lors des festivals d'été traditionnels.",
+    "origin": "Vêtement traditionnel d'été.",
+    "examples": "Les héroïnes lors du festival des feux d'artifice.",
+    "impact": "Accentue le charme esthétique et traditionnel des personnages lors des scènes romantiques estivales."
+  },
+  "Matsuri": {
+    "definition": "Festival traditionnel japonais de quartier avec des stands de nourriture (yatai), des jeux et des feux d'artifice.",
+    "origin": "Festival shintoïste traditionnel de quartier.",
+    "examples": "Le festival des feux d'artifice dans les Rom-Coms.",
+    "impact": "Cadre romantique idéal pour les scènes d'aveux amoureux sous les éclats des feux d'artifice."
+  },
+  "Bunkasai": {
+    "definition": "Le festival culturel annuel organisé par les élèves au sein de leur établissement scolaire.",
+    "origin": "Événement réel obligatoire du calendrier scolaire japonais.",
+    "examples": "*Kaguya-sama*, *K-On!* (concert de fin d'année).",
+    "impact": "Moment dramatique et festif clé permettant de briser la routine scolaire."
+  },
+  "Hatsumode": {
+    "definition": "La première visite rituelle de l'année dans un sanctuaire shintoïste ou temple bouddhiste au Nouvel An.",
+    "origin": "Tradition religieuse et sociale majeure du Nouvel An au Japon.",
+    "examples": "Les personnages vêtus de kimonos de fête tirant des prédictions (Omikuji).",
+    "impact": "Marque le passage à la nouvelle année dans le calendrier de la série, propice aux vœux secrets d'amour."
+  },
+  "Kotatsu": {
+    "definition": "Table basse traditionnelle chauffante recouverte d'une couverture épaisse, sous laquelle on glisse ses jambes en hiver.",
+    "origin": "Meuble de chauffage traditionnel japonais.",
+    "examples": "Les personnages y paressant en mangeant des mandarines en hiver.",
+    "impact": "Symbole absolu de la convivialité familiale chaleureuse, de la paresse comique et du confort quotidien."
+  },
+  "Tatami": {
+    "definition": "Revêtement de sol traditionnel japonais fait de paille de riz pressée et de jonc tissé.",
+    "origin": "Module d'architecture traditionnelle.",
+    "examples": "Les chambres traditionnelles des héros.",
+    "impact": "Définit l'espace de vie traditionnel japonais, imposant de retirer ses chaussures à l'entrée."
+  },
+  "Ryokan": {
+    "definition": "Auberge traditionnelle japonaise avec des sols en tatami, des bains Onsen et des repas gastronomiques (Kaiseki).",
+    "origin": "Hôtellerie traditionnelle historique.",
+    "examples": "Le lieu d'hébergement lors des voyages scolaires (Shugakuryoko).",
+    "impact": "Cadre idéal pour les épisodes de quiproquos nocturnes entre les chambres des garçons et des filles."
+  },
+  "Bento": {
+    "definition": "Boîte-repas japonaise compartimentée préparée à la maison ou achetée, consommée lors du déjeuner scolaire.",
+    "origin": "Boîte-repas traditionnelle.",
+    "examples": "Les bentos préparés avec amour contenant des cœurs en ketchup par l'héroïne.",
+    "impact": "Outil de communication sentimentale puissant, marquant le niveau d'affection entre les personnages."
+  },
+  "Ramen": {
+    "definition": "Plat de nouilles japonaises servies dans un bouillon de viande ou de poisson riche, garni de tranches de porc (Chashu).",
+    "origin": "Plat d'origine chinoise naturalisé et devenu culte au Japon.",
+    "examples": "Naruto Uzumaki mangeant chez Ichiraku Ramen.",
+    "impact": "Le plat réconfortant par excellence de la pop-culture, vecteur de convivialité brute après les combats."
+  },
+  "Taiyaki": {
+    "definition": "Gâteau traditionnel japonais en forme de poisson, généralement fourré de pâte de haricots rouges sucrée (Anko).",
+    "origin": "Pâtisserie populaire de rue.",
+    "examples": "Airi (*Kanon*), divers personnages gourmands.",
+    "impact": "Symbole de mignonnerie gourmande et de réconfort nostalgique enfantin dans les tranches de vie."
+  },
+  "Takoyaki": {
+    "definition": "Boulettes de pâte frites contenant des morceaux de poulpe, cuites sur une plaque spéciale et recouvertes de sauce.",
+    "origin": "Spécialité culinaire emblématique de la rue d'Osaka.",
+    "examples": "Consommés lors des festivals scolaires ou de quartier.",
+    "impact": "Plat convivial de partage festif, souvent associé à des gags de brûlures de langue."
+  },
+  "Dango": {
+    "definition": "Brochette de boulettes de pâte de riz gluant (Mochi) nappées d'un sirop de soja sucré ou colorées en trois tons.",
+    "origin": "Pâtisserie traditionnelle japonaise.",
+    "examples": "La chanson culte des Dangos de *Clannad*.",
+    "impact": "Symbole visuel de douceur, de nostalgie enfantine et d'harmonie familiale paisible."
+  },
+  "Pocky": {
+    "definition": "Biscuit en bâtonnet nappé de chocolat, célèbre pour le jeu du 'Pocky Game' consistant à le manger à deux par les deux bouts.",
+    "origin": "Marque de confiserie japonaise réelle (Mikado en France) devenue culte.",
+    "examples": "Scènes de séduction amoureuse de Rom-Coms lycéennes.",
+    "impact": "Ressort romantique comique et provocateur très populaire dans les tranches de vie scolaires."
+  },
+  "Ramune": {
+    "definition": "Boisson gazeuse japonaise traditionnelle aromatisée au citron, scellée par une bille de verre dans le goulot.",
+    "origin": "Limonade d'origine occidentale introduite au XIXe siècle.",
+    "examples": "Bu lors des chaudes journées d'été des festivals.",
+    "impact": "Le symbole absolu de la nostalgie rafraîchissante des étés d'enfance dans les animés."
+  },
+  "Melon-pan": {
+    "definition": "Pain brioché japonais recouvert d'une fine couche de pâte sablée croustillante imitant la peau d'un melon.",
+    "origin": "Viennoiserie japonaise populaire.",
+    "examples": "Shana mangeant des melon-pans (*Shakugan no Shana*).",
+    "impact": "La gourmandise culte des héroïnes en retard le matin courant vers l'école avec un pain dans la bouche."
+  },
+  "Torii": {
+    "definition": "Portail traditionnel en bois rouge marquant l'entrée d'un sanctuaire shintoïste, délimitant le monde sacré du profane.",
+    "origin": "Architecture shintoïste sacrée.",
+    "examples": "L'entrée du sanctuaire dans *Your Name.*.",
+    "impact": "Indicateur visuel immédiat du passage vers un cadre mystique, spirituel ou de recueillement solennel."
+  },
+  "Shinto": {
+    "definition": "La religion animiste indigène et traditionnelle du Japon, basée sur la vénération des esprits de la nature (Kami).",
+    "origin": "Spiritualité historique du Japon.",
+    "examples": "Les rituels de prêtresse (Miko) dans les sanctuaires.",
+    "impact": "Façonne en profondeur le rapport à la nature, aux objets et au surnaturel dans la majorité des œuvres."
+  },
+  "Matsuri Feux d'artifice": {
+    "definition": "L'événement culminant du festival d'été (Hanabi-taikai) où le héros tente de déclarer sa flamme au milieu des détonations.",
+    "origin": "Spectacle estival traditionnel.",
+    "examples": "La scène finale de la saison de nombreuses Rom-Coms.",
+    "impact": "Ressort dramatique classique où le bruit de l'explosion masque l'aveu amoureux au dernier moment."
+  },
+  "Golden Week": {
+    "definition": "Semaine de congés nationaux groupés fin avril / début mai au Japon, prétexte à des voyages ou sorties pour les personnages.",
+    "origin": "Période de vacances réelles du calendrier japonais.",
+    "examples": "Épisodes de vacances en groupe à la montagne ou à la plage.",
+    "impact": "Moment opportun pour sortir du cadre scolaire et développer les relations intimes entre les héros."
+  },
+  "Obon": {
+    "definition": "Festival bouddhiste traditionnel d'été honorant les esprits des ancêtres revenus visiter leurs familles.",
+    "origin": "Fête religieuse et familiale traditionnelle d'août au Japon.",
+    "examples": "Les lanternes flottantes sur l'eau (Toro Nagashi).",
+    "impact": "Apporte une touche de nostalgie, de recueillement spirituel et de poésie dramatique sur le deuil."
+  },
+  "Omikuji": {
+    "definition": "Bande de papier contenant une prédiction divine (de la grande chance au grand malheur) tirée au sort dans un sanctuaire.",
+    "origin": "Rituel divin shintoïste.",
+    "examples": "Les personnages tirant leur fortune lors du Nouvel An.",
+    "impact": "Sert de présage comique ou de confirmation dramatique du destin romantique des héros."
+  },
+  "Hana Fuda": {
+    "definition": "Jeu de cartes traditionnel japonais illustré de motifs floraux représentant les douze mois de l'année.",
+    "origin": "Jeu de cartes historique du Japon.",
+    "examples": "Les parties de Hana Fuda dans le film *Summer Wars*.",
+    "impact": "Incorpore un élément de jeu traditionnel hautement esthétique et de confrontation intellectuelle."
+  },
+  "Kotatsu Hibernation": {
+    "definition": "Le fait comique de rester piégé tout l'hiver sous le Kotatsu, refusant d'en sortir en raison du froid extérieur.",
+    "origin": "Comportement comique récurrent lié au meuble.",
+    "examples": "Gags de paresse dans les tranches de vie.",
+    "impact": "Ressort comique traduisant la paresse chaleureuse, le cocooning et le refus du travail en hiver."
+  },
+  "Yukata Festival": {
+    "definition": "Le moment où l'héroïne apparaît vêtue d'un Yukata, provoquant la stupéfaction admirative du protagoniste.",
+    "origin": "Esthétique romantique estivale.",
+    "examples": "Festivals d'été dans les Rom-Coms.",
+    "impact": "Trope visuel majeur d'affirmation esthétique de l'héroïne et de rapprochement amoureux."
+  },
+  "Senbei": {
+    "definition": "Galette de riz soufflé japonaise croquante, généralement badigeonnée de sauce soja et enveloppée d'algue Nori.",
+    "origin": "Biscuit traditionnel salé du Japon.",
+    "examples": "Les personnages âgés ou paresseux les grignotant avec du thé vert.",
+    "impact": "Symbole de la détente décontractée, de la vie à la campagne ou de la sagesse tranquille des aînés."
+  },
+  "Sake": {
+    "definition": "Alcool de riz traditionnel japonais brassé, consommé chaud ou froid lors des célébrations.",
+    "origin": "Boisson alcoolisée historique shintoïste.",
+    "examples": "Rituels de mariage ou célébrations de victoires de combats féodaux.",
+    "impact": "Incorpore des éléments de tradition solennelle ou de relâchement comique (ivresse comique)."
+  },
+  "Hatsuyume": {
+    "definition": "Le tout premier rêve fait durant la nuit du 1er au 2 janvier, censé prédire la fortune de l'année à venir.",
+    "origin": "Croyance populaire traditionnelle du Nouvel An.",
+    "examples": "Les personnages décrivant leur rêve de mont Fuji ou de faucon.",
+    "impact": "Sert de resort comique ou de prémonition fantastique sur le destin de la saison."
+  },
+  "Sakura Viewing": {
+    "definition": "La coutume traditionnelle de contempler la floraison printanière des cerisiers en faisant un pique-nique sous les arbres (Hanami).",
+    "origin": "Tradition printanière majeure du Hanami.",
+    "examples": "Scènes de rentrée des classes sous les pétales roses tourbillonnants.",
+    "impact": "Symbole de nouveau départ, de la beauté éphémère de la vie (mono no aware) et du début de l'amour scolaire."
+  },
+  "Bento Sharing": {
+    "definition": "Le fait de partager son repas préparé (Bento) sur le toit de l'école ou sous un arbre durant la pause de midi.",
+    "origin": "Habitude scolaire japonaise classique.",
+    "examples": "Rom-Coms scolaires.",
+    "impact": "Indicateur visuel clé du rapprochement de complicité affective entre le héros et l'héroïne."
+  },
+  "Onsen Peeping": {
+    "definition": "Le gag classique où les garçons tentent de regarder à travers la cloison séparant les bains masculins et féminins de l'Onsen.",
+    "origin": "Ressort comique ecchi traditionnel de l'hôtellerie des bains.",
+    "examples": "Gags de bains dans les comédies d'action ou de harem.",
+    "impact": "Ressort d'humour potache et de punition physique violente et comique des garçons par les héroïnes."
+  },
+  "Summer Homework Crisis": {
+    "definition": "L'arc récurrent de fin août où les élèves réalisent en panique qu'ils n'ont pas fait leurs devoirs de vacances d'été.",
+    "origin": "Réalité du système scolaire japonais.",
+    "examples": "*La Mélancolie de Haruhi Suzumiya* (Endless Eight).",
+    "impact": "Génère des sessions de révision de groupe paniquées de dernière minute à la bibliothèque ou chez le héros."
+  },
+  "Golden Week Trip": {
+    "definition": "Le voyage organisé par le groupe d'amis à la campagne ou à la plage profitant de la semaine de vacances nationales.",
+    "origin": "Calendrier des congés japonais.",
+    "examples": "Voyages en groupe dans les tranches de vie.",
+    "impact": "Permet de sortir du lycée pour placer les personnages dans des situations d'intimité informelle."
+  },
+  "New Year Shrine Visit": {
+    "definition": "La visite solennelle en kimono au sanctuaire lors de la veille du Nouvel An pour prier pour la nouvelle année.",
+    "origin": "Pratique rituelle réelle (Hatsumode).",
+    "examples": "Épisodes de Nouvel An d'animes romantiques.",
+    "impact": "Permet d'installer une atmosphère intime, propice aux confidences sous la neige et aux vœux secrets de couple."
+  },
+  "Bunkasai Maid Cafe": {
+    "definition": "Le fait pour une classe d'élèves d'organiser un Maid Cafe temporaire au sein de leur salle lors du festival culturel.",
+    "origin": "Événement ultra-classique des festivals de lycées.",
+    "examples": "*Maid Sama!*, *Kaguya-sama*.",
+    "impact": "Prétexte scénaristique comique pour forcer l'héroïne stricte ou le héros réticent à porter l'uniforme de Maid/Butler."
+  },
+  "Omikuji Fortune": {
+    "definition": "La bande de papier tirée au sort prédisant la chance, que l'on attache à une branche d'arbre pour conjurer le mauvais sort.",
+    "origin": "Pratique shintoïste d'exorcisme populaire.",
+    "examples": "Personnages suspendant leur prédiction au temple.",
+    "impact": "Sert de métaphore visuelle sur les doutes ou l'espoir des personnages face à leur destin."
+  },
+  "Hana Fuda Duel": {
+    "definition": "Le duel tendu où les personnages s'affrontent sur le jeu de cartes traditionnel pour résoudre un conflit.",
+    "origin": "Jeu de cartes shintoïste.",
+    "examples": "*Summer Wars*.",
+    "impact": "Donne un aspect d'art traditionnel hautement esthétique et dramatique au dénouement de l'affrontement."
+  },
+  "Kotatsu Trap": {
+    "definition": "Le fait comique de se faire piéger par la chaleur confortable du Kotatsu au point de s'y endormir pendant des heures.",
+    "origin": "Comportement comique universel lié au meuble.",
+    "examples": "Gags de paresse quotidienne.",
+    "impact": "Ressort d'humour quotidien illustrant le cocon de paresse et la douceur de vivre domestique."
+  },
+  "Yukata Reveal": {
+    "definition": "Le moment fort où le héros voit l'héroïne habillée d'un Yukata pour la première fois, déclenchant le trouble romantique.",
+    "origin": "Esthétique des festivals d'été.",
+    "examples": "Rom-Coms scolaires.",
+    "impact": "Trope esthétique romantique pilier marquant un pic d'admiration visuelle et de tension sentimentale."
+  },
+  "Hanami Picnic": {
+    "definition": "Le pique-nique organisé sous les cerisiers en fleurs pour célébrer le printemps et la contemplation des fleurs (Sakura).",
+    "origin": "Tradition printanière du Hanami.",
+    "examples": "Épisodes de printemps d'animes de tranche de vie.",
+    "impact": "Cadre propice à la détente conviviale, aux discussions informelles et à l'ivresse comique des adultes."
+  },
+  "Moe-moe-kyun": {
+    "definition": "La formule magique emblématique prononcée par les serveuses de Maid Cafés pour infuser de l'amour dans les boissons.",
+    "origin": "Onomatopée combinant le sentiment d'affection 'Moe' et le battement de cœur rapide 'Kyun'.",
+    "examples": "Mio Akiyama (*K-On!*), serveuses de Maid Cafés réels.",
+    "impact": "La catchphrase la plus célèbre et parodiée de la sous-culture moe mondiale."
+  },
+  "Kawaii": {
+    "definition": "L'esthétique de la mignonnerie, de la vulnérabilité innocente et des teintes pastel qui imprègne toute la pop-culture japonaise.",
+    "origin": "Évolution linguistique du mot 'Kawa-hayashi' (visage rougissant de pitié/compassion).",
+    "examples": "Mascottes comme Hello Kitty, personnages moe d'anime.",
+    "impact": "Le pilier central du soft power esthétique japonais à l'international, redéfinissant la mode et le design mondial."
+  },
+  "Keikaku": {
+    "definition": "Meme légendaire désignant une planification intellectuelle diabolique ou extrêmement calculée.",
+    "origin": "Provient d'un sous-titrage amateur devenu culte de *Death Note* : 'Just as keikaku (translator's note: keikaku means plan)'.",
+    "examples": "Light Yagami prévoyant chaque action de L, complots diaboliques.",
+    "impact": "Meme internet intemporel pour désigner les plans machiavéliques parfaits d'un protagoniste."
+  },
+  "Baka": {
+    "definition": "L'insulte la plus fréquente de l'animation japonaise, signifiant idiot ou imbécile, criée par gêne ou colère.",
+    "origin": "Mot japonais classique pour désigner la bêtise (composé des kanjis 'cheval' et 'cerf').",
+    "examples": "Cris récurrents des héroïnes Tsundere envers le héros maladroit.",
+    "impact": "Mot de vocabulaire japonais le plus universellement connu des fans d'animes du monde entier."
+  },
+  "Saimin": {
+    "definition": "Trope narratif de l'hypnose ou de la suggestion mentale utilisé pour manipuler les actions ou les sentiments des personnages.",
+    "origin": "Mot japonais pour désigner l'hypnotisme.",
+    "examples": "Intrigues d'animes fantastiques ou productions pour adultes.",
+    "impact": "Ressort dramatique puissant exploitant la perte de contrôle psychologique et les dilemmes moraux intimes."
+  },
+  "Powerscaling": {
+    "definition": "L'acte de comparer la force, la vitesse, la durabilité et le niveau de puissance relatif de personnages de fiction.",
+    "origin": "Pratique théorique d'analyse de combat par les communautés de fans.",
+    "examples": "Débats comparatifs entre Goku (*Dragon Ball*) et Saitama (*One Punch Man*).",
+    "impact": "Structure l'analyse technique des affrontements et anime les forums de discussions de versus."
+  },
+  "Mid Diff": {
+    "definition": "Contraction de 'medium difficulty', désignant une victoire obtenue avec une difficulté moyenne pour le vainqueur.",
+    "origin": "Abréviation anglophone de versus.",
+    "examples": "Le combat de Luffy contre Arlong dans *One Piece*.",
+    "impact": "Permet de quantifier précisément le fossé de puissance relatif lors d'une simulation d'affrontement."
+  },
+  "Extreme Diff": {
+    "definition": "Victoire acquise avec une difficulté maximale, poussant le personnage vainqueur à ses extrêmes limites physiques ou mentales.",
+    "origin": "Terminologie de combat de fans.",
+    "examples": "Le combat de Luffy contre Rob Lucci à Enies Lobby.",
+    "impact": "Souligne un niveau de combat où la moindre erreur aurait mené à la défaite totale du protagoniste."
+  },
+  "Boundless": {
+    "definition": "Niveau de puissance transcendant toutes les dimensions temporelles et spatiales, infini, incommensurable et absolu.",
+    "origin": "Sommet de la classification du Tiering System des communautés.",
+    "examples": "Des entités cosmiques divines comme Kami Tenchi (*Tenchi Muyo!*) ou Featherine (*Umineko*).",
+    "impact": "Définit des êtres au-dessus des lois de la physique et des réalités dimensionnelles ordinaires."
+  },
+  "Outerversal": {
+    "definition": "Niveau désignant un personnage transcendant le concept même de l'espace tridimensionnel et des dimensions mathématiques infinies.",
+    "origin": "Théorie dimensionnelle du powerscaling de versus.",
+    "examples": "Des personnages divins de romans légers ou de visual novels complexes.",
+    "impact": "Permet de classer des entités existant en dehors du temps et de l'espace multiversel standard."
+  },
+  "Speedblitz": {
+    "definition": "Le fait de surpasser totalement la vitesse de réaction et de perception d'un adversaire pour l'attaquer avant qu'il ne puisse réagir.",
+    "origin": "Fusion de 'speed' (vitesse) et 'blitzkrieg' (guerre éclair).",
+    "examples": "Minato Namikaze terrassant des pelotons entiers de ninjas en une fraction de seconde dans *Naruto*.",
+    "impact": "Indicateur d'un écart de vitesse si grand que les autres attributs physiques deviennent obsolètes."
+  },
+  "Hax": {
+    "definition": "Capacités spéciales, magiques ou surnaturelles contournant ou annulant complètement la force brute physique.",
+    "origin": "Dérivé de 'hacks' (triche de jeu vidéo).",
+    "examples": "Le Death Note de Light Yagami, le 'Gojo Limitless' ou la manipulation de causalité du Behelit dans *Berserk*.",
+    "impact": "Permet à des personnages physiquement faibles de vaincre des géants ou des dieux grâce à des règles absolues."
+  },
+  "Feats": {
+    "definition": "Les exploits, démonstrations concrètes de puissance ou faits d'armes tangibles et mesurables démontrés par un personnage dans l'œuvre originale.",
+    "origin": "Signifie 'exploit' en anglais.",
+    "examples": "Saitama détruisant une météorite d'un seul coup de poing dans *One Punch Man*.",
+    "impact": "Sert de preuve indiscutable et empirique pour contrecarrer les déclarations hyperboliques non prouvées."
+  },
+  "Scaling": {
+    "definition": "L'attribution d'un niveau de puissance par transitivité logique à travers des affrontements indirects.",
+    "origin": "Méthode d'évaluation comparative de versus.",
+    "examples": "Si A bat B et que B bat C, alors A est programmé supérieur à C dans les conditions de versus standards.",
+    "impact": "Permet de mesurer le niveau de personnages n'ayant jamais combattu directement entre eux."
+  },
+  "Low Diff": {
+    "definition": "Victoire remportée avec une faible difficulté, le vainqueur dominant largement son adversaire sans subir de blessures graves.",
+    "origin": "Contraction de 'low difficulty'.",
+    "examples": "Le combat de Shanks terrassant Eustass Kid dans *One Piece*.",
+    "impact": "Indique un déséquilibre de puissance significatif tout en nécessitant une brève phase de combat."
+  },
+  "No Diff": {
+    "definition": "Victoire immédiate, totale et sans aucun effort physique ou mental de la part du vainqueur, illustrant un fossé de puissance absolu.",
+    "origin": "Contraction de 'no difficulty'.",
+    "examples": "Aizen terrassant les capitaines du Gotei 13 dans *Bleach*.",
+    "impact": "Marque le sommet de l'intimidation et de l'affirmation de la supériorité martiale d'un personnage."
+  },
+  "High Diff": {
+    "definition": "Victoire remportée après un combat acharné et éprouvant, causant d'importantes blessures et l'épuisement du vainqueur.",
+    "origin": "Contraction de 'high difficulty'.",
+    "examples": "Naruto battant Pain au terme de la destruction de Konoha.",
+    "impact": "Montre un combat équilibré où la victoire s'est jouée sur des détails tactiques ou des réserves d'endurance."
+  },
+  "AP": {
+    "definition": "Attack Potency (Puissance d'Attaque) : l'énergie destructrice concentrée délivrée par une attaque, distincte de sa zone de destruction environnementale.",
+    "origin": "Terminologie technique de versus.",
+    "examples": "Un personnage concentrant l'énergie d'une supernova dans la pointe de son épée pour transpercer son ennemi sans détruire la Terre.",
+    "impact": "Essentiel pour évaluer les personnages de fiction dont les auteurs restreignent la destruction de décors par commodité narrative."
+  },
+  "DC": {
+    "definition": "Destructive Capacity (Capacité de Destruction) : la zone d'effet physique ou environnementale globale détruite par une seule attaque.",
+    "origin": "Indice de destruction à grande échelle.",
+    "examples": "Freezer détruisant la planète Vegeta d'une seule boule d'énergie dans *Dragon Ball Z*.",
+    "impact": "Mesure visuelle immédiate de la puissance brute de destruction environnementale."
+  },
+  "Tiering System": {
+    "definition": "Le système de classification hiérarchique standardisé (du niveau humain au niveau dimensionnel infini) pour classifier la puissance des personnages.",
+    "origin": "Codification universelle par les wikis spécialisés (comme VS Battles Wiki).",
+    "examples": "Classer un personnage au 'Tier 2-C' (Multi-Universal) ou 'Tier 4-B' (Niveau Système Solaire).",
+    "impact": "Permet d'établir un référentiel commun pour comparer objectivement des œuvres aux physiques et cosmologies différentes."
+  },
+  "Multiversal": {
+    "definition": "Niveau désignant un personnage capable de créer, manipuler ou détruire plusieurs univers physiques ou lignes temporelles distinctes simultanément.",
+    "origin": "Cosmologie théorique appliquée au versus.",
+    "examples": "Zeno détruisant instantanément plusieurs univers entiers dans *Dragon Ball Super*.",
+    "impact": "Représente une échelle de puissance cosmique extrême, commune dans les récits de fantasy épique tardive."
+  },
+  "Universal": {
+    "definition": "Niveau caractérisant un personnage capable d'annihiler ou de générer l'intégralité de la matière d'un univers physique tridimensionnel unique.",
+    "origin": "Échelle cosmologique standard de versus.",
+    "examples": "Beerus menaçant de détruire l'univers lors de son choc d'énergie avec Goku Super Saiyan God.",
+    "impact": "Seuil classique séparant les puissances stellaires des entités de niveau divin suprême."
+  },
+  "Speed Tier": {
+    "definition": "La classification standardisée de la vitesse de déplacement et de réaction d'un personnage (de sub-sonique à infinie).",
+    "origin": "Catégorisation technique de vitesse de versus.",
+    "examples": "Classer Kizaru comme ayant une vitesse de combat et de déplacement de niveau luminique (vitesse de la lumière).",
+    "impact": "Paramètre le plus critique du versus, car un personnage plus rapide peut esquiver ou attaquer indéfiniment un ennemi lent."
+  },
+  "BFR": {
+    "definition": "Battlefield Removal (Retrait du Champ de Bataille) : l'acte d'expulser un adversaire de la zone de combat pour remporter la victoire.",
+    "origin": "Acronyme stratégique de combat de fiction.",
+    "examples": "Obito Uchiha aspirant un ennemi dans sa dimension Kamui dans *Naruto*, ou Kaguya téléportant ses ennemis dans une mer d'acide.",
+    "impact": "Permet de clore un versus sans forcer une supériorité physique directe, en exploitant l'incapacité de retour de l'adversaire."
+  },
+  "Outlier": {
+    "definition": "Un exploit isolé et disproportionné par rapport au niveau de puissance habituel démontré par un personnage, généralement rejeté.",
+    "origin": "Concept statistique appliqué aux analyses narratives.",
+    "examples": "Chopper de *One Piece* esquivant des attaques de vitesse luminique au tout début de l'œuvre alors qu'il est de niveau humain standard.",
+    "impact": "Élimine les incohérences d'écriture des auteurs pour garder une cohérence globale lors des comparaisons de versus."
+  },
+  "Durability": {
+    "definition": "La capacité d'encaissement et de résistance globale d'un personnage face à des attaques physiques, énergétiques, magiques ou de hax.",
+    "origin": "Indice de robustesse de versus.",
+    "examples": "Kaido retombant d'une île céleste sans subir la moindre égratignure dans *One Piece*.",
+    "impact": "Détermine si un personnage peut survivre aux attaques d'une puissance équivalente à sa propre puissance offensive."
+  },
+  "Crossplay": {
+    "definition": "Pratique du cosplay consistant à incarner et à se costumer en un personnage de fiction d'un genre biologique opposé au sien.",
+    "origin": "Fusion de 'cross-dressing' (travestissement) et 'cosplay'.",
+    "examples": "Un homme costumé en Hatsune Miku ou une femme incarnant Levi Ackerman.",
+    "impact": "Exprime une liberté artistique totale et brouille de manière créative les codes de genre au sein des conventions."
+  },
+  "Worbla": {
+    "definition": "Matériau thermoplastique modelable à chaud sous forme de plaques, hautement prisé pour créer des armures de cosplay rigides.",
+    "origin": "Marque de plastique thermique allemande devenue générique dans le cosplay.",
+    "examples": "Fabrication de l'armure d'Erza Scarlet (*Fairy Tail*) ou de Saber (*Fate*).",
+    "impact": "A révolutionné l'artisanat du cosplay en permettant de sculpter des détails fins et solides sans moule complexe."
+  },
+  "EVA Foam": {
+    "definition": "Mousse flexible, légère et thermoformable d'éthylène-acétate de vinyle utilisée pour sculpter des armes, armures et accessoires.",
+    "origin": "Matériau industriel adapté par la communauté cosplay mondiale.",
+    "examples": "Création d'armes géantes comme la Buster Sword de Cloud ou des pièces de méchas d'Evangelion.",
+    "impact": "Alternative économique et ultra-légère au Worbla, indispensable pour les cosplays massifs ou aériens."
+  },
+  "Vtuber": {
+    "definition": "Youtubeur ou streamer virtuel qui anime un avatar 2D ou 3D en temps réel grâce à un logiciel de capture de mouvements et d'expressions faciales.",
+    "origin": "Contraction de 'Virtual YouTuber', initiée par la pionnière Kizuna AI en 2016.",
+    "examples": "Kizuna AI, Gawr Gura, Mori Calliope, Kuzuha.",
+    "impact": "A redéfini le streaming moderne sur YouTube et Twitch en fusionnant divertissement en ligne et esthétique animée."
+  },
+  "Hololive": {
+    "definition": "La plus grande agence de Youtubeurs Virtuels (Vtubers) au monde, comptant des dizaines de talents internationaux.",
+    "origin": "Créée par Cover Corporation sous la direction de Motoaki Tanigo (surnommé Yagoo).",
+    "examples": "Gawr Gura, Houshou Marine, Usada Pekora.",
+    "impact": "Pilier culturel majeur du streaming mondial, organisant des concerts virtuels géants en 3D et des événements musicaux."
+  },
+  "Nijisanji": {
+    "definition": "Agence majeure de Vtubers réputée pour ses streams décontractés, son accent sur l'humour en direct et ses collaborations massives.",
+    "origin": "Créée par la société japonaise Anycolor Inc.",
+    "examples": "Kuzuha, Kanae, Hyakumantenbara Salome.",
+    "impact": "Pionnière de l'utilisation d'avatars 2D Live2D fluides sur smartphone et leader sur le marché des Vtubers masculins au Japon."
+  },
+  "Clipper": {
+    "definition": "Un fan ou créateur qui extrait, monte, édite et traduit de courts moments marquants issus de lives fleuves de Vtubers.",
+    "origin": "Dérivé de 'clip' (courte vidéo) de streams de Vtubers.",
+    "examples": "Les chaînes YouTube de clips traduits en français d'Usada Pekora ou Gawr Gura.",
+    "impact": "Vecteur promotionnel absolu permettant aux Vtubers d'étendre leur audience à l'international grâce aux traductions bénévoles."
+  },
+  "Debut Stream": {
+    "definition": "La toute première diffusion en direct d'un Vtuber marquant sa présentation officielle et la révélation publique de son avatar.",
+    "origin": "Tradition et événement marketing majeur dans les agences de Vtubers.",
+    "examples": "Les débuts de générations complètes chez Hololive (ex: HoloMyth ou HoloCouncil).",
+    "impact": "Événement à forte audience générant une tension et une ferveur communautaire immenses sur les réseaux sociaux."
+  },
+  "Kami-oshi": {
+    "definition": "Terme désignant l'idol ou le Vtuber préféré absolu d'un fan au sein d'une agence ou d'un groupe, exigeant son soutien inconditionnel.",
+    "origin": "Fusion de 'kami' (dieu) et 'oshi' (soutenir/recommander).",
+    "examples": "Déclarer un talent d'Hololive comme son unique 'Kami-oshi'.",
+    "impact": "Illustre le niveau suprême d'engagement affectif et financier d'un fan envers son créateur favori."
+  },
+  "Cyalume": {
+    "definition": "Bâton lumineux chimique ou électronique agité de manière synchronisée par les fans lors des concerts d'idols et d'anime songs.",
+    "origin": "Nom commercial des premiers bâtons de lumière chimique devenu générique au Japon.",
+    "examples": "Les océans de lumières de couleurs changeantes lors des concerts virtuels de Hatsune Miku.",
+    "impact": "Symbole de la communion fusionnelle entre le public et l'artiste (idols, seiyuu, chanteurs) lors des concerts."
+  },
+  "Vocalo-P": {
+    "definition": "Producteur ou compositeur indépendant écrivant des chansons originales à l'aide de synthétiseurs vocaux Vocaloid.",
+    "origin": "Contraction de 'Vocaloid Producer'.",
+    "examples": "Mitchie M, Deco*27, ryo (Supercell), Kenshi Yonezu (anciennement Hachi).",
+    "impact": "A démocratisé la création musicale autoproduite sur Nico Nico Douga, lançant la carrière de grands artistes de la J-Pop."
+  },
+  "Weekly Shōnen Jump": {
+    "definition": "Le magazine hebdomadaire de prépublication de mangas Shonen le plus célèbre et le plus vendu de l'histoire du Japon, édité par la Shūeisha depuis 1968.",
+    "origin": "Lancé le 2 juillet 1968 par Shūeisha pour concurrencer le Weekly Shōnen Magazine de Kōdansha.",
+    "examples": "*One Piece*, *Dragon Ball*, *Naruto*, *Bleach*, *Hunter x Hunter*, *Demon Slayer*, *Jujutsu Kaisen*.",
+    "impact": "A défini les codes universels du genre 'Nekketsu' à travers sa devise éditoriale historique : Amitié, Effort, Victoire."
+  },
+  "Weekly Shōnen Magazine": {
+    "definition": "Magazine hebdomadaire de prépublication de mangas Shonen publié par la Kōdansha depuis 1959, principal rival historique du Weekly Shōnen Jump.",
+    "origin": "Lancé le 17 mars 1959 par Kōdansha au même moment que le Weekly Shōnen Sunday.",
+    "examples": "*Fairy Tail*, *Hajime no Ippo*, *Seven Deadly Sins*, *Tokyo Revengers*, *GTO (Great Teacher Onizuka)*.",
+    "impact": "Propose historiquement des récits Shonen légèrement plus matures, réalistes ou axés sur le sport et le drame social."
+  },
+  "Weekly Shōnen Sunday": {
+    "definition": "Magazine hebdomadaire de prépublication de mangas Shonen historique publié par la Shōgakukan depuis 1959.",
+    "origin": "Lancé le 17 mars 1959 par Shōgakukan pour célébrer l'avènement de l'ère du manga de divertissement hebdomadaire.",
+    "examples": "*Détective Conan*, *Inuyasha*, *Frieren*, *Magi: The Labyrinth of Magic*, *Ranma 1/2*.",
+    "impact": "Reconnu pour ses récits mettant l'accent sur les comédies romantiques pures, la tranche de vie et les aventures poétiques."
+  },
+  "Bessatsu Shōnen Magazine": {
+    "definition": "Magazine mensuel de prépublication de mangas Shonen publié par la Kōdansha, célèbre pour ses intrigues sombres et fantastiques.",
+    "origin": "Lancé en septembre 2009 en tant que spin-off mensuel du Weekly Shōnen Magazine.",
+    "examples": "*L'Attaque des Titans* (*Shingeki no Kyojin*), *The Heroic Legend of Arslan*, *Sankarea*.",
+    "impact": "Héberge des œuvres shonen hors-normes et psychologiques, souvent trop sombres ou complexes pour le rythme hebdomadaire."
+  },
+  "Weekly Young Jump": {
+    "definition": "Magazine hebdomadaire de prépublication de type Seinen (jeunes adultes) publié par la Shūeisha depuis 1979.",
+    "origin": "Créé en 1979 par Shūeisha pour conserver son lectorat vieillissant issu du Weekly Shōnen Jump.",
+    "examples": "*Kingdom*, *Tokyo Ghoul*, *Oshi no Ko*, *Kaguya-sama: Love is War*, *Golden Kamui*, *Elfen Lied*.",
+    "impact": "Mêle habilement récits historiques d'envergure, thrillers psychologiques violents et comédies romantiques sophistiquées."
+  },
+  "Young Animal": {
+    "definition": "Magazine bimensuel de prépublication de mangas Seinen publié par l'éditeur Hakusensha depuis 1992.",
+    "origin": "Lancé en 1992 en remplacement du magazine *Animal House* créé en 1989.",
+    "examples": "*Berserk*, *March Comes in Like a Lion* (*3-gatsu no Lion*), *Detroit Metal City*.",
+    "impact": "Célèbre pour avoir hébergé le monument de la dark fantasy *Berserk*, affirmant une liberté artistique et graphique totale."
+  },
+  "Weekly Young Magazine": {
+    "definition": "Magazine hebdomadaire de prépublication de mangas Seinen édité par Kōdansha depuis 1980.",
+    "origin": "Lancé en 1980 par Kōdansha pour s'imposer sur le marché grandissant de la bande dessinée pour adultes.",
+    "examples": "*Akira*, *Ghost in the Shell*, *Initial D*, *Prison School*, *Chobits*.",
+    "impact": "Pionnier des récits cyberpunk, de science-fiction dystopique et de thrillers urbains réalistes."
+  },
+  "Monthly Afternoon": {
+    "definition": "Magazine mensuel de prépublication de mangas Seinen édité par Kōdansha, renommé pour sa liberté de ton et son prestige artistique.",
+    "origin": "Lancé en 1986 par Kōdansha, il propose un rythme mensuel permettant des planches d'une richesse graphique extrême.",
+    "examples": "*Vinland Saga*, *L'Ère des Cristaux* (*Houseki no Kuni*), *Parasyte*, *Blue Period*, *Mushishi*.",
+    "impact": "Considéré comme l'élite littéraire et artistique du Seinen, récompensant des récits lents, philosophiques et novateurs."
+  },
+  "Big Comic Spirits": {
+    "definition": "Magazine hebdomadaire de prépublication de mangas Seinen publié par Shōgakukan depuis 1980.",
+    "origin": "Créé en 1980 par Shōgakukan pour cibler les étudiants et jeunes professionnels masculins.",
+    "examples": "*20th Century Boys*, *Maison Ikkoku*, *Bonne nuit Punpun* (*Oyasumi Punpun*), *I Am a Hero*.",
+    "impact": "Reconnu pour ses drames sociaux contemporains poignants, ses satires politiques et ses thrillers psychologiques majeurs."
+  },
+  "Ultra Jump": {
+    "definition": "Magazine mensuel de prépublication de mangas Seinen publié par Shūeisha, caractérisé par sa créativité graphique et pop.",
+    "origin": "Créé en 1999 par Shūeisha, devenant un magazine mensuel autonome réputé.",
+    "examples": "*JoJo's Bizarre Adventure* (Partie 7: *Steel Ball Run*, Partie 8: *Jojolion*, Partie 9: *The JOJOLands*).",
+    "impact": "Offre un écrin haut de gamme aux designs extravagants et aux structures narratives complexes d'auteurs phares."
+  },
+  "Monthly Shōnen Gangan": {
+    "definition": "Magazine mensuel de prépublication de mangas Shonen édité par Square Enix depuis 1991.",
+    "origin": "Lancé par Enix (avant la fusion avec Square) en 1991 pour pénétrer le marché du manga.",
+    "examples": "*Fullmetal Alchemist*, *Soul Eater*, *Blast of Tempest*, *Guilty Crown*.",
+    "impact": "Se distingue par un style graphique hérité de l'esthétique des jeux de rôle (JRPG) et de la fantasy d'action stylisée."
+  },
+  "Comic Ran": {
+    "definition": "Magazine mensuel de mangas historiques publié par l'éditeur Leed, axé sur les récits de samouraïs et le genre Gekiga.",
+    "origin": "Spécialisé dans les récits 'Jidaigeki' (drame d'époque) et le réalisme historique.",
+    "examples": "Mangas de sabre traditionnels, adaptations de chroniques féodales.",
+    "impact": "Préserve l'art graphique traditionnel et exigeant du Gekiga historique pour un lectorat de passionnés d'histoire féodale."
+  },
+  "Sho-Comi": {
+    "definition": "Magazine bimensuel de prépublication de mangas Shōjo publié par Shōgakukan depuis 1968, axé sur la romance lycéenne moderne.",
+    "origin": "Lancé en 1968 sous le nom de *Shōjo Comic* avant de prendre son diminutif officiel.",
+    "examples": "*Fushigi Yugi*, *Tsubaki-chou Lonely Planet* (variante), récits de romance scolaire contemporaine.",
+    "impact": "Modélise les codes esthétiques et les fantasmes amoureux adolescents pour des générations de jeunes lectrices japonaises."
+  },
+  "Monthly Comic Ryū": {
+    "definition": "Magazine mensuel Seinen édité par Tokuma Shoten, réputé pour ses récits de fantasy originaux et de sous-cultures.",
+    "origin": "Relancé en 2006 par Tokuma Shoten pour explorer des genres hybrides de science-fiction et de comédie fantastique.",
+    "examples": "*Monster Musume*, *Alice & Zouroku*, *Legend of the Galactic Heroes* (récent).",
+    "impact": "Héberge des récits de niche uniques explorant la fantasy hybride et les relations d'espèces fantastiques."
+  },
+  "Ribon": {
+    "definition": "Magazine mensuel de mangas Shōjo historique publié par Shūeisha depuis 1955, ciblant les jeunes filles du primaire et collège.",
+    "origin": "Lancé le 3 août 1955 pour offrir des histoires douces, éducatives et romantiques aux jeunes filles.",
+    "examples": "*Chibi Maruko-chan*, *Marmalade Boy*, *Gals!*, *Ultra Maniac*.",
+    "impact": "L'un des trois piliers historiques du Shōjo manga, ayant initié les tropes de romances d'enfance les plus purs."
+  },
+  "Prix Shōgakukan": {
+    "definition": "L'un des prix de manga les plus anciens, les plus respectés et les plus prestigieux du Japon, décerné par Shōgakukan depuis 1955.",
+    "origin": "Créé en 1955 pour célébrer le centenaire de la fondation de Shōgakukan et encourager la qualité artistique des bandes dessinées.",
+    "examples": "Lauréats célèbres : *Frieren*, *Komi cherche ses mots*, *Inuyasha*, *Monster*, *Slam Dunk*.",
+    "impact": "Offre une reconnaissance institutionnelle suprême et propulse les ventes nationales des mangas primés."
+  },
+  "Prix du manga Kōdansha": {
+    "definition": "Prix annuel prestigieux parrainé par l'éditeur Kōdansha, récompensant les meilleures œuvres publiées l'année précédente.",
+    "origin": "Fondé en 1977 pour célébrer le talent artistique des dessinateurs et scénaristes dans différentes catégories démographiques.",
+    "examples": "Lauréats : *Blue Lock*, *Oshi no Ko*, *Tokyo Revengers*, *L'Attaque des Titans*, *Vinland Saga*.",
+    "impact": "Récompense l'excellence narrative et le dynamisme éditorial à travers trois prix phares (Shonen, Shōjo, Général)."
+  },
+  "Prix culturel Osamu Tezuka": {
+    "definition": "Prix culturel suprême du manga au Japon parrainé par le journal Asahi Shimbun en hommage au 'Dieu du Manga' Osamu Tezuka.",
+    "origin": "Créé en 1997 à Tokyo par le quotidien de référence Asahi Shimbun pour distinguer des mangas d'une immense valeur littéraire.",
+    "examples": "Lauréats : *Pluto*, *Monster*, *March Comes in Like a Lion*, *Golden Kamui*, *Land of the Lustrous*.",
+    "impact": "Considéré comme le 'Goncourt du Manga', il salue l'innovation graphique, l'écriture complexe et l'apport philosophique."
+  },
+  "Manga Taishō": {
+    "definition": "Prix annuel japonais fondé en 2008 par des comités de libraires pour récompenser les œuvres récentes de moins de 8 volumes.",
+    "origin": "Créé en 2008 pour promouvoir les mangas émergents et conseiller directement les lecteurs en magasin.",
+    "examples": "Lauréats historiques : *Frieren*, *Golden Kamui*, *Blue Period*, *Chihayafuru*, *Beastars*.",
+    "impact": "Le prix le plus influent pour lancer la popularité d'une série émergente et déclencher de futures adaptations animées."
+  },
+  "Oscar du meilleur film d'animation": {
+    "definition": "La plus haute distinction cinématographique mondiale attribuée par l'Académie des Oscars aux États-Unis, récompensant les longs-métrages d'animation.",
+    "origin": "Catégorie créée en 2001 aux Oscars pour honorer spécifiquement l'art de l'animation à long-métrage.",
+    "examples": "Seul animé japonais lauréat : *Le Voyage de Chihiro* de Hayao Miyazaki en 2003 (nommés célèbres : *Le Conte de la princesse Kaguya*, *Le Vent se lève*).",
+    "impact": "Consacre le cinéma d'animation japonais comme un égal artistique majeur face aux géants hollywoodiens (Disney/Pixar)."
+  },
+  "Crunchyroll Anime Awards": {
+    "definition": "Cérémonie annuelle mondiale de récompenses fondée par la plateforme de streaming Crunchyroll pour célébrer les meilleures séries animées.",
+    "origin": "Lancé en 2017 avec un système de vote mixte mêlant un jury international d'experts et le vote du public mondial en ligne.",
+    "examples": "Lauréats de l'Anime de l'Année : *Jujutsu Kaisen*, *Demon Slayer*, *Cyberpunk: Edgerunners*, *L'Attaque des Titans*.",
+    "impact": "Le plus grand indicateur de la popularité internationale des productions de japanimation auprès du public occidental moderne."
+  },
+  "Tokyo Anime Award Festival": {
+    "definition": "TAAF - Festival et cérémonie annuelle prestigieuse de l'industrie récompensant l'excellence technique et artistique des animés à Tokyo.",
+    "origin": "Issu de la section animation de la foire Tokyo International Anime Fair créée en 2002, devenu indépendant en 2014.",
+    "examples": "Lauréats de l'Anime de l'Année : *Spy x Family*, *Oshi no Ko*, *Demon Slayer*, *Keep Your Hands Off Eizouken!*.",
+    "impact": "Représente la reconnaissance suprême des professionnels et créateurs de l'industrie de l'animation japonaise à Tokyo."
+  },
+  "Japan Media Arts Festival": {
+    "definition": "Prix national prestigieux décerné par l'Agence pour les Affaires culturelles du gouvernement japonais pour honorer les chefs-d'œuvre artistiques.",
+    "origin": "Établi en 1997 à Tokyo pour promouvoir et encourager l'innovation dans les domaines artistiques, médiatiques et technologiques.",
+    "examples": "Lauréats du Grand Prix Manga : *Monster*, *Vagabond*, *L'Ère des Cristaux*, *Les Enfants de la mer*.",
+    "impact": "Le label d'excellence étatique ultime au Japon, célébrant la valeur patrimoniale et culturelle d'une œuvre."
+  },
+  "Prix Harvey": {
+    "definition": "Prestigieux prix de bande dessinée américain récompensant l'excellence artistique, doté d'une catégorie dédiée au meilleur manga depuis 2018.",
+    "origin": "Créé en 1988 aux États-Unis en hommage au légendaire dessinateur et scénariste Harvey Kurtzman.",
+    "examples": "Lauréats du Meilleur Manga : *Chainsaw Man*, *L'Attaque des Titans*, *My Hero Academia*, *Witch Hat Atelier*.",
+    "impact": "Marque la reconnaissance critique nord-américaine de la supériorité scénaristique et formelle des mangas japonais récents."
+  },
+  "Prix Eisner": {
+    "definition": "Les Eisner Awards sont considérés comme les 'Oscars' de la bande dessinée américaine, couronnant régulièrement les maîtres du manga.",
+    "origin": "Créés en 1988 aux États-Unis en mémoire du dessinateur pionnier Will Eisner.",
+    "examples": "Mangakas intronisés ou récompensés : Junji Ito, Naoki Urasawa, Shigeru Mizuki, Rumiko Takahashi.",
+    "impact": "Consacre définitivement un auteur de manga dans le panthéon mondial du neuvième art et de l'illustration graphique."
+  },
+  "Festival d'Angoulême": {
+    "definition": "Le Festival international de la bande dessinée d'Angoulême est le plus grand événement de BD d'Europe, récompensant des mangas d'exception.",
+    "origin": "Fondé en 1974 en France, récompensant des œuvres internationales de toutes origines géographiques.",
+    "examples": "Lauréats et hommages majeurs : Jiro Taniguchi (*Quartier Lointain*), Katsuhiro Otomo, Ryoichi Ikegami, Shigeru Mizuki.",
+    "impact": "Assure la consécration intellectuelle critique européenne du manga en tant qu'œuvre littéraire et picturale d'avant-garde."
+  },
+  "Prix Seiun": {
+    "definition": "Le plus ancien et le plus important prix de science-fiction au Japon, récompensant les meilleures œuvres spéculatives de l'année précédente.",
+    "origin": "Créé en 1970 sur le modèle du Prix Hugo américain lors de la convention nationale de science-fiction du Japon.",
+    "examples": "Lauréats : *Neon Genesis Evangelion*, *Nausicaä de la Vallée du Vent*, *Planetes*, *Astra Lost in Space*.",
+    "impact": "La plus haute distinction pour les récits d'anticipation, de hard science-fiction et de conquête spatiale en manga et animé."
+  },
+  "Japan Cartoonists Association Award": {
+    "definition": "Prix national d'excellence parrainé par l'Association des caricaturistes du Japon pour récompenser les contributions culturelles exceptionnelles.",
+    "origin": "Créé en 1972 pour honorer le talent des artistes et préserver le patrimoine de l'illustration graphique nationale.",
+    "examples": "Grands Prix : *One Piece*, *Golgo 13*, *Asadora!* de Naoki Urasawa.",
+    "impact": "Récompense la longévité artistique, la rigueur technique et le rôle sociétal majeur d'un créateur au Japon."
+  },
+  "Shogakukan Light Novel Award": {
+    "definition": "Concours de manuscrits et prix annuel de l'éditeur Shōgakukan pour découvrir de nouveaux talents d'écriture dans le Light Novel.",
+    "origin": "Lancé en 2006 pour alimenter les collections de romans légers de l'éditeur (Gagaga Bunko).",
+    "examples": "*Oregairu* (My Teen Romantic Comedy SNAFU), *Shimoneta*.",
+    "impact": "Le canal le plus compétitif du Japon pour faire publier son premier roman léger et obtenir une future adaptation animée."
+  },
+  "Tezuka Award & Akatsuka Award": {
+    "definition": "Concours de mangas semestriels légendaires organisés par le Weekly Shōnen Jump pour lancer les futurs génies du Shonen et de l'humour.",
+    "origin": "Créés en 1971 par Shūeisha, parrainés par Osamu Tezuka (action) et Fujio Akatsuka (humour gag).",
+    "examples": "Lauréats ou mentionnés célèbres : Akira Toriyama, Eiichiro Oda, Masashi Kishimoto, Yoshihiro Togashi.",
+    "impact": "Le rite de passage ultime pour devenir dessinateur professionnel sous contrat avec l'écurie prestigieuse du Shōnen Jump."
+  },
+  "LiSA": {
+    "definition": "Chanteuse pop-rock japonaise surnommée la 'Reine des Anisongs', réputée pour ses performances vocales puissantes et énergiques.",
+    "origin": "Débute sa carrière solo en 2011 chez Aniplex après avoir chanté pour le groupe fictif Girls Dead Monster dans l'animé *Angel Beats!*.",
+    "examples": "*Gurenge* et *Homura* (*Demon Slayer*), *Crossing Field* (*Sword Art Online*), *Oath Sign* (*Fate/Zero*).",
+    "impact": "A popularisé les openings de rock énergique moderne, décrochant des records historiques de ventes et de streams mondiaux."
+  },
+  "Aimer": {
+    "definition": "Chanteuse japonaise dotée d'une voix suave, rauque et mélancolique unique, très prisée pour les ballades dramatiques et les génériques épiques.",
+    "origin": "Adopte son nom de scène en référence au verbe français 'aimer' après avoir temporairement perdu sa voix à l'adolescence.",
+    "examples": "*Zankyou Sanka* (*Demon Slayer*), *Brave Shine* (*Fate/stay night: UBW*), *Last Stardust*, *Spark-Again* (*Fire Force*).",
+    "impact": "Crée une atmosphère mystérieuse et émotionnelle intense, indispensable aux moments forts et climax des grandes séries d'action."
+  },
+  "YOASOBI": {
+    "definition": "Duo de J-Pop composé du producteur musical Ayase (faisant ses débuts sur Vocaloid) et de la chanteuse Ikura, célèbre pour ses chansons inspirées de nouvelles littéraires.",
+    "origin": "Formé en 2019 par la société Sony Music pour adapter des récits écrits en morceaux de musique pop rythmés.",
+    "examples": "*Idol* (*Oshi no Ko*), *Yūsha* (*Frieren*), *Kaibutsu* (*Beastars*), *Gunjō*.",
+    "impact": "A propulsé l'anisong au sommet des classements Billboard mondiaux grâce au titre ultra-populaire *Idol*."
+  },
+  "Asian Kung-Fu Generation": {
+    "definition": "Groupe de rock alternatif japonais légendaire (surnommé AKFG) ayant marqué toute la génération des animés des années 2000.",
+    "origin": "Formé en 1996 à Yokohama, caractérisé par des riffs de guitare intenses et des textes mélancoliques engagés.",
+    "examples": "*Haruka Kanata* (*Naruto*), *Rewrite* (*Fullmetal Alchemist*), *After Dark* (*Bleach*), *Re:Re:* (*Erased*).",
+    "impact": "Icône incontournable du rock d'animé, apportant une crédibilité et une énergie de rock indépendant aux shonens cultes."
+  },
+  "RADWIMPS": {
+    "definition": "Groupe de rock alternatif japonais acclamé pour ses compositions orchestrales et mélodiques majestueuses.",
+    "origin": "Formé en 2001, devenu mondialement célèbre pour sa collaboration fusionnelle exclusive avec le réalisateur Makoto Shinkai.",
+    "examples": "*Zenzenzense* et *Sparkle* (*Your Name.*), *Grand Escape* (*Les Enfants du Temps*), *Suzume* (*Suzume*).",
+    "impact": "A redéfini le rôle de la bande-son dans le cinéma d'animation japonais en composant des morceaux porteurs de l'émotion visuelle."
+  },
+  "Kenshi Yonezu": {
+    "definition": "Auteur-compositeur-interprète de J-Pop de génie (ancien producteur de Vocaloid sous le pseudonyme Hachi), figure artistique majeure de sa génération.",
+    "origin": "Commence à publier ses créations originales autoproduites sur Nico Nico Douga avant d'exploser dans les charts sous son vrai nom.",
+    "examples": "*KICK BACK* (*Chainsaw Man*), *Peace Sign* (*My Hero Academia*), *Uchiage Hanabi* (*Fireworks*), *Chikyūgi* (*Le Garçon et le Héron*).",
+    "impact": "Insuffle une créativité excentrique et une complexité rythmique de premier ordre aux openings de shonens majeurs."
+  },
+  "TK from Ling Tosite Sigure": {
+    "definition": "Chanteur et guitariste du groupe de rock progressif Ling Tosite Sigure, célèbre pour sa voix suraiguë, ses cris intenses et son jeu de guitare complexe.",
+    "origin": "Projet solo initié par Toru Kitajima en marge de son groupe de rock agressif et expérimental.",
+    "examples": "*unravel* (*Tokyo Ghoul*), *Katharsis* (*Tokyo Ghoul:re*), *Signal* (*91 Days*).",
+    "impact": "Interprète de l'opening *unravel*, devenu l'un des hymnes les plus célèbres, parodiés et vibrants de la culture otaku mondiale."
+  },
+  "FLOW": {
+    "definition": "Groupe de rock alternatif japonais réputé pour ses génériques d'action survoltables et ses refrains fédérateurs de combats d'animes.",
+    "origin": "Formé en 1998 par deux frères, mariant rock énergique, punk et touches de hip-hop mélodique.",
+    "examples": "*GO!!!* et *Sign* (*Naruto*), *Colors* et *World End* (*Code Geass*), *Hero* (*Dragon Ball Z Battle of Gods*).",
+    "impact": "Le groupe le plus représentatif de la ferveur shonen des années 2000, réchauffant l'ambiance de toutes les conventions occidentales."
+  },
+  "Linked Horizon": {
+    "definition": "Projet musical symphonique dirigé par le compositeur Revo, réputé pour ses orchestrations militaires, épiques et grandioses.",
+    "origin": "Extension du groupe originel Sound Horizon créée spécifiquement pour collaborer avec d'autres médias de fantasy.",
+    "examples": "*Guren no Yumiya*, *Jiyuu no Tsubasa* et *Shinzou wo Sasageyo!* (*L'Attaque des Titans*).",
+    "impact": "A composé les hymnes patriotiques cultes de *L'Attaque des Titans*, marquant l'identité sonore absolue de la série."
+  },
+  "Myth & Roid": {
+    "definition": "Projet de musique contemporaine alternant rock industriel, électro sombre et arrangements symphoniques épiques.",
+    "origin": "Fondé en 2015 par le producteur Tom-H@ck pour proposer une esthétique sonore sombre et avant-gardiste aux animés de fantasy.",
+    "examples": "*VORACITY* (*Overlord*), *STYX HELIX* et *Paradisus-Paradoxum* (*Re:Zero*), *JINGO JUNGLE* (*Saga of Tanya the Evil*).",
+    "impact": "Apporte une ambiance psychologique, torturée et fantastique intense aux œuvres de dark fantasy contemporaines."
+  },
+  "Supercell": {
+    "definition": "Groupe de musique et d'illustration indépendant dirigé par le compositeur ryo, pionnier de l'utilisation de Vocaloid et de chanteurs invités.",
+    "origin": "Formé en 2007 par ryo avec des artistes de la plateforme d'illustrations Pixiv pour diffuser leurs créations originales.",
+    "examples": "*Kimi no Shiranai Monogatari* (*Bakemonogatari*), *My Dearest* (*Guilty Crown*), *The Bravery* (*Magi*).",
+    "impact": "A révélé de superbes talents vocaux (comme Yanagi Nagi ou Chelly) et a structuré l'anisong pop-mélancolique moderne."
+  },
+  "Kana-Boon": {
+    "definition": "Groupe de rock alternatif japonais réputé pour ses rythmiques de batterie ultra-rapides et ses voix claires et énergiques.",
+    "origin": "Formé en 2008 à Osaka, ils connaissent un succès foudroyant grâce à leur collaboration avec la franchise Naruto.",
+    "examples": "*Silhouette* (*Naruto Shippuden*), *Baton Road* (*Boruto*), *Fighter* (*Gundam Iron-Blooded Orphans*).",
+    "impact": "Interprète de l'opening *Silhouette*, unanimement considéré comme l'un des openings de shonens les plus nostalgiques et parfaits."
+  },
+  "Eve": {
+    "definition": "Chanteur et compositeur de J-Pop indépendant issu de la communauté 'Utaite' (repreneurs de chansons sur Nico Nico Douga).",
+    "origin": "Débute comme repreneur de chansons de Vocaloid en 2009 avant de composer ses propres albums et d'écrire pour la télévision.",
+    "examples": "*Kaikai Kitan* (*Jujutsu Kaisen*), *Bokurano* (*My Hero Academia*), *Ao no Sumika* (variante).",
+    "impact": "Incorpore une esthétique visuelle mystique et une rythmique nerveuse idéale pour les animés d'exorcisme modernes."
+  },
+  "Official Hige Dandism": {
+    "definition": "Groupe de pop-rock japonais (surnommé Higedan) caractérisé par un piano dynamique et la voix de tête claire de son chanteur.",
+    "origin": "Formé en 2012, ils s'imposent comme l'un des groupes majeurs de la J-Pop contemporaine.",
+    "examples": "*Cry Baby* (*Tokyo Revengers*), *Mixed Nuts* (*Spy x Family*), *White Noise* (*Tokyo Revengers*).",
+    "impact": "Célèbre pour les variations de tons et de rythmes complexes de *Cry Baby*, collant à l'ambiance dramatique des sauts temporels."
+  },
+  "ClariS": {
+    "definition": "Duo de J-Pop féminin réputé pour ses voix douces en harmonie parfaite et ses visages longtemps restés secrets et représentés en illustrations.",
+    "origin": "Formé en 2009 par deux lycéennes (Clara et Alice) publiant des reprises sur Nico Nico Douga.",
+    "examples": "*Connect* (*Puella Magi Madoka Magica*), *Irony* (*Oreimo*), *Click* (*Nisekoi*), *ALIVE* (*Lycoris Recoil*).",
+    "impact": "Iconise les chansons douces et nostalgiques de shojos, d'animes de magie ou de tranches de vie lycéennes."
+  },
+  "Hiroshi Kamiya": {
+    "definition": "L'un des doubleurs les plus influents, primés et respectés du Japon, réputé pour son intonation pince-sans-rire et son charisme vocal.",
+    "origin": "Né en 1975 à Matsudo, il rejoint la prestigieuse agence Aoni Production pour prêter sa voix aux héros les plus complexes.",
+    "examples": "*Levi Ackerman* (*L'Attaque des Titans*), *Koyomi Araragi* (*Monogatari*), *Saiki Kusuo* (*Saiki Kusuo no Psi-nan*), *Izaya Orihara* (*Durarara!!*).",
+    "impact": "Donne un sang-froid assassin ou un débit de parole humoristique d'une fluidité légendaire aux personnages cultes."
+  },
+  "Yuki Kaji": {
+    "definition": "Doubleur vedette acclamé pour sa capacité exceptionnelle à retranscrire la rage, le désespoir, le cri viscéral et la détermination.",
+    "origin": "Né en 1985, il s'est imposé comme la voix incontournable des protagonistes shonen tourmentés des années 2010.",
+    "examples": "*Eren Jaeger* (*L'Attaque des Titans*), *Shoto Todoroki* (*My Hero Academia*), *Meliodas* (*Seven Deadly Sins*), *Issei Hyoudou* (*High School DxD*).",
+    "impact": "A incarné la folie vengeresse et l'évolution dramatique traumatisante d'Eren Jaeger de manière magistrale."
+  },
+  "Rie Takahashi": {
+    "definition": "Doubleuse et chanteuse de premier plan, célèbre pour son timbre espiègle, énergique et d'une grande douceur affective.",
+    "origin": "Né en 1994, elle intègre l'agence 81 Produce après avoir remporté un concours de jeunes talents.",
+    "examples": "*Megumin* (*Konosuba*), *Emilia* (*Re:Zero*), *Ai Hoshino* (*Oshi no Ko*), *Takagi* (*Karakai Jouzu no Takagi-san*).",
+    "impact": "Voix de personnages cultes de type magiciennes extravagantes (le sortilège 'Explosion!' de Megumin) ou d'idols légendaires."
+  },
+  "Mamoru Miyano": {
+    "definition": "Doubleur, chanteur et acteur de légende réputé pour ses intonations théâtrales extravagantes et ses rires machiavéliques mythiques.",
+    "origin": "Né en 1983, il commence le théâtre dès l'enfance avant de devenir la voix incontournable des génies calculateurs.",
+    "examples": "*Light Yagami* (*Death Note*), *Rintarou Okabe* (*Steins;Gate*), *Chrollo Lucilfer* (*Hunter x Hunter*), *Dazai Osamu* (*Bungou Stray Dogs*).",
+    "impact": "A immortalisé les rires démentiels et les monologues machiavéliques parfaits de Light Yagami et du savant fou Okabe."
+  },
+  "Kana Hanazawa": {
+    "definition": "L'une des doubleuses les plus prolifiques et adorées de l'histoire du Japon, célèbre pour sa voix aérienne d'une douceur angélique.",
+    "origin": "Né en 1989 à Tokyo, elle débute à la télévision dès l'enfance avant de s'imposer comme la voix féminine la plus demandée du secteur.",
+    "examples": "*Mayuri Shiina* (*Steins;Gate* - le fameux 'Tutturu~'), *Nadeko Sengoku* (*Monogatari*), *Mitsuri Kanroji* (*Demon Slayer*), *Kanade Tachibana* (*Angel Beats!*).",
+    "impact": "Son interprétation de Nadeko Sengoku et la chanson *Renai Circulation* ont marqué durablement la pop-culture otaku."
+  },
+  "Natsuki Hanae": {
+    "definition": "Doubleur contemporain de premier plan réputé pour sa voix claire, sensible, sincère et sa grande polyvalence dramatique.",
+    "origin": "Né en 1991, il commence sa carrière en 2011 et explose mondialement en prêtant sa voix aux héros les plus protecteurs et tragiques.",
+    "examples": "*Tanjiro Kamado* (*Demon Slayer*), *Ken Kaneki* (*Tokyo Ghoul*), *Kousei Arima* (*Your Lie in April*), *Falco Grice* (*L'Attaque des Titans*).",
+    "impact": "A incarné la bonté d'âme de Tanjiro et la descente aux enfers psychologique tragique de Ken Kaneki avec brio."
+  },
+  "Yoshitsugu Matsuoka": {
+    "definition": "Doubleur renommé pour ses rôles de héros de fantasy solitaires, de duellistes et sa capacité à monter dans des aigus intenses.",
+    "origin": "Né en 1986 à Hokkaido, il rejoint l'agence I'm Enterprise pour prêter sa voix aux protagonistes masculins d'action.",
+    "examples": "*Kirito* (*Sword Art Online*), *Inosuke Hashibira* (*Demon Slayer*), *Soma Yukihira* (*Food Wars!*), *Petelgeuse Romanee-Conti* (*Re:Zero*).",
+    "impact": "Voix iconique de Kirito (SAO) et du sauvage Inosuke, démontrant un grand écart vocal impressionnant (héros calme vs démon hurlant)."
+  },
+  "Saori Hayami": {
+    "definition": "Doubleuse d'exception saluée pour sa voix de velours d'une élégance et d'une douceur apaisantes, capable d'une intensité folle.",
+    "origin": "Né en 1991 à Tokyo, elle intègre l'industrie très jeune et se distingue par la noblesse et le sang-froid de ses personnages.",
+    "examples": "*Shinobu Kocho* (*Demon Slayer*), *Yor Forger* (*Spy x Family*), *Shoko Nishimiya* (*A Silent Voice*), *Yukino Yukinoshita* (*Oregairu*).",
+    "impact": "Incarne avec brio des personnages féminins forts, doux en apparence mais dotés d'un mystère ou d'une puissance martiale cachée."
+  },
+  "Jun Fukuyama": {
+    "definition": "Doubleur charismatique renommé pour ses intonations impériales, théâtrales et d'un grand charisme de commandant.",
+    "origin": "Né en 1978 à Hiroshima, il s'est imposé comme une voix majeure de domaine grâce à son ton majestueux.",
+    "examples": "*Lelouch vi Britannia* (*Code Geass*), *Koro-sensei* (*Assassination Classroom*), *King* (*Seven Deadly Sins*), *Kraft Lawrence* (*Spice and Wolf*).",
+    "impact": "A immortalisé l'autorité suprême et les ordres théâtraux absolus de Lelouch vi Britannia dans la révolte de la Zone 11."
+  },
+  "Megumi Ogata": {
+    "definition": "Doubleuse et chanteuse légendaire, célèbre pour son talent incomparable à prêter sa voix à des personnages masculins androgynes profonds.",
+    "origin": "Né en 1965 à Tokyo, elle a brisé les barrières de genre dans le doublage dans les années 90.",
+    "examples": "*Shinji Ikari* (*Neon Genesis Evangelion*), *Kurama* (*YuYu Hakusho*), *Yugi Muto* (*Yu-Gi-Oh!*), *Yuta Okkotsu* (*Jujutsu Kaisen 0*).",
+    "impact": "Doubleuse historique de Shinji Ikari, transcendant les doutes psychologiques et la détresse émotionnelle adolescente."
+  },
+  "Rie Kugimiya": {
+    "definition": "Doubleuse emblématique sacrée par les fans comme la 'Reine des Tsundere', réputée pour ses voix aiguës, colériques et adorables.",
+    "origin": "Né en 1979 à Kumamoto, son timbre vocal unique a défini tout l'âge d'or des comédies romantiques des années 2000.",
+    "examples": "*Taiga Aisaka* (*Toradora!*), *Alphonse Elric* (*Fullmetal Alchemist*), *Shana* (*Shakugan no Shana*), *Happy* (*Fairy Tail*).",
+    "impact": "A popularisé les archétypes tsundere à l'international, marquant les répliques colériques phares des héroïnes de poche."
+  },
+  "Kenjiro Tsuda": {
+    "definition": "Doubleur et réalisateur à la voix de basse rauque, ténébreuse, caressante et d'un magnétisme absolu inimitable.",
+    "origin": "Né en 1971 à Osaka, sa voix unique et reconnaissable dès les premières syllabes l'a imposé comme un doubleur culte.",
+    "examples": "*Kento Nanami* (*Jujutsu Kaisen*), *Overhaul* (*My Hero Academia*), *Seto Kaiba* (*Yu-Gi-Oh!*), *Tatsu* (*La Voie du tablier*).",
+    "impact": "Donne un calme stoïque et une mélancolie adulte marquante à ses personnages (comme le culte Kento Nanami)."
+  },
+  "Yuichi Nakamura": {
+    "definition": "Doubleur charismatique renommé pour ses rôles de mentors puissants, décontractés et d'une assurance insolente indéboulonnable.",
+    "origin": "Né en 1980 à Kagawa, sa voix grave et posée s'est imposée pour doubler les figures d'autorité protectrices.",
+    "examples": "*Satoru Gojo* (*Jujutsu Kaisen*), *Gray Fullbuster* (*Fairy Tail*), *Bruno Bucciarati* (*JoJo's Bizarre Adventure*), *Oreki Houtarou* (*Hyouka*).",
+    "impact": "Prête sa voix de mentor surpuissant à Satoru Gojo, renforçant son attitude insolente et détendue face aux fléaux."
+  },
+  "Takahiro Sakurai": {
+    "definition": "Doubleur renommé pour ses voix calmes, posées, élégantes et parfois ambiguës ou manipulatrices.",
+    "origin": "Né en 1974 à Aichi, il intègre l'industrie et prête sa voix à des personnages de premier plan d'une grande complexité morale.",
+    "examples": "*Suguru Geto* (*Jujutsu Kaisen*), *Reigen Arataka* (*Mob Psycho 100*), *Giyu Tomioka* (*Demon Slayer*), *Griffith* (*Berserk* - trilogie/récent).",
+    "impact": "Donne une douceur mélancolique ou un charisme inquiétant aux personnages à double facette (Geto, Griffith)."
+  },
+  "Maaya Sakamoto": {
+    "definition": "Doubleuse, chanteuse et actrice de comédie musicale de premier ordre, célèbre pour son élégance vocale et ses rôles d'une grande noblesse.",
+    "origin": "Né en 1980, elle débute très jeune dans l'animation sous la tutelle de la compositrice Yoko Kanno.",
+    "examples": "*Shinobu Oshino* (*Monogatari*), *Shiki Ryougi* (*The Garden of Sinners*), *Ciel Phantomhive* (*Black Butler*), *Motoko Kusanagi* (*Ghost in the Shell Arise*).",
+    "impact": "Interprète de la noble et mystérieuse Shiki Ryougi, insufflant une poésie et une force morale froides à ses personnages."
+  }
+}

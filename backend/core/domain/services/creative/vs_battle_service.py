@@ -347,81 +347,19 @@ class VsBattleService:
         if not tier_str:
             return 0
         t = tier_str.upper()
-        # Relaxed patterns: remove \b to match fragments in complex sentences
-        tier_patterns = [
-            (r"(?<!\d)0(?!\d)", 100),
-            (r"BOUNDLESS", 100),
-            (r"1-A", 95),
-            (r"OUTERVERSAL", 95),
-            (r"HIGH 1-B", 92),
-            (r"1-B", 90),
-            (r"HYPERVERSAL", 90),
-            (r"HIGH 1-C", 88),
-            (r"1-C", 85),
-            (r"COMPLEX MULTIVERSAL", 85),
-            (r"HIGH 2-A", 82),
-            (r"2-A", 80),
-            (r"MULTIVERSAL\+", 80),
-            (r"2-B", 75),
-            (r"MULTIVERSAL", 75),
-            (r"2-C", 70),
-            (r"LOW MULTIVERSAL", 70),
-            (r"HIGH 3-A", 68),
-            (r"3-A", 65),
-            (r"UNIVERSAL", 65),
-            (r"3-B", 60),
-            (r"MULTI-GALAXY", 60),
-            (r"3-C", 58),
-            (r"GALAXY", 58),
-            (r"4-A", 55),
-            (r"MULTI-SOLAR SYSTEM", 55),
-            (r"4-B", 53),
-            (r"COSMIC", 53),
-            (r"SOLAR SYSTEM", 53),
-            (r"4-C", 50),
-            (r"STAR", 50),
-            (r"5-A", 48),
-            (r"LARGE PLANET", 48),
-            (r"5-B", 46),
-            (r"PLANET", 46),
-            (r"LOW 5-B", 45),
-            (r"5-C", 44),
-            (r"MOON", 44),
-            (r"6-A", 42),
-            (r"LARGE CONTINENT", 42),
-            (r"6-B", 40),
-            (r"CONTINENT", 40),
-            (r"HIGH 6-C", 39),
-            (r"6-C", 38),
-            (r"ISLAND", 38),
-            (r"HIGH 7-A", 37),
-            (r"7-A", 36),
-            (r"LARGE MOUNTAIN", 36),
-            (r"7-B", 34),
-            (r"MOUNTAIN", 34),
-            (r"7-C", 32),
-            (r"TOWN", 32),
-            (r"LOW 7-C", 31),
-            (r"HIGH 8-A", 31),
-            (r"8-A", 30),
-            (r"MULTI-CITY BLOCK", 30),
-            (r"8-B", 28),
-            (r"CITY BLOCK", 28),
-            (r"8-C", 26),
-            (r"BUILDING", 26),
-            (r"9-A", 24),
-            (r"SMALL BUILDING", 24),
-            (r"ROOM", 24),
-            (r"9-B", 22),
-            (r"WALL", 22),
-            (r"9-C", 20),
-            (r"STREET", 20),
-            (r"10-A", 15),
-            (r"ATHLETE", 15),
-            (r"10-B", 10),
-            (r"HUMAN", 10),
-            (r"10-C", 5),
-        ]
+
+        # Load tiers from JSON file dynamically
+        import json
+        import os
+
+        path = os.path.join(os.path.dirname(__file__), "vs_battle_tiers.json")
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                tier_patterns = json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load vs_battle_tiers.json: {e}")
+            tier_patterns = []
+
         for pattern, value in tier_patterns:
             if _regex_module.search(pattern, t):
                 logger.debug(f"🎯 Matched tier {pattern} -> {value}")

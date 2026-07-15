@@ -5,6 +5,7 @@ import logging  # noqa: E402
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union  # noqa: E402
 
 import httpx  # noqa: E402
+from core.config import get_config  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
 from core.utils.model_registry import OPEN_CLIP_MODELS  # noqa: E402
@@ -127,7 +128,7 @@ class ClipVisionMixin:
 
         from PIL import Image  # noqa: E402
 
-        name = model_id or "clip-ViT-B-32"
+        name = model_id or get_config().get("CLIP_MODEL_NAME", "clip-ViT-B-32")
         try:
             img = Image.open(BytesIO(image_data)).convert("RGB")
             model = _load_open_clip(name)
@@ -166,7 +167,9 @@ class ClipVisionMixin:
             from sentence_transformers import util  # noqa: E402
 
             img_emb = torch.tensor(self.get_image_embedding(image_data, model_id))
-            model_name = model_id or "clip-ViT-B-32"
+            model_name = model_id or get_config().get(
+                "CLIP_MODEL_NAME", "clip-ViT-B-32"
+            )
             model = _load_open_clip(model_name)
             text_embs = torch.tensor(
                 [model.encode_text(label) for label in candidate_labels]
@@ -187,7 +190,7 @@ class ClipVisionMixin:
         try:
             from sentence_transformers import util  # noqa: E402
 
-            model_name = "clip-ViT-B-32"
+            model_name = get_config().get("CLIP_MODEL_NAME", "clip-ViT-B-32")
             if not hasattr(self, "_clip_model"):
                 from sentence_transformers import SentenceTransformer  # noqa: E402
 
@@ -216,7 +219,9 @@ class ClipVisionMixin:
             from sentence_transformers import SentenceTransformer  # noqa: E402
 
             logger.info("🏗️ Loading CLIP for reranking...")
-            self._clip_model = SentenceTransformer("clip-ViT-B-32")
+            self._clip_model = SentenceTransformer(
+                get_config().get("CLIP_MODEL_NAME", "clip-ViT-B-32")
+            )
         except Exception as e:
             logger.error(f"❌ Failed to load CLIP: {e}")
             raise InferenceError(f"Critical failure during CLIP loading: {str(e)}")

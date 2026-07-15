@@ -1,7 +1,7 @@
 import json
 import logging
-import os
 
+from core.config import get_config
 from google.cloud.workflows.executions_v1 import ExecutionsClient
 from google.cloud.workflows.executions_v1.types import Execution
 
@@ -10,9 +10,10 @@ logger = logging.getLogger("animetix.workflows")
 
 class GCPWorkflowsClient:
     def __init__(self):
-        self.project_id = os.getenv("GCP_PROJECT_ID", "animetix-prod")
-        self.location = os.getenv("GCP_LOCATION", "europe-west1")
-        self.workflow_id = os.getenv("GCP_WORKFLOW_ID", "manga-voice-pipeline")
+        config = get_config()
+        self.project_id = config.get("GCP_PROJECT_ID", "animetix-prod")
+        self.location = config.get("GCP_LOCATION", "europe-west1")
+        self.workflow_id = config.get("GCP_WORKFLOW_ID", "manga-voice-pipeline")
 
         self.client = ExecutionsClient()
         self.parent = f"projects/{self.project_id}/locations/{self.location}/workflows/{self.workflow_id}"
@@ -20,13 +21,14 @@ class GCPWorkflowsClient:
     def trigger_pipeline(
         self, image_b64: str, reference_audio_b64: str, target_lang: str, filename: str
     ) -> str:
+        config = get_config()
         arguments = {
-            "brain_url": os.getenv("BRAIN_API_URL", "http://localhost:7861"),
-            "api_key": os.getenv("BRAIN_API_KEY", "dev-insecure-key-animetix-2026"),
+            "brain_url": config.get("BRAIN_API_URL", "http://localhost:7861"),
+            "api_key": config.get("BRAIN_API_KEY", "dev-insecure-key-animetix-2026"),
             "image": image_b64,
             "reference_audio": reference_audio_b64,
             "target_lang": target_lang,
-            "gcs_bucket": os.getenv("GCS_MEDIA_BUCKET", "animetix-media-bucket"),
+            "gcs_bucket": config.get("GCS_MEDIA_BUCKET", "animetix-media-bucket"),
             "filename": filename,
         }
 
@@ -56,23 +58,24 @@ class GCPWorkflowsClient:
         """
         Enqueues a GCP Cloud Task to poll the workflow execution at the dedicated url.
         """
-        is_prod = os.getenv("DJANGO_ENV", "development").lower() == "production"
+        config = get_config()
+        is_prod = config.get("DJANGO_ENV", "development").lower() == "production"
         if not is_prod:
             return
 
         from google.cloud import tasks_v2  # noqa: E402
 
-        project = os.getenv("GCP_PROJECT_ID", "animetix-prod")
-        queue = os.getenv("GCP_TASKS_QUEUE_NAME", "animetix-queue")
-        location = os.getenv("GCP_TASKS_LOCATION", "europe-west1")
+        project = config.get("GCP_PROJECT_ID", "animetix-prod")
+        queue = config.get("GCP_TASKS_QUEUE_NAME", "animetix-queue")
+        location = config.get("GCP_TASKS_LOCATION", "europe-west1")
 
         # Build the exact url for poll-workflow view
-        base_worker_url = os.getenv(
+        base_worker_url = config.get(
             "GCP_TASKS_WORKER_URL",
             "https://missawb-animetix-web.hf.space/api/tasks/run/",
         )
         url = base_worker_url.replace("/api/tasks/run/", "/api/tasks/poll-workflow/")
-        service_account = os.getenv(
+        service_account = config.get(
             "GCP_TASKS_SERVICE_ACCOUNT",
             "animetix-tasks-invoker@animetix.iam.gserviceaccount.com",
         )
