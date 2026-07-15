@@ -39,7 +39,7 @@ class MultiverseService:
 
         # Build dynamic Cypher query
         where_clauses = ["m.is_synthetic = true"]
-        params = {"skip": skip, "limit": page_size}
+        params: Dict[str, Any] = {"skip": skip, "limit": page_size}
 
         if search:
             where_clauses.append(
