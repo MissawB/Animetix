@@ -12,7 +12,7 @@ from .prompt_manager import PromptManager
 logger = logging.getLogger("animetix.mlops")
 
 django_available = False
-AIFeedback = None
+AIFeedback: Any = None
 try:
     import django
 
@@ -230,7 +230,7 @@ Réponds UNIQUEMENT avec le nouveau System Prompt, sans explications.
             corrupt_fn = chosen_override
             chosen_override = None
 
-        context = entry.get("context") or entry.get("input_context")
+        context = entry.get("context") or entry.get("input_context") or ""
         output = entry.get("output") or entry.get("output_text")
         is_positive = entry.get("is_positive", False)
 
