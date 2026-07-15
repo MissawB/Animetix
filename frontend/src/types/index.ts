@@ -662,3 +662,34 @@ export interface UResult {
   reason?: string;
   mrwhite_winners?: string[];
 }
+
+export type CombatCharacter = components['schemas']['CombatCharacter'];
+export type DebateTurn = components['schemas']['DebateTurn'];
+export type VsBattleResult = components['schemas']['VsBattleResult'];
+
+export interface TrackerConnection {
+  id: number;
+  tracker: 'myanimelist' | 'anilist';
+  username?: string;
+  created_at: string;
+}
+
+export interface AIUsageData {
+  tier: string;
+  limits: {
+    daily_tokens: number;
+    daily_requests: number;
+  };
+  usage_today: {
+    tokens: number;
+    requests: number;
+    estimated_cost_usd: number;
+    tokens_percent: number;
+    requests_percent: number;
+  };
+  history: {
+    date: string;
+    tokens: number;
+    requests: number;
+  }[];
+}

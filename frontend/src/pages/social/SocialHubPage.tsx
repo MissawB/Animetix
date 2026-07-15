@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 
 import { Users, UserPlus, Search, UserMinus, ChevronRight } from 'lucide-react';
-import { searchUsers } from '../../api';
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
+import { socialService } from '../../features/social/services/socialService';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { Link } from 'react-router-dom';
-import { User } from "../../types";
-import { useToastStore } from "../../store/toastStore";
+import { User } from '../../types';
+import { useToastStore } from '../../store/toastStore';
 import { useTranslation } from 'react-i18next';
-import { useSocialDashboard } from "../../features/social/hooks/useSocialDashboard";
+import { useSocialDashboard } from '../../features/social/hooks/useSocialDashboard';
 
 const SocialHubPage: React.FC = () => {
   const { addToast } = useToastStore();
   const { t } = useTranslation();
   const { data: dashboardData, isLoading: isDashboardLoading, toggleFollow } = useSocialDashboard();
-  
+
   const [searchResults, setSearchUsers] = useState<(User & { is_following: boolean })[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'following' | 'followers' | 'discovery'>('following');
@@ -26,11 +26,11 @@ const SocialHubPage: React.FC = () => {
     e.preventDefault();
     if (searchQuery.length < 2) return;
     try {
-      const results = await searchUsers(searchQuery);
+      const results = await socialService.searchUsers(searchQuery);
       setSearchUsers(results);
       setActiveTab('discovery');
     } catch (_err) {
-      addToast(t('social.hub.search_error', 'Erreur lors de la recherche.'), "error");
+      addToast(t('social.hub.search_error', 'Erreur lors de la recherche.'), 'error');
     }
   };
 
@@ -38,23 +38,29 @@ const SocialHubPage: React.FC = () => {
     try {
       toggleFollow(userId, {
         onSuccess: () => {
-          addToast(t('social.hub.action_success', 'Action effectuée avec succès !'), "success");
+          addToast(t('social.hub.action_success', 'Action effectuée avec succès !'), 'success');
           if (activeTab === 'discovery') {
             // Optimistic or manual update of search results if needed
-            setSearchUsers(prev => prev.map(u => u.id === userId ? { ...u, is_following: !u.is_following } : u));
+            setSearchUsers((prev) =>
+              prev.map((u) => (u.id === userId ? { ...u, is_following: !u.is_following } : u)),
+            );
           }
         },
         onError: () => {
-           addToast(t('social.hub.action_error', 'Action impossible.'), "error");
-        }
+          addToast(t('social.hub.action_error', 'Action impossible.'), 'error');
+        },
       });
     } catch (_err) {
-      addToast(t('social.hub.action_error', 'Action impossible.'), "error");
+      addToast(t('social.hub.action_error', 'Action impossible.'), 'error');
     }
   };
 
   if (isDashboardLoading) {
-    return <div className="p-20 text-center animate-pulse font-black uppercase tracking-widest">{t('social.hub.loading', 'Initialisation du réseau social...')}</div>;
+    return (
+      <div className="p-20 text-center animate-pulse font-black uppercase tracking-widest">
+        {t('social.hub.loading', 'Initialisation du réseau social...')}
+      </div>
+    );
   }
 
   return (
@@ -65,7 +71,10 @@ const SocialHubPage: React.FC = () => {
             <Users className="w-10 h-10 text-yellow-500" /> {t('social.hub.title', 'HUB SOCIAL')}
           </h1>
           <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-2">
-            {t('social.hub.subtitle', 'Gérez vos connexions, découvrez de nouveaux héros et restez informé.')}
+            {t(
+              'social.hub.subtitle',
+              'Gérez vos connexions, découvrez de nouveaux héros et restez informé.',
+            )}
           </p>
         </div>
 
@@ -79,7 +88,10 @@ const SocialHubPage: React.FC = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white dark:bg-navy-900 border-2 border-transparent focus:border-yellow-500 rounded-2xl px-6 py-4 outline-none font-bold shadow-sm transition-all pr-12"
           />
-          <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-500 transition-colors">
+          <button
+            type="submit"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-500 transition-colors"
+          >
             <Search className="w-5 h-5" />
           </button>
         </form>
@@ -87,17 +99,27 @@ const SocialHubPage: React.FC = () => {
 
       {/* Tabs */}
       <div className="flex gap-4 mb-8 overflow-x-auto pb-2 no-scrollbar">
-        {(['following', 'followers', 'discovery'] as const).map(tabId => {
-          const tabLabel = tabId === 'following' ? t('social.hub.tab_following', 'Abonnements') : tabId === 'followers' ? t('social.hub.tab_followers', 'Abonnés') : t('social.hub.tab_discovery', 'Découverte');
-          const tabCount = tabId === 'following' ? following.length : tabId === 'followers' ? followers.length : searchResults.length;
-          
+        {(['following', 'followers', 'discovery'] as const).map((tabId) => {
+          const tabLabel =
+            tabId === 'following'
+              ? t('social.hub.tab_following', 'Abonnements')
+              : tabId === 'followers'
+                ? t('social.hub.tab_followers', 'Abonnés')
+                : t('social.hub.tab_discovery', 'Découverte');
+          const tabCount =
+            tabId === 'following'
+              ? following.length
+              : tabId === 'followers'
+                ? followers.length
+                : searchResults.length;
+
           return (
             <button
               key={tabId}
               onClick={() => setActiveTab(tabId)}
               className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all whitespace-nowrap ${
-                activeTab === tabId 
-                  ? 'bg-yellow-500 text-white shadow-lg' 
+                activeTab === tabId
+                  ? 'bg-yellow-500 text-white shadow-lg'
                   : 'bg-white dark:bg-navy-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-navy-800'
               }`}
             >
@@ -109,85 +131,121 @@ const SocialHubPage: React.FC = () => {
 
       {/* Grid Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        {activeTab === 'following' && following.map(item => (
-          <Card key={item.id} padding="md" className="group hover:border-yellow-500/30 transition-all">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-black text-xl italic">
-                {item.username[0]}
-              </div>
-              <div className="flex-1">
-                <Link to={`/profile/${item.username}/`} className="font-black uppercase tracking-tight hover:text-yellow-500 transition-colors no-underline">
-                  {item.username}
-                </Link>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] bg-gray-100 dark:bg-navy-800 px-2 py-0.5 rounded text-gray-500 font-black uppercase">{t('social.hub.level_short', 'Niv. {{level}}', { level: item.level })}</span>
+        {activeTab === 'following' &&
+          following.map((item) => (
+            <Card
+              key={item.id}
+              padding="md"
+              className="group hover:border-yellow-500/30 transition-all"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-black text-xl italic">
+                  {item.username[0]}
                 </div>
+                <div className="flex-1">
+                  <Link
+                    to={`/profile/${item.username}/`}
+                    className="font-black uppercase tracking-tight hover:text-yellow-500 transition-colors no-underline"
+                  >
+                    {item.username}
+                  </Link>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] bg-gray-100 dark:bg-navy-800 px-2 py-0.5 rounded text-gray-500 font-black uppercase">
+                      {t('social.hub.level_short', 'Niv. {{level}}', { level: item.level })}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleToggleFollow(item.to_user)}
+                  className="text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white"
+                >
+                  <UserMinus className="w-4 h-4" />
+                </Button>
               </div>
-              <Button variant="outline" size="sm" onClick={() => handleToggleFollow(item.to_user)} className="text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white">
-                <UserMinus className="w-4 h-4" />
-              </Button>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))}
 
-        {activeTab === 'followers' && followers.map(item => (
-          <Card key={item.id} padding="md">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-black text-xl italic">
-                {item.username[0]}
-              </div>
-              <div className="flex-1">
-                <Link to={`/profile/${item.username}/`} className="font-black uppercase tracking-tight hover:text-blue-500 transition-colors no-underline">
-                  {item.username}
+        {activeTab === 'followers' &&
+          followers.map((item) => (
+            <Card key={item.id} padding="md">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-black text-xl italic">
+                  {item.username[0]}
+                </div>
+                <div className="flex-1">
+                  <Link
+                    to={`/profile/${item.username}/`}
+                    className="font-black uppercase tracking-tight hover:text-blue-500 transition-colors no-underline"
+                  >
+                    {item.username}
+                  </Link>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">
+                    {t('social.hub.follows_you', 'Vous suit')}
+                  </p>
+                </div>
+                <Link
+                  to={`/profile/${item.username}/`}
+                  className="text-gray-400 hover:text-blue-500"
+                >
+                  <ChevronRight className="w-5 h-5" />
                 </Link>
-                <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">{t('social.hub.follows_you', 'Vous suit')}</p>
               </div>
-              <Link to={`/profile/${item.username}/`} className="text-gray-400 hover:text-blue-500">
-                <ChevronRight className="w-5 h-5" />
-              </Link>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))}
 
-        {activeTab === 'discovery' && searchResults.map(user => (
-          <Card key={user.id} padding="md" className="border-2 border-transparent hover:border-yellow-500/20">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-navy-800 flex items-center justify-center font-black text-xl italic">
-                {user.username[0]}
+        {activeTab === 'discovery' &&
+          searchResults.map((user) => (
+            <Card
+              key={user.id}
+              padding="md"
+              className="border-2 border-transparent hover:border-yellow-500/20"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-navy-800 flex items-center justify-center font-black text-xl italic">
+                  {user.username[0]}
+                </div>
+                <div className="flex-1">
+                  <Link
+                    to={`/profile/${user.username}/`}
+                    className="font-black uppercase tracking-tight hover:text-yellow-500 transition-colors no-underline"
+                  >
+                    {user.username}
+                  </Link>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">
+                    {t('social.hub.level_label', 'Niveau {{level}}', { level: user.level || 1 })}
+                  </p>
+                </div>
+                <Button
+                  variant={user.is_following ? 'outline' : 'primary'}
+                  size="sm"
+                  onClick={() => handleToggleFollow(user.id)}
+                >
+                  {user.is_following ? (
+                    <UserMinus className="w-4 h-4" />
+                  ) : (
+                    <UserPlus className="w-4 h-4" />
+                  )}
+                </Button>
               </div>
-              <div className="flex-1">
-                <Link to={`/profile/${user.username}/`} className="font-black uppercase tracking-tight hover:text-yellow-500 transition-colors no-underline">
-                  {user.username}
-                </Link>
-                <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">{t('social.hub.level_label', 'Niveau {{level}}', { level: user.level || 1 })}</p>
-              </div>
-              <Button 
-                variant={user.is_following ? "outline" : "primary"} 
-                size="sm" 
-                onClick={() => handleToggleFollow(user.id)}
-              >
-                {user.is_following ? <UserMinus className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-              </Button>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))}
 
         {/* Empty States */}
-        {((activeTab === 'following' && following.length === 0) || 
+        {((activeTab === 'following' && following.length === 0) ||
           (activeTab === 'followers' && followers.length === 0) ||
           (activeTab === 'discovery' && searchResults.length === 0)) && (
           <div className="col-span-full py-20 text-center opacity-40">
             <Users className="w-16 h-12 mx-auto mb-4" />
-            <p className="font-black uppercase tracking-widest text-sm">{t('social.hub.empty_state', 'Rien à afficher ici pour le moment.')}</p>
+            <p className="font-black uppercase tracking-widest text-sm">
+              {t('social.hub.empty_state', 'Rien à afficher ici pour le moment.')}
+            </p>
           </div>
         )}
-
       </div>
     </div>
   );
 };
 
 export default SocialHubPage;
-
-

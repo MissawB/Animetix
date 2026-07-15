@@ -3,14 +3,16 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SearchBar } from '../SearchBar';
-import { searchByImage } from '../../api';
+import { searchService } from '../../features/search/services/searchService';
 
-vi.mock('../../api', () => ({
-  searchMedia: vi.fn(),
-  searchByImage: vi.fn(),
+vi.mock('../../features/search/services/searchService', () => ({
+  searchService: {
+    searchMedia: vi.fn(),
+    searchByImage: vi.fn(),
+  },
 }));
 
-const mockedSearch = vi.mocked(searchByImage);
+const mockedSearch = vi.mocked(searchService.searchByImage);
 
 const file = new File([new Uint8Array([1, 2, 3])], 'cover.png', { type: 'image/png' });
 

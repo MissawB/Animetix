@@ -2,14 +2,16 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { interactWithCompanion } from '../../../api';
+import { companionService } from '../services/companionService';
 import { useCompanionStore } from '../companionStore';
 
-vi.mock('../../../api', () => ({
-  interactWithCompanion: vi.fn(),
+vi.mock('../services/companionService', () => ({
+  companionService: {
+    interact: vi.fn(),
+  },
 }));
 
-const mockedInteract = vi.mocked(interactWithCompanion);
+const mockedInteract = vi.mocked(companionService.interact);
 
 describe('useCompanionStore', () => {
   beforeEach(() => {

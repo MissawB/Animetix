@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { TFunction } from 'i18next';
-import { getAuthUser } from '../api';
+import { authService } from '../features/auth/services/authService';
 import { User } from '../types';
 import { useNotificationStore } from './notificationStore';
 import { useToastStore } from './toastStore';
@@ -79,7 +79,7 @@ export const useAuthStore = create<AuthState>((set) => {
   const applyFirebaseUser = async (firebaseUser: FirebaseUser | null) => {
     if (firebaseUser) {
       try {
-        const user = await getAuthUser();
+        const user = await authService.getAuthUser();
         set({ user, isAuthenticated: true, isLoading: false });
         useNotificationStore.getState().connect();
       } catch (_error) {
@@ -97,7 +97,7 @@ export const useAuthStore = create<AuthState>((set) => {
     isLoading: true,
     refetchUser: async () => {
       try {
-        const user = await getAuthUser();
+        const user = await authService.getAuthUser();
         set({ user, isAuthenticated: true });
       } catch (error) {
         console.error('Failed to refetch user data:', error);

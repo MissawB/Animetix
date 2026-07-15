@@ -2,11 +2,16 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { getProfile } from '../../../../api';
+import { socialService } from '../../services/socialService';
 import { useProfile } from '../useProfile';
+import { Profile } from '../../../../types';
 
-vi.mock('../../../../api', () => ({ getProfile: vi.fn() }));
-const mockedGetProfile = vi.mocked(getProfile);
+vi.mock('../../services/socialService', () => ({
+  socialService: {
+    getProfile: vi.fn(),
+  },
+}));
+const mockedGetProfile = vi.mocked(socialService.getProfile);
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -25,7 +30,7 @@ describe('useProfile', () => {
   });
 
   it('fetches the profile for a username', async () => {
-    const profile = { username: 'kira' } as unknown as Awaited<ReturnType<typeof getProfile>>;
+    const profile = { username: 'kira' } as unknown as Profile;
     mockedGetProfile.mockResolvedValue(profile);
     const { result } = renderHook(() => useProfile('kira'), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));

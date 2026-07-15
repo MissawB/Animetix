@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Users, Settings, Bell, Info, Calendar, Plus, Clock, FileText } from 'lucide-react';
+import {
+  ChevronLeft,
+  Users,
+  Settings,
+  Bell,
+  Info,
+  Calendar,
+  Plus,
+  Clock,
+  FileText,
+} from 'lucide-react';
 import ClubChat from '../../features/social/components/ClubChat';
-import { createClubEvent } from '../../api';
-import { useToastStore } from "../../store/toastStore";
-import { useClub } from "../../features/social/hooks/useClub";
+import { socialService } from '../../features/social/services/socialService';
+import { useToastStore } from '../../store/toastStore';
+import { useClub } from '../../features/social/hooks/useClub';
 import { useTranslation } from 'react-i18next';
 
 interface Member {
@@ -41,19 +51,23 @@ const ClubDashboard: React.FC = () => {
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEventTitle || !newEventDate || !newEventDescription) {
-      useToastStore.getState().addToast(t('social.club.fill_fields', 'Veuillez remplir tous les champs.'), "error");
+      useToastStore
+        .getState()
+        .addToast(t('social.club.fill_fields', 'Veuillez remplir tous les champs.'), 'error');
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
-      await createClubEvent({
+      await socialService.createClubEvent({
         club: clubId,
         title: newEventTitle,
         description: newEventDescription,
         event_date: newEventDate,
       });
-      useToastStore.getState().addToast(t('social.club.event_created', 'Événement créé avec succès !'), "success");
+      useToastStore
+        .getState()
+        .addToast(t('social.club.event_created', 'Événement créé avec succès !'), 'success');
       setNewEventTitle('');
       setNewEventDescription('');
       setNewEventDate('');
@@ -64,14 +78,25 @@ const ClubDashboard: React.FC = () => {
     } catch (err) {
       const error = err as { error?: string; message?: string };
       console.error(error);
-      useToastStore.getState().addToast(error?.error || error?.message || t('social.club.create_error', "Erreur lors de la création de l'événement."), "error");
+      useToastStore
+        .getState()
+        .addToast(
+          error?.error ||
+            error?.message ||
+            t('social.club.create_error', "Erreur lors de la création de l'événement."),
+          'error',
+        );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (isLoadingClub) {
-    return <div className="p-20 text-center animate-pulse font-black uppercase tracking-widest bg-navy-950 min-h-screen text-white">{t('social.club.syncing', 'Synchronisation avec le club...')}</div>;
+    return (
+      <div className="p-20 text-center animate-pulse font-black uppercase tracking-widest bg-navy-950 min-h-screen text-white">
+        {t('social.club.syncing', 'Synchronisation avec le club...')}
+      </div>
+    );
   }
 
   const clubName = club?.name || t('social.club.loading', 'Chargement...');
@@ -82,14 +107,23 @@ const ClubDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex-none p-4 lg:p-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to="/social/discovery/" className="p-2 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-colors">
+          <Link
+            to="/social/discovery/"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-colors"
+          >
             <ChevronLeft className="w-6 h-6" />
           </Link>
           <div>
-            <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none">{clubName}</h1>
+            <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none">
+              {clubName}
+            </h1>
             <div className="flex items-center gap-2 mt-1 opacity-60">
               <Users className="w-3 h-3" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">{t('social.club.active_members', '{{count}} Membres actifs', { count: members.length })}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">
+                {t('social.club.active_members', '{{count}} Membres actifs', {
+                  count: members.length,
+                })}
+              </span>
             </div>
           </div>
         </div>
@@ -143,8 +177,15 @@ const ClubDashboard: React.FC = () => {
             <div className="max-w-4xl mx-auto space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-black italic tracking-tight uppercase">{t('social.club.scheduled_events', 'Événements programmés')}</h2>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">{t('social.club.events_desc', 'Découvrez et rejoignez les activités organisées par le club.')}</p>
+                  <h2 className="text-2xl font-black italic tracking-tight uppercase">
+                    {t('social.club.scheduled_events', 'Événements programmés')}
+                  </h2>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">
+                    {t(
+                      'social.club.events_desc',
+                      'Découvrez et rejoignez les activités organisées par le club.',
+                    )}
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowCreateModal(true)}
@@ -157,12 +198,20 @@ const ClubDashboard: React.FC = () => {
               {events.length === 0 ? (
                 <div className="p-16 border-2 border-dashed border-gray-200 dark:border-white/5 rounded-3xl text-center space-y-4">
                   <Calendar className="w-12 h-12 text-gray-300 dark:text-navy-700 mx-auto" />
-                  <p className="font-bold text-gray-500">{t('social.club.no_events', "Aucun événement n'est actuellement programmé pour ce club.")}</p>
+                  <p className="font-bold text-gray-500">
+                    {t(
+                      'social.club.no_events',
+                      "Aucun événement n'est actuellement programmé pour ce club.",
+                    )}
+                  </p>
                   <button
                     onClick={() => setShowCreateModal(true)}
                     className="text-xs text-brand-primary font-black uppercase tracking-widest hover:underline border-none bg-transparent cursor-pointer"
                   >
-                    {t('social.club.launch_first_event', 'Lancez le premier événement maintenant !')}
+                    {t(
+                      'social.club.launch_first_event',
+                      'Lancez le premier événement maintenant !',
+                    )}
                   </button>
                 </div>
               ) : (
@@ -184,13 +233,17 @@ const ClubDashboard: React.FC = () => {
                               day: 'numeric',
                               month: 'short',
                               hour: '2-digit',
-                              minute: '2-digit'
+                              minute: '2-digit',
                             })}
                           </span>
                         </div>
                         <div className="space-y-2">
-                          <h3 className="text-lg font-black uppercase tracking-tight group-hover:text-brand-primary transition-colors line-clamp-1">{event.title}</h3>
-                          <p className="text-xs text-gray-400 leading-relaxed line-clamp-3">{event.description}</p>
+                          <h3 className="text-lg font-black uppercase tracking-tight group-hover:text-brand-primary transition-colors line-clamp-1">
+                            {event.title}
+                          </h3>
+                          <p className="text-xs text-gray-400 leading-relaxed line-clamp-3">
+                            {event.description}
+                          </p>
                         </div>
                       </div>
                       <div className="pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-xs font-black uppercase tracking-widest text-brand-primary">
@@ -214,32 +267,47 @@ const ClubDashboard: React.FC = () => {
                 <Info className="w-3 h-3" /> About Club
               </h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                {description || t('social.club.no_description', 'Pas de description disponible pour ce club.')}
+                {description ||
+                  t('social.club.no_description', 'Pas de description disponible pour ce club.')}
               </p>
             </div>
 
             {/* Member List */}
             <div className="space-y-4">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
-                <Users className="w-3 h-3" /> {t('social.club.members_online', 'Membres — {{count}} en ligne', { count: members.filter(m => m.status === 'online').length })}
+                <Users className="w-3 h-3" />{' '}
+                {t('social.club.members_online', 'Membres — {{count}} en ligne', {
+                  count: members.filter((m) => m.status === 'online').length,
+                })}
               </h3>
               <div className="space-y-2">
-                {members.map(member => (
-                  <div key={member.id} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors group">
+                {members.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors group"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
                           {member.username[0]}
                         </div>
-                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-white dark:border-navy-900 rounded-full ${
-                          member.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
-                        }`} />
+                        <div
+                          className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-white dark:border-navy-900 rounded-full ${
+                            member.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
+                          }`}
+                        />
                       </div>
                       <div>
                         <p className="text-sm font-bold">{member.username}</p>
-                        <p className={`text-[9px] font-black uppercase tracking-widest ${
-                          member.role === 'admin' ? 'text-red-500' : member.role === 'moderator' ? 'text-blue-500' : 'text-gray-400'
-                        }`}>
+                        <p
+                          className={`text-[9px] font-black uppercase tracking-widest ${
+                            member.role === 'admin'
+                              ? 'text-red-500'
+                              : member.role === 'moderator'
+                                ? 'text-blue-500'
+                                : 'text-gray-400'
+                          }`}
+                        >
                           {member.role}
                         </p>
                       </div>
@@ -257,7 +325,9 @@ const ClubDashboard: React.FC = () => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-navy-900 w-full max-w-lg rounded-3xl p-8 border border-gray-100 dark:border-white/5 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-4">
-              <h3 className="text-xl font-black italic uppercase tracking-tight">{t('social.club.plan_event', 'Planifier un événement')}</h3>
+              <h3 className="text-xl font-black italic uppercase tracking-tight">
+                {t('social.club.plan_event', 'Planifier un événement')}
+              </h3>
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="text-xs text-gray-400 font-bold hover:text-red-500 border-none bg-transparent cursor-pointer"
@@ -265,18 +335,25 @@ const ClubDashboard: React.FC = () => {
                 {t('social.club.close', 'Fermer')}
               </button>
             </div>
-            
+
             <form onSubmit={handleCreateEvent} className="space-y-6">
               <div className="space-y-2">
-                <label htmlFor="event-title" className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-                  <FileText className="w-3 h-3" /> {t('social.club.event_title', "Titre de l'événement")}
+                <label
+                  htmlFor="event-title"
+                  className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
+                >
+                  <FileText className="w-3 h-3" />{' '}
+                  {t('social.club.event_title', "Titre de l'événement")}
                 </label>
                 <input
                   id="event-title"
                   type="text"
                   required
                   aria-label={t('social.club.event_title', "Titre de l'événement")}
-                  placeholder={t('social.club.event_title_placeholder', 'Ex : Soirée analyse Scan Shonen Jump 125')}
+                  placeholder={t(
+                    'social.club.event_title_placeholder',
+                    'Ex : Soirée analyse Scan Shonen Jump 125',
+                  )}
                   value={newEventTitle}
                   onChange={(e) => setNewEventTitle(e.target.value)}
                   className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary"
@@ -284,15 +361,22 @@ const ClubDashboard: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="event-description" className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-                  <Info className="w-3 h-3" /> {t('social.club.event_desc_label', "Description de l'activité")}
+                <label
+                  htmlFor="event-description"
+                  className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
+                >
+                  <Info className="w-3 h-3" />{' '}
+                  {t('social.club.event_desc_label', "Description de l'activité")}
                 </label>
                 <textarea
                   id="event-description"
                   required
                   rows={4}
                   aria-label={t('social.club.event_desc_label', "Description de l'activité")}
-                  placeholder={t('social.club.event_desc_placeholder', 'Expliquez le concept, le déroulement, ou les prérequis pour cet événement...')}
+                  placeholder={t(
+                    'social.club.event_desc_placeholder',
+                    'Expliquez le concept, le déroulement, ou les prérequis pour cet événement...',
+                  )}
                   value={newEventDescription}
                   onChange={(e) => setNewEventDescription(e.target.value)}
                   className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary resize-none"
@@ -300,7 +384,10 @@ const ClubDashboard: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="event-date" className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                <label
+                  htmlFor="event-date"
+                  className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
+                >
                   <Clock className="w-3 h-3" /> {t('social.club.event_date', 'Date et Heure')}
                 </label>
                 <input
@@ -319,7 +406,9 @@ const ClubDashboard: React.FC = () => {
                 disabled={isSubmitting}
                 className="w-full bg-brand-primary text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 border-none cursor-pointer disabled:opacity-50"
               >
-                {isSubmitting ? t('social.club.creating', 'Création en cours...') : t('social.club.confirm_event', "Confirmer l'événement")}
+                {isSubmitting
+                  ? t('social.club.creating', 'Création en cours...')
+                  : t('social.club.confirm_event', "Confirmer l'événement")}
               </button>
             </form>
           </div>
@@ -330,6 +419,3 @@ const ClubDashboard: React.FC = () => {
 };
 
 export default ClubDashboard;
-
-
-

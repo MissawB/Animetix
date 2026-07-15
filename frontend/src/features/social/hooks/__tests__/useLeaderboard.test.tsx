@@ -2,11 +2,16 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { getLeaderboard } from '../../../../api';
+import { socialService } from '../../services/socialService';
 import { useLeaderboard } from '../useLeaderboard';
+import { Profile } from '../../../../types';
 
-vi.mock('../../../../api', () => ({ getLeaderboard: vi.fn() }));
-const mockedGetLeaderboard = vi.mocked(getLeaderboard);
+vi.mock('../../services/socialService', () => ({
+  socialService: {
+    getLeaderboard: vi.fn(),
+  },
+}));
+const mockedGetLeaderboard = vi.mocked(socialService.getLeaderboard);
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -19,7 +24,7 @@ describe('useLeaderboard', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('fetches the leaderboard', async () => {
-    const board = [{ username: 'kira' }] as unknown as Awaited<ReturnType<typeof getLeaderboard>>;
+    const board = [{ username: 'kira' }] as unknown as Profile[];
     mockedGetLeaderboard.mockResolvedValue(board);
     const { result } = renderHook(() => useLeaderboard(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));

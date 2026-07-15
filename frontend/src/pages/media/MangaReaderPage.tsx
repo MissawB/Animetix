@@ -6,7 +6,7 @@ import { MangaReader } from '../../features/manga-reader';
 import { useReaderStore } from '../../features/manga-reader/stores/useReaderStore';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { apiClient } from '../../utils/apiClient';
-import { syncMangaProgress } from '../../api';
+import { mediaService } from '../../features/media/services/mediaService';
 import { ArrowLeft, BookOpen, ChevronRight, Settings, WifiOff } from 'lucide-react';
 import { useChapterPages } from '../../features/manga-reader/offline/useChapterPages';
 
@@ -32,12 +32,17 @@ const MangaReaderPage: React.FC = () => {
 
   // Synchronize progress on reaching the last page of the chapter
   useEffect(() => {
-    if (mediaId && chapterId && readerPages.length > 0 && currentPageIndex === readerPages.length - 1) {
+    if (
+      mediaId &&
+      chapterId &&
+      readerPages.length > 0 &&
+      currentPageIndex === readerPages.length - 1
+    ) {
       const syncKey = `${mediaId}-${chapterId}`;
       if (syncedRef.current !== syncKey) {
         syncedRef.current = syncKey;
-        syncMangaProgress(mediaId, chapterId).catch((err) => {
-          console.error("Failed to sync manga reading progress:", err);
+        mediaService.syncMangaProgress(mediaId, chapterId).catch((err) => {
+          console.error('Failed to sync manga reading progress:', err);
         });
       }
     }
@@ -45,8 +50,8 @@ const MangaReaderPage: React.FC = () => {
 
   const handleNextChapter = () => {
     if (mediaId && chapterId) {
-      syncMangaProgress(mediaId, chapterId).catch((err) => {
-        console.error("Failed to sync manga reading progress on next chapter:", err);
+      mediaService.syncMangaProgress(mediaId, chapterId).catch((err) => {
+        console.error('Failed to sync manga reading progress on next chapter:', err);
       });
       navigate(`/media/manga/${mediaId}/${parseFloat(chapterId) + 1}/`);
     }
@@ -58,13 +63,13 @@ const MangaReaderPage: React.FC = () => {
         {/* Top Navigation Bar */}
         <header className="sticky top-0 z-50 bg-[#05050a]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <button 
+            <button
               onClick={() => navigate(-1)}
               className="p-2 hover:bg-white/5 rounded-full transition-colors"
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
-            
+
             <div className="flex flex-col">
               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-anime-accent mb-0.5">
                 <BookOpen className="w-3 h-3" />
@@ -97,7 +102,12 @@ const MangaReaderPage: React.FC = () => {
               <p className="text-sm font-black uppercase tracking-widest opacity-60">
                 {t('media.reader.unavailable_offline', 'Chapitre indisponible hors-ligne')}
               </p>
-              <p className="text-xs opacity-30">{t('media.reader.download_online_hint', 'Téléchargez ce chapitre lorsque vous êtes connecté.')}</p>
+              <p className="text-xs opacity-30">
+                {t(
+                  'media.reader.download_online_hint',
+                  'Téléchargez ce chapitre lorsque vous êtes connecté.',
+                )}
+              </p>
             </div>
           ) : (
             <MangaReader />
@@ -106,22 +116,22 @@ const MangaReaderPage: React.FC = () => {
 
         {/* Bottom Navigation (Quick Chapter Switch) */}
         <footer className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-            <div className="bg-navy-900/90 backdrop-blur-2xl border border-white/10 px-8 py-4 rounded-full shadow-2xl flex items-center gap-8">
-                <button 
-                  onClick={() => navigate(`/media/manga/${mediaId}/${parseFloat(chapterId!) - 1}/`)}
-                  disabled={parseFloat(chapterId!) <= 1}
-                  className="text-xs font-black uppercase tracking-tighter opacity-40 hover:opacity-100 transition-opacity disabled:hidden"
-                >
-                  {t('media.reader.prev_chapter', 'Chapitre Précédent')}
-                </button>
-                <div className="w-px h-4 bg-white/10"></div>
-                <button 
-                  onClick={handleNextChapter}
-                  className="text-xs font-black uppercase tracking-tighter opacity-40 hover:opacity-100 transition-opacity"
-                >
-                  {t('media.reader.next_chapter', 'Chapitre Suivant')}
-                </button>
-            </div>
+          <div className="bg-navy-900/90 backdrop-blur-2xl border border-white/10 px-8 py-4 rounded-full shadow-2xl flex items-center gap-8">
+            <button
+              onClick={() => navigate(`/media/manga/${mediaId}/${parseFloat(chapterId!) - 1}/`)}
+              disabled={parseFloat(chapterId!) <= 1}
+              className="text-xs font-black uppercase tracking-tighter opacity-40 hover:opacity-100 transition-opacity disabled:hidden"
+            >
+              {t('media.reader.prev_chapter', 'Chapitre Précédent')}
+            </button>
+            <div className="w-px h-4 bg-white/10"></div>
+            <button
+              onClick={handleNextChapter}
+              className="text-xs font-black uppercase tracking-tighter opacity-40 hover:opacity-100 transition-opacity"
+            >
+              {t('media.reader.next_chapter', 'Chapitre Suivant')}
+            </button>
+          </div>
         </footer>
       </div>
     </AnimatedPage>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getOpenDatasets, downloadDataset } from '../../api';
+import { labService } from '../../features/labs/services/labService';
 import { OpenDataset } from '../../types';
 import { Card } from '../../components/ui/Card';
 import { Share2, Download, FileText, Database, Loader2, ExternalLink } from 'lucide-react';
@@ -37,7 +37,7 @@ const OpenDataPage: React.FC = () => {
   useEffect(() => {
     const fetchDatasets = async () => {
       try {
-        const response = await getOpenDatasets();
+        const response = await labService.getOpenDatasets();
         if (response.status === 'success') {
           setDatasets(response.datasets);
         }
@@ -65,7 +65,7 @@ const OpenDataPage: React.FC = () => {
         }),
         'info',
       );
-      await downloadDataset(dataset.id, originalFilename);
+      await labService.downloadDataset(dataset.id, originalFilename);
       addToast(
         t('social.opendata.download_success', '{{name}} téléchargé avec succès !', {
           name: dataset.name,

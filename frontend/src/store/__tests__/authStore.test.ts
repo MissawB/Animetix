@@ -25,9 +25,11 @@ vi.mock('firebase/auth', () => ({
   TwitterAuthProvider: vi.fn(function TwitterAuthProvider() {}),
 }));
 
-// --- Mock the API getAuthUser call ---
-vi.mock('../../api', () => ({
-  getAuthUser: vi.fn(),
+// --- Mock the authService getAuthUser call ---
+vi.mock('../../features/auth/services/authService', () => ({
+  authService: {
+    getAuthUser: vi.fn(),
+  },
 }));
 
 // --- Mock the notification store (connect/disconnect are side effects) ---
@@ -62,9 +64,9 @@ vi.mock('../../i18n/config', () => ({
 }));
 
 import * as firebaseAuth from 'firebase/auth';
-import * as api from '../../api';
+import { authService } from '../../features/auth/services/authService';
 
-const mockGetAuthUser = vi.mocked(api.getAuthUser);
+const mockGetAuthUser = vi.mocked(authService.getAuthUser);
 const mockSignIn = vi.mocked(firebaseAuth.signInWithEmailAndPassword);
 const mockCreateUser = vi.mocked(firebaseAuth.createUserWithEmailAndPassword);
 const mockSignOut = vi.mocked(firebaseAuth.signOut);

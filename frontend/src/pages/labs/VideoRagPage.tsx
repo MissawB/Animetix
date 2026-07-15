@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Search, Wand2, Sparkles, Film } from 'lucide-react';
-import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { Timeline } from "../../components/video/Timeline";
-import { Inspector } from "../../components/video/Inspector";
+import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { Timeline } from '../../components/video/Timeline';
+import { Inspector } from '../../components/video/Inspector';
 import { useVideoRagStore } from '../../features/labs/stores/videoRagStore';
-import { searchVideoSegments } from '../../api';
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { useAuthStore } from "../../store/authStore";
-import { VideoIndexing } from "../../components/video/VideoIndexing";
+import { labService } from '../../features/labs/services/labService';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { useAuthStore } from '../../store/authStore';
+import { VideoIndexing } from '../../components/video/VideoIndexing';
 
 const SUGGESTIONS = [
   { label: '⚔️ Combat Épique', query: 'combat épique' },
@@ -20,23 +20,38 @@ const SUGGESTIONS = [
 const determineSegmentType = (summary: string): 'emotion' | 'action' | 'dialogue' => {
   const text = (summary || '').toLowerCase();
   if (
-    text.includes('triste') || text.includes('sad') ||
-    text.includes('pleure') || text.includes('cry') ||
-    text.includes('peur') || text.includes('scared') || text.includes('fear') ||
-    text.includes('émotion') || text.includes('emotion') ||
-    text.includes('colère') || text.includes('angry') ||
-    text.includes('joie') || text.includes('happy') ||
-    text.includes('amour') || text.includes('love')
+    text.includes('triste') ||
+    text.includes('sad') ||
+    text.includes('pleure') ||
+    text.includes('cry') ||
+    text.includes('peur') ||
+    text.includes('scared') ||
+    text.includes('fear') ||
+    text.includes('émotion') ||
+    text.includes('emotion') ||
+    text.includes('colère') ||
+    text.includes('angry') ||
+    text.includes('joie') ||
+    text.includes('happy') ||
+    text.includes('amour') ||
+    text.includes('love')
   ) {
     return 'emotion';
   }
   if (
-    text.includes('parle') || text.includes('speak') ||
-    text.includes('dit') || text.includes('say') ||
-    text.includes('raconte') || text.includes('tell') ||
-    text.includes('dialogue') || text.includes('discute') || text.includes('chat') ||
-    text.includes('voix') || text.includes('voice') ||
-    text.includes('explique') || text.includes('explain')
+    text.includes('parle') ||
+    text.includes('speak') ||
+    text.includes('dit') ||
+    text.includes('say') ||
+    text.includes('raconte') ||
+    text.includes('tell') ||
+    text.includes('dialogue') ||
+    text.includes('discute') ||
+    text.includes('chat') ||
+    text.includes('voix') ||
+    text.includes('voice') ||
+    text.includes('explique') ||
+    text.includes('explain')
   ) {
     return 'dialogue';
   }
@@ -56,7 +71,7 @@ const VideoRagPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await searchVideoSegments(searchQuery);
+      const response = await labService.searchVideoSegments(searchQuery);
       if (response && response.status === 'success' && Array.isArray(response.results)) {
         const mapped = response.results.map((res) => ({
           id: res.id || `${res.video_id}_${res.start}`,
@@ -88,18 +103,22 @@ const VideoRagPage: React.FC = () => {
             VIDEO-<span className="text-red-500">RAG</span> EXPLORER
           </h1>
           <p className="text-white/60 text-lg">
-            Recherche sémantique et localisation temporelle de moments précis dans vos vidéos indexées via Similarité Vectorielle.
+            Recherche sémantique et localisation temporelle de moments précis dans vos vidéos
+            indexées via Similarité Vectorielle.
           </p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           {/* Sidebar / Controls */}
           <div className="lg:col-span-1 space-y-6">
-            <Card padding="lg" className="bg-white/5 border border-white/10 shadow-xl backdrop-blur-md">
+            <Card
+              padding="lg"
+              className="bg-white/5 border border-white/10 shadow-xl backdrop-blur-md"
+            >
               <h3 className="text-xs font-black uppercase opacity-60 mb-4 tracking-widest flex items-center gap-2 text-red-500">
                 <Sparkles className="w-4 h-4 animate-pulse" /> Recherche Sémantique
               </h3>
-              
+
               <div className="space-y-4">
                 <div className="relative">
                   <input
@@ -133,7 +152,9 @@ const VideoRagPage: React.FC = () => {
 
               {/* Suggestions */}
               <div className="mt-8">
-                <span className="text-[10px] font-black uppercase opacity-40 tracking-widest block mb-3">Suggestions de test</span>
+                <span className="text-[10px] font-black uppercase opacity-40 tracking-widest block mb-3">
+                  Suggestions de test
+                </span>
                 <div className="flex flex-col gap-2">
                   {SUGGESTIONS.map((s, idx) => (
                     <button
@@ -156,12 +177,15 @@ const VideoRagPage: React.FC = () => {
 
           {/* Main Content (Timeline + Inspector) */}
           <div className="lg:col-span-3 space-y-6">
-            <Card padding="lg" className="bg-black/40 border border-white/10 relative overflow-hidden min-h-[400px] flex flex-col justify-between">
+            <Card
+              padding="lg"
+              className="bg-black/40 border border-white/10 relative overflow-hidden min-h-[400px] flex flex-col justify-between"
+            >
               <div>
                 <h2 className="text-lg font-black italic tracking-wide uppercase mb-6 flex items-center gap-2">
                   <Film className="w-5 h-5 text-red-500" /> Timeline Interactive
                 </h2>
-                
+
                 {error && (
                   <div className="p-4 mb-6 bg-red-950/40 border border-red-500/20 text-red-400 rounded-xl text-sm font-semibold">
                     ⚠️ {error}
@@ -184,38 +208,48 @@ const VideoRagPage: React.FC = () => {
                 <Inspector />
               </div>
             </Card>
-
           </div>
         </div>
 
         {/* Guide & Protocole */}
         <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card padding="lg" className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
-                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <Film className="w-64 h-64 text-red-500" />
-                </div>
-                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                    <Sparkles className="w-5 h-5 text-red-400" /> Guide du Video-RAG
-                </h4>
-                <div className="space-y-4 relative z-10">
-                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                        <span className="text-red-400">Le Concept :</span> Décrivez un moment avec vos mots ("combat épique", "personnage triste") et le système retrouve les passages correspondants dans les vidéos indexées.
-                    </p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                        <span className="text-red-400">La Timeline :</span> Chaque résultat apparaît comme un segment coloré sur la timeline (action, dialogue ou émotion). Cliquez dessus pour voir ses détails dans l'inspecteur.
-                    </p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                        <span className="text-red-400">Les Suggestions :</span> Pas d'idée ? Utilisez les suggestions de test dans la barre latérale pour lancer une recherche en un clic.
-                    </p>
-                </div>
-            </Card>
-
-            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
-                <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-200/60">
-                    Les vidéos sont découpées en segments temporels décrits par un modèle de vision (VLM Qwen2-VL), puis ces descriptions sont projetées dans un espace vectoriel via Jina-Embeddings. <br />
-                    Votre requête est vectorisée à son tour et comparée par similarité à ces vecteurs pour situer l'instant exact où l'événement recherché se produit.
-                </p>
+          <Card
+            padding="lg"
+            className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group"
+          >
+            <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Film className="w-64 h-64 text-red-500" />
             </div>
+            <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-red-400" /> Guide du Video-RAG
+            </h4>
+            <div className="space-y-4 relative z-10">
+              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                <span className="text-red-400">Le Concept :</span> Décrivez un moment avec vos mots
+                ("combat épique", "personnage triste") et le système retrouve les passages
+                correspondants dans les vidéos indexées.
+              </p>
+              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                <span className="text-red-400">La Timeline :</span> Chaque résultat apparaît comme
+                un segment coloré sur la timeline (action, dialogue ou émotion). Cliquez dessus pour
+                voir ses détails dans l'inspecteur.
+              </p>
+              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                <span className="text-red-400">Les Suggestions :</span> Pas d'idée ? Utilisez les
+                suggestions de test dans la barre latérale pour lancer une recherche en un clic.
+              </p>
+            </div>
+          </Card>
+
+          <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
+            <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-200/60">
+              Les vidéos sont découpées en segments temporels décrits par un modèle de vision (VLM
+              Qwen2-VL), puis ces descriptions sont projetées dans un espace vectoriel via
+              Jina-Embeddings. <br />
+              Votre requête est vectorisée à son tour et comparée par similarité à ces vecteurs pour
+              situer l'instant exact où l'événement recherché se produit.
+            </p>
+          </div>
         </div>
       </div>
     </AnimatedPage>

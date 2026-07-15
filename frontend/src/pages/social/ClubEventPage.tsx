@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Calendar, Clock, MapPin, Users, Send, CheckCircle } from 'lucide-react';
-import { getClubEventDetails, getClubDetails, toggleEventParticipation } from '../../api';
+import { socialService } from '../../features/social/services/socialService';
 import { ClubEvent } from '../../types';
-import { useToastStore } from "../../store/toastStore";
-import { Button } from "../../components/ui/Button";
-import { Card } from "../../components/ui/Card";
+import { useToastStore } from '../../store/toastStore';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
 import { useTranslation } from 'react-i18next';
 
 const ClubEventPage: React.FC = () => {
@@ -17,24 +17,38 @@ const ClubEventPage: React.FC = () => {
   const [isEventPast, setIsEventPast] = useState(false);
   const [isParticipating, setIsParticipating] = useState(false);
   const [participantsCount, setParticipantsCount] = useState(0);
-  const [chatMessages, setChatMessages] = useState<{ sender: string; text: string; time: string }[]>([
-    { sender: 'IA Guide', text: t('social.club_event.welcome_chat', "Bienvenue dans l'événement ! N'hésitez pas à poser vos questions ici."), time: t('social.club_event.system', 'Système') },
+  const [chatMessages, setChatMessages] = useState<
+    { sender: string; text: string; time: string }[]
+  >([
+    {
+      sender: 'IA Guide',
+      text: t(
+        'social.club_event.welcome_chat',
+        "Bienvenue dans l'événement ! N'hésitez pas à poser vos questions ici.",
+      ),
+      time: t('social.club_event.system', 'Système'),
+    },
   ]);
   const [newMessage, setNewMessage] = useState('');
 
   const fetchEventData = useCallback(async () => {
     if (!eventId || !id) return;
     try {
-      const eventData = await getClubEventDetails(Number(eventId));
+      const eventData = await socialService.getClubEventDetails(Number(eventId));
       setEvent(eventData);
       setIsParticipating(!!eventData.is_participant);
       setParticipantsCount(eventData.participants_count || 0);
 
-      const clubData = await getClubDetails(Number(id));
+      const clubData = await socialService.getClubDetails(Number(id));
       setClubName(clubData.name);
     } catch (err) {
-      console.error("Erreur de récupération :", err);
-      useToastStore.getState().addToast(t('social.club_event.fetch_error', "Impossible de récupérer l'événement."), "error");
+      console.error('Erreur de récupération :', err);
+      useToastStore
+        .getState()
+        .addToast(
+          t('social.club_event.fetch_error', "Impossible de récupérer l'événement."),
+          'error',
+        );
     }
   }, [id, eventId, t]);
 
@@ -46,7 +60,9 @@ const ClubEventPage: React.FC = () => {
       }
     };
     load();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [fetchEventData]);
 
   // Countdown timer logic
@@ -75,16 +91,29 @@ const ClubEventPage: React.FC = () => {
   const handleToggleParticipation = async () => {
     if (!eventId) return;
     try {
-      const response = await toggleEventParticipation(Number(eventId));
+      const response = await socialService.toggleEventParticipation(Number(eventId));
       setIsParticipating(response.status === 'joined');
       setParticipantsCount(response.participants_count);
-      useToastStore.getState().addToast(
-        response.status === 'joined' ? t('social.club_event.registered_success', 'Votre inscription a été enregistrée !') : t('social.club_event.unregistered_success', 'Vous ne participez plus à cet événement.'),
-        response.status === 'joined' ? "success" : "info"
-      );
+      useToastStore
+        .getState()
+        .addToast(
+          response.status === 'joined'
+            ? t('social.club_event.registered_success', 'Votre inscription a été enregistrée !')
+            : t(
+                'social.club_event.unregistered_success',
+                'Vous ne participez plus à cet événement.',
+              ),
+          response.status === 'joined' ? 'success' : 'info',
+        );
     } catch (err) {
       const error = err as { error?: string; message?: string };
-      useToastStore.getState().addToast(error.error || t('social.club_event.action_error', 'Action impossible. Êtes-vous membre du club ?'), "error");
+      useToastStore
+        .getState()
+        .addToast(
+          error.error ||
+            t('social.club_event.action_error', 'Action impossible. Êtes-vous membre du club ?'),
+          'error',
+        );
     }
   };
 
@@ -92,13 +121,13 @@ const ClubEventPage: React.FC = () => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    setChatMessages(prev => [
+    setChatMessages((prev) => [
       ...prev,
       {
         sender: t('social.club_event.me', 'Moi'),
         text: newMessage,
-        time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-      }
+        time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      },
     ]);
     setNewMessage('');
   };
@@ -114,24 +143,30 @@ const ClubEventPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-navy-950 text-surface-text py-12 px-6">
       <div className="max-w-5xl mx-auto space-y-8">
-        
         {/* Back Link */}
-        <Link 
-          to={`/clubs/${id}/`} 
+        <Link
+          to={`/clubs/${id}/`}
           className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-brand-primary no-underline transition-colors"
         >
-          <ChevronLeft className="w-4 h-4" /> {t('social.club_event.back_to_club', 'Retour au club : {{name}}', { name: clubName })}
+          <ChevronLeft className="w-4 h-4" />{' '}
+          {t('social.club_event.back_to_club', 'Retour au club : {{name}}', { name: clubName })}
         </Link>
 
         {/* Hero Section */}
-        <Card hasAura className="relative overflow-hidden p-8 md:p-12 bg-gradient-to-br from-white to-gray-50 dark:from-navy-900 dark:to-navy-950 border border-gray-100 dark:border-white/5 rounded-3xl flex flex-col md:flex-row gap-8 justify-between items-start md:items-center">
+        <Card
+          hasAura
+          className="relative overflow-hidden p-8 md:p-12 bg-gradient-to-br from-white to-gray-50 dark:from-navy-900 dark:to-navy-950 border border-gray-100 dark:border-white/5 rounded-3xl flex flex-col md:flex-row gap-8 justify-between items-start md:items-center"
+        >
           <div className="space-y-6 max-w-xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-[10px] font-black uppercase tracking-widest">
-              <Calendar className="w-3.5 h-3.5" /> {t('social.club_event.event_badge', 'Événement du Club')}
+              <Calendar className="w-3.5 h-3.5" />{' '}
+              {t('social.club_event.event_badge', 'Événement du Club')}
             </div>
-            <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase leading-none manga-font text-brand-accent">{event.title}</h1>
+            <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase leading-none manga-font text-brand-accent">
+              {event.title}
+            </h1>
             <p className="text-sm text-gray-400 font-bold leading-relaxed">{event.description}</p>
-            
+
             <div className="flex flex-wrap gap-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               <span className="flex items-center gap-1.5">
                 <Clock className="w-4 h-4 text-brand-primary" />
@@ -140,14 +175,18 @@ const ClubEventPage: React.FC = () => {
                   month: 'long',
                   year: 'numeric',
                   hour: '2-digit',
-                  minute: '2-digit'
+                  minute: '2-digit',
                 })}
               </span>
               <span className="flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-brand-primary" /> {t('social.club_event.voice_salon', "Salon Vocal de l'App")}
+                <MapPin className="w-4 h-4 text-brand-primary" />{' '}
+                {t('social.club_event.voice_salon', "Salon Vocal de l'App")}
               </span>
               <span className="flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-brand-primary" /> {t('social.club_event.registered_count', '{{count}} inscrits', { count: participantsCount })}
+                <Users className="w-4 h-4 text-brand-primary" />{' '}
+                {t('social.club_event.registered_count', '{{count}} inscrits', {
+                  count: participantsCount,
+                })}
               </span>
             </div>
           </div>
@@ -159,45 +198,64 @@ const ClubEventPage: React.FC = () => {
                 <span className="inline-flex items-center gap-1 text-[10px] bg-red-500/10 text-red-500 font-black tracking-widest uppercase px-3 py-1 rounded-full">
                   {t('social.club_event.past', 'Terminé')}
                 </span>
-                <p className="text-sm font-bold text-gray-500">{t('social.club_event.past_desc', 'Cet événement est passé.')}</p>
+                <p className="text-sm font-bold text-gray-500">
+                  {t('social.club_event.past_desc', 'Cet événement est passé.')}
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
                 <span className="inline-flex items-center gap-1 text-[10px] bg-green-500/10 text-green-500 font-black tracking-widest uppercase px-3 py-1 rounded-full">
                   {t('social.club_event.upcoming', 'À venir')}
                 </span>
-                
+
                 {/* Timer Grid */}
                 <div className="grid grid-cols-4 gap-2">
                   <div className="bg-white dark:bg-navy-900 rounded-xl p-2.5 border border-gray-200 dark:border-white/5">
-                    <span className="block text-xl font-black text-brand-primary">{timeLeft.days}</span>
-                    <span className="text-[8px] font-black uppercase text-gray-400">{t('social.club_event.days', 'Jours')}</span>
+                    <span className="block text-xl font-black text-brand-primary">
+                      {timeLeft.days}
+                    </span>
+                    <span className="text-[8px] font-black uppercase text-gray-400">
+                      {t('social.club_event.days', 'Jours')}
+                    </span>
                   </div>
                   <div className="bg-white dark:bg-navy-900 rounded-xl p-2.5 border border-gray-200 dark:border-white/5">
-                    <span className="block text-xl font-black text-brand-primary">{timeLeft.hours}</span>
-                    <span className="text-[8px] font-black uppercase text-gray-400">{t('social.club_event.hours', 'Heures')}</span>
+                    <span className="block text-xl font-black text-brand-primary">
+                      {timeLeft.hours}
+                    </span>
+                    <span className="text-[8px] font-black uppercase text-gray-400">
+                      {t('social.club_event.hours', 'Heures')}
+                    </span>
                   </div>
                   <div className="bg-white dark:bg-navy-900 rounded-xl p-2.5 border border-gray-200 dark:border-white/5">
-                    <span className="block text-xl font-black text-brand-primary">{timeLeft.minutes}</span>
-                    <span className="text-[8px] font-black uppercase text-gray-400">{t('social.club_event.min', 'Min')}</span>
+                    <span className="block text-xl font-black text-brand-primary">
+                      {timeLeft.minutes}
+                    </span>
+                    <span className="text-[8px] font-black uppercase text-gray-400">
+                      {t('social.club_event.min', 'Min')}
+                    </span>
                   </div>
                   <div className="bg-white dark:bg-navy-900 rounded-xl p-2.5 border border-gray-200 dark:border-white/5">
-                    <span className="block text-xl font-black text-brand-primary">{timeLeft.seconds}</span>
-                    <span className="text-[8px] font-black uppercase text-gray-400">{t('social.club_event.sec', 'Sec')}</span>
+                    <span className="block text-xl font-black text-brand-primary">
+                      {timeLeft.seconds}
+                    </span>
+                    <span className="text-[8px] font-black uppercase text-gray-400">
+                      {t('social.club_event.sec', 'Sec')}
+                    </span>
                   </div>
                 </div>
 
-                <Button 
+                <Button
                   onClick={handleToggleParticipation}
                   className={`w-full py-4 font-black uppercase tracking-widest rounded-xl transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${
-                    isParticipating 
-                      ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg' 
+                    isParticipating
+                      ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg'
                       : 'bg-brand-primary hover:bg-brand-primary/95 text-white'
                   }`}
                 >
                   {isParticipating ? (
                     <>
-                      <CheckCircle className="w-4 h-4" /> {t('social.club_event.registered_badge', 'Inscrit(e) !')}
+                      <CheckCircle className="w-4 h-4" />{' '}
+                      {t('social.club_event.registered_badge', 'Inscrit(e) !')}
                     </>
                   ) : (
                     t('social.club_event.join_event', "Rejoindre l'événement")
@@ -210,31 +268,34 @@ const ClubEventPage: React.FC = () => {
 
         {/* Dual Panel - Info & Discussion */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
           {/* Left / Center Column: Chat & Discussion */}
           <div className="md:col-span-2 space-y-6 flex flex-col h-[500px] bg-white dark:bg-navy-900 border border-gray-100 dark:border-white/5 rounded-3xl overflow-hidden p-6">
             <h3 className="text-sm font-black uppercase tracking-wider text-gray-400 flex items-center gap-2 pb-4 border-b border-gray-100 dark:border-white/5">
               {t('social.club_event.chat_title', "Fil de discussion de l'événement")}
             </h3>
-            
+
             {/* Messages */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-2">
               {chatMessages.map((msg, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className={`flex flex-col max-w-[80%] space-y-1 ${
-                    msg.sender === t('social.club_event.me', 'Moi') ? 'ml-auto items-end' : 'mr-auto items-start'
+                    msg.sender === t('social.club_event.me', 'Moi')
+                      ? 'ml-auto items-end'
+                      : 'mr-auto items-start'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold text-gray-500">{msg.sender}</span>
                     <span className="text-[9px] text-gray-400">{msg.time}</span>
                   </div>
-                  <div className={`p-3.5 rounded-2xl text-xs font-bold ${
-                    msg.sender === t('social.club_event.me', 'Moi') 
-                      ? 'bg-brand-primary text-white rounded-tr-none' 
-                      : 'bg-gray-100 dark:bg-navy-800 text-surface-text rounded-tl-none'
-                  }`}>
+                  <div
+                    className={`p-3.5 rounded-2xl text-xs font-bold ${
+                      msg.sender === t('social.club_event.me', 'Moi')
+                        ? 'bg-brand-primary text-white rounded-tr-none'
+                        : 'bg-gray-100 dark:bg-navy-800 text-surface-text rounded-tl-none'
+                    }`}
+                  >
                     {msg.text}
                   </div>
                 </div>
@@ -242,11 +303,17 @@ const ClubEventPage: React.FC = () => {
             </div>
 
             {/* Input Form */}
-            <form onSubmit={handleSendMessage} className="flex gap-2 pt-4 border-t border-gray-100 dark:border-white/5">
+            <form
+              onSubmit={handleSendMessage}
+              className="flex gap-2 pt-4 border-t border-gray-100 dark:border-white/5"
+            >
               <input
                 type="text"
                 aria-label={t('social.club_event.chat_aria', 'Votre message')}
-                placeholder={t('social.club_event.chat_placeholder', 'Posez vos questions ou discutez du concept...')}
+                placeholder={t(
+                  'social.club_event.chat_placeholder',
+                  'Posez vos questions ou discutez du concept...',
+                )}
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 className="flex-1 bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-xs font-bold focus:outline-none focus:border-brand-primary"
@@ -265,26 +332,28 @@ const ClubEventPage: React.FC = () => {
             <h3 className="text-sm font-black uppercase tracking-wider text-gray-400 flex items-center gap-2 pb-4 border-b border-gray-100 dark:border-white/5">
               {t('social.club_event.ai_stats', "Statistiques de l'IA")}
             </h3>
-            
+
             <div className="space-y-4">
               <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-2xl">
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{t('social.club_event.expected_impact', 'Impact prévu')}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
+                  {t('social.club_event.expected_impact', 'Impact prévu')}
+                </p>
                 <p className="text-lg font-black text-brand-primary">+250 XP</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-2xl">
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{t('social.club_event.vibe_detected', 'Vibe détectée')}</p>
-                <p className="text-lg font-black text-purple-500">{t('social.club_event.vibe_value', 'Social / Débat')}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
+                  {t('social.club_event.vibe_detected', 'Vibe détectée')}
+                </p>
+                <p className="text-lg font-black text-purple-500">
+                  {t('social.club_event.vibe_value', 'Social / Débat')}
+                </p>
               </div>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
 };
 
 export default ClubEventPage;
-
-
-
