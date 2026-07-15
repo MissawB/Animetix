@@ -34,7 +34,7 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Frontend — finir la migration `api.ts` → services de feature** _(audit dette 2026-07-11)_
+- [x] **~~Frontend — finir la migration `api.ts` → services de feature~~** _(audit dette 2026-07-11)_
   - [api.ts](frontend/src/api.ts) god-module legacy (415 lignes, ~60 fonctions, importé par **31 fichiers**) coexiste avec 20 services modernes dans `features/*/services/`. Deux conventions pour la même chose. **Reco** : migrer les 31 importeurs puis supprimer le module.
 - [x] **~~Frontend — frontière API non typée + types maintenus en double~~** _(audit dette 2026-07-11)_
   - [apiClient.ts](frontend/src/utils/apiClient.ts) retourne `any` implicite ; les services castent à l'aveugle (`as RawBlindtestState`, [blindtestService.ts:79](frontend/src/features/games/services/blindtestService.ts#L79)) alors que **zod est installé** (2 imports seulement). 79 interfaces manuelles dans [types/index.ts](frontend/src/types/index.ts) doublonnent `types/api.d.ts` généré depuis OpenAPI (8 références à `components['schemas']` seulement). **Reco** : dériver les types du schéma généré + valider les réponses critiques avec zod.
