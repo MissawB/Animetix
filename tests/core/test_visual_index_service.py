@@ -101,7 +101,7 @@ def test_a_search_only_ever_touches_its_own_target_collection():
     service, _, _, store = _service()
     service.search("character", [0.3] * 768, limit=5)
     store.search_by_vector.assert_called_once_with(
-        "character_ccip_space", [0.3] * 768, limit=5
+        "character_ccip_space", [0.3] * 768, limit=5, where=None
     )
 
 

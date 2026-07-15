@@ -1,6 +1,77 @@
 from unittest.mock import MagicMock
 
+from core.domain.exceptions import InferenceError
 from core.domain.services.advanced_rag_service import AdvancedRAGService
+from core.domain.services.rag.hybrid_index import HybridSearchIndex
+
+
+def _rag_with_visual(visual):
+    """Un service dont la moitié lexicale est mockée et l'ajustement cognitif neutralisé,
+    pour isoler la fusion lexical + sémantique-CLIP."""
+    service = AdvancedRAGService(MagicMock(), MagicMock(), visual_index_service=visual)
+    idx = MagicMock()
+    # La VRAIE fusion RRF -- c'est elle qu'on teste, pas un mock.
+    idx.reciprocal_rank_fusion = HybridSearchIndex().reciprocal_rank_fusion
+    service._get_or_create_index = MagicMock(return_value=idx)
+    service._adjust_scores_cognitively = lambda docs, q, user_id=None: docs
+    return service, idx
+
+
+def test_hybrid_search_fuses_lexical_and_clip_on_the_mal_id_not_the_anilist_id():
+    # Kimetsu : le catalogue lexical le connaît par son id AniList (101922), avec
+    # idMal (38000) en second champ ; l'index CLIP (unified_clip_space) l'a écrit
+    # sous external_id = MAL id (38000). Sans normalisation sur une clé commune,
+    # RRF verrait DEUX œuvres (101922 et 38000) et n'en renforcerait aucune. On
+    # prouve qu'il n'en voit qu'UNE, clavetée sur le MAL id.
+    visual = MagicMock()
+    visual.encode_text.return_value = [0.1, 0.2, 0.3]
+    visual.search.return_value = [
+        {
+            "id": "38000",
+            "external_id": "38000",
+            "media_type": "Anime",
+            "title": "Kimetsu no Yaiba",
+        }
+    ]
+    service, idx = _rag_with_visual(visual)
+    idx.search.return_value = [
+        {"id": 101922, "idMal": 38000, "title": "Kimetsu no Yaiba"}
+    ]
+
+    results = service.hybrid_search("demon slayer", "Anime", limit=10)
+
+    kimetsu = [r for r in results if r.get("title") == "Kimetsu no Yaiba"]
+    assert len(kimetsu) == 1, f"attendu 1 entrée fusionnée, obtenu {len(kimetsu)}"
+    assert str(kimetsu[0]["id"]) == "38000"
+
+
+def test_hybrid_search_encodes_with_clip_text_tower_and_filters_by_media_type():
+    visual = MagicMock()
+    visual.encode_text.return_value = [0.1, 0.2, 0.3]
+    visual.search.return_value = []
+    service, idx = _rag_with_visual(visual)
+    idx.search.return_value = []
+
+    service.hybrid_search("une fille aux cheveux blancs", "Anime", limit=10)
+
+    visual.encode_text.assert_called_once_with("work", "une fille aux cheveux blancs")
+    args, kwargs = visual.search.call_args
+    assert args[0] == "work"
+    assert kwargs.get("where") == {"media_type": "Anime"}
+
+
+def test_hybrid_search_degrades_to_lexical_when_clip_fails():
+    # Chemin FACTURÉ (agentic-rag, 6 Bx) : un brain froid ne doit pas faire 500,
+    # juste retomber sur le lexical.
+    visual = MagicMock()
+    visual.encode_text.side_effect = InferenceError("brain froid")
+    service, idx = _rag_with_visual(visual)
+    idx.search.return_value = [{"id": 101922, "idMal": 38000, "title": "Kimetsu"}]
+
+    results = service.hybrid_search("demon slayer", "Anime", limit=10)
+
+    assert [r.get("title") for r in results] == ["Kimetsu"]
+    visual.search.assert_not_called()
 
 
 def test_rag_colbert_filtering():

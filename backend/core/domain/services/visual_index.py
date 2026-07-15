@@ -13,7 +13,7 @@ les deux méthodes. N'en injecter qu'un, c'était appeler une méthode absente �
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from core.utils.model_registry import ANIME_CLIP_MODEL_ID, CCIP_MODEL_ID
 
@@ -144,7 +144,13 @@ class VisualIndexService:
         )
         return self._checked(vector, f"la tour texte de {spec.model_id}")
 
-    def search(self, target: str, vector: List[float], limit: int = 10) -> List[Dict]:
+    def search(
+        self,
+        target: str,
+        vector: List[float],
+        limit: int = 10,
+        where: Optional[Dict] = None,
+    ) -> List[Dict]:
         """Cherche, puis rend au lecteur l'id qu'il peut RÉELLEMENT résoudre.
 
         `PgVectorStoreAdapter.search_by_vector` rend `doc["id"] = doc_id`, la
@@ -162,7 +168,7 @@ class VisualIndexService:
         """
         spec = self.target(target)
         results = self.vector_store.search_by_vector(
-            spec.collection, vector, limit=limit
+            spec.collection, vector, limit=limit, where=where
         )
         for doc in results:
             if "external_id" in doc:

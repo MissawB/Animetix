@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 class VectorStorePort(ABC):
@@ -19,11 +19,20 @@ class VectorStorePort(ABC):
 
     @abstractmethod
     def search_by_vector(
-        self, collection_name: str, query_vector: List[float], limit: int = 10
+        self,
+        collection_name: str,
+        query_vector: List[float],
+        limit: int = 10,
+        where: Optional[Dict] = None,
     ) -> List[Dict]:
         """Retourne les `limit` éléments les plus proches de `query_vector`.
 
         Chaque élément est un dict de métadonnées augmenté de sa clé ``id``.
+
+        `where` filtre par métadonnée (``metadata @> jsonb``) : une collection qui
+        mélange plusieurs types (``unified_clip_space`` : anime/manga/film/jeu)
+        peut être restreinte à un seul, sans quoi une recherche « Anime » ramène
+        tout.
 
         Une liste vide signifie « la requête a tourné et n'a rien trouvé », et
         UNIQUEMENT ça. Une panne (collection injoignable, requête refusée)

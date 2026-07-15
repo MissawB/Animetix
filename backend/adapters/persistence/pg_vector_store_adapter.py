@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from adapters.persistence.cache_constants import (
     COLLECTION_COUNT_CACHE_TTL_SECONDS,
@@ -28,7 +28,11 @@ class PgVectorStoreAdapter(VectorStorePort):
         return data["embeddings"]
 
     def search_by_vector(
-        self, collection_name: str, query_vector: List[float], limit: int = 10
+        self,
+        collection_name: str,
+        query_vector: List[float],
+        limit: int = 10,
+        where: Optional[Dict] = None,
     ) -> List[Dict]:
         """Cherche les plus proches voisins. LÈVE si la requête échoue.
 
@@ -44,7 +48,9 @@ class PgVectorStoreAdapter(VectorStorePort):
         """
         try:
             collection = vector_manager.get_collection(collection_name)
-            res = collection.query(query_embeddings=[query_vector], n_results=limit)
+            res = collection.query(
+                query_embeddings=[query_vector], n_results=limit, where=where
+            )
         except Exception as e:
             logger.exception(
                 f"Vector search failed for collection '{collection_name}': {e}"

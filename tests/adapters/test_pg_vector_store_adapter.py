@@ -150,6 +150,23 @@ def test_search_by_vector_returns_metadata_with_the_id_attached(adapter):
     ]
 
 
+def test_search_by_vector_passes_the_where_filter_through_to_the_query(adapter):
+    # `unified_clip_space` mélange les 4 media_types ; hybrid_search en veut un
+    # seul. Le filtre `where` (metadata @> jsonb) doit atteindre la collection,
+    # sinon une recherche « Anime » ramènerait aussi mangas/films/jeux.
+    mock_manager = _manager_returning([], [])
+    with patch(
+        "adapters.persistence.pg_vector_store_adapter.vector_manager", mock_manager
+    ):
+        adapter.search_by_vector(
+            "unified_clip_space", [0.1, 0.2], limit=5, where={"media_type": "Anime"}
+        )
+
+    mock_manager.get_collection.return_value.query.assert_called_once_with(
+        query_embeddings=[[0.1, 0.2]], n_results=5, where={"media_type": "Anime"}
+    )
+
+
 def test_search_by_vector_raises_instead_of_returning_an_empty_list_on_failure(adapter):
     """THE bug this test exists for: a transient pgvector failure used to be
     swallowed into `[]`. The endpoint turns `[]` into a 200 with no results --

@@ -24,6 +24,19 @@ class AgenticContainer(containers.DeclarativeContainer):
         user_context_port=infrastructure.user_context_port,
     )
 
+    # La moitié « sémantique » de hybrid_search : la tour texte CLIP sur
+    # `unified_clip_space`. `core.visual_index_service` existe déjà, mais `core`
+    # reçoit `agentic` (pour reasoning_agent) -- l'injecter ici créerait un cycle
+    # de conteneurs core↔agentic. `VisualIndexService` est sans état ; une seconde
+    # instance, câblée sur les mêmes inference+persistence, coûte cinq lignes et
+    # évite le cycle.
+    visual_index_service = providers.Singleton(
+        LazyClass("core.domain.services.visual_index", "VisualIndexService"),
+        inference_engine=inference.inference_engine,
+        repository=persistence.repository,
+        vector_store=persistence.vector_store,
+    )
+
     rag_service = providers.Singleton(
         LazyClass("core.domain.services.advanced_rag_service", "AdvancedRAGService"),
         repository=persistence.repository,
@@ -34,6 +47,7 @@ class AgenticContainer(containers.DeclarativeContainer):
         cognitive_boosters_enabled=getattr(
             settings, "RAG_COGNITIVE_BOOSTERS_ENABLED", True
         ),
+        visual_index_service=visual_index_service,
     )
 
     graph_expert = providers.Singleton(
