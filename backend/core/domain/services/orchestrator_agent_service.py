@@ -1,7 +1,6 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-import orjson
 from core.ports.inference_port import InferencePort
 
 from .prompt_manager import PromptManager
@@ -145,15 +144,11 @@ class OrchestratorAgentService:
     def _safe_json_generate(
         self, prompt: str, system_prompt: Optional[str] = None
     ) -> Dict:
+        from core.utils.json_utils import extract_json
+
         res = self.inference_engine.generate(prompt, system_prompt=system_prompt or "")
         try:
-            if "{" in res and "}" in res:
-                json_str = res[res.find("{") : res.rfind("}") + 1]
-                return orjson.loads(json_str)
-        except orjson.JSONDecodeError as e:
-            logger.error(
-                f"Orchestrator failed to parse JSON from AI: {e}. Output was: {res[:200]}"
-            )
+            return extract_json(res)
         except Exception as e:
             logger.error(f"Unexpected error in Orchestrator JSON extraction: {e}")
         return {}

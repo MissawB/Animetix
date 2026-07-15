@@ -541,16 +541,10 @@ class AgenticRAGService:
                 logger.error(f"Unexpected error in memory storage: {e}")
 
     def _extract_json(self, text: str) -> Dict:
-        import orjson  # noqa: E402
+        from core.utils.json_utils import extract_json
 
         try:
-            if "{" in text and "}" in text:
-                json_str = text[text.find("{") : text.rfind("}") + 1]
-                return orjson.loads(json_str)
-        except orjson.JSONDecodeError as e:
-            logger.error(
-                f"Failed to parse JSON from AI output: {e}. Output was: {text[:200]}..."
-            )
+            return extract_json(text)
         except (InferenceError, InfrastructureError, RuntimeError) as e:
             logger.error(f"Unexpected error during JSON extraction: {e}")
         return {}

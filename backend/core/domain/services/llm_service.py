@@ -1,7 +1,6 @@
 import logging
 from typing import Any, Dict, Optional, Type
 
-import orjson
 from pydantic import BaseModel
 
 from ...ports.inference_port import InferencePort
@@ -212,14 +211,10 @@ class LLMService:
             return self._retry_json(prompt, res, str(e), schema, system_prompt, use_slm)
 
     def _parse_json(self, text: str, schema: Type[BaseModel]) -> Any:
+        from core.utils.json_utils import extract_and_validate_json
+
         try:
-            # Extraction du bloc JSON si nécessaire
-            if "{" in text and "}" in text:
-                json_str = text[text.find("{") : text.rfind("}") + 1]
-                data = orjson.loads(json_str)
-                return schema.model_validate(data)
-            else:
-                raise ParsingError("No JSON block found in output")
+            return extract_and_validate_json(text, schema)
         except Exception as e:
             raise ParsingError(f"Failed to parse or validate JSON: {str(e)}")
 

@@ -1,5 +1,4 @@
 import difflib
-import json
 import logging
 import re as _regex_module
 import time
@@ -120,34 +119,14 @@ class VsBattleService:
 
     def _extract_json(self, text: Any) -> Dict[str, Any]:
         """Ultra-robust recursive JSON extraction."""
-        if isinstance(text, dict):
-            return self._find_best_dict(text) or text
+        from core.utils.json_utils import extract_json
+
+        data = extract_json(text)
+        if data:
+            return self._find_best_dict(data) or data
+
         cleaned_text = str(text).split("---")[0].strip()
-        try:
-            data = json.loads(cleaned_text)
-            return self._find_best_dict(data) or (
-                data if isinstance(data, dict) else {}
-            )
-        except json.JSONDecodeError:
-            match = _regex_module.search(
-                r"```(?:json)?\s*(\{.*?\})\s*```",
-                cleaned_text,
-                _regex_module.DOTALL | _regex_module.IGNORECASE,
-            )
-            if match:
-                try:
-                    data = json.loads(match.group(1))
-                    return self._find_best_dict(data) or data
-                except Exception as e:
-                    logger.debug(f"JSON extraction fallback 1 failed: {e}")
-            start, end = cleaned_text.find("{"), cleaned_text.rfind("}")
-            if start != -1 and end != -1:
-                try:
-                    data = json.loads(cleaned_text[start : end + 1])
-                    return self._find_best_dict(data) or data
-                except Exception as e:
-                    logger.debug(f"JSON extraction fallback 2 failed: {e}")
-            raise ValueError(f"Could not extract valid JSON (len: {len(cleaned_text)})")
+        raise ValueError(f"Could not extract valid JSON (len: {len(cleaned_text)})")
 
     def _find_best_dict(self, obj: Any) -> Optional[Dict]:
         if isinstance(obj, dict):
