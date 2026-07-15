@@ -58,6 +58,10 @@ steps:
         fi
 
   # --- Brain Image Build & Push ---
+  # The gguf stages (model download + merge + quantize) take ~90 min from scratch.
+  # --cache-from makes them a cache hit when the model hasn't changed, cutting the
+  # build to ~10 min (deps + COPY only). The pull || true ensures a cold cache
+  # (first ever build, or after a registry wipe) doesn't fail the step.
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-brain'
     entrypoint: 'bash'
@@ -65,7 +69,9 @@ steps:
       - '-c'
       - |
         if [ "${_BUILD_TARGET}" = "all" ] || [ "${_BUILD_TARGET}" = "brain" ]; then
+          docker pull europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:latest || true
           docker build --pull \
+            --cache-from europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:latest \
             -t europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:latest \
             -t europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:${_TAG} \
             -f deploy/Dockerfile.brain .

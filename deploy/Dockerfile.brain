@@ -7,12 +7,20 @@
 # LoRA is bound to its base's architecture; it cannot be grafted onto anything
 # else. Serving that base is also what makes the GPU usable at all -- see the
 # driver note in stage 2.
+#
+# --- LAYER CACHING STRATEGY ---
+# The merge+quantize takes ~90 min on E2_HIGHCPU_32 and is fully deterministic
+# given the same base model, adapter, and llama.cpp revision. By splitting the
+# work into layers keyed by ARGs, `docker build --cache-from` skips all of it
+# when the model hasn't changed. Only a deps or code change in the runtime
+# stage triggers a rebuild (~10 min).
+#
+# To bust the cache after a new adapter push: change ADAPTER_MODEL or pass
+# --build-arg ADAPTER_MODEL=MissawB/otaku-qwen-7b-adapter@<new-sha>.
 # ---------------------------------------------------------------------------
-FROM python:3.11-slim AS gguf
 
-ENV BASE_MODEL=unsloth/Qwen2.5-7B-Instruct \
-    ADAPTER_MODEL=MissawB/otaku-qwen-7b-adapter \
-    HF_HOME=/tmp/hf
+# -- 1a: tooling (rarely changes) --
+FROM python:3.11-slim AS gguf-tools
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git build-essential cmake curl ca-certificates \
@@ -22,6 +30,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir \
     transformers peft accelerate safetensors sentencepiece protobuf gguf
+
+# -- 1b: download + merge (busted by BASE_MODEL or ADAPTER_MODEL change) --
+FROM gguf-tools AS gguf-merge
+
+ARG BASE_MODEL=unsloth/Qwen2.5-7B-Instruct
+ARG ADAPTER_MODEL=MissawB/otaku-qwen-7b-adapter
+ENV HF_HOME=/tmp/hf
 
 RUN python -c "\
 import os, torch;\
@@ -38,9 +53,16 @@ m.save_pretrained('/merged', safe_serialization=True);\
 AutoTokenizer.from_pretrained(base).save_pretrained('/merged');\
 print('merged -> /merged')"
 
+# -- 1c: convert + quantize (busted by LLAMA_CPP_REF or merge output change) --
+FROM gguf-tools AS gguf
+
+ARG LLAMA_CPP_REF=master
+
+COPY --from=gguf-merge /merged /merged
+
 # f16 GGUF, then Q4_K_M. The intermediate f16 (~15 GB) is deleted in the same
 # layer so it never reaches the final image.
-RUN git clone --depth 1 https://github.com/ggml-org/llama.cpp /llama.cpp \
+RUN git clone --depth 1 --branch "${LLAMA_CPP_REF}" https://github.com/ggml-org/llama.cpp /llama.cpp \
     && pip install --no-cache-dir -r /llama.cpp/requirements/requirements-convert_hf_to_gguf.txt \
     && python /llama.cpp/convert_hf_to_gguf.py /merged --outfile /otaku-f16.gguf --outtype f16 \
     && cmake -B /llama.cpp/build /llama.cpp -DLLAMA_CURL=OFF -DGGML_NATIVE=OFF \
@@ -150,6 +172,9 @@ COPY . .
 RUN mkdir -p data/models/torch data/models/huggingface
 
 EXPOSE 7861
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+    CMD curl -fs http://127.0.0.1:7861/health || exit 1
 
 # Ollama first, then the API -- and wait for the model server to answer before
 # uvicorn takes traffic, otherwise /health says "offline" for the first seconds

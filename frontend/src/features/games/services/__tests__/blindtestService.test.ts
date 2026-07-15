@@ -72,4 +72,12 @@ describe('blindtestService', () => {
     expect(mocked).toHaveBeenCalledWith('/api/v1/game/blindtest/titles/', { skipToast: true });
     expect(result).toEqual(['Naruto', 'Bleach']);
   });
+
+  it('getState rejects on invalid validation schemas', async () => {
+    mocked.mockResolvedValue({
+      game_over: 'not-a-boolean-invalid-data',
+    });
+
+    await expect(blindtestService.getState()).rejects.toThrow();
+  });
 });

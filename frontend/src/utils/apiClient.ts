@@ -2,14 +2,15 @@ import { useToastStore } from '../store/toastStore';
 import { usePersonalizationStore } from '../store/personalizationStore';
 import { auth } from './firebase';
 
-export const apiClient = async (
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const apiClient = async <T = any>(
   url: string,
   options: RequestInit & {
     skipToast?: boolean;
     isFormData?: boolean;
     responseType?: 'json' | 'blob';
   } = {},
-) => {
+): Promise<T> => {
   const { skipToast, isFormData, responseType = 'json', ...fetchOptions } = options;
   const defaultHeaders: Record<string, string> = {
     'X-Requested-With': 'XMLHttpRequest',
@@ -78,10 +79,10 @@ export const apiClient = async (
     }
 
     // Gérer les retours 204 No Content
-    if (response.status === 204) return null;
+    if (response.status === 204) return null as unknown as T;
 
     if (responseType === 'blob') {
-      return response.blob();
+      return response.blob() as unknown as T;
     }
 
     const data = await response.json();

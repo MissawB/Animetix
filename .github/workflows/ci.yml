@@ -14,6 +14,10 @@ on:
         description: 'Deploy to prod (animetix-web) after the checks pass'
         type: boolean
         default: false # opt-in: a prod deploy must be ticked explicitly
+      deploy_brain:
+        description: 'Deploy brain to prod (animetix-brain) after the checks pass'
+        type: boolean
+        default: false # opt-in: a brain deploy must be ticked explicitly
 
 # Cancel superseded runs on the same ref (e.g. rapid PR pushes) to stop redundant
 # work piling up. The event_name is part of the group so a push to main never
@@ -453,5 +457,100 @@ jobs:
     - name: Show prod service URL
       run: |
         gcloud run services describe "$PROD_SERVICE" \
+          --project "$GCP_PROJECT" --region "$GCP_REGION" \
+          --format="value(status.url)"
+
+  deploy-brain-to-prod:
+    name: Deploy Brain to Production
+    needs: [lint, test, integration-test, perf-test, frontend-checks, frontend-test]
+    # Manual trigger only, from main, with the deploy_brain box explicitly ticked.
+    # Independent of deploy_to_prod: you can deploy the brain without the web and
+    # vice versa. The brain was previously undeployable from CI because
+    # Dockerfile.brain exceeded Cloud Build's timeout; the gguf layer caching
+    # added alongside this job brings it back under 10 min (warm cache).
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy_brain && success()
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GCP_PROJECT: animetix
+      GCP_REGION: europe-west1
+      BRAIN_SERVICE: animetix-brain
+      BRAIN_IMAGE: europe-west9-docker.pkg.dev/animetix/animetix-repo/brain
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        lfs: true
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+        service_account: ${{ vars.SERVICE_ACCOUNT_EMAIL }}
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+    - name: Build & push brain image (Cloud Build)
+      # _BUILD_TARGET=brain: only the brain image. The gguf stages hit the
+      # Docker cache when the model hasn't changed (~10 min vs 2 h cold).
+      run: |
+        gcloud builds submit \
+          --project "$GCP_PROJECT" \
+          --config cloudbuild.yaml \
+          --substitutions=_TAG=${{ github.sha }},_BUILD_TARGET=brain \
+          .
+    - name: Deploy candidate revision (no traffic)
+      # GPU flags mirror deployments.yaml: L4 GPU, 4 vCPU, 16 Gi.
+      # --no-traffic + --tag: the new revision starts WITHOUT serving traffic,
+      # reachable only through the `candidate` tag URL.
+      run: |
+        gcloud run deploy "$BRAIN_SERVICE" \
+          --project "$GCP_PROJECT" \
+          --region "$GCP_REGION" \
+          --image "$BRAIN_IMAGE:${{ github.sha }}" \
+          --gpu=1 --gpu-type=nvidia-l4 \
+          --cpu=4 --memory=16Gi \
+          --no-traffic \
+          --tag candidate
+    - name: Smoke-test the candidate revision
+      # Hits /health on the tagged revision URL. The brain cold-starts slower
+      # than the web (Ollama + model warm-up), so allow up to 10 minutes.
+      run: |
+        CANDIDATE_URL=$(gcloud run services describe "$BRAIN_SERVICE" \
+          --project "$GCP_PROJECT" --region "$GCP_REGION" --format=json \
+          | jq -r '.status.traffic[] | select(.tag=="candidate") | .url')
+        if [ -z "$CANDIDATE_URL" ]; then
+          echo "::error::candidate tag URL not found on $BRAIN_SERVICE"
+          exit 1
+        fi
+        echo "Smoke-testing $CANDIDATE_URL/health"
+        for i in $(seq 1 60); do
+          body=$(curl -sS --max-time 15 "$CANDIDATE_URL/health" || true)
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$CANDIDATE_URL/health" || echo 000)
+          if [ "$code" = "200" ]; then
+            echo "Brain candidate healthy after $i attempt(s): $body"
+            exit 0
+          fi
+          echo "Attempt $i/60: HTTP $code — retrying in 10s"
+          sleep 10
+        done
+        echo "::error::brain candidate revision never became healthy — traffic was NOT switched"
+        exit 1
+    - name: Dump candidate logs (smoke test failed)
+      if: failure()
+      run: |
+        gcloud logging read \
+          "resource.type=cloud_run_revision AND resource.labels.service_name=$BRAIN_SERVICE" \
+          --project "$GCP_PROJECT" --limit 80 --freshness=30m \
+          --format="value(timestamp, severity, textPayload)" || true
+    - name: Promote candidate to 100% traffic
+      run: |
+        gcloud run services update-traffic "$BRAIN_SERVICE" \
+          --project "$GCP_PROJECT" --region "$GCP_REGION" \
+          --to-latest
+    - name: Show brain service URL
+      run: |
+        gcloud run services describe "$BRAIN_SERVICE" \
           --project "$GCP_PROJECT" --region "$GCP_REGION" \
           --format="value(status.url)"

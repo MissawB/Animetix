@@ -80,18 +80,15 @@ export interface SocialDashboardData {
   followers: Friendship[];
 }
 
-export interface CreativeFusion {
-  id: number;
-  title_a: string;
-  title_b: string;
-  media_type_a: string;
-  media_type_b: string;
+export type CreativeFusion = Omit<
+  components['schemas']['CreativeFusion'],
+  'image_url' | 'creator_name' | 'is_liked' | 'created_at'
+> & {
   image_url?: string;
-  scenario_text?: string;
-  likes_count: number;
   creator_name?: string;
   is_liked?: boolean;
-}
+  created_at?: string;
+};
 
 export interface VideoSegment {
   id: string;
@@ -111,15 +108,14 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
-export interface CurationTicket {
-  id: number;
-  item_title: string;
-  issue_description: string;
+export type CurationTicket = Omit<
+  components['schemas']['DataCurationTicket'],
+  'source_pg' | 'source_neo4j' | 'is_resolved'
+> & {
   source_pg: Record<string, unknown> | null;
   source_neo4j: Record<string, unknown> | null;
   is_resolved: boolean;
-  created_at: string;
-}
+};
 
 export interface DeducedRule {
   id: string;
@@ -421,32 +417,24 @@ export interface VoiceProfile {
   updated_at: string;
 }
 
-export interface ClubEvent {
-  id: number;
-  club: number;
-  title: string;
-  description: string;
+export type ClubEvent = Omit<
+  components['schemas']['ClubEvent'],
+  'is_participant' | 'participants_count' | 'event_date'
+> & {
   event_date: string;
-  created_at: string;
   is_participant?: boolean;
   participants_count?: number;
-}
+};
 
-export interface DiscoveryClub {
-  id: number;
-  name: string;
-  description: string;
-  creator: number;
-  creator_name: string;
-  members_count: number;
+export type DiscoveryClub = Omit<
+  components['schemas']['DiscoveryClub'],
+  'image_url' | 'is_private' | 'events'
+> & {
   image_url?: string;
   is_private: boolean;
-  theme?: string;
   events: ClubEvent[];
-  created_at: string;
-  updated_at: string;
   is_member?: boolean;
-}
+};
 
 export interface ClubMembership {
   id: number;
@@ -456,20 +444,22 @@ export interface ClubMembership {
   joined_at: string;
 }
 
-export interface GoldDatasetEntry {
-  id: number;
+export type GoldDatasetEntry = Omit<
+  components['schemas']['GoldDatasetEntry'],
+  | 'entry_type'
+  | 'metadata'
+  | 'is_validated'
+  | 'ai_validation_score'
+  | 'confidence_score'
+  | 'is_safe'
+> & {
   entry_type: string;
-  context: string;
-  instruction: string;
-  response: string;
   metadata: Record<string, unknown>;
   is_validated: boolean;
   ai_validation_score: number;
-  ai_critique: string | null;
   confidence_score: number;
   is_safe: boolean;
-  created_at: string;
-}
+};
 
 export interface GraphAudit {
   isolated_nodes: number;
