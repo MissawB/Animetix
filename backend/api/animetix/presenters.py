@@ -1,6 +1,12 @@
+import io
 import random
 
 from django.utils.translation import gettext_lazy as _
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 # Ordered list of every Classic-mode hint key (also the default order/selection).
 CLASSIC_HINT_ORDER = [
@@ -463,3 +469,389 @@ class GamePresenter:
                 key, label, (i + 1) * step, value, guess_count, revealed_ids
             )
         return result
+
+
+class NumberedCanvas(canvas.Canvas):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_decorations(num_pages)
+            super().showPage()
+        super().save()
+
+    def draw_page_decorations(self, page_count):
+        self.saveState()
+        # Footer
+        self.setFont("Helvetica", 8)
+        self.setFillColor(colors.HexColor("#7F8C8D"))
+        self.drawString(40, 30, "Animetix Multiverse — Fiche Scénaristique Wiki")
+        self.drawRightString(
+            A4[0] - 40, 30, f"Page {self._pageNumber} sur {page_count}"
+        )
+
+        # Header (except first page)
+        if self._pageNumber > 1:
+            self.drawString(40, A4[1] - 30, "Animetix Multiverse Catalog")
+            self.setStrokeColor(colors.HexColor("#BDC3C7"))
+            self.setLineWidth(0.5)
+            self.line(40, A4[1] - 34, A4[0] - 40, A4[1] - 34)
+
+        self.restoreState()
+
+
+class MultiversePresenter:
+    """Helper class to format Multiverse data (JSON/PDF) for the UI."""
+
+    @staticmethod
+    def format_gallery_data(results: list) -> dict:
+        nodes = []
+        links = []
+        genres_added = set()
+        universes_added = set()
+
+        for record in results:
+            media = record.get("m")
+            genre = record.get("g")
+            characters = record.get("characters", [])
+
+            if not media or not genre:
+                continue
+
+            genre_name = genre.get("name")
+            genre_id = f"genre_{genre_name}"
+
+            if genre_id not in genres_added:
+                nodes.append(
+                    {"id": genre_id, "name": genre_name, "type": "genre", "val": 15}
+                )
+                genres_added.add(genre_id)
+
+            universe_name = media.get("name") or media.get("title")
+            if universe_name not in universes_added:
+                nodes.append(
+                    {
+                        "id": universe_name,
+                        "name": universe_name,
+                        "type": "universe",
+                        "val": 10,
+                        "metadata": {
+                            "description": media.get("description"),
+                            "cosmology": media.get("cosmology"),
+                            "characters": [c.get("name") for c in characters],
+                        },
+                    }
+                )
+                universes_added.add(universe_name)
+
+                links.append({"source": universe_name, "target": genre_id})
+
+        return {"nodes": nodes, "links": links}
+
+    @staticmethod
+    def format_catalog_data(
+        results: list,
+        total: int,
+        page: int,
+        page_size: int,
+        search: str,
+        genre_filter: str,
+        sort_by: str,
+        genre_results: list,
+    ) -> dict:
+        available_genres = (
+            [{"name": r.get("name"), "count": r.get("count", 0)} for r in genre_results]
+            if genre_results
+            else []
+        )
+
+        universes = []
+        for record in results:
+            media = record.get("media", {})
+            genre = record.get("genre", {})
+            characters = record.get("characters", [])
+            char_count = record.get("char_count", 0)
+
+            universes.append(
+                {
+                    "id": media.get("name") or media.get("title", "unknown"),
+                    "name": media.get("name") or media.get("title", "Univers Inconnu"),
+                    "description": media.get("description", ""),
+                    "cosmology": media.get("cosmology", ""),
+                    "genre": genre.get("name", "Unknown"),
+                    "is_synthetic": True,
+                    "character_count": char_count,
+                    "characters": [
+                        {
+                            "name": c.get("name", "Unknown"),
+                            "role": c.get("role", ""),
+                            "power_level": c.get("power_level", 0),
+                        }
+                        for c in characters[:8]
+                    ],
+                    "created_at": media.get("created_at"),
+                }
+            )
+
+        return {
+            "results": universes,
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total": total,
+                "total_pages": max(1, -(-total // page_size)),  # Ceil division
+                "has_next": (page * page_size) < total,
+                "has_previous": page > 1,
+            },
+            "filters": {
+                "search": search,
+                "genre": genre_filter,
+                "sort": sort_by,
+            },
+            "available_genres": available_genres,
+        }
+
+    @staticmethod
+    def generate_lore_pdf(universe_name: str, raw_data: dict) -> io.BytesIO:
+        media = raw_data.get("media", {})
+        genre = raw_data.get("genre", {})
+        characters = raw_data.get("characters", [])
+        relations = raw_data.get("relations", [])
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=40,
+            leftMargin=40,
+            topMargin=54,
+            bottomMargin=54,
+        )
+
+        styles = getSampleStyleSheet()
+
+        # Custom Styles for Wiki Theme
+        primary_color = colors.HexColor("#2C3E50")  # Slate Blue
+        secondary_color = colors.HexColor("#16A085")  # Teal
+        text_color = colors.HexColor("#34495E")  # Charcoal
+        bg_light = colors.HexColor("#F8F9F9")  # Off white / Light gray
+
+        title_style = ParagraphStyle(
+            "WikiTitle",
+            parent=styles["Heading1"],
+            fontName="Helvetica-Bold",
+            fontSize=24,
+            leading=28,
+            textColor=primary_color,
+            spaceAfter=10,
+        )
+
+        h2_style = ParagraphStyle(
+            "WikiH2",
+            parent=styles["Heading2"],
+            fontName="Helvetica-Bold",
+            fontSize=13,
+            leading=16,
+            textColor=secondary_color,
+            spaceBefore=14,
+            spaceAfter=8,
+            keepWithNext=True,
+        )
+
+        body_style = ParagraphStyle(
+            "WikiBody",
+            parent=styles["Normal"],
+            fontName="Helvetica",
+            fontSize=9.5,
+            leading=13.5,
+            textColor=text_color,
+            spaceAfter=6,
+        )
+
+        meta_style = ParagraphStyle(
+            "WikiMeta",
+            parent=styles["Normal"],
+            fontName="Helvetica-Oblique",
+            fontSize=8.5,
+            leading=11,
+            textColor=colors.HexColor("#7F8C8D"),
+            spaceAfter=12,
+        )
+
+        th_style = ParagraphStyle(
+            "WikiTH",
+            parent=styles["Normal"],
+            fontName="Helvetica-Bold",
+            fontSize=9,
+            leading=11,
+            textColor=colors.white,
+        )
+
+        td_style = ParagraphStyle(
+            "WikiTD",
+            parent=styles["Normal"],
+            fontName="Helvetica",
+            fontSize=8.5,
+            leading=11,
+            textColor=text_color,
+        )
+
+        story = []
+
+        # Title
+        story.append(
+            Paragraph(
+                media.get("name") or media.get("title", "Univers Fictif"), title_style
+            )
+        )
+        genre_name = genre.get("name") if genre else "Inconnu"
+        story.append(
+            Paragraph(
+                f"Genre Principal : <b>{genre_name}</b> | Univers Synthétique Animetix",
+                meta_style,
+            )
+        )
+
+        # Divider line
+        divider = Table([[""]], colWidths=[doc.width], rowHeights=[1.5])
+        divider.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), secondary_color),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                    ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ]
+            )
+        )
+        story.append(divider)
+        story.append(Spacer(1, 10))
+
+        # Description Section
+        story.append(Paragraph("Description Générale", h2_style))
+        desc_text = (
+            media.get("description")
+            or "Aucune description de lore n'a été spécifiée pour cet univers."
+        )
+        story.append(Paragraph(desc_text, body_style))
+
+        # Cosmology Section
+        story.append(Paragraph("Cosmologie & Lois Physiques", h2_style))
+        cosmo_text = (
+            media.get("cosmology")
+            or "Les lois cosmologiques de cet univers n'ont pas encore été archivées."
+        )
+        story.append(Paragraph(cosmo_text, body_style))
+
+        # Characters Section
+        story.append(Paragraph("Personnages Clés de l'Univers", h2_style))
+        if characters:
+            char_data = [
+                [
+                    Paragraph("<b>Nom</b>", th_style),
+                    Paragraph("<b>Rôle / Description</b>", th_style),
+                    Paragraph("<b>Puissance</b>", th_style),
+                ]
+            ]
+            for char in characters:
+                c_name = char.get("name", "Inconnu")
+                c_role = char.get("role", "Rôle inconnu")
+                c_power = str(char.get("power_level", "N/A"))
+                char_data.append(
+                    [
+                        Paragraph(c_name, td_style),
+                        Paragraph(c_role, td_style),
+                        Paragraph(c_power, td_style),
+                    ]
+                )
+
+            # Table configuration
+            char_table = Table(char_data, colWidths=[120, 290, 80])
+            char_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, 0), secondary_color),
+                        ("BACKGROUND", (0, 1), (-1, -1), bg_light),
+                        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [bg_light, colors.white]),
+                        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BDC3C7")),
+                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                        ("TOPPADDING", (0, 0), (-1, -1), 6),
+                    ]
+                )
+            )
+            story.append(char_table)
+        else:
+            story.append(
+                Paragraph("Aucun personnage répertorié dans cet univers.", body_style)
+            )
+
+        # Neo4j Relations Section
+        story.append(Paragraph("Concepts Clés & Relations Graph (Neo4j)", h2_style))
+        if relations:
+            rel_data = [
+                [
+                    Paragraph("<b>Source</b>", th_style),
+                    Paragraph("<b>Relation</b>", th_style),
+                    Paragraph("<b>Cible (Label)</b>", th_style),
+                ]
+            ]
+            for rel in relations:
+                props = rel.get("properties", {})
+                labels = rel.get("labels", [])
+                target_label = labels[0] if labels else "Entity"
+                target_name = props.get("name") or props.get("title") or "Concept"
+                rel_type = rel.get("rel_type", "RELATED_TO")
+                is_out = rel.get("is_outgoing", True)
+
+                if is_out:
+                    src = media.get("name") or media.get("title") or "Univers"
+                    tgt = f"{target_name} ({target_label})"
+                else:
+                    src = f"{target_name} ({target_label})"
+                    tgt = media.get("name") or media.get("title") or "Univers"
+
+                rel_data.append(
+                    [
+                        Paragraph(src, td_style),
+                        Paragraph(f"——( {rel_type} )——>", td_style),
+                        Paragraph(tgt, td_style),
+                    ]
+                )
+
+            rel_table = Table(rel_data, colWidths=[180, 130, 180])
+            rel_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, 0), primary_color),
+                        ("BACKGROUND", (0, 1), (-1, -1), bg_light),
+                        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [bg_light, colors.white]),
+                        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BDC3C7")),
+                        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                        ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ]
+                )
+            )
+            story.append(rel_table)
+        else:
+            story.append(
+                Paragraph(
+                    "Aucune relation ou concept connexe répertorié dans la base Neo4j.",
+                    body_style,
+                )
+            )
+
+        # Build Document
+        doc.build(story, canvasmaker=NumberedCanvas)
+
+        # Seek to start
+        buffer.seek(0)
+        return buffer
