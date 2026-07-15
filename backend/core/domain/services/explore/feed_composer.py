@@ -39,6 +39,11 @@ class FeedComposer:
             rows.extend(byl_rows)
             personalized = True
 
+        genre_rows = self._genre_affinity_rows(user, media_type, catalog, seen_ids)
+        if genre_rows:
+            rows.extend(genre_rows)
+            personalized = True
+
         rows.extend(self._cold_start_rows(catalog, seen_ids))
         return {"rows": rows[:TARGET_ROWS], "personalized": personalized}
 
@@ -148,6 +153,37 @@ class FeedComposer:
                     }
                 )
         return rows
+
+    def _genre_affinity_rows(self, user, media_type, catalog, seen_ids):
+        if user is None or not getattr(user, "is_authenticated", False):
+            return []
+        from collections import Counter  # noqa: E402
+
+        from animetix.models import FavoriteManga  # noqa: E402
+
+        counter = Counter()
+        for fav in FavoriteManga.objects.filter(user=user).select_related("manga"):
+            for g in (fav.manga.metadata or {}).get("genres", []):
+                counter[g] += 1
+        if not counter:
+            return []
+        top_genre = counter.most_common(1)[0][0]
+
+        matching = [
+            it for it in catalog.get("db", []) if top_genre in (it.get("genres") or [])
+        ]
+        picked = self._take(matching, seen_ids)
+        if len(picked) < MIN_ROW_ITEMS:
+            return []
+        return [
+            {
+                "kind": "genre_affinity",
+                "title": f"Plus de {top_genre}",
+                "reason": "D'après tes genres favoris",
+                "seed": None,
+                "items": picked,
+            }
+        ]
 
     def _serialize(self, item: dict) -> dict:
         out = {k: item.get(k) for k in _ITEM_KEYS}
