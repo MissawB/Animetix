@@ -24,7 +24,7 @@ from core.utils.security import safe_http_request  # noqa: E402
 def monitor_inference_health():
     """Surveille la latence et la disponibilité de l'API Brain (Inférence)."""
     brain_url = os.getenv("BRAIN_API_URL")
-    brain_api_key = os.getenv("BRAIN_API_KEY", "dev-secret-key")
+    brain_api_key = os.getenv("BRAIN_API_KEY", "dev-insecure-key-animetix-2026")
     if not brain_url:
         return "⚠️ BRAIN_API_URL non configuré."
 

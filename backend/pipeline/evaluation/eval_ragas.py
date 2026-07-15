@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import logging
 import os
 
@@ -37,7 +37,9 @@ class RAGEvaluator:
         if not self.brain_url.endswith("/generate"):
             self.brain_url = f"{self.brain_url}/generate"
 
-        self.brain_api_key = os.getenv("BRAIN_API_KEY", "dev-secret-key")
+        self.brain_api_key = os.getenv(
+            "BRAIN_API_KEY", "dev-insecure-key-animetix-2026"
+        )
         self.embed_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
 
     def get_contexts(self, query: str, mode: str = "vector") -> List[str]:

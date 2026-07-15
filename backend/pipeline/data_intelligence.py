@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 import os
 import sys
 from typing import List
@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 BRAIN_URL = os.getenv("BRAIN_API_URL")
-BRAIN_API_KEY = os.getenv("BRAIN_API_KEY", "dev-secret-key")
+BRAIN_API_KEY = os.getenv("BRAIN_API_KEY", "dev-insecure-key-animetix-2026")
 
 
 class DataIntelligence:

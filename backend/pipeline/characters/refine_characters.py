@@ -23,7 +23,7 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 INPUT_FILE = os.path.join(BASE_DIR, "data", "raw", "raw_characters_db.json")
 OUTPUT_FILE = os.path.join(BASE_DIR, "data", "processed", "refined_characters.json")
 BRAIN_URL = os.getenv("BRAIN_API_URL")
-BRAIN_API_KEY = os.getenv("BRAIN_API_KEY", "dev-secret-key")
+BRAIN_API_KEY = os.getenv("BRAIN_API_KEY", "dev-insecure-key-animetix-2026")
 
 
 def call_brain_for_extraction(name, description):

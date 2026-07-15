@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import logging
 import os
 
@@ -32,7 +32,7 @@ if os.getenv("WANDB_API_KEY"):
     wandb.login(key=os.getenv("WANDB_API_KEY"))
 
 BRAIN_URL = os.getenv("BRAIN_API_URL", "http://127.0.0.1:7861")
-BRAIN_API_KEY = os.getenv("BRAIN_API_KEY", "dev-secret-key")
+BRAIN_API_KEY = os.getenv("BRAIN_API_KEY", "dev-insecure-key-animetix-2026")
 
 # Test set extracted from dataset
 TEST_SET = [

@@ -1,4 +1,4 @@
-﻿import json
+import json
 import logging
 import os
 import sys
@@ -71,7 +71,7 @@ def ragas_performance_comparison():
 
     embed_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
     brain_url = os.getenv("BRAIN_API_URL", "http://127.0.0.1:7861")
-    brain_api_key = os.getenv("BRAIN_API_KEY", "dev-secret-key")
+    brain_api_key = os.getenv("BRAIN_API_KEY", "dev-insecure-key-animetix-2026")
 
     # Registry and service for costs
     from core.domain.services.pricing_service import PricingService  # noqa: E402
