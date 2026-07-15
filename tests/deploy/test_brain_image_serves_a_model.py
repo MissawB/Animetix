@@ -80,7 +80,12 @@ def test_weights_are_baked_before_the_source_copy():
 def test_model_server_is_started_and_awaited_before_the_api():
     """uvicorn taking traffic before Ollama answers = /health "offline" on every
     cold start, and the router drops the brain for the whole health-TTL window."""
-    cmd = DOCKERFILE[DOCKERFILE.index("CMD ") :]
+    # Le CMD exec final (`CMD [...]`), pas le premier `CMD ` du dépôt : depuis
+    # l'ajout du HEALTHCHECK (`HEALTHCHECK ... CMD curl .../health`), `"CMD "`
+    # apparaît AVANT le vrai CMD, et la tranche captait le commentaire « uvicorn
+    # takes traffic » -- « uvicorn » y précédait « ollama serve », d'où un faux
+    # négatif. Le CMD exec est le seul au format `CMD [`.
+    cmd = DOCKERFILE[DOCKERFILE.index("CMD [") :]
 
     assert "ollama serve" in cmd, "the model server must run alongside the API"
     assert "/api/tags" in cmd, "the API must wait for the model server to answer"
