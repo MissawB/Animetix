@@ -69,7 +69,7 @@ z3-solver==4.16.0.0
 # Pinned to the versions pip-compile already resolved into requirements.txt, so
 # the lockfile stays byte-identical and a future re-compile is deterministic.
 google-cloud-aiplatform==1.158.0
-google-cloud-bigquery==3.42.0
+google-cloud-bigquery==3.42.2
 google-cloud-pubsub==2.39.0
 google-cloud-profiler==4.1.0
 google-cloud-workflows==1.22.0
