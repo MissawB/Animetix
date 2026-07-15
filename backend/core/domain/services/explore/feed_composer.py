@@ -29,10 +29,42 @@ class FeedComposer:
         seen_ids: set[str] = set()
         personalized = False
 
-        # (les couches personnalisées seront insérées ici par les tâches suivantes)
+        ai_row = self._ai_reco_row(user, media_type, catalog, seen_ids)
+        if ai_row:
+            rows.append(ai_row)
+            personalized = True
 
         rows.extend(self._cold_start_rows(catalog, seen_ids))
         return {"rows": rows[:TARGET_ROWS], "personalized": personalized}
+
+    def _ai_reco_row(self, user, media_type, catalog, seen_ids):
+        if user is None or not getattr(user, "is_authenticated", False):
+            return None
+        from animetix.models import UserRecommendation  # noqa: E402
+
+        recs = (
+            UserRecommendation.objects.filter(
+                user=user, media_item__media_type=media_type
+            )
+            .select_related("media_item")
+            .order_by("rank")
+        )
+        index = catalog.get("id_to_full_data", {})
+        items = []
+        for rec in recs:
+            item = index.get(str(rec.media_item.external_id))
+            if item:
+                items.append(item)
+        picked = self._take(items, seen_ids)
+        if not picked:
+            return None
+        return {
+            "kind": "ai_reco",
+            "title": "Choisi pour vous par l'IA",
+            "reason": "Recommandation personnalisée",
+            "seed": None,
+            "items": picked,
+        }
 
     def _serialize(self, item: dict) -> dict:
         out = {k: item.get(k) for k in _ITEM_KEYS}
