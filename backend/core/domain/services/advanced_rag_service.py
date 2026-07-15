@@ -55,13 +55,9 @@ class AdvancedRAGService:
         lnn_service: Any = "default",
         cache_port: Optional[CachePort] = None,
         cognitive_boosters_enabled: bool = True,
-        visual_index_service=None,
     ):
         self.repository = repository
         self.llm_service = llm_service
-        # La moitié « sémantique » de hybrid_search. Optionnel : hors container
-        # (tests, scripts), le service dégrade proprement en lexical seul.
-        self.visual_index_service = visual_index_service
         self.neo4j_manager = neo4j_manager
         self.prompt_manager = prompt_manager or getattr(
             llm_service, "prompt_manager", None
@@ -235,50 +231,23 @@ class AdvancedRAGService:
         user_id: Optional[str] = None,
     ) -> List[Dict]:
         idx = self._get_or_create_index(media_type)
-        lexical_results = idx.search(query, limit=limit * 2)
-
-        # Normaliser la clé de fusion des docs lexicaux sur le MAL id -- la MÊME
-        # règle (`idMal or id`) que `build_visual_index` a utilisée pour
-        # `external_id` dans `unified_clip_space`. Le catalogue lexical connaît une
-        # œuvre par son id AniList (ex. 101922) ; l'index CLIP l'a écrite sous son
-        # MAL id (38000). Sans cette normalisation, RRF verrait deux œuvres pour la
-        # même entrée et n'en renforcerait aucune -- le bug d'id, encore. Pour une
-        # œuvre sans idMal, la règle retombe sur l'id AniList des DEUX côtés (CLIP a
-        # aussi indexé sous `idMal or id`), donc elles coïncident quand même.
-        #
-        # COPIE, pas mutation en place : `idx.search` rend les items du catalogue
-        # PAR RÉFÉRENCE (via `parent_child_map`). Réécrire `doc["id"]` en place
-        # corromprait l'item en cache pour tout autre lecteur du catalogue.
-        lexical_results = [
-            {**doc, "id": str(doc.get("idMal") or doc.get("id") or "")}
-            for doc in lexical_results
-        ]
-
-        # La moitié « sémantique » : la tour texte de CLIP sur `unified_clip_space`
-        # (9 165 vraies jaquettes), filtrée par media_type. CLIP est un espace
-        # joint : une requête texte y cherche réellement. Avant, cette moitié
-        # interrogeait `anime_thematic` (vide) et `UnifiedRepositoryAdapter`
-        # retombait en silence sur un `ILIKE` SQL -- une « recherche sémantique »
-        # qui n'en était pas une.
-        semantic_results: List[Dict] = []
-        if self.visual_index_service is not None:
-            try:
-                query_vec = self.visual_index_service.encode_text("work", query)
-                semantic_results = self.visual_index_service.search(
-                    "work", query_vec, limit=limit * 2, where={"media_type": media_type}
-                )
-            except Exception as e:
-                # Chemin FACTURÉ (agentic-rag) : une panne d'encodeur ne fait pas
-                # tomber la réponse, elle dégrade vers le lexical seul.
-                logger.warning(
-                    f"Recherche sémantique CLIP indisponible, lexical seul: {e}"
-                )
-
-        fused_results = idx.reciprocal_rank_fusion(lexical_results, semantic_results)
-        fused_results = self._adjust_scores_cognitively(
-            fused_results, query, user_id=user_id
-        )
-        return fused_results[:limit]
+        # Lexical seul (TF-IDF sur titre + description). Mesuré le 2026-07-15 sur
+        # les vrais vecteurs de prod, c'est de LOIN la meilleure moitié : « a dark
+        # psychological thriller about death » -> Death Note, Mirai Nikki, Kaiji,
+        # Juuni Taisen, Dead Mount. Les deux « moitiés sémantiques » essayées ont
+        # échoué :
+        #   - l'ILIKE d'origine (via UnifiedRepositoryAdapter, collection thématique
+        #     vide) matchait le TITRE seul : redondant avec TF-IDF sur les requêtes
+        #     mot-clé, et VIDE sur les requêtes en langage naturel (le cas RAG) ;
+        #   - CLIP sur unified_clip_space (rebranchement 27c662d5) rend une proximité
+        #     VISUELLE de jaquette, pas thématique -- sur la requête ci-dessus il
+        #     remontait « Omae Gotoki » (isekai), Given (romance)... du bruit qui,
+        #     fusionné en RRF, DÉGRADAIT un top lexical impeccable.
+        # CLIP reste l'outil de la recherche PAR IMAGE (jaquette -> jaquette), sa
+        # vraie force ; il n'a rien à faire dans un RAG texte.
+        return self._adjust_scores_cognitively(
+            idx.search(query, limit=limit), query, user_id=user_id
+        )[:limit]
 
     def _get_or_create_index(self, media_type: str) -> HybridSearchIndex:
         if media_type not in self._indices:
