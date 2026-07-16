@@ -87,6 +87,17 @@ gcp_services:
         schedule: "" # On-demand only
         memory: "4Gi"
         cpu: "2"
+      - name: "animetix-build-character-index"
+        # One-shot backfill of character_ccip_space (~35k portraits). CCIP runs
+        # on the Brain (BRAIN_API_URL is injected); reads Character items and
+        # writes vectors via DATABASE_URL. Resumable: an already-indexed or dead
+        # image is skipped, so re-executing the job continues where it stopped
+        # (and retries items the Brain was too cold to encode on a prior run).
+        args: "backend/api/manage.py,build_visual_index,--target,character"
+        schedule: "" # On-demand only — run: gcloud run jobs execute animetix-build-character-index --region=europe-west9
+        memory: "4Gi"
+        cpu: "2"
+        timeout: "21600s" # 6h/run, download-dominated; re-run to finish the ~35k.
 
   budget:
     topic_name: "animetix-budget-alerts"
