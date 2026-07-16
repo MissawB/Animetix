@@ -152,8 +152,12 @@ def test_archetype_nexus_skips_snapshot_when_recent_exists(auth_client, user):
             aura_intensity=0.8,
             font_vibe="serif",
         )
-        container.core.neuro_symbolic_user_profiler.return_value.deduce_preference_rules.return_value = []
-        container.persistence.feedback_adapter.return_value.get_user_feedback.return_value = []
+        container.core.neuro_symbolic_user_profiler.return_value.deduce_preference_rules.return_value = (
+            []
+        )
+        container.persistence.feedback_adapter.return_value.get_user_feedback.return_value = (
+            []
+        )
         resp = auth_client.get(reverse("api_archetype_nexus"))
 
     assert resp.status_code == 200

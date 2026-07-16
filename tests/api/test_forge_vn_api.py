@@ -76,7 +76,9 @@ class TestForgeVNAPI:
 
         # Configure the global mock_container
         mock_container.visual_novel_service.generate_script.return_value = MockScript()
-        mock_container.visual_novel_service.return_value.generate_script.return_value = MockScript()
+        mock_container.visual_novel_service.return_value.generate_script.return_value = (
+            MockScript()
+        )
 
         mock_guardrail = MagicMock()
         mock_guardrail.validate_input.return_value = {"is_safe": True}
