@@ -108,13 +108,12 @@ class Command(BaseCommand):
                 discrepancies.append({"item": str(item), "issues": issues})
 
         # 4. Report
-        if not discrepancies:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    "[SUCCESS] All sampled items are synchronized across Django, pgvector, and Neo4j."
-                )
-            )
-        else:
+        checked = ["Django"]
+        skipped = []
+        (checked if vector_available else skipped).append("pgvector")
+        (checked if neo4j_available else skipped).append("Neo4j")
+
+        if discrepancies:
             self.stdout.write(
                 self.style.ERROR(f"[ERROR] FOUND {len(discrepancies)} DISCREPANCIES:")
             )
@@ -123,3 +122,24 @@ class Command(BaseCommand):
 
             if len(discrepancies) > 20:
                 self.stdout.write(f"  ... and {len(discrepancies) - 20} more.")
+        elif skipped:
+            # No discrepancies among the stores we could reach -- but do NOT
+            # issue a clean bill of health for a store we never checked. A dead
+            # Neo4j URI (the whole point of this guard) must not read as
+            # "synchronized across ... Neo4j": the verdict names what was
+            # verified and what was skipped, so the skip cannot pass unnoticed.
+            were = "was" if len(skipped) == 1 else "were"
+            self.stdout.write(
+                self.style.WARNING(
+                    "[WARNING] No discrepancies among the checked stores "
+                    f"({', '.join(checked)}), but {', '.join(skipped)} {were} "
+                    "SKIPPED (offline): synchronization there is UNVERIFIED, not "
+                    "confirmed."
+                )
+            )
+        else:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    "[SUCCESS] All sampled items are synchronized across Django, pgvector, and Neo4j."
+                )
+            )
