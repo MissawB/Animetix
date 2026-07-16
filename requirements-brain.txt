@@ -5,722 +5,154 @@
 #    pip-compile --allow-unsafe --output-file=requirements-brain.txt --strip-extras requirements-brain.in
 #
 absl-py==2.4.0
-    # via
-    #   -c requirements.txt
-    #   tensorboard
 accelerate==1.13.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
-    #   peft
 aiohappyeyeballs==2.6.2
-    # via
-    #   -c requirements.txt
-    #   aiohttp
 aiohttp==3.14.1
-    # via
-    #   -c requirements.txt
-    #   fsspec
 aiosignal==1.4.0
-    # via
-    #   -c requirements.txt
-    #   aiohttp
 annotated-doc==0.0.4
-    # via
-    #   -c requirements.txt
-    #   fastapi
 annotated-types==0.7.0
-    # via
-    #   -c requirements.txt
-    #   pydantic
 anyascii==0.3.3
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
 anyio==4.14.0
-    # via
-    #   -c requirements.txt
-    #   httpx
-    #   starlette
 attrs==26.1.0
-    # via
-    #   -c requirements.txt
-    #   aiohttp
 audioread==3.1.0
-    # via
-    #   -c requirements.txt
-    #   librosa
 bitsandbytes==0.49.2
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 bleach==6.4.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 certifi==2026.6.17
-    # via
-    #   -c requirements.txt
-    #   httpcore
-    #   httpx
-    #   requests
-    #   sentry-sdk
 cffi==2.0.0
-    # via
-    #   -c requirements.txt
-    #   cryptography
-    #   soundfile
 charset-normalizer==3.4.7
-    # via
-    #   -c requirements.txt
-    #   requests
 click==8.4.1
-    # via
-    #   -c requirements.txt
-    #   uvicorn
-colorama==0.4.6
-    # via
-    #   -c requirements.txt
-    #   click
-    #   tqdm
 colpali-engine==0.3.13
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 contourpy==1.3.3
-    # via
-    #   -c requirements.txt
-    #   matplotlib
 coqpit-config==0.2.5
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
-    #   coqui-tts-trainer
 coqui-tts==0.27.5
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 coqui-tts-trainer==0.3.3
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
 cryptography==47.0.0
-    # via
-    #   -c requirements.txt
-    #   google-auth
 cycler==0.12.1
-    # via
-    #   -c requirements.txt
-    #   matplotlib
 decorator==5.3.1
-    # via
-    #   -c requirements.txt
-    #   librosa
-diffusers==0.37.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
+diffusers==0.39.0
 docopt==0.6.2
-    # via
-    #   -c requirements.txt
-    #   num2words
 einops==0.8.2
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
 fastapi==0.135.3
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 filelock==3.29.4
-    # via
-    #   -c requirements.txt
-    #   diffusers
-    #   huggingface-hub
-    #   torch
-    #   transformers
 filetype==1.2.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 flatbuffers==25.12.19
-    # via
-    #   -c requirements.txt
-    #   onnxruntime
 fonttools==4.63.0
-    # via
-    #   -c requirements.txt
-    #   matplotlib
 frozenlist==1.8.0
-    # via
-    #   -c requirements.txt
-    #   aiohttp
-    #   aiosignal
 fsspec==2026.4.0
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
-    #   coqui-tts-trainer
-    #   huggingface-hub
-    #   torch
 ftfy==6.3.1
-    # via
-    #   -c requirements.txt
-    #   open-clip-torch
 google-api-core==2.31.0
-    # via
-    #   -c requirements.txt
-    #   google-api-python-client
-    #   google-cloud-trace
 google-api-python-client==2.197.0
-    # via
-    #   -c requirements.txt
-    #   google-cloud-profiler
 google-auth==2.55.0
-    # via
-    #   -c requirements.txt
-    #   google-api-core
-    #   google-api-python-client
-    #   google-auth-httplib2
-    #   google-cloud-profiler
-    #   google-cloud-trace
 google-auth-httplib2==0.4.0
-    # via
-    #   -c requirements.txt
-    #   google-api-python-client
-    #   google-cloud-profiler
 google-cloud-profiler==4.1.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 google-cloud-trace==1.19.0
-    # via
-    #   -c requirements.txt
-    #   opentelemetry-exporter-gcp-trace
 googleapis-common-protos==1.75.0
-    # via
-    #   -c requirements.txt
-    #   google-api-core
-    #   grpcio-status
 grpcio==1.81.1
-    # via
-    #   -c requirements.txt
-    #   google-api-core
-    #   google-cloud-trace
-    #   grpcio-status
-    #   tensorboard
 grpcio-status==1.81.1
-    # via
-    #   -c requirements.txt
-    #   google-api-core
 h11==0.16.0
-    # via
-    #   -c requirements.txt
-    #   httpcore
-    #   uvicorn
+hf-xet==1.5.1
 httpcore==1.0.9
-    # via
-    #   -c requirements.txt
-    #   httpx
 httplib2==0.31.2
-    # via
-    #   -c requirements.txt
-    #   google-api-python-client
-    #   google-auth-httplib2
 httpx==0.28.1
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
-    #   diffusers
 huggingface-hub==0.36.2
-    # via
-    #   -c requirements.txt
-    #   accelerate
-    #   diffusers
-    #   open-clip-torch
-    #   peft
-    #   sentence-transformers
-    #   timm
-    #   tokenizers
-    #   transformers
 idna==3.18
-    # via
-    #   -c requirements.txt
-    #   anyio
-    #   httpx
-    #   requests
-    #   yarl
 imageio==2.37.3
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 importlib-metadata==8.7.1
-    # via
-    #   -c requirements.txt
-    #   diffusers
-    #   opentelemetry-api
 inflect==7.5.0
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
 jinja2==3.1.6
-    # via
-    #   -c requirements.txt
-    #   torch
 joblib==1.5.3
-    # via
-    #   -c requirements.txt
-    #   librosa
-    #   scikit-learn
 kiwisolver==1.5.0
-    # via
-    #   -c requirements.txt
-    #   matplotlib
 ko-speech-tools==0.1.0
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
 lazy-loader==0.5
-    # via
-    #   -c requirements.txt
-    #   librosa
 librosa==0.11.0
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
 llvmlite==0.47.0
-    # via
-    #   -c requirements.txt
-    #   numba
 markdown==3.10.2
-    # via
-    #   -c requirements.txt
-    #   tensorboard
 markupsafe==3.0.3
-    # via
-    #   -c requirements.txt
-    #   jinja2
-    #   werkzeug
 matplotlib==3.11.0
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
 monotonic-alignment-search==0.2.1
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
 more-itertools==10.8.0
-    # via
-    #   -c requirements.txt
-    #   inflect
 mpmath==1.3.0
-    # via
-    #   -c requirements.txt
-    #   sympy
 msgpack==1.2.1
-    # via
-    #   -c requirements.txt
-    #   librosa
 multidict==6.7.1
-    # via
-    #   -c requirements.txt
-    #   aiohttp
-    #   yarl
 narwhals==2.22.1
-    # via
-    #   -c requirements.txt
-    #   scikit-learn
 networkx==3.6.1
-    # via
-    #   -c requirements.txt
-    #   torch
 num2words==0.5.14
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
 numba==0.65.1
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
-    #   librosa
 numpy==1.26.4
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
-    #   accelerate
-    #   bitsandbytes
-    #   colpali-engine
-    #   contourpy
-    #   coqui-tts
-    #   diffusers
-    #   imageio
-    #   librosa
-    #   matplotlib
-    #   monotonic-alignment-search
-    #   numba
-    #   onnxruntime
-    #   peft
-    #   scikit-learn
-    #   scipy
-    #   soundfile
-    #   soxr
-    #   tensorboard
-    #   torchvision
-    #   transformers
+nvidia-cublas-cu12==12.4.5.8
+nvidia-cuda-cupti-cu12==12.4.127
+nvidia-cuda-nvrtc-cu12==12.4.127
+nvidia-cuda-runtime-cu12==12.4.127
+nvidia-cudnn-cu12==9.1.0.70
+nvidia-cufft-cu12==11.2.1.3
+nvidia-curand-cu12==10.3.5.147
+nvidia-cusolver-cu12==11.6.1.9
+nvidia-cusparse-cu12==12.3.1.170
+nvidia-nccl-cu12==2.21.5
+nvidia-nvjitlink-cu12==12.4.127
+nvidia-nvtx-cu12==12.4.127
 onnxruntime==1.24.4
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 open-clip-torch==3.3.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 opentelemetry-api==1.40.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
-    #   opentelemetry-exporter-gcp-trace
-    #   opentelemetry-resourcedetector-gcp
-    #   opentelemetry-sdk
-    #   opentelemetry-semantic-conventions
 opentelemetry-exporter-gcp-trace==1.7.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 opentelemetry-resourcedetector-gcp==1.12.0a0
-    # via
-    #   -c requirements.txt
-    #   opentelemetry-exporter-gcp-trace
 opentelemetry-sdk==1.40.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
-    #   opentelemetry-exporter-gcp-trace
-    #   opentelemetry-resourcedetector-gcp
 opentelemetry-semantic-conventions==0.61b0
-    # via
-    #   -c requirements.txt
-    #   opentelemetry-sdk
 orjson==3.11.8
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 packaging==26.2
-    # via
-    #   -c requirements.txt
-    #   accelerate
-    #   bitsandbytes
-    #   coqui-tts
-    #   coqui-tts-trainer
-    #   huggingface-hub
-    #   lazy-loader
-    #   matplotlib
-    #   onnxruntime
-    #   peft
-    #   pooch
-    #   tensorboard
-    #   transformers
 peft==0.17.1
-    # via
-    #   -c requirements.txt
-    #   colpali-engine
 pillow==12.2.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
-    #   colpali-engine
-    #   diffusers
-    #   imageio
-    #   matplotlib
-    #   sentence-transformers
-    #   tensorboard
-    #   torchvision
 platformdirs==4.10.0
-    # via
-    #   -c requirements.txt
-    #   pooch
 pooch==1.9.0
-    # via
-    #   -c requirements.txt
-    #   librosa
 propcache==0.5.2
-    # via
-    #   -c requirements.txt
-    #   aiohttp
-    #   yarl
 proto-plus==1.28.0
-    # via
-    #   -c requirements.txt
-    #   google-api-core
-    #   google-cloud-trace
 protobuf==6.33.6
-    # via
-    #   -c requirements.txt
-    #   google-api-core
-    #   google-cloud-profiler
-    #   google-cloud-trace
-    #   googleapis-common-protos
-    #   grpcio-status
-    #   onnxruntime
-    #   proto-plus
-    #   tensorboard
 psutil==7.2.2
-    # via
-    #   -c requirements.txt
-    #   accelerate
-    #   coqui-tts-trainer
-    #   peft
 pyasn1==0.6.3
-    # via
-    #   -c requirements.txt
-    #   pyasn1-modules
 pyasn1-modules==0.4.2
-    # via
-    #   -c requirements.txt
-    #   google-auth
 pycparser==3.0
-    # via
-    #   -c requirements.txt
-    #   cffi
 pydantic==2.12.5
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
-    #   fastapi
-    #   pydantic-settings
 pydantic-core==2.41.5
-    # via
-    #   -c requirements.txt
-    #   pydantic
 pydantic-settings==2.13.1
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 pydub==0.25.1
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 pyparsing==3.3.2
-    # via
-    #   -c requirements.txt
-    #   httplib2
-    #   matplotlib
 pysbd==0.3.4
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
 python-dateutil==2.9.0.post0
-    # via
-    #   -c requirements.txt
-    #   matplotlib
 python-dotenv==1.2.2
-    # via
-    #   -c requirements.txt
-    #   pydantic-settings
 pyyaml==6.0.3
-    # via
-    #   -c requirements.txt
-    #   accelerate
-    #   coqui-tts
-    #   huggingface-hub
-    #   peft
-    #   timm
-    #   transformers
 regex==2026.5.9
-    # via
-    #   -c requirements.txt
-    #   diffusers
-    #   open-clip-torch
-    #   transformers
 requests==2.34.2
-    # via
-    #   -c requirements.txt
-    #   colpali-engine
-    #   diffusers
-    #   google-api-core
-    #   google-cloud-profiler
-    #   huggingface-hub
-    #   opentelemetry-resourcedetector-gcp
-    #   pooch
-    #   transformers
 safetensors==0.8.0
-    # via
-    #   -c requirements.txt
-    #   accelerate
-    #   diffusers
-    #   open-clip-torch
-    #   peft
-    #   timm
-    #   transformers
 scikit-learn==1.9.0
-    # via
-    #   -c requirements.txt
-    #   librosa
-    #   sentence-transformers
 scipy==1.17.1
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
-    #   colpali-engine
-    #   coqui-tts
-    #   librosa
-    #   scikit-learn
-    #   sentence-transformers
 sentence-transformers==3.3.1
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 sentry-sdk==2.58.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 six==1.17.0
-    # via
-    #   -c requirements.txt
-    #   python-dateutil
 soundfile==0.14.0
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
-    #   librosa
 soxr==1.1.0
-    # via
-    #   -c requirements.txt
-    #   librosa
 starlette==1.3.1
-    # via
-    #   -c requirements.txt
-    #   fastapi
 sympy==1.13.1
-    # via
-    #   -c requirements.txt
-    #   onnxruntime
-    #   torch
 tensorboard==2.20.0
-    # via
-    #   -c requirements.txt
-    #   coqui-tts-trainer
 tensorboard-data-server==0.7.2
-    # via
-    #   -c requirements.txt
-    #   tensorboard
 threadpoolctl==3.6.0
-    # via
-    #   -c requirements.txt
-    #   scikit-learn
 timm==1.0.28
-    # via
-    #   -c requirements.txt
-    #   open-clip-torch
 tokenizers==0.22.2
-    # via
-    #   -c requirements.txt
-    #   transformers
 torch==2.5.1
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
-    #   accelerate
-    #   bitsandbytes
-    #   colpali-engine
-    #   open-clip-torch
-    #   peft
-    #   sentence-transformers
-    #   timm
-    #   torchvision
 torchvision==0.20.1
-    # via
-    #   -c requirements.txt
-    #   colpali-engine
-    #   open-clip-torch
-    #   timm
 tqdm==4.68.3
-    # via
-    #   -c requirements.txt
-    #   coqui-tts
-    #   huggingface-hub
-    #   open-clip-torch
-    #   peft
-    #   sentence-transformers
-    #   transformers
 transformers==4.57.6
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
-    #   colpali-engine
-    #   coqui-tts
-    #   peft
-    #   sentence-transformers
+triton==3.1.0
 typeguard==4.5.2
-    # via
-    #   -c requirements.txt
-    #   inflect
 typing-extensions==4.15.0
-    # via
-    #   -c requirements.txt
-    #   aiohttp
-    #   aiosignal
-    #   anyio
-    #   coqpit-config
-    #   coqui-tts
-    #   fastapi
-    #   grpcio
-    #   huggingface-hub
-    #   librosa
-    #   opentelemetry-api
-    #   opentelemetry-resourcedetector-gcp
-    #   opentelemetry-sdk
-    #   opentelemetry-semantic-conventions
-    #   pydantic
-    #   pydantic-core
-    #   soundfile
-    #   starlette
-    #   torch
-    #   typeguard
-    #   typing-inspection
 typing-inspection==0.4.2
-    # via
-    #   -c requirements.txt
-    #   fastapi
-    #   pydantic
-    #   pydantic-settings
 uritemplate==4.2.0
-    # via
-    #   -c requirements.txt
-    #   google-api-python-client
 urllib3==2.7.0
-    # via
-    #   -c requirements.txt
-    #   requests
-    #   sentry-sdk
 uvicorn==0.44.0
-    # via
-    #   -c requirements.txt
-    #   -r requirements-brain.in
 wcwidth==0.8.2
-    # via
-    #   -c requirements.txt
-    #   ftfy
 webencodings==0.5.1
-    # via
-    #   -c requirements.txt
-    #   bleach
 werkzeug==3.1.8
-    # via
-    #   -c requirements.txt
-    #   tensorboard
 yarl==1.24.2
-    # via
-    #   -c requirements.txt
-    #   aiohttp
 zipp==4.1.0
-    # via
-    #   -c requirements.txt
-    #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 setuptools==80.10.2
-    # via
-    #   -c requirements.txt
-    #   tensorboard
-    #   torch
