@@ -371,7 +371,7 @@ grpcio-tools==1.81.1
     # via envoy-data-plane
 grpclib==0.4.9
     # via betterproto
-gunicorn==25.3.0
+gunicorn==26.0.0
     # via -r requirements.in
 h11==0.16.0
     # via

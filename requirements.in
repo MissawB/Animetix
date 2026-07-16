@@ -17,7 +17,7 @@ django-ratelimit==4.1.0
 django-csp==4.0
 django-storages==1.14.6
 fastapi==0.135.3
-gunicorn==25.3.0
+gunicorn==26.0.0
 uvicorn==0.44.0
 whitenoise==6.7.0
 
