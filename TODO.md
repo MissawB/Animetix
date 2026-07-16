@@ -29,7 +29,7 @@ _Aucun item ouvert._
 ## 🟡 Moyens
 
 - [ ] **Tests — hygiène : fixtures dupliquées, snapshot `sys.modules`, env forcé à l'import** _(audit dette 2026-07-11)_
-  - `api_client` défini **38×**, `mock_prompt_manager` et `mock_engine` **22×** chacun (2 conftest seulement) → factoriser et centraliser dans [tests/conftest.py](tests/conftest.py). Fixture autouse [tests/conftest.py:107-139](tests/conftest.py#L107-L139) snapshot/restore `sys.modules` entier à chaque test pour compenser les mocks fuyants (`test_diffusers_adapter.py:25`). `BRAIN_API_URL` forcé au niveau import ([tests/conftest.py:12](tests/conftest.py#L12)) masque les tests d'absence de config → privilégier une injection dynamique via monkeypatch dans les fixtures.
+  - **`api_client` (39×) et `mock_engine` (16×) centralisés** dans [tests/conftest.py](tests/conftest.py) le 2026-07-16 (cf. HISTORY ; CI verte). **Reste** : `mock_prompt_manager` (~21×) — non factorisé car il **varie** (valeurs de retour différentes par test), à traiter au cas par cas si un jour on veut une base commune paramétrable. Fixture autouse [tests/conftest.py:107-139](tests/conftest.py#L107-L139) snapshot/restore `sys.modules` entier à chaque test pour compenser les mocks fuyants (`test_diffusers_adapter.py:25`), et `BRAIN_API_URL` forcé au niveau import ([tests/conftest.py:12](tests/conftest.py#L12)) qui masque les tests d'absence de config : **gardes porteuses, à ne toucher qu'avec prudence** (fixer le mock fuyant AVANT de retirer le snapshot ; rendre la construction DI paresseuse AVANT de retirer le default BRAIN_API_URL).
 
 ## 🟢 Faibles
 
