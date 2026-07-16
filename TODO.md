@@ -23,8 +23,8 @@ _Aucun item ouvert._
   - CCIP est vérifié contre les **vrais poids** (768 dims, déterministe, personnages différents à 0,36-0,45 sur de vrais portraits du catalogue). La construction est un `python manage.py build_visual_index --target character` (reprenable, une image morte est sautée) — dominée par le téléchargement, ~35 000 images.
   - **La tour texte de CLIP reste volontairement non exposée** (décidé 2026-07-16) : `VisualIndexService.encode_text` n'a aucun appelant, et c'est le bon choix. La saga `hybrid_search` (archivée HISTORY 2026-07-14→15) a mesuré la recherche texte CLIP sur `unified_clip_space` **sur les vrais vecteurs prod** et l'a trouvée hors sujet — CLIP capte le **style de jaquette, pas le thème** — puis a reverté `hybrid_search` en lexical seul (`revert(rag): … CLIP mesure hors sujet`). L'exposer comme recherche d'œuvres répèterait cette erreur mesurée. `encode_text` = infrastructure dormante, à ne rebrancher que pour une éventuelle recherche « par description de jaquette » (style visuel), jamais thématique.
 
-- [ ] **URI Neo4j locale morte** _(constaté 2026-07-12)_
-  - `Failed to DNS resolve a654e145.databases.neo4j.io` — l'instance configurée en local n'existe plus (la prod tourne sur l'instance `1254b9b8`). `reconcile_db` saute donc toutes les vérifications de graphe en silence, et personne ne le voit.
+- [ ] **URI Neo4j locale morte — reste un geste de config** _(constaté 2026-07-12 ; skip silencieux corrigé 2026-07-16)_
+  - `Failed to DNS resolve a654e145.databases.neo4j.io` — l'instance configurée en local n'existe plus (la prod tourne sur l'instance `1254b9b8`). **Le skip n'est plus silencieux** : `reconcile_db` nomme désormais les stores vérifiés et signale `UNVERIFIED` quand Neo4j (ou pgvector) est sauté, au lieu d'annoncer un faux « synchronized across … Neo4j » (cf. HISTORY). Reste **purement de la config** : pointer `NEO4J_URI` local vers une instance vivante (prod = `1254b9b8`, ou un Neo4j local) — nécessite les creds, action opérateur, pas du code.
 
 ## 🟡 Moyens
 
