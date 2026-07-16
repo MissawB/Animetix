@@ -1,204 +1,65 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Play, Pause, Check, X, Music, Trophy, ArrowRight } from 'lucide-react';
+import React from 'react';
+import { Check, X, Trophy, ArrowRight, Music } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useBlindtestStore } from '../../features/games/stores/blindtestStore';
-import { blindtestService } from '../../features/games/services/blindtestService';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-
-const norm = (s: string) =>
-  s
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase();
-
-type HintType = 'invert' | 'blur' | 'grayscale' | 'hue' | 'noise';
-const HINT_TYPES: HintType[] = ['invert', 'blur', 'grayscale', 'hue', 'noise'];
-const SCORE_TIERS = [100, 50, 25, 10, 0];
-
-const pickHint = (): HintType => HINT_TYPES[Math.floor(Math.random() * HINT_TYPES.length)];
-
-// The colour/noise effect stays on at all times (the clip is never shown clean);
-// only the blur eases off with each guess so the image "se précise".
-const filterFor = (type: HintType, level: number): string => {
-  const L = Math.max(0, Math.min(1, level));
-  const blur = `blur(${(3 + L * 13).toFixed(1)}px)`;
-  switch (type) {
-    case 'invert':
-      return `invert(1) ${blur}`;
-    case 'grayscale':
-      return `grayscale(1) contrast(1.15) ${blur}`;
-    case 'hue':
-      return `hue-rotate(160deg) saturate(2.5) ${blur}`;
-    case 'blur':
-      return `blur(${(6 + L * 18).toFixed(1)}px)`;
-    case 'noise':
-      return `${blur} brightness(0.9)`;
-    default:
-      return blur;
-  }
-};
-
-const BonusRecap: React.FC<{
-  bonusArtistOn: boolean;
-  bonusSeqOn: boolean;
-  artistCorrect: boolean;
-  seqCorrect: boolean;
-  artists?: string[];
-  sequence?: number | string;
-  type: 'OP' | 'ED';
-}> = ({ bonusArtistOn, bonusSeqOn, artistCorrect, seqCorrect, artists, sequence, type }) => {
-  const { t } = useTranslation();
-  return (
-    <div className="mt-3 space-y-1 text-sm font-black uppercase tracking-wide">
-      {bonusArtistOn && (
-        <p className={artistCorrect ? 'text-green-500' : 'text-red-400'}>
-          {artistCorrect
-            ? t('games.blindtest.game.bonus_singer_ok', 'Chanteur ✓ +25')
-            : t('games.blindtest.game.bonus_singer_ko', {
-                defaultValue: 'Chanteur : {{artists}}',
-                artists: (artists ?? []).join(', '),
-              })}
-        </p>
-      )}
-      {bonusSeqOn && (
-        <p className={seqCorrect ? 'text-green-500' : 'text-red-400'}>
-          {seqCorrect
-            ? t('games.blindtest.game.bonus_number_ok', 'Numéro ✓ +25')
-            : t('games.blindtest.game.bonus_number_ko', {
-                defaultValue: "C'était {{type}} n°{{sequence}}",
-                type,
-                sequence,
-              })}
-        </p>
-      )}
-    </div>
-  );
-};
-
-// Révélation de fin de manche : l'affiche de l'œuvre + son titre,
-// que la manche soit gagnée ou perdue.
-const SecretReveal: React.FC<{ title?: string; image?: string | null }> = ({ title, image }) => {
-  const { t } = useTranslation();
-  return (
-    <div className="mt-3 flex flex-col items-center gap-3">
-      {image && (
-        <img
-          src={image}
-          alt={title ?? t('games.blindtest.game.secret_poster_alt', "Affiche de l'animé")}
-          className="w-32 rounded-2xl shadow-xl border-2 border-white/10 object-cover"
-          loading="lazy"
-          decoding="async"
-        />
-      )}
-      <p className="text-lg font-bold">
-        {t('games.blindtest.game.it_was', "C'était :")}{' '}
-        <span className="text-yellow-500">{title}</span>
-      </p>
-    </div>
-  );
-};
+import { useBlindtestGame } from './hooks/useBlindtestGame';
+import { BlindtestBonusRecap } from './components/BlindtestBonusRecap';
+import { BlindtestSecretReveal } from './components/BlindtestSecretReveal';
+import { BlindtestPlayer } from './components/BlindtestPlayer';
 
 const BlindtestPage: React.FC = () => {
   const { t } = useTranslation();
-  const { gameState, isLoading, error, loadGame, restartGame, submitGuess } = useBlindtestStore();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const cfg = location.state as {
-    mode?: 'session' | 'single';
-    type?: 'OP' | 'ED';
-    difficulty?: string;
-    length?: number;
-    hints?: boolean;
-    guessArtist?: boolean;
-    guessSequence?: boolean;
-  } | null;
-  const mode = cfg?.mode ?? 'single';
-  const sessionLength = cfg?.length ?? 1;
-  const hintsEnabled = cfg?.hints ?? false;
-  const guessArtist = cfg?.guessArtist ?? false;
-  const guessSequence = cfg?.guessSequence ?? false;
-  const launchType = cfg?.type;
-  const launchDifficulty = cfg?.difficulty;
-
-  const [guess, setGuess] = useState<string>('');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [round, setRound] = useState(1);
-  const [totalScore, setTotalScore] = useState(0);
-  const [results, setResults] = useState<{ score: number; won: boolean; secret?: string }[]>([]);
-  const [sessionOver, setSessionOver] = useState(false);
-  const [hintType, setHintType] = useState<HintType>(() => pickHint());
-  const [aspect, setAspect] = useState(16 / 9);
-  const [titles, setTitles] = useState<string[]>([]);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [showSug, setShowSug] = useState(false);
-  // Bonus objectives (singer / opening number)
-  const [artistGuess, setArtistGuess] = useState('');
-  const [seqGuess, setSeqGuess] = useState('');
-  const [bonusDone, setBonusDone] = useState(false);
-  const [artistCorrect, setArtistCorrect] = useState(false);
-  const [seqCorrect, setSeqCorrect] = useState(false);
-  const mediaRef = useRef<HTMLVideoElement>(null);
-
-  // Start the chosen format/difficulty; otherwise resume / auto-start.
-  useEffect(() => {
-    if (launchType) restartGame(launchType, launchDifficulty);
-    else loadGame();
-  }, [launchType, launchDifficulty, loadGame, restartGame]);
-
-  // Anime titles for the guess autocomplete (fetched once).
-  useEffect(() => {
-    let active = true;
-    blindtestService
-      .getTitles()
-      .then((t) => {
-        if (active) setTitles(t);
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const onSubmit = (value?: string) => {
-    const g = (value ?? guess).trim();
-    if (!g) return;
-    submitGuess(g);
-    setGuess('');
-    setSuggestions([]);
-    setShowSug(false);
-  };
-
-  const onGuessChange = (val: string) => {
-    setGuess(val);
-    const q = norm(val.trim());
-    if (q.length < 2) {
-      setSuggestions([]);
-      setShowSug(false);
-      return;
-    }
-    const starts: string[] = [];
-    const incl: string[] = [];
-    for (const t of titles) {
-      const n = norm(t);
-      if (n.startsWith(q)) starts.push(t);
-      else if (n.includes(q)) incl.push(t);
-      if (starts.length >= 8) break;
-    }
-    const sug = [...starts, ...incl].slice(0, 8);
-    setSuggestions(sug);
-    setShowSug(sug.length > 0);
-  };
-
-  const pick = (title: string) => onSubmit(title);
-
-  const togglePlay = () => {
-    const el = mediaRef.current;
-    if (!el) return;
-    if (el.paused) el.play().catch(() => {});
-    else el.pause();
-  };
+  const {
+    gameState,
+    isLoading,
+    error,
+    mode,
+    sessionLength,
+    hintsEnabled,
+    bonusArtistOn,
+    bonusSeqOn,
+    currentMode,
+    lost,
+    showVisual,
+    hintLevel,
+    hintType,
+    aspect,
+    setAspect,
+    baseScore,
+    round,
+    totalScore,
+    results,
+    sessionOver,
+    guess,
+    isPlaying,
+    setIsPlaying,
+    suggestions,
+    showSug,
+    setShowSug,
+    artistGuess,
+    setArtistGuess,
+    seqGuess,
+    setSeqGuess,
+    bonusDone,
+    artistCorrect,
+    seqCorrect,
+    bonusEnabled,
+    bonusPending,
+    bonusScore,
+    roundScore,
+    lastRound,
+    mediaRef,
+    onSubmit,
+    onGuessChange,
+    pick,
+    togglePlay,
+    validateBonus,
+    finishRound,
+    replay,
+    navigate,
+    restartGame,
+  } = useBlindtestGame();
 
   if (isLoading)
     return (
@@ -225,76 +86,8 @@ const BlindtestPage: React.FC = () => {
 
   if (!gameState) return null;
 
-  const currentMode: 'OP' | 'ED' = gameState.theme_type === 'ED' ? 'ED' : 'OP';
-  const lost = gameState.gameOver && gameState.won === false;
-  const maxAttempts = gameState.maxAttempts ?? 4;
-  const used = gameState.guesses.length;
-  // Visual hint only after the first guess; round always opens on the vinyl.
-  const showVisual = hintsEnabled && !gameState.gameOver && used >= 1;
-  const hintSteps = Math.max(1, maxAttempts - 1);
-  const hintLevel = used >= 1 ? Math.max(0, 1 - (used - 1) / hintSteps) : 1;
-  const correctIdx = gameState.guesses.findIndex((g) => g.is_correct);
-  const baseScore = gameState.won && correctIdx >= 0 ? (SCORE_TIERS[correctIdx] ?? 0) : 0;
+  const isSession = mode === 'session';
 
-  // Bonus objectives — only when won and the data is available for this theme.
-  const artistAvailable = !!(gameState.artists && gameState.artists.length);
-  const sequenceAvailable = gameState.sequence != null && gameState.sequence !== '';
-  const bonusArtistOn = guessArtist && artistAvailable;
-  const bonusSeqOn = guessSequence && sequenceAvailable;
-  const bonusEnabled = !!gameState.won && (bonusArtistOn || bonusSeqOn);
-  const bonusPending = bonusEnabled && !bonusDone;
-  const bonusScore =
-    (bonusArtistOn && artistCorrect ? 25 : 0) + (bonusSeqOn && seqCorrect ? 25 : 0);
-  const roundScore = baseScore + bonusScore;
-
-  const resetBonus = () => {
-    setBonusDone(false);
-    setArtistCorrect(false);
-    setSeqCorrect(false);
-    setArtistGuess('');
-    setSeqGuess('');
-  };
-  const validateBonus = () => {
-    if (bonusArtistOn) {
-      const g = norm(artistGuess);
-      setArtistCorrect(
-        !!g &&
-          (gameState.artists ?? []).some((a) => {
-            const n = norm(a);
-            return n.includes(g) || g.includes(n);
-          }),
-      );
-    }
-    if (bonusSeqOn) {
-      const want = String(gameState.sequence ?? '').replace(/[^0-9]/g, '');
-      const got = seqGuess.replace(/[^0-9]/g, '');
-      setSeqCorrect(!!got && got === want);
-    }
-    setBonusDone(true);
-  };
-
-  const replay = () => {
-    resetBonus();
-    restartGame(currentMode, gameState.difficulty);
-  };
-
-  const finishRound = () => {
-    setResults((r) => [
-      ...r,
-      { score: roundScore, won: !!gameState.won, secret: gameState.secret_title },
-    ]);
-    setTotalScore((t) => t + roundScore);
-    if (round >= sessionLength) {
-      setSessionOver(true);
-    } else {
-      setRound((r) => r + 1);
-      setHintType(pickHint());
-      resetBonus();
-      restartGame(launchType ?? currentMode, launchDifficulty ?? gameState.difficulty);
-    }
-  };
-
-  // ── Session summary ──────────────────────────────────────────
   if (sessionOver) {
     const maxScore = sessionLength * 100;
     const wins = results.filter((r) => r.won).length;
@@ -346,9 +139,6 @@ const BlindtestPage: React.FC = () => {
     );
   }
 
-  const isSession = mode === 'session';
-  const lastRound = round >= sessionLength;
-
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
       {/* Session progress */}
@@ -391,168 +181,21 @@ const BlindtestPage: React.FC = () => {
               <track kind="captions" />
             </video>
           ) : (
-            <div className="flex flex-col items-center py-8">
-              {/* Current format */}
-              <div className="mb-8">
-                <span className="px-4 py-1.5 rounded-full bg-yellow-400/15 border border-yellow-400/30 text-yellow-600 dark:text-yellow-400 text-[11px] font-black uppercase tracking-widest">
-                  {currentMode === 'OP'
-                    ? t('games.blindtest.game.format_opening', 'Opening')
-                    : t('games.blindtest.game.format_ending', 'Ending')}
-                </span>
-              </div>
-
-              {hintsEnabled ? (
-                /* One persistent media element (audio stays continuous). The vinyl
-                   covers it until the first guess; afterwards the clip is revealed
-                   distorted — colour effect always on, blur easing each guess. */
-                <div
-                  className="relative w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl bg-[#0d0d12]"
-                  style={{ aspectRatio: String(aspect) }}
-                >
-                  <video
-                    ref={mediaRef}
-                    src={gameState.video_url}
-                    className={`w-full h-full object-cover transition-all duration-500 ${showVisual ? 'opacity-100' : 'opacity-0'}`}
-                    style={{ filter: showVisual ? filterFor(hintType, hintLevel) : 'none' }}
-                    preload="auto"
-                    aria-label={t(
-                      'games.blindtest.game.visual_hint_aria',
-                      'Indice visuel du générique',
-                    )}
-                    onLoadedMetadata={(e) => {
-                      const el = e.currentTarget;
-                      if (el.videoWidth && el.videoHeight)
-                        setAspect(el.videoWidth / el.videoHeight);
-                    }}
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    onEnded={() => setIsPlaying(false)}
-                    onEmptied={() => setIsPlaying(false)}
-                  >
-                    <track kind="captions" />
-                  </video>
-
-                  {showVisual && hintType === 'noise' && (
-                    <div
-                      className="absolute inset-0 mix-blend-overlay pointer-events-none"
-                      style={{
-                        backgroundImage: "url('/static/img/noise.png')",
-                        opacity: 0.4 + hintLevel * 0.5,
-                      }}
-                    />
-                  )}
-
-                  {!showVisual && (
-                    <div className="absolute inset-0 grid place-items-center">
-                      <div
-                        className={`relative w-44 h-44 rounded-full grid place-items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isPlaying ? 'motion-safe:animate-[spin_4s_linear_infinite]' : ''}`}
-                        style={{
-                          background:
-                            'repeating-radial-gradient(circle at center, #0d0d12 0 3px, #1b1b24 3px 6px)',
-                        }}
-                      >
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-white/15" />
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500 grid place-items-center border-4 border-black/40 shadow-inner">
-                          <Music className="w-6 h-6 text-black/80" />
-                        </div>
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#0f0f1a] border border-white/20" />
-                      </div>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={togglePlay}
-                    aria-label={
-                      isPlaying
-                        ? t('games.blindtest.game.pause_aria', 'Mettre en pause')
-                        : t('games.blindtest.game.play_aria', 'Lancer la lecture')
-                    }
-                    className="absolute inset-0 grid place-items-center group outline-none"
-                  >
-                    <span className="bg-black/60 backdrop-blur-sm text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      {isPlaying ? (
-                        <Pause className="w-7 h-7" />
-                      ) : (
-                        <Play className="w-7 h-7 fill-current" />
-                      )}
-                    </span>
-                  </button>
-                </div>
-              ) : (
-                /* Vinyl disc — audio only (hints disabled) */
-                <button
-                  onClick={togglePlay}
-                  aria-label={
-                    isPlaying
-                      ? t('games.blindtest.game.pause_aria', 'Mettre en pause')
-                      : t('games.blindtest.game.play_aria', 'Lancer la lecture')
-                  }
-                  className="group relative outline-none"
-                >
-                  <div
-                    className={`relative w-60 h-60 rounded-full grid place-items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isPlaying ? 'motion-safe:animate-[spin_4s_linear_infinite]' : ''}`}
-                    style={{
-                      background:
-                        'repeating-radial-gradient(circle at center, #0d0d12 0 3px, #1b1b24 3px 6px)',
-                    }}
-                  >
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500 grid place-items-center border-4 border-black/40 shadow-inner">
-                      <Music className="w-9 h-9 text-black/80" />
-                    </div>
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#0f0f1a] border border-white/20" />
-                  </div>
-                  <span className="absolute inset-0 grid place-items-center pointer-events-none">
-                    <span className="bg-black/60 backdrop-blur-sm text-white p-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      {isPlaying ? (
-                        <Pause className="w-8 h-8" />
-                      ) : (
-                        <Play className="w-8 h-8 fill-current" />
-                      )}
-                    </span>
-                  </span>
-                  <video
-                    ref={mediaRef}
-                    src={gameState.video_url}
-                    className="hidden"
-                    preload="auto"
-                    aria-label={t(
-                      'games.blindtest.game.audio_clip_aria',
-                      'Extrait audio du blind test',
-                    )}
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    onEnded={() => setIsPlaying(false)}
-                    onEmptied={() => setIsPlaying(false)}
-                  >
-                    <track kind="captions" />
-                  </video>
-                </button>
-              )}
-
-              <p className="mt-8 font-bold text-gray-500 uppercase tracking-widest text-xs">
-                {isPlaying
-                  ? t('games.blindtest.game.playing', 'Lecture en cours…')
-                  : hintsEnabled
-                    ? t(
-                        'games.blindtest.game.listen_hint_visual',
-                        'Clique pour écouter — le visuel se précise à chaque essai',
-                      )
-                    : t(
-                        'games.blindtest.game.listen_hint_disc',
-                        'Cliquez sur le disque pour écouter',
-                      )}
-              </p>
-              {typeof gameState.attemptsLeft === 'number' && (
-                <p className="mt-2 text-[11px] font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400">
-                  {t('games.blindtest.game.attempts_left', {
-                    defaultValue: '{{count}} tentative{{plural}} restante{{plural}}',
-                    count: gameState.attemptsLeft,
-                    plural: gameState.attemptsLeft > 1 ? 's' : '',
-                  })}
-                </p>
-              )}
-            </div>
+            <BlindtestPlayer
+              videoUrl={gameState.video_url ?? ''}
+              hintsEnabled={hintsEnabled}
+              showVisual={showVisual}
+              hintType={hintType}
+              hintLevel={hintLevel}
+              aspect={aspect}
+              setAspect={setAspect}
+              isPlaying={isPlaying}
+              setIsPlaying={setIsPlaying}
+              mediaRef={mediaRef}
+              togglePlay={togglePlay}
+              currentMode={currentMode}
+              attemptsLeft={gameState.attemptsLeft}
+            />
           )}
         </Card>
 
@@ -615,7 +258,10 @@ const BlindtestPage: React.FC = () => {
                   score: baseScore,
                 })}
               </p>
-              <SecretReveal title={gameState.secret_title} image={gameState.secret_image} />
+              <BlindtestSecretReveal
+                title={gameState.secret_title}
+                image={gameState.secret_image}
+              />
               <div className="mt-5 pt-5 border-t border-white/10 space-y-3 text-left max-w-sm mx-auto">
                 <p className="text-[11px] font-black uppercase tracking-widest text-yellow-500 text-center">
                   {t('games.blindtest.game.bonus_title', 'Bonus (+25 pts chacun)')}
@@ -664,18 +310,19 @@ const BlindtestPage: React.FC = () => {
                     })
                   : t('games.blindtest.game.round_lost', '😵 Manche perdue')}
               </p>
-              <SecretReveal title={gameState.secret_title} image={gameState.secret_image} />
+              <BlindtestSecretReveal
+                title={gameState.secret_title}
+                image={gameState.secret_image}
+              />
               {bonusEnabled && bonusDone && (
-                <BonusRecap
-                  {...{
-                    bonusArtistOn,
-                    bonusSeqOn,
-                    artistCorrect,
-                    seqCorrect,
-                    artists: gameState.artists,
-                    sequence: gameState.sequence,
-                    type: currentMode,
-                  }}
+                <BlindtestBonusRecap
+                  bonusArtistOn={bonusArtistOn}
+                  bonusSeqOn={bonusSeqOn}
+                  artistCorrect={artistCorrect}
+                  seqCorrect={seqCorrect}
+                  artists={gameState.artists}
+                  sequence={gameState.sequence}
+                  type={currentMode}
                 />
               )}
               <Button variant="primary" className="mt-6" onClick={finishRound}>
@@ -690,7 +337,10 @@ const BlindtestPage: React.FC = () => {
               <p className="text-red-500 font-black text-2xl">
                 {t('games.blindtest.game.lost', '😵 PERDU !')}
               </p>
-              <SecretReveal title={gameState.secret_title} image={gameState.secret_image} />
+              <BlindtestSecretReveal
+                title={gameState.secret_title}
+                image={gameState.secret_image}
+              />
               <Button variant="danger" className="mt-6" onClick={replay}>
                 {t('games.blindtest.game.replay', 'REJOUER')}
               </Button>
@@ -706,18 +356,19 @@ const BlindtestPage: React.FC = () => {
                     })
                   : ''}
               </p>
-              <SecretReveal title={gameState.secret_title} image={gameState.secret_image} />
+              <BlindtestSecretReveal
+                title={gameState.secret_title}
+                image={gameState.secret_image}
+              />
               {bonusEnabled && bonusDone && (
-                <BonusRecap
-                  {...{
-                    bonusArtistOn,
-                    bonusSeqOn,
-                    artistCorrect,
-                    seqCorrect,
-                    artists: gameState.artists,
-                    sequence: gameState.sequence,
-                    type: currentMode,
-                  }}
+                <BlindtestBonusRecap
+                  bonusArtistOn={bonusArtistOn}
+                  bonusSeqOn={bonusSeqOn}
+                  artistCorrect={artistCorrect}
+                  seqCorrect={seqCorrect}
+                  artists={gameState.artists}
+                  sequence={gameState.sequence}
+                  type={currentMode}
                 />
               )}
               <Button variant="success" className="mt-6" onClick={replay}>
