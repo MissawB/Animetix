@@ -11,6 +11,13 @@ class TestDPODatasetCompiler(unittest.TestCase):
         pass
 
     def test_corrupt_fact_substitution(self):
+        import random  # noqa: E402
+
+        # Deterministic: the substitutions use the module-global RNG, so seed it
+        # to keep the entity-membership assertions below from flaking (a related
+        # studio/VA/publisher can otherwise fall outside the expected set).
+        random.seed(1)
+
         from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             corrupt_fact_substitution,
         )

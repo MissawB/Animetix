@@ -14,6 +14,7 @@ The former 404 ids `unsloth/DeepSeek-R1-Distill-Qwen-8B` and
 """
 
 import logging
+import os
 from typing import Optional
 
 from core.config import get_config
@@ -195,7 +196,11 @@ def resolve_text_embedding_version() -> str:
     (``PGVectorRepositoryAdapter.embedding_fn`` via
     ``resolve_text_embedding_model_id``) move together.
     """
-    return get_config().get("MODEL_VERSION_TEXT", "v3")
+    # Read the env var live (not via get_config): under Django the ConfigPort
+    # adapter reads static settings, which silently broke this documented
+    # env-driven toggle (writer/reader could then diverge). See
+    # tests/core/test_model_registry.py::...respects_env_override.
+    return os.getenv("MODEL_VERSION_TEXT", "v3")
 
 
 def resolve_text_embedding_model_id(version: Optional[str] = None) -> str:

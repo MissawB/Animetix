@@ -9,8 +9,12 @@ api_path = os.path.join(backend_path, "api")
 if api_path not in sys.path:
     sys.path.insert(0, api_path)
 
-from core.domain.services.dpo_feedback_loop import (  # noqa: E402
+# Re-export the module-level names the compiler bridges through sys.modules
+# (see core.dpo_feedback_loop.fetch_db_feedbacks) and that tests patch here.
+from core.domain.services.dpo_feedback_loop import (  # noqa: E402,F401
+    AIFeedback,
     DPOFeedbackLoop,
+    django_available,
 )
 
 if __name__ == "__main__":
