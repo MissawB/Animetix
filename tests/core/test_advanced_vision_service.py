@@ -1,12 +1,5 @@
-from unittest.mock import MagicMock
-
 import pytest
 from core.domain.services.advanced_vision_service import AdvancedVisionService
-
-
-@pytest.fixture
-def mock_engine():
-    return MagicMock()
 
 
 @pytest.fixture

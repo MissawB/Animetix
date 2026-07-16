@@ -24,7 +24,6 @@ from animetix.models import GameplaySession
 from dependency_injector import providers
 from django.contrib.auth.models import User
 from django.urls import reverse
-from rest_framework.test import APIClient
 
 
 @pytest.fixture(autouse=True)
@@ -37,11 +36,6 @@ def _wire_quiz_who():
     """
     container.wire(modules=[quiz_who_mod])
     yield
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 # --------------------------------------------------------------------------- #

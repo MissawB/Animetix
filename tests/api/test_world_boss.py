@@ -6,12 +6,6 @@ from core.domain.services.world_boss import rules
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
-from rest_framework.test import APIClient
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 @pytest.fixture

@@ -7,11 +7,6 @@ from core.domain.services.graph_construction_service import (
 
 
 @pytest.fixture
-def mock_engine():
-    return MagicMock()
-
-
-@pytest.fixture
 def mock_prompt_manager():
     manager = MagicMock()
     manager.get_prompt.return_value = ("Formatted Prompt", "System Prompt")

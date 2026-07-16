@@ -14,7 +14,6 @@ from django.db import connection
 from django.test import override_settings
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
-from rest_framework.test import APIClient
 
 LOCMEM_CACHE = {
     "default": {
@@ -31,11 +30,6 @@ def _locmem_cache():
     """Force LocMem cache so DRF throttling does not hit redis (CI sets REDIS_URL)."""
     with override_settings(CACHES=LOCMEM_CACHE):
         yield
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 @pytest.fixture

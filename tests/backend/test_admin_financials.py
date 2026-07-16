@@ -1,14 +1,8 @@
 import pytest
 from animetix.models import AdEvent, AITokenUsage
 from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
 
 User = get_user_model()
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 @pytest.mark.django_db

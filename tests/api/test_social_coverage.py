@@ -45,11 +45,6 @@ def _locmem_cache():
 
 
 @pytest.fixture
-def api_client():
-    return APIClient()
-
-
-@pytest.fixture
 def user(db):
     return User.objects.create_user(username="alice", password="password")
 

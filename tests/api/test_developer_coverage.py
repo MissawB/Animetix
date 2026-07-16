@@ -1,4 +1,4 @@
-﻿"""Coverage for animetix.api.developer view module.
+"""Coverage for animetix.api.developer view module.
 
 Covers the B2B developer RAG endpoint, API-key metadata/generation and the
 (now free/manual) Pro-tier subscription mock endpoint.
@@ -17,7 +17,6 @@ from animetix.api import developer as developer_mod
 from animetix.containers import get_container
 from django.contrib.auth.models import User
 from django.urls import reverse
-from rest_framework.test import APIClient
 
 real_container = get_container()
 
@@ -39,11 +38,6 @@ def _astream(events):
             yield e
 
     return _gen
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 @pytest.fixture

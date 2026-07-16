@@ -5,11 +5,6 @@ from core.domain.services.ragas_eval_service import EvaluationResult, RagasEvalS
 
 
 @pytest.fixture
-def mock_engine():
-    return MagicMock()
-
-
-@pytest.fixture
 def eval_service(mock_engine):
     return RagasEvalService(judge_engine=mock_engine)
 

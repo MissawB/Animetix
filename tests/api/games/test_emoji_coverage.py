@@ -13,7 +13,6 @@ from animetix.containers import container
 from dependency_injector import providers
 from django.contrib.auth.models import User
 from django.urls import reverse
-from rest_framework.test import APIClient
 
 
 @pytest.fixture(autouse=True)
@@ -32,11 +31,6 @@ def _wire_container():
 
     container.wire(modules=[emoji_mod])
     yield
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 # --------------------------------------------------------------------------- #

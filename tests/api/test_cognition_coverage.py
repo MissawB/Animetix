@@ -1,4 +1,4 @@
-﻿"""Coverage-focused tests for ``animetix.api.cognition`` DRF views.
+"""Coverage-focused tests for ``animetix.api.cognition`` DRF views.
 
 Exercises success, validation (400) and error (500) paths of every endpoint
 via the real URL routing + APIClient, with the constructor-injected services
@@ -15,7 +15,6 @@ from animetix.containers import get_container
 from django.contrib.auth.models import User
 from django.test import override_settings
 from django.urls import reverse
-from rest_framework.test import APIClient
 
 real_container = get_container()
 
@@ -34,11 +33,6 @@ def _locmem_cache():
     """Force LocMem cache so DRF throttling does not hit redis (CI sets REDIS_URL)."""
     with override_settings(CACHES=LOCMEM_CACHE):
         yield
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 @pytest.fixture
@@ -158,12 +152,8 @@ def test_archetype_nexus_skips_snapshot_when_recent_exists(auth_client, user):
             aura_intensity=0.8,
             font_vibe="serif",
         )
-        container.core.neuro_symbolic_user_profiler.return_value.deduce_preference_rules.return_value = (
-            []
-        )
-        container.persistence.feedback_adapter.return_value.get_user_feedback.return_value = (
-            []
-        )
+        container.core.neuro_symbolic_user_profiler.return_value.deduce_preference_rules.return_value = []
+        container.persistence.feedback_adapter.return_value.get_user_feedback.return_value = []
         resp = auth_client.get(reverse("api_archetype_nexus"))
 
     assert resp.status_code == 200

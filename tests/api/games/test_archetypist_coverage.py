@@ -17,17 +17,11 @@ from dependency_injector import providers
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.urls import reverse
-from rest_framework.test import APIClient
 
 # NB: the per-test wiring guard lives in conftest.py (``_rewire_game_modules``).
 # We never call ``container.reset_override()`` -- on this dependency_injector
 # version it detaches the ``core -> persistence`` sub-container link and breaks the
 # views. Each test scopes its overrides with ``with`` blocks, which self-clean.
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 @pytest.fixture

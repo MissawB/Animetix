@@ -3,12 +3,6 @@
 import pytest
 from animetix.models import AIFeedback, AIREvalResult, AISafetyEvent
 from django.urls import reverse
-from rest_framework.test import APIClient
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 @pytest.mark.django_db

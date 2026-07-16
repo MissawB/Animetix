@@ -5,11 +5,6 @@ from core.domain.services.star_reasoner_service import StarReasonerService
 
 
 @pytest.fixture
-def mock_engine():
-    return MagicMock()
-
-
-@pytest.fixture
 def mock_prompt_manager():
     pm = MagicMock()
     pm.get_prompt.return_value = ("formatted prompt", "system prompt")

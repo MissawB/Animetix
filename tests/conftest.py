@@ -184,3 +184,21 @@ def mock_container():
     # MagicMock auto-creates the nested sub-container paths on access
     # (container.core.x, container.agentic.y, ...); configure per-test.
     return container
+
+
+@pytest.fixture
+def api_client():
+    """Shared DRF test client — previously redefined identically in ~39 test
+    files. A test needing something else (e.g. Django's plain `Client`) defines
+    its own local `api_client`, which shadows this one."""
+    from rest_framework.test import APIClient  # noqa: E402
+
+    return APIClient()
+
+
+@pytest.fixture
+def mock_engine():
+    """Shared bare mocked inference engine — previously redefined identically in
+    ~16 test files. Tests needing a pre-configured engine (stream_generate,
+    generate, ...) define their own local `mock_engine`, which shadows this."""
+    return MagicMock()

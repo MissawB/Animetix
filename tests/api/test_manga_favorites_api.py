@@ -1,4 +1,4 @@
-﻿from unittest.mock import MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from animetix.containers import get_container
@@ -6,11 +6,6 @@ from animetix.models import FavoriteManga, MediaItem
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.test import APIClient
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 @pytest.fixture

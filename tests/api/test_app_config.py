@@ -9,12 +9,6 @@ import pytest
 from animetix.models import SiteConfiguration
 from django.contrib.auth.models import User
 from django.urls import reverse
-from rest_framework.test import APIClient
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 def _set_maintenance(on: bool, message: str = "", until=None):

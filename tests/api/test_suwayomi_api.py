@@ -1,4 +1,4 @@
-﻿import base64
+import base64
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,11 +7,6 @@ from animetix.models import MediaItem
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.test import APIClient
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 @pytest.fixture

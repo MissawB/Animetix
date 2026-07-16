@@ -5,7 +5,6 @@ from animetix.containers import container
 from dependency_injector import providers
 from django.contrib.auth.models import User
 from django.urls import reverse
-from rest_framework.test import APIClient
 
 
 class MockCovertestState:
@@ -28,11 +27,6 @@ class MockParadoxState:
         self.media = "Anime"
         self.is_daily = False
         self.game_over = False
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 @pytest.fixture
@@ -92,7 +86,6 @@ def test_emoji_game_state_auto_start(api_client, mock_catalog):
         container.core.catalog_service.override(providers.Object(mock_cat_service)),
         container.core.emoji_service.override(providers.Object(mock_em_service)),
     ):
-
         url = reverse("api_emoji_state")
         response = api_client.get(url)
 
@@ -124,7 +117,6 @@ def test_covertest_game_state_auto_start(api_client, mock_catalog):
         container.core.catalog_service.override(providers.Object(mock_cat_service)),
         container.core.cover_test_service.override(providers.Object(mock_ct_service)),
     ):
-
         url = reverse("api_covertest_state")
         response = api_client.get(url)
 
@@ -160,7 +152,6 @@ def test_paradox_game_state_and_guess(api_client, mock_catalog):
         container.core.catalog_service.override(providers.Object(mock_cat_service)),
         container.core.paradox_service.override(providers.Object(mock_px_service)),
     ):
-
         url_state = reverse("api_paradox_state")
         response = api_client.get(url_state)
         assert response.status_code == 200

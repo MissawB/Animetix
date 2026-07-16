@@ -1,15 +1,8 @@
-from unittest.mock import MagicMock
-
 import pytest
 from core.domain.services.spatial_audio_service import (
     NativeSpeechLLMService,
     VoiceCloningService,
 )
-
-
-@pytest.fixture
-def mock_engine():
-    return MagicMock()
 
 
 @pytest.fixture

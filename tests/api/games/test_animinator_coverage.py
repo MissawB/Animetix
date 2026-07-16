@@ -30,11 +30,6 @@ def _wire_animinator():
 
 
 @pytest.fixture
-def api_client():
-    return APIClient()
-
-
-@pytest.fixture
 def auth_client(db):
     user = User.objects.create_user(username="oracle-player", password="pw")
     client = APIClient()

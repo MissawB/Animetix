@@ -1,12 +1,5 @@
-from unittest.mock import MagicMock
-
 import pytest
 from core.domain.services.spatial_computing_service import SpatialComputingService
-
-
-@pytest.fixture
-def mock_engine():
-    return MagicMock()
 
 
 @pytest.fixture

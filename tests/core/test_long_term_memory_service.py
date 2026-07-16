@@ -11,11 +11,6 @@ def mock_vectors():
 
 
 @pytest.fixture
-def mock_engine():
-    return MagicMock()
-
-
-@pytest.fixture
 def mock_prompt_manager():
     manager = MagicMock(spec=PromptManager)
     manager.get_prompt.return_value = (

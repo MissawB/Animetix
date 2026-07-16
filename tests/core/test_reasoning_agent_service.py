@@ -5,11 +5,6 @@ from core.domain.services.reasoning_agent_service import ReasoningAgentService
 
 
 @pytest.fixture
-def mock_engine():
-    return MagicMock()
-
-
-@pytest.fixture
 def mock_search():
     return MagicMock()
 

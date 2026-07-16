@@ -1,4 +1,4 @@
-﻿from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from animetix.containers import get_container
@@ -7,16 +7,10 @@ from core.domain.entities.ai_schemas import (
     InferenceResponse,
     TokenLogProb,
 )
-from rest_framework.test import APIClient
 
 # The requests traverse the full middleware stack (session/profile lookups),
 # which needs DB access even with the container and billing mocked out.
 pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 def test_neural_diagnostics_api_success(api_client):

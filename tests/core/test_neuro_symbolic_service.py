@@ -6,11 +6,6 @@ from core.domain.services.neuro_symbolic_service import NeuroSymbolicService
 
 
 @pytest.fixture
-def mock_engine():
-    return MagicMock()
-
-
-@pytest.fixture
 def mock_prompt_manager():
     pm = MagicMock()
     pm.get_prompt.return_value = ("formatted prompt", "system prompt")
