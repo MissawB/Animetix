@@ -11,14 +11,15 @@ class TestDPODatasetCompiler(unittest.TestCase):
         pass
 
     def test_corrupt_fact_substitution(self):
-        import random  # noqa: E402
-
-        # Deterministic: the substitutions use the module-global RNG, so seed it
-        # to keep the entity-membership assertions below from flaking (a related
-        # studio/VA/publisher can otherwise fall outside the expected set).
-        random.seed(1)
-
+        # Assert replacements against the module's ACTUAL entity pools, not a
+        # hardcoded subset: the substitution draws from RELATED_ENTITIES_MAP /
+        # these lists, which are built from anime-DB data that differs between
+        # local and CI — a hardcoded expected set (or a fixed RNG seed) flakes
+        # across environments.
         from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            PUBLISHERS_LIST,
+            STUDIOS_LIST,
+            VOICE_ACTORS_LIST,
             corrupt_fact_substitution,
         )
 
@@ -43,20 +44,8 @@ class TestDPODatasetCompiler(unittest.TestCase):
         corr_ufo = corrupt_fact_substitution(text_ufotable, "Français")
         self.assertNotEqual(text_ufotable, corr_ufo)
         self.assertTrue(
-            any(
-                s in corr_ufo
-                for s in [
-                    "MAPPA",
-                    "Studio Trigger",
-                    "Bones",
-                    "Sunrise",
-                    "Wit Studio",
-                    "Studio Ghibli",
-                    "Kyoto Animation",
-                    "Madhouse",
-                    "Studio Pierrot",
-                ]
-            )
+            any(s in corr_ufo for s in STUDIOS_LIST if s.lower() != "ufotable"),
+            f"ufotable was not replaced by a known studio: {corr_ufo!r}",
         )
 
         # Test voice actor franchise replacement
@@ -66,8 +55,10 @@ class TestDPODatasetCompiler(unittest.TestCase):
         self.assertTrue(
             any(
                 v in corr_va
-                for v in ["Patrick Borg", "Eric Legrand", "Philippe Ariotti"]
-            )
+                for v in VOICE_ACTORS_LIST
+                if v != "Brigitte Lecordier"
+            ),
+            f"VA was not replaced by a known voice actor: {corr_va!r}",
         )
 
         # Test publisher group replacement
@@ -75,16 +66,8 @@ class TestDPODatasetCompiler(unittest.TestCase):
         corr_pub = corrupt_fact_substitution(text_pub, "Français")
         self.assertNotEqual(text_pub, corr_pub)
         self.assertTrue(
-            any(
-                p in corr_pub
-                for p in [
-                    "Kana",
-                    "Pika Édition",
-                    "Kurokawa",
-                    "Ki-oon",
-                    "Crunchyroll Manga",
-                ]
-            )
+            any(p in corr_pub for p in PUBLISHERS_LIST if p != "Glénat Manga"),
+            f"publisher was not replaced by a known publisher: {corr_pub!r}",
         )
 
     def test_corrupt_tonal_deviation(self):
