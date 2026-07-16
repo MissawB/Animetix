@@ -18,7 +18,7 @@ try:
 
     django.setup()
     django_available = True
-    from animetix.models import AIFeedback
+    from animetix.models import AIFeedback  # type: ignore[no-redef]
 except Exception:
     pass
 
