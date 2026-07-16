@@ -123,14 +123,13 @@ export default defineConfig({
         'src/types/**',
         'src/main.tsx',
       ],
-      // Plancher anti-régression (actuel 29.2 % stmts / 22.9 branches / 28.7 funcs
-      // / 29.5 lines après les campagnes services/utils/hooks + composants + pages,
-      // dont les lots games/media-services + hooks). Remonter, jamais baisser.
+      // Plancher anti-régression (rehaussé à 38 % stmts / 28 branches / 34 funcs
+      // / 39 lines suite à l'intégration des services et hooks partagés). Remonter, jamais baisser.
       thresholds: {
-        statements: 29,
-        branches: 22,
-        functions: 28,
-        lines: 29,
+        statements: 38,
+        branches: 28,
+        functions: 34,
+        lines: 39,
       },
     },
     projects: [{
