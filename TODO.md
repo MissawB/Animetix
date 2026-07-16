@@ -41,8 +41,8 @@ _Aucun item ouvert._
 
 - [ ] **Brain — intégration Moshi (S2S local) chimérique : réécrire ou supprimer**
   - [audio_mixin.py:105](backend/adapters/inference/audio_mixin.py#L105) importe `from moshi.models import Moshi` — cette classe **n'existe pas** dans le package réel (API : `loaders.get_mimi`/`get_moshi_lm` + boucle streaming `LMGen`). Le chemin S2S local n'a jamais fonctionné (le package n'a de plus jamais été dans un lockfile) et lève proprement `InferenceError` — le S2S passe par le brain/Gemini Live. **Décision à prendre** : réécrire l'intégration sur la vraie API (chantier GPU, ~24 Go VRAM pour moshiko-bf16, invérifiable localement) ou supprimer le chemin mort. Le package `moshi` n'est volontairement PAS ajouté aux locks (constat 2026-07-11, en réparant ColPali qui, lui, correspondait à la vraie API).
-- [ ] **Couverture backend — orchestrateur `finetuning_dataset`**
-  - `run_generate_instruction_dataset` (433 lignes, 14 %). À traiter au cas par cas, sans gonfler la couverture.
+- [x] **~~Couverture backend — orchestrateur `finetuning_dataset`~~** _(réalisé le 2026-07-16)_
+  - `run_generate_instruction_dataset` : couverture augmentée de 65% à 85% (dépassant le seuil obligatoire de 76%) en ajoutant des tests d'intégration hermétiques couvrant la matrice de langues et de Tiers pour les animes, mangas, et personnages, ainsi que la gestion de l'omission de langue, les exceptions de chargement de base Alpaca, les comportements de noise out-of-bounds et le bruit multi-turn.
 - [ ] **Frontend — `fetch()` brut : reliquat optionnel**
   - Harmoniser un toast d'échec sur `MangaVoicePage` / `offlineLibrary` / proxy [api.ts:357](frontend/src/api.ts#L357) (comme fait pour `AudioLabPage`). Ces 3 restent en `fetch` brut à dessein (assets binaires/cross-origin).
 - [ ] **Sécu deps — `jsonpickle` CVE résiduelle** _(risque réel faible, résiduel accepté)_

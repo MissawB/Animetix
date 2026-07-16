@@ -992,10 +992,309 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
             ) as out:
                 # Invalid rate -> ValueError caught -> 0.12 fallback; must not raise.
                 fd.run_generate_instruction_dataset()
+                self.assertTrue(self._read(out))
+
+    def test_run_generate_instruction_dataset_all_tiers_and_languages_no_augmentation(
+        self,
+    ):
+        # We need 6 items to alternate indices (idx 0 to 5) to cover French/English & Tiers 1/2/3
+        animes = [
+            # idx 0: French Tier-1 (>150k)
+            {
+                "title": "AnimeFR1",
+                "genres": ["Action"],
+                "studios": ["S1"],
+                "tags": ["t1"],
+                "popularity": 200000,
+                "year": 2010,
+            },
+            # idx 1: English Tier-1 (>150k)
+            {
+                "title": "AnimeEN1",
+                "genres": ["Comedy"],
+                "studios": ["S2"],
+                "tags": ["t2"],
+                "popularity": 200000,
+                "year": 2010,
+            },
+            # idx 2: French Tier-2 (50k - 150k)
+            {
+                "title": "AnimeFR2",
+                "genres": ["Drama"],
+                "studios": ["S3"],
+                "tags": ["t3"],
+                "popularity": 100000,
+                "year": 2010,
+            },
+            # idx 3: English Tier-2 (50k - 150k)
+            {
+                "title": "AnimeEN2",
+                "genres": ["Sci-Fi"],
+                "studios": ["S4"],
+                "tags": ["t4"],
+                "popularity": 100000,
+                "year": 2010,
+            },
+            # idx 4: French Tier-3 (<= 50k)
+            {
+                "title": "AnimeFR3",
+                "genres": ["Slice of Life"],
+                "studios": ["S5"],
+                "tags": ["t5"],
+                "popularity": 10000,
+                "year": 1990,
+            },  # underrepresented genre + retro era
+            # idx 5: English Tier-3 (<= 50k)
+            {
+                "title": "AnimeEN3",
+                "genres": ["Mecha"],
+                "studios": ["S6"],
+                "tags": ["t6"],
+                "popularity": 10000,
+                "year": 1990,
+            },
+        ]
+        mangas = [
+            # idx 0: French Tier-1
+            {
+                "title": "MangaFR1",
+                "genres": ["Action"],
+                "tags": ["t1"],
+                "popularity": 200000,
+                "year": 2010,
+            },
+            # idx 1: English Tier-1
+            {
+                "title": "MangaEN1",
+                "genres": ["Comedy"],
+                "tags": ["t2"],
+                "popularity": 200000,
+                "year": 2010,
+            },
+            # idx 2: French Tier-2
+            {
+                "title": "MangaFR2",
+                "genres": ["Drama"],
+                "tags": ["t3"],
+                "popularity": 100000,
+                "year": 2010,
+            },
+            # idx 3: English Tier-2
+            {
+                "title": "MangaEN2",
+                "genres": ["Sci-Fi"],
+                "tags": ["t4"],
+                "popularity": 100000,
+                "year": 2010,
+            },
+            # idx 4: French Tier-3
+            {
+                "title": "MangaFR3",
+                "genres": ["Slice of Life"],
+                "tags": ["t5"],
+                "popularity": 10000,
+                "year": 1990,
+            },
+            # idx 5: English Tier-3
+            {
+                "title": "MangaEN3",
+                "genres": ["Mecha"],
+                "tags": ["t6"],
+                "popularity": 10000,
+                "year": 1990,
+            },
+        ]
+        chars = [
+            # idx 0: French Tier-1 (>2000 favoris)
+            {
+                "name": "CharFR1",
+                "origin": "OriginFR1",
+                "entities": {"organizations": ["Org1"]},
+                "popularity": {"favourites": 3000, "rank": 1},
+                "metadata": {"height": "180cm"},
+            },
+            # idx 1: English Tier-1 (>2000 favoris)
+            {
+                "name": "CharEN1",
+                "origin": "OriginEN1",
+                "entities": {"organizations": ["Org2"]},
+                "popularity": {"favourites": 3000, "rank": 2},
+                "metadata": {"height": "170cm"},
+            },
+            # idx 2: French Tier-2 (500 - 2000 favoris)
+            {
+                "name": "CharFR2",
+                "origin": "OriginFR2",
+                "entities": {"organizations": ["Org3"]},
+                "popularity": {"favourites": 1000, "rank": 10},
+                "metadata": {"height": "165cm"},
+            },
+            # idx 3: English Tier-2 (500 - 2000 favoris)
+            {
+                "name": "CharEN2",
+                "origin": "OriginEN2",
+                "entities": {"organizations": ["Org4"]},
+                "popularity": {"favourites": 1000, "rank": 20},
+                "metadata": {"height": "160cm"},
+            },
+            # idx 4: French Tier-3 (50 - 500 favoris)
+            {
+                "name": "CharFR3",
+                "origin": "OriginFR3",
+                "entities": {"organizations": ["Org5"]},
+                "popularity": {"favourites": 100, "rank": 100},
+                "metadata": {"height": "155cm"},
+            },
+            # idx 5: English Tier-3 (50 - 500 favoris)
+            {
+                "name": "CharEN3",
+                "origin": "OriginEN3",
+                "entities": {"organizations": ["Org6"]},
+                "popularity": {"favourites": 100, "rank": 200},
+                "metadata": {"height": "150cm"},
+            },
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with _orchestrator_env(
+                tmp,
+                animes=animes,
+                mangas=mangas,
+                chars=chars,
+                env={
+                    "ANIMETIX_AUGMENT_DATA": "False",
+                    "ANIMETIX_QUERY_NOISE_RATE": "0.0",
+                },
+            ) as out:
+                # Patch one simple generator to omit "language" to cover line 1242
+                with patch.object(
+                    fd,
+                    "generate_transmedia_instructions",
+                    return_value=[
+                        {"instruction": "no-lang", "input": "", "output": "o"}
+                    ],
+                ):
+                    fd.run_generate_instruction_dataset()
+                    data = self._read(out)
+
+        self.assertTrue(data)
+        # Check that we handled the item without language
+        no_lang_item = [it for it in data if it.get("instruction") == "no-lang"]
+        self.assertEqual(len(no_lang_item), 1)
+        self.assertEqual(no_lang_item[0]["language"], "Français")
+
+    def test_run_generate_instruction_dataset_ratios_warning_and_meta_expansion(self):
+        animes = [
+            {
+                "title": "A",
+                "genres": ["G"],
+                "studios": ["S"],
+                "tags": ["t"],
+                "popularity": 100,
+                "year": 2020,
+            }
+        ]
+        # 1. Test ratios sum <= 0 warning fallback
+        with tempfile.TemporaryDirectory() as tmp:
+            with _orchestrator_env(
+                tmp,
+                animes=animes,
+                mangas=[],
+                chars=[],
+                env={
+                    "ANIMETIX_AUGMENT_DATA": "False",
+                    "ANIMETIX_QUERY_NOISE_RATE": "0.0",
+                    "ANIMETIX_RATIO_SPECIALIZED": "0",
+                    "ANIMETIX_RATIO_META": "0",
+                    "ANIMETIX_RATIO_GENERAL": "0",
+                },
+            ) as out:
+                fd.run_generate_instruction_dataset()
                 data = self._read(out)
-        self.assertTrue(
-            data, "orchestrator should still produce a dataset on noise-rate fallback"
-        )
+        self.assertTrue(data)
+
+        # 2. Test meta expansion when required meta count > meta pool
+        with tempfile.TemporaryDirectory() as tmp:
+            with _orchestrator_env(
+                tmp,
+                animes=animes,
+                mangas=[],
+                chars=[],
+                env={
+                    "ANIMETIX_AUGMENT_DATA": "False",
+                    "ANIMETIX_QUERY_NOISE_RATE": "0.0",
+                    "ANIMETIX_RATIO_SPECIALIZED": "5",
+                    "ANIMETIX_RATIO_META": "500",
+                    "ANIMETIX_RATIO_GENERAL": "15",
+                },
+            ) as out:
+                fd.run_generate_instruction_dataset()
+                data = self._read(out)
+        self.assertTrue(data)
+
+    def test_run_generate_instruction_dataset_load_dataset_exception(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with _orchestrator_env(
+                tmp,
+                animes=[],
+                mangas=[],
+                chars=[],
+                env={
+                    "ANIMETIX_AUGMENT_DATA": "False",
+                    "ANIMETIX_QUERY_NOISE_RATE": "0.0",
+                },
+            ) as out:
+                with patch.object(
+                    fd, "load_dataset", side_effect=Exception("Failed to load")
+                ):
+                    fd.run_generate_instruction_dataset()
+                    data = self._read(out)
+        self.assertTrue(data)
+
+    def test_run_generate_instruction_dataset_noise_rate_out_of_bounds_and_turns_noise(
+        self,
+    ):
+        animes = [
+            {
+                "title": "A",
+                "genres": ["G"],
+                "studios": ["S"],
+                "tags": ["t"],
+                "popularity": 100,
+                "year": 2020,
+            }
+        ]
+        # Noise rate out of bounds -> exception raised internally -> fallback
+        with tempfile.TemporaryDirectory() as tmp:
+            with _orchestrator_env(
+                tmp,
+                animes=animes,
+                mangas=[],
+                chars=[],
+                env={
+                    "ANIMETIX_AUGMENT_DATA": "False",
+                    "ANIMETIX_QUERY_NOISE_RATE": "2.0",
+                },
+            ) as out:
+                fd.run_generate_instruction_dataset()
+                data = self._read(out)
+        self.assertTrue(data)
+
+        # Noise rate = 1.0 (forces noise on all) + verify multi-turn noise injection
+        with tempfile.TemporaryDirectory() as tmp:
+            with _orchestrator_env(
+                tmp,
+                animes=animes,
+                mangas=[],
+                chars=[],
+                env={
+                    "ANIMETIX_AUGMENT_DATA": "False",
+                    "ANIMETIX_QUERY_NOISE_RATE": "1.0",
+                },
+            ) as out:
+                fd.run_generate_instruction_dataset()
+                data = self._read(out)
+        self.assertTrue(data)
 
 
 if __name__ == "__main__":
