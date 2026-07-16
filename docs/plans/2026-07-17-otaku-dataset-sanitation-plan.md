@@ -145,6 +145,9 @@ def clean_source_prose(text: str, max_chars: int = 1200) -> str:
     text = text.replace("�", " ")
     # Espaces.
     text = re.sub(r"\s+", " ", text).strip()
+    # Les balises/spoilers retirés laissent parfois un espace avant la ponctuation
+    # ("Hunter ." ) — on le referme.
+    text = re.sub(r"\s+([.!?,;:])", r"\1", text)
     if len(text) <= max_chars:
         return text
     window = text[:max_chars]
