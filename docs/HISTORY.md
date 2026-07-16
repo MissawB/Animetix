@@ -2,6 +2,17 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-16] Session: Dockerfile hardening, Covertest→Postgres, coverage & fetch hygiene, script archive, BlindtestPage split, CCIP integration guard
+
+- **Dockerfile hardening (safe subset).** `Dockerfile.brain` runtime → `python:3.12-slim` (bake stages left on 3.11 to preserve the ~90-min merge cache); `Dockerfile.dataflow` drops root to a non-root `appuser` after apt/pip. Brain stays root by design (Ollama installs as root, the GPU path is untestable and CI never rebuilds the brain); the dataflow non-root drop is **unverified against a real Dataflow submission** — revert the `USER` block if the runner rejects it. The `:latest` launcher is kept (Google's recommended form, with pin-by-digest instructions in-file).
+- **Covertest — covers out of the JSON blob.** `manga_covers.json` (0.5 → ~25 MB, loaded entirely into RAM by the pgvector singleton at first call) moved to a Postgres `MangaCover` model with on-demand lookups (`sync_covers` command + migration).
+- **`finetuning_dataset` coverage 65 → 85%.** Hermetic integration tests over the language×tier matrix (anime/manga/character), language omission, Alpaca-base load exceptions, out-of-bounds noise, and multi-turn noise.
+- **Raw-`fetch()` toast hygiene.** Failure toasts harmonized on `MangaVoicePage`, `offlineLibrary` (via a `useChapterDownload` hook), and the OpenData download (`OpenDataPage` / `labService`); the three keep raw `fetch` on purpose (binary / cross-origin) but now surface an `error` toast.
+- **Frontend coverage gate raised** to match reality and block regressions: 29→38 statements / 22→28 branches / 28→34 functions / 29→39 lines.
+- **`scripts/` cleaned.** 7 unused one-offs → `scripts/archive/`, stale `test_*.pyc` purged, and a `scripts/README.md` documenting the active and archived scripts.
+- **`BlindtestPage.tsx` 753 → 324 lines**, extracting a `useBlindtestGame` hook plus `BlindtestPlayer` / `BlindtestSecretReveal` / `BlindtestBonusRecap` components. The other >500-line components (TransparencyPage, AudioLabPage, LabHubPage, SpeechToSpeechLabPage) remain and stay tracked as open.
+- **CCIP integration guard.** A new `integration`-marked test (`tests/adapters/test_ccip_vision_integration.py`) drives the real `deepghs/ccip_onnx` graph over real catalog portraits and pins the end-to-end property — 768-d, non-zero, deterministic, discriminating (mean cross-character ~0.33 ≪ self ~1.0), size-invariant, query-ranks-self — that a subtly-wrong preprocessing change would break while passing the mocked units. De-risks the phase-2 character build (which remains a prod job).
+
 ## [2026-07-15] Session: Technical-debt sweep — hardcoded config & data externalized, duplicated logic unified
 
 Closure of five 🟡 items from the *audit dette 2026-07-11*.
