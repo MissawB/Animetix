@@ -165,7 +165,7 @@ deepdiff==8.6.2
     # via dbt-common
 dependency-injector==4.49.0
     # via -r requirements.in
-diffusers==0.37.0
+diffusers==0.39.0
     # via -r requirements.in
 dill==0.4.1
     # via
