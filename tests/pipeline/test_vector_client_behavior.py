@@ -407,17 +407,16 @@ def test_upsert_alloydb_null_embedding_when_no_document(mocker):
     assert params[0] == "anime" and params[1] == "1"
 
 
-def test_upsert_alloydb_raises_instead_of_discarding_a_supplied_embedding(mocker):
-    """IMPORTANT: this branch computes `embedding = embedding(model, document)`
-    -- it never reads a caller-supplied `embeddings` vector at all. When
-    `documents` is absent (exactly what `VisualIndexService.index` always
-    passes: it hands over vectors it already computed itself, never raw text),
-    the old code silently wrote `embedding = NULL` and returned normally. No
-    exception meant `strict=True` never fired, so `VisualIndexService.index`
-    (and the command built on it) announced success for a row that holds no
-    vector at all. Dormant on Neon/Cloud SQL today (is_alloydb_ai_supported()
-    is False there); armed the day anyone points this at a real AlloyDB
-    instance. Must raise instead of quietly writing a vectorless row.
+def test_upsert_alloydb_writes_a_supplied_embedding_without_document(mocker):
+    """This branch normally derives `embedding = embedding(model, document)`.
+    But when the caller supplies a precomputed vector and NO `document`
+    (exactly what `VisualIndexService.index` always passes: it hands over
+    vectors it computed itself, never raw text), the derivation does not apply
+    -- and discarding the vector to NULL is silent data loss. So the branch
+    must PERSIST the supplied vector directly (`%s::vector`), not raise and not
+    write NULL. Dormant on Neon/Cloud SQL today (is_alloydb_ai_supported() is
+    False there); this is what makes the visual index buildable the day anyone
+    points it at a real AlloyDB instance.
     """
     cur = FakeCursor()
     conn, _ = _fake_connection(cursor=cur)
@@ -426,17 +425,26 @@ def test_upsert_alloydb_raises_instead_of_discarding_a_supplied_embedding(mocker
     mocker.patch.object(cc.transaction, "atomic", MagicMock())
 
     coll = PGVectorCollectionWrapper("unified_clip_space")
+    coll.upsert(
+        ids=["Anime:1"],
+        embeddings=[[0.1, 0.2, 0.3]],
+        metadatas=[{"external_id": "1"}],
+        # no documents: exactly VisualIndexService.index's call shape.
+    )
 
-    with pytest.raises(ValueError):
-        coll.upsert(
-            ids=["Anime:1"],
-            embeddings=[[0.1, 0.2, 0.3]],
-            metadatas=[{"external_id": "1"}],
-            # no documents: exactly VisualIndexService.index's call shape.
-        )
-
-    # Nothing was silently written under this id.
-    assert cur.executed == []
+    assert len(cur.executed) == 1
+    sql, params = cur.executed[0]
+    assert "INSERT INTO animetix_vectorrecord" in sql
+    # The supplied vector is written as a pgvector literal, not derived from a
+    # document and not NULL.
+    assert "%s::vector" in sql
+    assert "embedding(%s" not in sql
+    assert "VALUES (%s, %s, NULL," not in sql
+    assert "embedding = EXCLUDED.embedding" in sql
+    assert params[0] == "unified_clip_space"
+    assert params[1] == "Anime:1"
+    assert params[2] == "[0.1,0.2,0.3]"  # vector literal, no spaces
+    assert json.loads(params[3]) == {"external_id": "1"}
 
 
 def test_upsert_alloydb_still_writes_null_when_no_embedding_and_no_document(mocker):
