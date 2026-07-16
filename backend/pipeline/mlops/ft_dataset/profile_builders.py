@@ -246,37 +246,27 @@ def make_english_manga_profile(title: str, genres: List[str], tags: List[str]) -
     return " ".join(profile_parts)
 
 
-def make_english_character_bio(name, origin, orgs, favs, rank, height):
-    org_str = (
-        " and ".join(orgs) if orgs else "several factions and groups in their universe"
-    )
+_EN_CHAR_LEADINS = [
+    "{name}{syns} is a character from '{origin}'{osyns}.",
+    "{name}{syns} appears in '{origin}'{osyns}.",
+    "In '{origin}'{osyns}, {name}{syns} is one of the cast.",
+    "Meet {name}{syns}, from the series '{origin}'{osyns}.",
+    "{name}{syns} belongs to the world of '{origin}'{osyns}.",
+    "Here is {name}{syns}, a figure of '{origin}'{osyns}.",
+]
 
+
+def make_english_character_bio(name, origin, orgs, biography):
     syns = get_character_synonyms_string(name, "English")
     origin_syns = get_synonyms_string(origin, "English")
-
-    formatted_favs = f"{favs:,}"
-
-    bio_parts = [
-        f"{name}{syns} is a legendary and prominent character from the hit series '{origin}'{origin_syns}.",
-        "Within this work, their narrative importance is colossal.",
-    ]
-
+    lead = random.choice(_EN_CHAR_LEADINS).format(
+        name=name, syns=syns, origin=origin, osyns=origin_syns
+    )
+    parts = [lead]
     if orgs:
-        bio_parts.append(
-            f"They are primarily known for their affiliation and major role within: {org_str}."
-        )
-
-    if height and height != "Unknown":
-        bio_parts.append(
-            f"Their physical characteristics and official profile notably mention: {height}."
-        )
-
-    bio_parts.append(
-        f"They enjoy immense popularity among the global community of anime fans, ranking at number {rank} of favorite characters with no less than {formatted_favs} votes of admiration."
-    )
-
-    bio_parts.append(
-        f"As an essential figure in '{origin}', {name} embodies the values and major conflicts of their universe, deeply marking the audience with their writing and top-tier character development."
-    )
-
-    return " ".join(bio_parts)
+        org_str = " and ".join(orgs)
+        parts.append(f"They are affiliated with {org_str}.")
+    bio = biography.strip() if biography else ""
+    if bio:
+        parts.append(bio)
+    return " ".join(parts)

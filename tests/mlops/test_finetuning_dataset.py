@@ -128,15 +128,23 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertIn("Adventure", manga_prof)
         self.assertIn("Pirates", manga_prof)
 
-        # Test character bio
+        # Test character bio — grounded in real biography, no numeric noise
         char_bio = make_english_character_bio(
-            "Luffy", "One Piece", ["Straw Hats"], 150000, 1, "174cm"
+            "Luffy",
+            "One Piece",
+            ["Straw Hats"],
+            "Luffy is a rubber-bodied pirate who dreams of becoming Pirate King.",
         )
         self.assertIn("Luffy", char_bio)
         self.assertIn("One Piece", char_bio)
         self.assertIn("Straw Hats", char_bio)
-        self.assertIn("150,000", char_bio)
-        self.assertIn("174cm", char_bio)
+        self.assertIn("Pirate King", char_bio)  # real fact from biography
+        self.assertNotIn("rank", char_bio.lower())
+        self.assertNotIn("votes", char_bio.lower())
+        # No free-floating digit runs (years would be OK, but this bio has none)
+        import re as _re
+
+        self.assertIsNone(_re.search(r"\d{3,}", char_bio))
 
     @patch("pipeline.mlops.finetuning_dataset.load_dataset")
     def test_bilingual_general_instructions(self, mock_load_dataset):
