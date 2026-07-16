@@ -53,11 +53,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
         corr_va = corrupt_fact_substitution(text_va, "Français")
         self.assertNotEqual(text_va, corr_va)
         self.assertTrue(
-            any(
-                v in corr_va
-                for v in VOICE_ACTORS_LIST
-                if v != "Brigitte Lecordier"
-            ),
+            any(v in corr_va for v in VOICE_ACTORS_LIST if v != "Brigitte Lecordier"),
             f"VA was not replaced by a known voice actor: {corr_va!r}",
         )
 
