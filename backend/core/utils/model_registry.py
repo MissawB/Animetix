@@ -114,6 +114,18 @@ MODELS: dict[str, dict] = {
         "revision": "2bfc9ae6e89079a5cc7ed2a68436010d91a3d289",
         "trust_remote_code": False,
     },
+    "kyutai/stt-1b-en_fr": {
+        "revision": "1c34c6b4f7e9299bb61985f145052ff131005dde",
+        "trust_remote_code": False,
+    },
+    "kyutai/tts-1.6b-en_fr": {
+        "revision": "f65439609986c392cb12df63938abcc550c3fb15",
+        "trust_remote_code": False,
+    },
+    "kyutai/tts-voices": {
+        "revision": "323332d33f997de8394f24a193e1a76df720e01a",
+        "trust_remote_code": False,
+    },
 }
 
 
