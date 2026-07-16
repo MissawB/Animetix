@@ -53,8 +53,8 @@ _Aucun item ouvert._
   - 145 fichiers de test + Playwright e2e + a11y bien câblés en CI, et seuils de couverture vitest rehaussés à 38 % statements / 28 % branches / 34 % functions / 39 % lines ([vite.config.ts:129-133](frontend/vite.config.ts#L129-L133)) pour correspondre à l'état réel et empêcher toute régression.
 - [ ] **CI — mono-cible : Windows jamais testé** _(audit dette 2026-07-11)_
   - Un seul `ubuntu-latest` / Python 3.12, aucune matrix — alors que toute la logique anti-pollution async du conftest cible Windows ([tests/conftest.py:14-18](tests/conftest.py#L14-L18)). Angle mort jamais couvert.
-- [ ] **`scripts/` — 44 scripts one-off accumulés** _(audit dette 2026-07-11)_
-  - `fix_prompt.py`, `fix_adapters_batch.py`, `migrate_gold_set.py`, `add_prompt.py`, `merge_translation_fragments.py`… (pic 2026-07-02, import massif) + des `test_*.pyc` dans `scripts/__pycache__/`. Archiver, supprimer ou documenter.
+- [x] **~~`scripts/` — 44 scripts one-off accumulés~~** _(audit dette 2026-07-11 ; archivé, nettoyé et documenté le 2026-07-16)_
+  - Un total de 7 scripts one-off inutilisés ont été déplacés vers `scripts/archive/` ; les fichiers compiled obsolètes `test_*.pyc` dans le dossier cache ont été supprimés ; et un fichier `scripts/README.md` a été créé pour répertorier et expliquer la structure et le but de tous les scripts actifs et archivés.
 - [ ] **Frontend — composants > 500 lignes** _(audit dette 2026-07-11)_
   - [BlindtestPage.tsx](frontend/src/pages/games/BlindtestPage.tsx) (753 — filtres/scoring + sous-composants inline + rendu), `TransparencyPage` (614), `AudioLabPage` (573), `LabHubPage` (569), `SpeechToSpeechLabPage` (544)… Découper au fil de l'eau (sous-composants + hooks métier).
 - [ ] **Deps — doublons et divers** _(audit dette 2026-07-11)_
