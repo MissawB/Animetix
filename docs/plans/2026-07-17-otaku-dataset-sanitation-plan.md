@@ -891,6 +891,38 @@ def _specialized_outputs(data):
     return outs
 
 
+def _all_assistant_texts(data):
+    """TOUS les textes assistant, y compris ceux des dialogues multi-tours.
+
+    Les garde-fous DOIVENT couvrir les dialogues : le bruit numérique s'y était
+    glissé (dialogue_generators) et ré-enseignerait le bug sous forme conversationnelle.
+    """
+    texts = []
+    for it in data:
+        if "turns" in it:
+            for t in it["turns"]:
+                if t.get("assistant"):
+                    texts.append(t["assistant"])
+        elif it.get("output"):
+            texts.append(it["output"])
+    return texts
+
+
+# Personnage Tier-2 (favs>500) SANS biographie NI organisation : la sortie primaire
+# dégénère en amorce seule et peut être byte-identique à l'exemple auxiliaire
+# ("{name} is a character from '{origin}'."). Force le chemin du garde-fou anti-collision.
+CHARS_COLLISION = [
+    {
+        "name": "Zeta",
+        "origin": "OmegaWork",
+        "entities": {"organizations": []},
+        "popularity": {"favourites": 1500, "rank": 3},
+        "metadata": {},
+        "biography": "",
+    }
+]
+
+
 class TestDatasetSanitation(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -933,23 +965,52 @@ class TestDatasetSanitation(unittest.TestCase):
             self.assertLessEqual(top / len(self.outs), 0.5,
                                  "un 8-gramme domine les sorties (squelette ?)")
 
+    def test_no_banned_phrases_in_turns(self):
+        # Les dialogues multi-tours ne doivent PAS ré-introduire les motifs bannis.
+        for text in _all_assistant_texts(self.data):
+            for phrase in BANNED_PHRASES:
+                self.assertNotIn(phrase, text, f"phrase bannie (turn): {phrase!r}")
+
+    def test_no_numeric_noise_in_turns(self):
+        for text in _all_assistant_texts(self.data):
+            for rx in BANNED_NUMERIC:
+                self.assertIsNone(rx.search(text), f"bruit numérique (turn): {rx.pattern}")
+
+    def test_collision_guard_keeps_outputs_distinct(self):
+        # Personnage sans bio ni org : sur plusieurs graines, le garde-fou doit
+        # empêcher toute sortie dupliquée pour l'entité (primary vs aux1).
+        for seed in range(10):
+            with tempfile.TemporaryDirectory() as tmp:
+                with _orchestrator_env(
+                    tmp, animes=[], mangas=[], chars=CHARS_COLLISION, seed=seed,
+                    env={"ANIMETIX_AUGMENT_DATA": "False", "ANIMETIX_QUERY_NOISE_RATE": "0.0"},
+                ) as out:
+                    fd.run_generate_instruction_dataset()
+                    with open(out, encoding="utf-8") as f:
+                        data = [json.loads(line) for line in f]
+            zeta = [it["output"] for it in data
+                    if "turns" not in it and "Zeta" in it.get("instruction", "")]
+            self.assertTrue(zeta, f"aucune sortie Zeta (seed={seed})")
+            self.assertEqual(len(zeta), len(set(zeta)),
+                             f"sortie dupliquée pour Zeta (seed={seed}) : garde-fou HS")
+
 
 if __name__ == "__main__":
     unittest.main()
 ```
 
-Note : le seuil 8-gramme est à 0.5 ici (échantillon minuscule = peu de sorties, donc tolérant). Sur le dataset réel complet (Task 9), on resserre à < 0.05 via l'inspection manuelle, pas via ce test unitaire.
+Note : le seuil 8-gramme est à 0.5 ici (échantillon minuscule = peu de sorties, donc tolérant). Sur le dataset réel complet (Task 9), on resserre à < 0.05 via l'inspection manuelle, pas via ce test unitaire. `test_collision_guard_keeps_outputs_distinct` boucle sur 10 graines pour exercer le chemin du garde-fou de manière déterministe (le choix d'amorce dépend de la graine, fixée par `_orchestrator_env`).
 
 - [ ] **Step 2: Lancer, vérifier le succès (le code des Tasks 1-6 doit déjà satisfaire)**
 
 Run: `cd backend && "$PY" -m pytest ../tests/mlops/test_dataset_sanitation.py -v`
-Expected: PASS (5 tests). Si un test échoue, c'est une régression réelle dans les Tasks 2-6 — corriger la source, pas le test.
+Expected: PASS (8 tests). Si un test échoue, c'est une régression réelle dans les Tasks 2-6/8 — corriger la source, pas le test.
 
 - [ ] **Step 3: Commit**
 
 ```bash
 git add tests/mlops/test_dataset_sanitation.py
-git commit -m "test(ft_dataset): sanitation guardrails (banned phrases, numeric noise, grounding, diversity)"
+git commit -m "test(ft_dataset): sanitation guardrails (banned phrases, numeric noise incl. turns, grounding, diversity, collision guard)"
 ```
 
 ---
