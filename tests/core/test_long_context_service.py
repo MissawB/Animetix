@@ -1,14 +1,5 @@
-from unittest.mock import MagicMock
-
 import pytest
 from core.domain.services.long_context_service import LongContextDiscoveryService
-
-
-@pytest.fixture
-def mock_prompt_manager():
-    pm = MagicMock()
-    pm.get_prompt.return_value = ("formatted prompt", "system prompt")
-    return pm
 
 
 @pytest.fixture

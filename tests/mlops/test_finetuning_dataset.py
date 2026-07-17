@@ -112,31 +112,100 @@ class TestFinetuningDataset(unittest.TestCase):
             make_english_manga_profile,
         )
 
-        # Test anime profile
+        # Test anime profile — grounded in real description
         anime_prof = make_english_anime_profile(
-            "Naruto", ["Action"], ["Pierrot"], ["Ninja"], 2002
+            "Naruto",
+            ["Action"],
+            ["Pierrot"],
+            ["Ninja"],
+            2002,
+            "Naruto Uzumaki is a young ninja seeking recognition and the Hokage title.",
         )
         self.assertIn("Naruto", anime_prof)
-        self.assertIn("Action", anime_prof)
-        self.assertIn("Pierrot", anime_prof)
-        self.assertIn("Ninja", anime_prof)
-        self.assertIn("2002", anime_prof)
+        self.assertIn("2002", anime_prof)  # year is the only allowed number
+        self.assertIn("Hokage", anime_prof)  # real fact from description
+        self.assertNotIn("landmark work", anime_prof)
+        self.assertNotIn("highly recommended", anime_prof)
 
-        # Test manga profile
-        manga_prof = make_english_manga_profile("One Piece", ["Adventure"], ["Pirates"])
+        # Empty description -> structured fallback still names the work + facts
+        anime_fallback = make_english_anime_profile(
+            "Naruto", ["Action"], ["Pierrot"], ["Ninja"], 2002, ""
+        )
+        self.assertIn("Naruto", anime_fallback)
+        self.assertIn("Pierrot", anime_fallback)
+
+        # Test manga profile — grounded in real description
+        manga_prof = make_english_manga_profile(
+            "One Piece",
+            ["Adventure"],
+            ["Pirates"],
+            "Monkey D. Luffy sails to find the One Piece treasure.",
+        )
         self.assertIn("One Piece", manga_prof)
-        self.assertIn("Adventure", manga_prof)
-        self.assertIn("Pirates", manga_prof)
+        self.assertIn("treasure", manga_prof)  # real fact
 
-        # Test character bio
+        # Test character bio — grounded in real biography, no numeric noise
         char_bio = make_english_character_bio(
-            "Luffy", "One Piece", ["Straw Hats"], 150000, 1, "174cm"
+            "Luffy",
+            "One Piece",
+            ["Straw Hats"],
+            "Luffy is a rubber-bodied pirate who dreams of becoming Pirate King.",
         )
         self.assertIn("Luffy", char_bio)
         self.assertIn("One Piece", char_bio)
         self.assertIn("Straw Hats", char_bio)
-        self.assertIn("150,000", char_bio)
-        self.assertIn("174cm", char_bio)
+        self.assertIn("Pirate King", char_bio)  # real fact from biography
+        self.assertNotIn("rank", char_bio.lower())
+        self.assertNotIn("votes", char_bio.lower())
+        # No free-floating digit runs (years would be OK, but this bio has none)
+        import re as _re
+
+        self.assertIsNone(_re.search(r"\d{3,}", char_bio))
+
+    def test_french_character_bio_structured(self):
+        from pipeline.mlops.finetuning_dataset import make_french_character_bio
+
+        bio = make_french_character_bio("Levi", "Shingeki no Kyojin", ["Survey Corps"])
+        self.assertIn("Levi", bio)
+        self.assertIn("Shingeki no Kyojin", bio)
+        # organisation traduite via le mapping conservé
+        self.assertIn("Bataillon d'exploration", bio)
+        # motifs corrupteurs bannis
+        for banned in [
+            "jouit d'une immense popularité",
+            "figure incontournable",
+            "rang numéro",
+            "votes d'admiration",
+            "incarne les valeurs",
+        ]:
+            self.assertNotIn(banned, bio)
+        import re as _re
+
+        self.assertIsNone(_re.search(r"\d{3,}", bio))
+
+    def test_french_profiles_structured(self):
+        from pipeline.mlops.finetuning_dataset import (
+            make_french_anime_profile,
+            make_french_manga_profile,
+        )
+
+        a = make_french_anime_profile(
+            "Naruto", ["Action"], ["Pierrot"], ["Ninja"], 2002
+        )
+        self.assertIn("Naruto", a)
+        self.assertIn("2002", a)
+        self.assertIn("Pierrot", a)
+        for banned in [
+            "œuvre marquante de la japanimation",
+            "s'inscrit avec brio",
+            "chef-d'œuvre",
+        ]:
+            self.assertNotIn(banned, a)
+
+        m = make_french_manga_profile("One Piece", ["Adventure"], ["Pirates"])
+        self.assertIn("One Piece", m)
+        self.assertNotIn("manga culte", m)
+        self.assertNotIn("référence incontournable", m)
 
     @patch("pipeline.mlops.finetuning_dataset.load_dataset")
     def test_bilingual_general_instructions(self, mock_load_dataset):
@@ -160,27 +229,15 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertEqual(res[0]["language"], "Français")
         self.assertEqual(res[1]["language"], "English")
 
-    def test_generate_otaku_meta_instructions_bilingual(self):
+    def test_generate_otaku_meta_instructions_french_only_without_client(self):
         from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_otaku_meta_instructions,
         )
 
         res = generate_otaku_meta_instructions(client=None)
-
-        fr_count = sum(1 for item in res if item.get("language") == "Français")
-        en_count = sum(1 for item in res if item.get("language") == "English")
-        self.assertGreater(fr_count, 0)
-        self.assertGreater(en_count, 0)
-
-        en_items = [item for item in res if item.get("language") == "English"]
-        self.assertTrue(
-            any(
-                "What does" in item["instruction"]
-                or "Who is" in item["instruction"]
-                or "What is the" in item["instruction"]
-                for item in en_items
-            )
-        )
+        self.assertGreater(len(res), 0)
+        # Sans client de traduction : tout en français, aucun code-switching.
+        self.assertTrue(all(item.get("language") == "Français" for item in res))
 
     def test_deduplicate_dataset_multiturn(self):
         from pipeline.mlops.finetuning_dataset import (  # noqa: E402
@@ -813,7 +870,7 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
 
     def test_integration_happy_path_assembles_all_sections(self):
         animes = [
-            {  # idx 0 -> French branch; Tier-1 (>150k) -> 5 variations
+            {  # idx 0 -> French branch; Tier-1 (>150k) -> 1 primary + 2 aux
                 "title": "TestAnimeAlpha",
                 "genres": ["Action"],
                 "studios": ["S"],
@@ -895,11 +952,14 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
         self.assertTrue(any(instr(it) in ("general-fr", "general-en") for it in data))
         self.assertTrue(any("turns" in it for it in data))
 
-        # Tier-variation counts (augmentation off, noise off -> instructions pristine).
+        # Tier-variation counts after sanitation (augmentation off, noise off).
         alpha = [it for it in data if "TestAnimeAlpha" in instr(it)]
         beta = [it for it in data if "TestAnimeBeta" in instr(it)]
-        self.assertEqual(len(alpha), 5, "Tier-1 anime should yield 5 variations")
-        self.assertEqual(len(beta), 1, "Tier-3 anime should yield 1 variation")
+        self.assertEqual(len(alpha), 3, "Tier-1 anime -> 1 primary + 2 aux")
+        self.assertEqual(len(beta), 1, "Tier-3 anime -> 1 primary only")
+        # No two outputs for the same entity are identical.
+        alpha_outputs = [it["output"] for it in alpha]
+        self.assertEqual(len(alpha_outputs), len(set(alpha_outputs)))
 
     def test_client_initialized_when_augmentation_enabled(self):
         genai_mock = MagicMock()
@@ -941,7 +1001,7 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
         genai_mock = MagicMock()
         paraphrase_mock = MagicMock(return_value="paraphrased")
         animes = [
-            {  # Tier-1 (>150k) -> enters the augmented set -> 5 paraphrase calls
+            {  # Tier-1 (>150k) -> enters the augmented set -> primary is paraphrased
                 "title": "AugAnime",
                 "genres": ["Action"],
                 "studios": ["S"],
@@ -965,8 +1025,8 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
                 paraphrase_mock=paraphrase_mock,
             ):
                 fd.run_generate_instruction_dataset()
-        # One Tier-1 anime in the augmented set triggers the 5-variation paraphrase branch.
-        self.assertEqual(paraphrase_mock.call_count, 5)
+        # Tier-1 primary profile is the only paraphrase target now (aux are short facts).
+        self.assertEqual(paraphrase_mock.call_count, 1)
 
     def test_invalid_noise_rate_falls_back_without_error(self):
         animes = [

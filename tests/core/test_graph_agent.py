@@ -33,13 +33,6 @@ def mock_web_search():
 
 
 @pytest.fixture
-def mock_prompt_manager():
-    pm = MagicMock()
-    pm.get_prompt.return_value = ("prompt", "system")
-    return pm
-
-
-@pytest.fixture
 def mock_llm_service():
     llm = MagicMock()
     # The synthesizer streams from LLMService.astream_generate (not the raw engine);

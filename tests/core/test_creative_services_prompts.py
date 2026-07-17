@@ -7,13 +7,6 @@ from core.domain.services.creative.soundscape import SoundscapeGenerationService
 
 
 @pytest.fixture
-def mock_prompt_manager():
-    pm = MagicMock()
-    pm.get_prompt.return_value = ("formatted prompt", "system prompt")
-    return pm
-
-
-@pytest.fixture
 def mock_llm_service():
     return MagicMock()
 

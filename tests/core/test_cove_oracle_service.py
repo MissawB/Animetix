@@ -28,13 +28,6 @@ def mock_neo4j():
 
 
 @pytest.fixture
-def mock_prompt_manager():
-    pm = MagicMock()
-    pm.get_prompt.return_value = ("prompt", "system")
-    return pm
-
-
-@pytest.fixture
 def cove_service(mock_engine, mock_neo4j, mock_prompt_manager):
     return CoveOracleService(
         inference_engine=mock_engine,

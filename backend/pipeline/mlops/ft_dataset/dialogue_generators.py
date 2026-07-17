@@ -14,9 +14,17 @@ from .profile_builders import (
     make_french_anime_profile,
     make_french_character_bio,
 )
-from .text_cleaning import clean_tags
+from .text_cleaning import clean_source_prose, clean_tags
 
 random = random.SystemRandom()  # type: ignore[assignment]  # intentional module-shadow: use CSPRNG
+
+
+def _studio_str(studios, lang):
+    """Nom(s) de studio, ou repli honnête si inconnu (jamais un studio fabriqué)."""
+    joined = ", ".join(studios) if studios else ""
+    if joined:
+        return joined
+    return "an unspecified studio" if lang == "English" else "un studio non précisé"
 
 
 def generate_multiturn_dialogues(
@@ -93,8 +101,8 @@ def generate_multiturn_dialogues(
             display_title = get_display_title(title)
             genres = anime.get("genres", ["Action"])
             genre = random.choice(genres) if genres else "Action"
-            studios = anime.get("studios", ["Pierrot"])
-            studio_str = ", ".join(studios)
+            studios = anime.get("studios") or []
+            studio_str = _studio_str(studios, lang)
             year = anime.get("year", 2002)
             tags = anime.get("tags", [])
             tags_str = ", ".join(clean_tags(tags, lang)[:4])
@@ -138,26 +146,10 @@ def generate_multiturn_dialogues(
             ents = char.get("entities", {})
             orgs = ents.get("organizations", []) if isinstance(ents, dict) else []
             orgs_str = ", ".join(orgs) if orgs else "several groups"
-            favs = (
-                char.get("popularity", {}).get("favourites", 0)
-                if isinstance(char.get("popularity"), dict)
-                else 0
-            )
-            rank = (
-                char.get("popularity", {}).get("rank", 999)
-                if isinstance(char.get("popularity"), dict)
-                else 999
-            )
-            height = (
-                char.get("metadata", {}).get("height", "Unknown")
-                if isinstance(char.get("metadata"), dict)
-                else "Unknown"
-            )
 
             if lang == "English":
-                p_text = make_english_character_bio(
-                    name, origin, orgs, favs, rank, height
-                )
+                biography = clean_source_prose(char.get("biography", ""))
+                p_text = make_english_character_bio(name, origin, orgs, biography)
                 t = en_char_templates[0]
                 turns = [
                     {"user": t["t1"].format(name=display_name), "assistant": p_text},
@@ -165,25 +157,15 @@ def generate_multiturn_dialogues(
                         "user": t["t2"],
                         "assistant": f"They are primarily known for their affiliation with: {orgs_str}.",
                     },
-                    {
-                        "user": t["t3"],
-                        "assistant": f"Their official height is {height}. They are ranked #{rank} in popularity with {favs:,} favourites.",
-                    },
                 ]
             else:
-                p_text = make_french_character_bio(
-                    name, origin, orgs, favs, rank, height
-                )
+                p_text = make_french_character_bio(name, origin, orgs)
                 t = fr_char_templates[0]
                 turns = [
                     {"user": t["t1"].format(name=display_name), "assistant": p_text},
                     {
                         "user": t["t2"],
                         "assistant": f"Il est principalement connu pour son affiliation avec : {orgs_str}.",
-                    },
-                    {
-                        "user": t["t3"],
-                        "assistant": f"Sa taille officielle est {height}. Il est classé au rang #{rank} des favoris avec {favs} votes d'admiration.",
                     },
                 ]
 
@@ -245,12 +227,10 @@ def generate_multiturn_dialogues(
             title2 = get_display_title(anime2.get("title", "Unknown"))
             genres1 = ", ".join(clean_tags(anime1.get("genres", []), lang))
             genres2 = ", ".join(clean_tags(anime2.get("genres", []), lang))
-            studio1 = ", ".join(anime1.get("studios", ["Pierrot"]))
-            studio2 = ", ".join(anime2.get("studios", ["Toei Animation"]))
+            studio1 = _studio_str(anime1.get("studios"), lang)
+            studio2 = _studio_str(anime2.get("studios"), lang)
             year1 = anime1.get("year", 2002)
             year2 = anime2.get("year", 1999)
-            pop1 = anime1.get("popularity", 10000)
-            pop2 = anime2.get("popularity", 10000)
 
             char_name = "Luffy"
             for c in characters:
@@ -270,7 +250,7 @@ def generate_multiturn_dialogues(
                     },
                     {
                         "user": "Understood. Are both finished and were they popular?",
-                        "assistant": f"Yes, '{title1}' was released in {year1} and has a popularity score of {pop1:,} members. '{title2}' was released in {year2} with {pop2:,} members. Both are major hits in otaku culture.",
+                        "assistant": f"Yes, '{title1}' was released in {year1} and '{title2}' in {year2}. Both are major hits in otaku culture.",
                     },
                 ]
             else:
@@ -285,7 +265,7 @@ def generate_multiturn_dialogues(
                     },
                     {
                         "user": "D'accord, je vois. Est-ce que les deux sont terminés et ont été populaires ?",
-                        "assistant": f"Oui, '{title1}' est sorti en {year1} et jouit d'une popularité de {pop1} membres. '{title2}' est sorti en {year2} et compte {pop2} membres. Les deux sont des succès majeurs incontournables.",
+                        "assistant": f"Oui, '{title1}' est sorti en {year1} et '{title2}' en {year2}. Les deux sont des succès majeurs de la culture otaku.",
                     },
                 ]
 
@@ -304,7 +284,7 @@ def generate_multiturn_dialogues(
                     if genres
                     else ("Action" if lang == "English" else "Action")
                 )
-                studio = ", ".join(anime.get("studios", ["Pierrot"]))
+                studio = _studio_str(anime.get("studios"), lang)
                 year = anime.get("year", 2002)
                 genres_str = ", ".join(genres)
 
@@ -334,7 +314,7 @@ def generate_multiturn_dialogues(
                         },
                         {
                             "user": "Thanks for the details. Are there any highly popular characters in it?",
-                            "assistant": f"Definitely! Within this universe, {char_name} is extremely popular among fans, ranking high with many votes of admiration.",
+                            "assistant": f"Definitely! Within this universe, {char_name} is one of the fan-favorite characters.",
                         },
                     ]
                 else:
@@ -349,7 +329,7 @@ def generate_multiturn_dialogues(
                         },
                         {
                             "user": "Merci pour ces détails. Est-ce qu'il y a des personnages très populaires dedans ?",
-                            "assistant": f"Absolument ! Si on regarde les personnages de cet univers, {char_name} est particulièrement apprécié de la communauté, se classant dans le top avec de nombreux votes d'admiration.",
+                            "assistant": f"Absolument ! Si on regarde les personnages de cet univers, {char_name} est particulièrement apprécié de la communauté des fans.",
                         },
                     ]
 
@@ -569,7 +549,7 @@ def generate_multiturn_dialogues(
                 mood_fr = "captivant et profond"
                 mood_en = "captivating and deep"
 
-            studio2 = ", ".join(anime2.get("studios", ["MAPPA"]))
+            studio2 = _studio_str(anime2.get("studios"), lang)
             year2 = anime2.get("year", 2021)
             (
                 ", ".join(clean_tags(tags2, lang)[:3])

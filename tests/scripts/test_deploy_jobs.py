@@ -24,12 +24,15 @@ def test_deploy_jobs_main(mocker):
         "--project=animetix",
     ]
 
-    # 8 jobs are scheduled (1 describe run, 1 deploy run, 1 describe scheduler,
-    # 1 deploy scheduler = 4 calls per job). The 9th job,
-    # animetix-generate-drift-baselines, has schedule=None: it is created but
-    # deliberately NOT wired to Cloud Scheduler (2 calls: describe run, deploy run).
-    # Total calls: 1 (enable api) + 8 * 4 (scheduled jobs) + 1 * 2 (on-demand job) = 35
-    assert len(mock_run.call_args_list) == 35
+    # Derive the expected count from the config so adding a job doesn't break
+    # this test: 1 (enable Scheduler API) + 4 calls per SCHEDULED job (describe
+    # + deploy run, describe + deploy scheduler) + 2 per ON-DEMAND job
+    # (schedule=="" -> describe + deploy run only, never wired to Scheduler).
+    from scripts.deploy.gcp.deploy_jobs import load_config
+
+    jobs = load_config()["gcp_services"]["jobs"]["items"]
+    expected_calls = 1 + sum(4 if job.get("schedule") else 2 for job in jobs)
+    assert len(mock_run.call_args_list) == expected_calls
 
     # Check details of specific jobs
     # animetix-sync-catalog
@@ -62,5 +65,19 @@ def test_deploy_jobs_main(mocker):
 
     assert not any(
         "animetix-generate-drift-baselines" in call[0][0] and "scheduler" in call[0][0]
+        for call in mock_run.call_args_list
+    )
+
+    # animetix-build-character-index: the 10th job, on-demand only, wiring the
+    # phase-2 character-index backfill. Created, never scheduled.
+    deploy_char_job = mock_run.call_args_list[36][0][0]
+    assert "animetix-build-character-index" in deploy_char_job
+    assert "create" in deploy_char_job
+    assert (
+        "--args=backend/api/manage.py,build_visual_index,--target,character"
+        in deploy_char_job
+    )
+    assert not any(
+        "animetix-build-character-index" in call[0][0] and "scheduler" in call[0][0]
         for call in mock_run.call_args_list
     )

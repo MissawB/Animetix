@@ -25,6 +25,37 @@ def clean_description(text: str) -> str:
     return text.strip()
 
 
+def clean_source_prose(text: str, max_chars: int = 1200) -> str:
+    """Nettoie une description/biographie AniList brute pour ancrage factuel EN.
+
+    - décode les entités HTML, retire les balises HTML ;
+    - retire le markup spoiler AniList ``~!...!~`` en gardant le texte interne ;
+    - retire le caractère de remplacement U+FFFD (données déjà perdues) ;
+    - normalise les espaces ;
+    - tronque sur une frontière de phrase <= ``max_chars`` (sinon coupe dure).
+    """
+    if not text:
+        return ""
+    text = html.unescape(text)
+    # Markup spoiler AniList : on garde le contenu, on retire les marqueurs.
+    text = text.replace("~!", " ").replace("!~", " ")
+    # Balises HTML.
+    text = re.sub(r"</?[a-zA-Z]+(?:\s+[^>]*)?>", " ", text)
+    # Caractère de remplacement : contenu irrécupérable, on le retire.
+    text = text.replace("�", " ")
+    # Espaces.
+    text = re.sub(r"\s+", " ", text).strip()
+    # Stripped tags/spoilers can leave a space before punctuation ("Hunter ." ) — close it.
+    text = re.sub(r"\s+([.!?,;:])", r"\1", text)
+    if len(text) <= max_chars:
+        return text
+    window = text[:max_chars]
+    boundary = max(window.rfind(". "), window.rfind("! "), window.rfind("? "))
+    if boundary != -1:
+        return window[: boundary + 1].strip()
+    return window
+
+
 def inject_query_noise(text: str, language: str = "Français") -> str:
     """
     Injecte du bruit réaliste dans une instruction utilisateur pour simuler

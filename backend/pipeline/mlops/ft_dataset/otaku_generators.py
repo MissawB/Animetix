@@ -14,7 +14,7 @@ def generate_otaku_meta_instructions(client=None):
 
     # 1. Génération par template pour les concepts généraux (15 variations par concept = ~6 000 exemples)
     for idx, (term, data) in enumerate(OTAKU_VOCABULARY.items()):
-        if idx % 2 == 1:
+        if client and idx % 2 == 1:
             lang = "English"
             definition = translate_to_english_via_gemini(data["definition"], client)
             examples = translate_to_english_via_gemini(data["examples"], client)
@@ -154,7 +154,7 @@ def generate_otaku_meta_instructions(client=None):
 
     # 2. Génération par template pour les créateurs et studios d'animation (15 variations par concept = 1 500 exemples)
     for idx, (creator, data) in enumerate(CREATORS_AND_STUDIOS.items()):
-        if idx % 2 == 1:
+        if client and idx % 2 == 1:
             lang = "English"
             definition = translate_to_english_via_gemini(data["definition"], client)
             examples = translate_to_english_via_gemini(data["examples"], client)
@@ -361,6 +361,7 @@ def generate_otaku_meta_instructions(client=None):
                 "instruction": f"Quelle est la différence fondamentale entre les termes '{t1}' et '{t2}' dans les animés et mangas ?",
                 "input": "",
                 "output": f"La distinction entre '{t1}' et '{t2}' est essentielle pour comprendre les archétypes d'animes. {diff} Par exemple, pour les {t1}, on pense souvent à {OTAKU_VOCABULARY[t1]['examples']}, tandis que pour les {t2}, un exemple frappant est {OTAKU_VOCABULARY[t2]['examples']}.",
+                "language": "Français",
             }
         )
 

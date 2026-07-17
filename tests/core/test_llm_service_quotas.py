@@ -14,11 +14,6 @@ def mock_inference_engine():
 
 
 @pytest.fixture
-def mock_prompt_manager():
-    return MagicMock()
-
-
-@pytest.fixture
 def mock_usage_port():
     port = MagicMock()
     port.check_quota.return_value = True
