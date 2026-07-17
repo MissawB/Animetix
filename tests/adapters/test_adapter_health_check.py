@@ -47,9 +47,9 @@ def test_audio_health_check_readiness():
     a = object.__new__(AudioTransformersAdapter)
     a._tts_model = None
     a._audioldm_pipeline = None
-    a._moshi_model = None
+    a._stt_model = None
     assert a.health_check() == {"status": "offline", "engine": "audio_transformers"}
-    a._moshi_model = object()
+    a._stt_model = object()
     assert a.health_check()["status"] == "online"
 
 

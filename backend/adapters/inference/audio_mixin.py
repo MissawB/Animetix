@@ -226,44 +226,32 @@ class AudioMixin(LazyLoadMixin):
             raise InferenceError(f"Soundscape generation failed: {str(e)}")
 
     def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
-        """Interaction End-to-End Voice via Moshi."""
+        """End-to-End Voice via the Kyutai STT -> LLM -> XTTS cascade.
+
+        Stage 1 STT (kyutai/stt-1b-en_fr-trfs, transformers) -> stage 2 LLM
+        (self.generate, the brain's Ollama) -> stage 3 TTS (XTTS-v2, French).
+        Requires an LLM-capable host (brain_engine = UnifiedInferenceAdapter).
+        """
         if not audio_input:
             raise InferenceError("Audio input is empty")
 
-        self._load_moshi()
-        if not self._moshi_model:
-            raise InferenceError("Moshi model not loaded.")
+        self._load_stt()
         try:
-            from pydub import AudioSegment  # noqa: E402
-
-            audio = (
-                AudioSegment.from_file(io.BytesIO(audio_input))
-                .set_frame_rate(24000)
-                .set_channels(1)
-            )
-            samples = np.array(audio.get_array_of_samples()).astype(np.float32)
-            samples /= float(1 << (8 * audio.sample_width - 1))
-
-            input_tensor = (
-                torch.from_numpy(samples).unsqueeze(0).to(self._moshi_model.device)
-            )
-            with torch.no_grad():
-                output_audio_tensor = self._moshi_model.generate(input_tensor)
-
-            output_np = np.clip(
-                output_audio_tensor.detach().cpu().numpy().squeeze(), -1.0, 1.0
-            )
-            output_int16 = (output_np * 32767).astype(np.int16)
-
-            buffer = io.BytesIO()
-            with wave.open(buffer, "wb") as wf:
-                wf.setnchannels(1)
-                wf.setsampwidth(2)
-                wf.setframerate(24000)
-                wf.writeframes(output_int16.tobytes())
-
-            self._log_usage(engine="transformers:moshi", units=1)
-            return buffer.getvalue()
+            transcript = self._transcribe(audio_input)
+            try:
+                reply = self.generate(
+                    prompt=transcript,
+                    system_prompt=system_prompt or DEFAULT_S2S_SYSTEM,
+                ).text
+            except InferenceNotImplementedError:
+                raise InferenceError(
+                    "S2S requires an LLM-capable host (no generate available)."
+                )
+            audio_bytes = self._synthesize(reply)
+            self._log_usage(engine="kyutai_stt+xtts", units=1)
+            return audio_bytes
+        except InferenceError:
+            raise
         except Exception as e:
             logger.error(f"❌ S2S failed: {e}")
             raise InferenceError(f"Native S2S failed: {str(e)}")

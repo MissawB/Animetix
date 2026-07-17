@@ -41,125 +41,6 @@ def adapter():
     return adp
 
 
-class TestS2SInference:
-    @pytest.fixture
-    def adapter(self):
-        adp = AudioTransformersAdapter()
-        adp._moshi_model = None
-        return adp
-
-    @patch("torch.cuda.is_available", return_value=True)
-    @patch("torch.from_numpy")
-    def test_speech_to_speech_success(self, mock_from_numpy, mock_cuda, adapter):
-        # Setup Moshi mock
-        mock_moshi_model = MagicMock()
-        moshi_cls = mock_moshi_models.Moshi  # noqa: F821
-        moshi_cls.from_pretrained.return_value = mock_moshi_model
-        mock_moshi_model.device = "cpu"
-
-        # Setup AudioSegment mock
-        mock_audio = MagicMock()
-        segment_cls = mock_pydub_segment  # noqa: F821
-        segment_cls.from_file.return_value = mock_audio
-        mock_audio.set_frame_rate.return_value = mock_audio
-        mock_audio.set_channels.return_value = mock_audio
-        mock_audio.sample_width = 2
-        mock_audio.get_array_of_samples.return_value = np.zeros(24000, dtype=np.int16)
-
-        # Mock torch.from_numpy chain
-        mock_input_tensor = MagicMock()
-        mock_from_numpy.return_value = mock_input_tensor
-        mock_input_tensor.unsqueeze.return_value = mock_input_tensor
-        mock_input_tensor.to.return_value = mock_input_tensor
-
-        # Mock output audio tensor to return a real numpy array
-        mock_output_audio = MagicMock()
-        mock_output_audio.detach.return_value = mock_output_audio
-        mock_output_audio.cpu.return_value = mock_output_audio
-        mock_output_audio.numpy.return_value = np.zeros((1, 24000), dtype=np.float32)
-
-        mock_moshi_model.generate.return_value = mock_output_audio
-
-        result = adapter.speech_to_speech(b"fake audio")
-
-        assert isinstance(result, bytes)
-        mock_moshi_model.generate.assert_called_once()
-
-    def test_speech_to_speech_empty_input(self, adapter):
-        with pytest.raises(InferenceError, match="Audio input is empty"):
-            adapter.speech_to_speech(b"")
-
-    @patch(
-        "adapters.inference.audio_transformers_adapter.AudioTransformersAdapter._load_moshi"
-    )
-    def test_speech_to_speech_load_failure(self, mock_load, adapter):
-        mock_load.side_effect = InferenceError("Moshi engine loading failed")
-        with pytest.raises(InferenceError, match="Moshi engine loading failed"):
-            adapter.speech_to_speech(b"some audio")
-
-    def test_speech_to_speech_general_failure(self, adapter):
-        # Manually set a mock model to skip loading
-        adapter._moshi_model = MagicMock()
-        # Make pydub fail
-        segment_cls = mock_pydub_segment  # noqa: F821
-        segment_cls.from_file.side_effect = Exception("Pydub crash")
-
-        with pytest.raises(InferenceError, match="Native S2S failed"):
-            adapter.speech_to_speech(b"some audio")
-
-    @patch("torch.cuda.is_available", return_value=True)
-    @patch("torch.from_numpy")
-    def test_speech_to_speech_resampling_normalization(
-        self, mock_from_numpy, mock_cuda, adapter
-    ):
-        # Setup Moshi mock
-        mock_moshi_model = MagicMock()
-        moshi_cls = mock_moshi_models.Moshi  # noqa: F821
-        moshi_cls.from_pretrained.return_value = mock_moshi_model
-        mock_moshi_model.device = "cpu"
-
-        mock_audio = MagicMock()
-        segment_cls = mock_pydub_segment  # noqa: F821
-        segment_cls.from_file.return_value = mock_audio
-        mock_audio.set_frame_rate.return_value = mock_audio
-        mock_audio.set_channels.return_value = mock_audio
-        mock_audio.sample_width = 2
-        mock_audio.get_array_of_samples.return_value = np.array([16384], dtype=np.int16)
-
-        captured_samples = None
-
-        def mock_fn(samples):
-            nonlocal captured_samples
-            captured_samples = samples
-            m = MagicMock()
-            m.unsqueeze.return_value = m
-            m.to.return_value = m
-            return m
-
-        mock_from_numpy.side_effect = mock_fn
-
-        mock_output_audio = MagicMock()
-        mock_output_audio.detach.return_value = mock_output_audio
-        mock_output_audio.cpu.return_value = mock_output_audio
-        mock_output_audio.numpy.return_value = np.zeros((1, 100), dtype=np.float32)
-        mock_moshi_model.generate.return_value = mock_output_audio
-
-        adapter.speech_to_speech(b"audio")
-        assert np.allclose(captured_samples, np.array([0.5], dtype=np.float32))
-
-    def test_speech_to_speech_import_error(self, adapter):
-        # We need to simulate a failure to import by shadowing the mocked sys.modules
-        # but the adapter does 'from moshi.models import Moshi' which will see None and raise ImportError
-        with patch.dict("sys.modules", {"moshi.models": None}):
-            with pytest.raises(InferenceError, match="Moshi model not loaded"):
-                adapter.speech_to_speech(b"audio")
-
-    def test_speech_to_speech_cuda_not_available(self, adapter):
-        with patch("torch.cuda.is_available", return_value=False):
-            with pytest.raises(InferenceError, match="CUDA GPU is not available"):
-                adapter.speech_to_speech(b"fake audio")
-
-
 class TestS2SLoaders:
     @patch(
         "adapters.inference.audio_mixin.get_verified_revision", return_value="deadbeef"
@@ -223,3 +104,56 @@ class TestSynthesize:
         assert kwargs["text"] == "bonjour"
         assert kwargs["language"] == "fr"
         assert kwargs["speaker"] == "Ana Florence"
+
+
+class TestSpeechToSpeech:
+    def _wire(self, adapter, reply="salut"):
+        adapter._load_stt = MagicMock()
+        adapter._transcribe = MagicMock(return_value="bonjour")
+        adapter._synthesize = MagicMock(return_value=b"WAVDATA")
+        resp = MagicMock()
+        resp.text = reply
+        adapter.generate = MagicMock(return_value=resp)
+        adapter._log_usage = MagicMock()
+
+    def test_orchestration_happy_path(self, adapter):
+        self._wire(adapter)
+        out = adapter.speech_to_speech(b"audio", system_prompt="sois bref")
+        assert out == b"WAVDATA"
+        adapter._transcribe.assert_called_once_with(b"audio")
+        _, kwargs = adapter.generate.call_args
+        assert kwargs["prompt"] == "bonjour"
+        assert kwargs["system_prompt"] == "sois bref"
+        adapter._synthesize.assert_called_once_with("salut")
+        adapter._log_usage.assert_called_once()
+
+    def test_empty_input(self, adapter):
+        with pytest.raises(InferenceError, match="Audio input is empty"):
+            adapter.speech_to_speech(b"")
+
+    def test_load_failure_propagates(self, adapter):
+        adapter._load_stt = MagicMock(side_effect=InferenceError("STT load failed"))
+        with pytest.raises(InferenceError, match="STT load failed"):
+            adapter.speech_to_speech(b"audio")
+
+    def test_missing_generate_host(self, adapter):
+        from core.ports.inference_port import InferenceNotImplementedError
+
+        adapter._load_stt = MagicMock()
+        adapter._transcribe = MagicMock(return_value="bonjour")
+        adapter.generate = MagicMock(side_effect=InferenceNotImplementedError("no llm"))
+        with pytest.raises(InferenceError, match="LLM-capable host"):
+            adapter.speech_to_speech(b"audio")
+
+    def test_cuda_not_available(self, adapter):
+        adapter._load_stt = MagicMock(
+            side_effect=InferenceError("CUDA GPU is not available.")
+        )
+        with pytest.raises(InferenceError, match="CUDA GPU is not available"):
+            adapter.speech_to_speech(b"audio")
+
+    def test_stage_failure_wrapped(self, adapter):
+        self._wire(adapter)
+        adapter._synthesize = MagicMock(side_effect=RuntimeError("boom"))
+        with pytest.raises(InferenceError, match="Native S2S failed"):
+            adapter.speech_to_speech(b"audio")
