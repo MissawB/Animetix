@@ -207,3 +207,19 @@ class TestTranscribe:
         proc.assert_called_once()
         model.generate.assert_called_once()
         proc.batch_decode.assert_called_once_with("tokens", skip_special_tokens=True)
+
+
+class TestSynthesize:
+    def test_synthesize_returns_wav_bytes(self, adapter):
+        adapter._load_xtts = MagicMock()
+        tts = MagicMock()
+        tts.tts.return_value = [0.0, 0.5, -0.5, 1.0]
+        adapter._tts_model = tts
+
+        out = adapter._synthesize("bonjour")
+        assert isinstance(out, bytes) and len(out) > 44
+        adapter._load_xtts.assert_called_once()
+        _, kwargs = tts.tts.call_args
+        assert kwargs["text"] == "bonjour"
+        assert kwargs["language"] == "fr"
+        assert kwargs["speaker"] == "Ana Florence"

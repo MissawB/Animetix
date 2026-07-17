@@ -144,6 +144,25 @@ class AudioMixin(LazyLoadMixin):
             0
         ].strip()
 
+    def _synthesize(self, text: str) -> bytes:
+        """Stage 3: reply text -> WAV bytes via XTTS-v2 (French)."""
+        self._load_xtts()
+        wav = self._tts_model.tts(
+            text=text, speaker=DEFAULT_XTTS_SPEAKER, language="fr"
+        )
+        pcm = np.asarray(wav, dtype=np.float32)
+        return self._pcm_to_wav(pcm, 24000)
+
+    def _pcm_to_wav(self, pcm, sample_rate: int) -> bytes:
+        pcm_int16 = (np.clip(pcm, -1.0, 1.0) * 32767).astype(np.int16)
+        buffer = io.BytesIO()
+        with wave.open(buffer, "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(sample_rate)
+            wf.writeframes(pcm_int16.tobytes())
+        return buffer.getvalue()
+
     def clone_voice(
         self, text: str, reference_audio: bytes, language: str = "fr"
     ) -> bytes:
