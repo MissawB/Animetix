@@ -40,13 +40,6 @@ def mock_web():
 
 
 @pytest.fixture
-def mock_prompt_manager():
-    pm = MagicMock()
-    pm.get_prompt.return_value = ("prompt", "system")
-    return pm
-
-
-@pytest.fixture
 def agentic_rag(mock_engine, mock_rag, mock_web, mock_prompt_manager):
     mock_xai = MagicMock()
     mock_xai.measure_confidence.return_value = 1.0

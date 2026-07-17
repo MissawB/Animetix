@@ -6,13 +6,6 @@ from core.domain.services.guardrail_service import GuardrailService, RedTeamingA
 
 
 @pytest.fixture
-def mock_prompt_manager():
-    pm = MagicMock()
-    pm.get_prompt.return_value = ("Moderation Prompt", "System Prompt")
-    return pm
-
-
-@pytest.fixture
 def guardrail_service(mock_engine, mock_prompt_manager):
     return GuardrailService(
         inference_engine=mock_engine, prompt_manager=mock_prompt_manager

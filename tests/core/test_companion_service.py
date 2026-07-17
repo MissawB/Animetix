@@ -9,11 +9,6 @@ def mock_llm_service():
     return MagicMock()
 
 
-@pytest.fixture
-def mock_prompt_manager():
-    return MagicMock()
-
-
 def test_companion_service_generate_response_sensei(
     mock_llm_service, mock_prompt_manager
 ):
