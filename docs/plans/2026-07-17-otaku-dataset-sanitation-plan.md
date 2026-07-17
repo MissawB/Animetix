@@ -263,10 +263,13 @@ git commit -m "feat(ft_dataset): ground EN character bio in real biography, drop
 
 **Files:**
 - Modify: `backend/pipeline/mlops/ft_dataset/profile_builders.py`
+- Modify: `backend/pipeline/mlops/ft_dataset/dialogue_generators.py` (2e site d'appel — voir Step 6)
 - Test: `tests/mlops/test_finetuning_dataset.py` (ajouter `test_french_character_bio_structured`)
 
 **Interfaces:**
 - Produces: `make_french_character_bio(name, origin, orgs) -> str` (le mapping FR des organisations est conservé.)
+
+> **Découvert en exécution (Task 2 review) :** `dialogue_generators.py` est un 2e consommateur des builders. Le changement de signature casse aussi la branche FR (ligne ~174), et ce fichier injecte le même bruit numérique (`#{rank}` / `{favs} votes d'admiration`, ligne ~186). Cette tâche doit donc AUSSI corriger la branche FR de `dialogue_generators.py` (Step 6). La branche EN a déjà été traitée en Task 2.
 
 - [ ] **Step 1: Écrire le test qui échoue**
 
@@ -346,11 +349,34 @@ def make_french_character_bio(name, origin, orgs):
 Run: `cd backend && "$PY" -m pytest ../tests/mlops/test_finetuning_dataset.py::TestFinetuningDataset::test_french_character_bio_structured -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Corriger la branche FR de `dialogue_generators.py`**
+
+Le 2e site d'appel (branche `else` du scénario personnage, ~lignes 173-186) appelle encore `make_french_character_bio(name, origin, orgs, favs, rank, height)` et son 3e tour injecte du bruit numérique. Remplacer le bloc `else:` par (symétrique de la correction EN faite en Task 2) :
+
+```python
+            else:
+                biography = clean_source_prose(char.get("biography", ""))
+                p_text = make_french_character_bio(name, origin, orgs)
+                t = fr_char_templates[0]
+                turns = [
+                    {"user": t["t1"].format(name=display_name), "assistant": p_text},
+                    {
+                        "user": t["t2"],
+                        "assistant": f"Il est principalement connu pour son affiliation avec : {orgs_str}.",
+                    },
+                ]
+```
+
+Le 3e tour (`Sa taille officielle est {height}. Il est classé au rang #{rank}…`) est supprimé. `clean_source_prose` est déjà importé (Task 2 a ajouté l'import). Les vars `favs`/`rank`/`height` peuvent devenir inutilisées après cette tâche — les retirer si le linter les signale.
+
+- [ ] **Step 7: Vérifier les tests de dialogue + commit**
+
+Run: `cd backend && "$PY" -m pytest ../tests/mlops/test_finetuning_dataset.py::TestFinetuningDataset::test_french_character_bio_structured ../tests/mlops/test_finetuning_dataset.py::TestFinetuningDataset::test_generate_multiturn_dialogues ../tests/mlops/test_finetuning_dataset.py::TestFinetuningDataset::test_generate_multiturn_dialogues_complex_scenarios -v`
+Expected: PASS.
 
 ```bash
-git add backend/pipeline/mlops/ft_dataset/profile_builders.py tests/mlops/test_finetuning_dataset.py
-git commit -m "feat(ft_dataset): structured honest FR character bio, purge templated filler"
+git add backend/pipeline/mlops/ft_dataset/profile_builders.py backend/pipeline/mlops/ft_dataset/dialogue_generators.py tests/mlops/test_finetuning_dataset.py
+git commit -m "feat(ft_dataset): structured honest FR character bio + FR dialogue fix, purge templated filler"
 ```
 
 ---
