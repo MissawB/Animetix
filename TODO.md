@@ -26,8 +26,8 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Tests — hygiène : reliquat** _(audit dette 2026-07-11 ; api_client/mock_engine centralisés 2026-07-16, cf. HISTORY)_
-  - `mock_prompt_manager` (~21×) non factorisé car il **varie** par test — à faire seulement pour une base paramétrable. Deux gardes **porteuses**, à séquencer : le snapshot `sys.modules` autouse ([conftest:107-139](tests/conftest.py#L107-L139)) → fixer d'abord le mock fuyant `test_diffusers_adapter.py:25` ; le `BRAIN_API_URL` forcé à l'import ([conftest:12](tests/conftest.py#L12)) → rendre la construction DI paresseuse d'abord.
+- [ ] **Tests — hygiène : reliquat (2 gardes porteuses)** _(audit dette 2026-07-11 ; api_client/mock_engine/mock_prompt_manager centralisés 2026-07-16, cf. HISTORY)_
+  - Fixtures dupliquées : **fait** (`api_client`, `mock_engine`, `mock_prompt_manager` 18/21 dans conftest). Restent **deux gardes porteuses, à séquencer** (retrait risqué, non vérifiable en local) : le snapshot `sys.modules` autouse ([conftest:107-139](tests/conftest.py#L107-L139)) → fixer d'abord le mock fuyant `test_diffusers_adapter.py:25` AVANT de retirer le snapshot ; le `BRAIN_API_URL` forcé à l'import ([conftest:12](tests/conftest.py#L12)) → rendre la construction DI paresseuse (containers/inference.py `validate_inference_config` sur `django.setup()`) AVANT de retirer le default.
 
 ## 🟢 Faibles
 
