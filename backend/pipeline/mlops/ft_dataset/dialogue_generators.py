@@ -14,7 +14,7 @@ from .profile_builders import (
     make_french_anime_profile,
     make_french_character_bio,
 )
-from .text_cleaning import clean_tags
+from .text_cleaning import clean_source_prose, clean_tags
 
 random = random.SystemRandom()  # type: ignore[assignment]  # intentional module-shadow: use CSPRNG
 
@@ -155,19 +155,14 @@ def generate_multiturn_dialogues(
             )
 
             if lang == "English":
-                p_text = make_english_character_bio(
-                    name, origin, orgs, favs, rank, height
-                )
+                biography = clean_source_prose(char.get("biography", ""))
+                p_text = make_english_character_bio(name, origin, orgs, biography)
                 t = en_char_templates[0]
                 turns = [
                     {"user": t["t1"].format(name=display_name), "assistant": p_text},
                     {
                         "user": t["t2"],
                         "assistant": f"They are primarily known for their affiliation with: {orgs_str}.",
-                    },
-                    {
-                        "user": t["t3"],
-                        "assistant": f"Their official height is {height}. They are ranked #{rank} in popularity with {favs:,} favourites.",
                     },
                 ]
             else:
