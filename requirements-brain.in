@@ -8,11 +8,11 @@
 # touches Django — it talks to the web side over HTTP only). CUDA torch is
 # intentional here: this is the only image that actually runs models on GPU.
 #
-# Known gap kept as-is: audio_mixin's Moshi speech-to-speech lazily imports a
-# `Moshi` class that does not exist in the real `moshi` package API (loaders/
-# LMGen) — the integration was never functional, so the package is deliberately
-# NOT added; see TODO. ColPali, on the other hand, matches the real
-# colpali-engine API and is now shipped (below).
+# S2S: Kyutai STT (transformers-native, kyutai/stt-1b-en_fr-trfs) -> brain LLM ->
+# XTTS-v2 (coqui-tts) cascade. Uses transformers + coqui-tts already locked below;
+# the `moshi` package is intentionally NOT added (it caps safetensors<0.8.0, which
+# conflicts with diffusers==0.39.0). See audio_mixin.speech_to_speech and
+# docs/superpowers/specs/2026-07-17-brain-moshi-s2s-kyutai-cascade-design.md.
 -c requirements.txt
 
 # Serving
