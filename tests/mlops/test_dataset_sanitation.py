@@ -32,6 +32,7 @@ BANNED_NUMERIC = [
     re.compile(r"rang num[ée]ro\s+\d+", re.IGNORECASE),
     re.compile(r"\d+\s+votes", re.IGNORECASE),
     re.compile(r"number\s+\d+\s+of favorite", re.IGNORECASE),
+    re.compile(r"\d[\d,]*\s+(members|membres)", re.I),
 ]
 
 # Le routage langue est positionnel : idx pair -> FR (structuré, PAS de synopsis),
@@ -239,8 +240,10 @@ class TestDatasetSanitation(unittest.TestCase):
         # sinon le test serait vacui (passerait même si le garde-fou était retiré).
         # Le garde-fou "a agi" quand aux1 == primary est supprimé -> il ne reste
         # que la sortie primaire pour Zeta (len == 1).
+        # NB : profile_builders.py utilise random.SystemRandom() pour l'amorce, donc
+        # celle-ci n'est PAS pilotée par le seed -> 60 graines pour fiabiliser le test.
         guard_fired = False
-        for seed in range(30):
+        for seed in range(60):
             with tempfile.TemporaryDirectory() as tmp:
                 with _orchestrator_env(
                     tmp,
@@ -271,7 +274,7 @@ class TestDatasetSanitation(unittest.TestCase):
                 guard_fired = True
         self.assertTrue(
             guard_fired,
-            "le garde-fou anti-collision n'a jamais été exercé sur 30 graines : "
+            "le garde-fou anti-collision n'a jamais été exercé sur 60 graines : "
             "le fixture ne provoque pas la collision -> test vacui",
         )
 

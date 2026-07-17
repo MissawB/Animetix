@@ -223,8 +223,6 @@ def generate_multiturn_dialogues(
             studio2 = ", ".join(anime2.get("studios", ["Toei Animation"]))
             year1 = anime1.get("year", 2002)
             year2 = anime2.get("year", 1999)
-            pop1 = anime1.get("popularity", 10000)
-            pop2 = anime2.get("popularity", 10000)
 
             char_name = "Luffy"
             for c in characters:
@@ -244,7 +242,7 @@ def generate_multiturn_dialogues(
                     },
                     {
                         "user": "Understood. Are both finished and were they popular?",
-                        "assistant": f"Yes, '{title1}' was released in {year1} and has a popularity score of {pop1:,} members. '{title2}' was released in {year2} with {pop2:,} members. Both are major hits in otaku culture.",
+                        "assistant": f"Yes, '{title1}' was released in {year1} and '{title2}' in {year2}. Both are major hits in otaku culture.",
                     },
                 ]
             else:
@@ -259,7 +257,7 @@ def generate_multiturn_dialogues(
                     },
                     {
                         "user": "D'accord, je vois. Est-ce que les deux sont terminés et ont été populaires ?",
-                        "assistant": f"Oui, '{title1}' est sorti en {year1} et jouit d'une popularité de {pop1} membres. '{title2}' est sorti en {year2} et compte {pop2} membres. Les deux sont des succès majeurs incontournables.",
+                        "assistant": f"Oui, '{title1}' est sorti en {year1} et '{title2}' en {year2}. Les deux sont des succès majeurs de la culture otaku.",
                     },
                 ]
 
