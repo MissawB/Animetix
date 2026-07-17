@@ -50,5 +50,3 @@ _Aucun item ouvert._
   - `BlindtestPage` traité (753→324, hook + sous-composants). Restent, à découper au fil de l'eau (sous-composants + hooks métier) : `TransparencyPage` (614), `AudioLabPage` (573), `LabHubPage` (569), `SpeechToSpeechLabPage` (544).
 - [ ] **Deps — doublons et divers (reliquat)** _(audit dette 2026-07-11 ; devtools-prod + full-scan admin réglés 2026-07-16, cf. HISTORY)_
   - Lock backend : 3 clients HTTP (aiohttp/httpx/requests), 2 sérialiseurs JSON (orjson/ujson) — souvent transitifs, à vérifier. `docs/COST_AUDIT.md` cite encore GPT-4o/Claude 3 Sonnet (daté), à rafraîchir.
-- [ ] **Backend — DI contourné et double voie Neo4j** _(audit dette 2026-07-11)_
-  - [dependencies.py:14-19](backend/api/animetix/api/dependencies.py#L14-L19) résout via l'instance globale du container (work-around coverage documenté) au lieu de `@inject/Provide`. Les scripts pipeline instancient `Neo4jClient` directement ([neo4j_client.py:55](backend/pipeline/neo4j_client.py#L55), [neo4j_sync.py:29](backend/pipeline/neo4j_sync.py#L29)) hors container → deux voies d'accès Neo4j.

@@ -2,7 +2,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from core.ports.graph_persistence_port import GraphPersistencePort
-from pipeline.neo4j_client import Neo4jManager
+from pipeline.neo4j_client import Neo4jManager, neo4j_manager as _shared_manager
 
 logger = logging.getLogger("animetix.neo4j_adapter")
 
@@ -14,7 +14,10 @@ class Neo4jGraphAdapter(GraphPersistencePort):
     """
 
     def __init__(self, neo4j_manager: Optional[Neo4jManager] = None):
-        self._manager = neo4j_manager or Neo4jManager()
+        # Default to the module-level singleton so this adapter and the pipeline
+        # scripts (which import ``neo4j_manager`` directly) share one connection
+        # pool instead of each opening their own.
+        self._manager = neo4j_manager or _shared_manager
 
     def execute_query(
         self, query: str, parameters: Optional[Dict[str, Any]] = None
