@@ -162,11 +162,18 @@ class AdminFinancialsAPIView(APIView):
         clicks = AdEvent.objects.filter(event_type="click").count()
 
         # Sponsorship stats (donations)
-        gold_sponsors = sum(
-            1
-            for p in Profile.objects.all()
-            if isinstance(p.unlocked_badges, list) and "Sponsor Or" in p.unlocked_badges
-        )
+        try:
+            gold_sponsors = Profile.objects.filter(
+                unlocked_badges__contains="Sponsor Or"
+            ).count()
+        except Exception:
+            # Fallback for database backends that do not support contains lookup (e.g. SQLite in tests)
+            gold_sponsors = sum(
+                1
+                for p in Profile.objects.all()
+                if isinstance(p.unlocked_badges, list)
+                and "Sponsor Or" in p.unlocked_badges
+            )
         total_donations = gold_sponsors * 5.00
 
         # Base ad revenue calculation
