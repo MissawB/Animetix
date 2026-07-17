@@ -115,42 +115,52 @@ def get_display_character(name):
     return name
 
 
+_FR_ANIME_LEADINS = [
+    "L'anime '{title}'{syns} est sorti en {year} et relève des genres {genres}.",
+    "'{title}'{syns} ({year}) est un anime des genres {genres}.",
+    "Sorti en {year}, l'anime '{title}'{syns} appartient aux genres {genres}.",
+    "'{title}'{syns} est un anime de {year}, classé dans {genres}.",
+]
+
+
 def make_french_anime_profile(
     title: str, genres: List[str], studios: List[str], tags: List[str], year: int
 ) -> str:
-    cleaned_tags = clean_tags(tags)
     cleaned_genres = clean_tags(genres)
-
-    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "genres indéterminés"
-    studios_str = ", ".join(studios) if studios else "un studio de talent non spécifié"
-    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else "thématiques diverses"
+    cleaned_tags = clean_tags(tags)
+    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "genres variés"
+    studios_str = ", ".join(studios) if studios else "un studio non précisé"
+    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else ""
     syns = get_synonyms_string(title)
+    lead = random.choice(_FR_ANIME_LEADINS).format(
+        title=title, syns=syns, year=year, genres=genres_str
+    )
+    parts = [lead, f"Il a été produit par {studios_str}."]
+    if tags_str:
+        parts.append(f"Ses thématiques incluent : {tags_str}.")
+    return " ".join(parts)
 
-    profile_parts = [
-        f"L'anime '{title}'{syns} est une œuvre marquante de la japanimation sortie en {year}.",
-        f"Elle s'inscrit avec brio dans les genres de type {genres_str}.",
-        f"Produite de manière impressionnante par le studio {studios_str}, cette série s'est imposée par sa réalisation soignée.",
-        f"Son univers aborde des thématiques profondes telles que {tags_str}.",
-        f"En raison de ses grandes qualités artistiques et de son scénario palpitant, '{title}' est grandement recommandée pour les passionnés du genre.",
-    ]
-    return " ".join(profile_parts)
+
+_FR_MANGA_LEADINS = [
+    "'{title}'{syns} est un manga des genres {genres}.",
+    "Le manga '{title}'{syns} relève des genres {genres}.",
+    "'{title}'{syns} est un manga classé dans {genres}.",
+]
 
 
 def make_french_manga_profile(title: str, genres: List[str], tags: List[str]) -> str:
-    cleaned_tags = clean_tags(tags)
     cleaned_genres = clean_tags(genres)
-
-    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "genres indéterminés"
-    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else "thématiques diverses"
+    cleaned_tags = clean_tags(tags)
+    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "genres variés"
+    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else ""
     syns = get_synonyms_string(title)
-
-    profile_parts = [
-        f"Le manga culte '{title}'{syns} est une œuvre majeure très appréciée des lecteurs.",
-        f"Elle s'illustre particulièrement dans les registres éditoriaux et genres suivants : {genres_str}.",
-        f"Ce manga propose une intrigue riche, se démarquant par ses thématiques fortes telles que {tags_str}.",
-        f"À travers un découpage graphique saisissant et un scénario dense, '{title}' reste une référence incontournable de sa catégorie.",
-    ]
-    return " ".join(profile_parts)
+    lead = random.choice(_FR_MANGA_LEADINS).format(
+        title=title, syns=syns, genres=genres_str
+    )
+    parts = [lead]
+    if tags_str:
+        parts.append(f"Ses thématiques incluent : {tags_str}.")
+    return " ".join(parts)
 
 
 _FR_CHAR_LEADINS = [

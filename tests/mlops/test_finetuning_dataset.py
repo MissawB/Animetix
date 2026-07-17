@@ -183,6 +183,30 @@ class TestFinetuningDataset(unittest.TestCase):
 
         self.assertIsNone(_re.search(r"\d{3,}", bio))
 
+    def test_french_profiles_structured(self):
+        from pipeline.mlops.finetuning_dataset import (
+            make_french_anime_profile,
+            make_french_manga_profile,
+        )
+
+        a = make_french_anime_profile(
+            "Naruto", ["Action"], ["Pierrot"], ["Ninja"], 2002
+        )
+        self.assertIn("Naruto", a)
+        self.assertIn("2002", a)
+        self.assertIn("Pierrot", a)
+        for banned in [
+            "œuvre marquante de la japanimation",
+            "s'inscrit avec brio",
+            "chef-d'œuvre",
+        ]:
+            self.assertNotIn(banned, a)
+
+        m = make_french_manga_profile("One Piece", ["Adventure"], ["Pirates"])
+        self.assertIn("One Piece", m)
+        self.assertNotIn("manga culte", m)
+        self.assertNotIn("référence incontournable", m)
+
     @patch("pipeline.mlops.finetuning_dataset.load_dataset")
     def test_bilingual_general_instructions(self, mock_load_dataset):
         mock_ds_fr = [{"instruction": "Inst FR", "input": "", "output": "Rep FR"}]
