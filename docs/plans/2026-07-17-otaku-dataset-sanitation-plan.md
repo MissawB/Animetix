@@ -904,10 +904,20 @@ def _specialized_outputs(data):
     return outs
 
 
-# Personnage Tier-2 (favs>500) SANS biographie NI organisation : la sortie primaire
-# dégénère en amorce seule et peut être byte-identique à l'exemple auxiliaire
-# ("{name} is a character from '{origin}'."). Force le chemin du garde-fou anti-collision.
+# Garde-fou anti-collision : Zeta doit tomber sur la branche ANGLAISE (idx impair),
+# car seule l'amorce EN[0] ("{name} is a character from '{origin}'.") est byte-identique
+# à l'aux1 EN. Un remplisseur (favs>50 pour rester dans top_chars) occupe idx 0 -> FR,
+# poussant Zeta à idx 1 -> EN. Zeta est SANS biographie NI organisation : sa sortie
+# primaire dégénère en amorce seule, donc collision avec aux1 quand EN[0] est tiré.
 CHARS_COLLISION = [
+    {
+        "name": "FillerColl",
+        "origin": "FillerWork",
+        "entities": {"organizations": []},
+        "popularity": {"favourites": 100, "rank": 9},
+        "metadata": {},
+        "biography": "A filler biography.",
+    },
     {
         "name": "Zeta",
         "origin": "OmegaWork",
@@ -915,7 +925,7 @@ CHARS_COLLISION = [
         "popularity": {"favourites": 1500, "rank": 3},
         "metadata": {},
         "biography": "",
-    }
+    },
 ]
 
 
@@ -982,9 +992,13 @@ class TestDatasetSanitation(unittest.TestCase):
                     self.assertIsNone(rx.search(t["assistant"]), f"bruit numérique (dialogue): {rx.pattern}")
 
     def test_collision_guard_keeps_outputs_distinct(self):
-        # Personnage sans bio ni org : sur plusieurs graines, le garde-fou doit
-        # empêcher toute sortie dupliquée pour l'entité (primary vs aux1).
-        for seed in range(10):
+        # Zeta (branche EN, sans bio ni org) : sur plusieurs graines, le garde-fou
+        # doit (a) empêcher toute sortie dupliquée, et (b) être RÉELLEMENT exercé —
+        # sinon le test serait vacui (passerait même si le garde-fou était retiré).
+        # Le garde-fou "a agi" quand aux1 == primary est supprimé -> il ne reste
+        # que la sortie primaire pour Zeta (len == 1).
+        guard_fired = False
+        for seed in range(30):
             with tempfile.TemporaryDirectory() as tmp:
                 with _orchestrator_env(
                     tmp, animes=[], mangas=[], chars=CHARS_COLLISION, seed=seed,
@@ -998,6 +1012,13 @@ class TestDatasetSanitation(unittest.TestCase):
             self.assertTrue(zeta, f"aucune sortie Zeta (seed={seed})")
             self.assertEqual(len(zeta), len(set(zeta)),
                              f"sortie dupliquée pour Zeta (seed={seed}) : garde-fou HS")
+            if len(zeta) == 1:  # aux1 supprimé car byte-identique à primary
+                guard_fired = True
+        self.assertTrue(
+            guard_fired,
+            "le garde-fou anti-collision n'a jamais été exercé sur 30 graines : "
+            "le fixture ne provoque pas la collision -> test vacui",
+        )
 
 
 if __name__ == "__main__":
