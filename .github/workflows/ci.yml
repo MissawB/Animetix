@@ -156,13 +156,13 @@ jobs:
     # Couvre l'angle mort Windows : toute la logique anti-pollution async du
     # conftest cible Windows (WindowsProactorEventLoopPolicy), jamais exercée en CI.
     # Job SÉPARÉ (pas une matrice sur `test`) pour NE PAS renommer le check requis
-    # "Run Unit Tests". NON-BLOQUANT (continue-on-error) tant qu'un run vert n'est
-    # pas confirmé — le promouvoir en check requis ensuite. Pas de services Linux :
-    # la suite unitaire tourne en SQLite + LocMemCache (animetix_project.test_settings),
-    # donc pas de docker-compose (indisponible sur les runners windows-latest).
+    # "Run Unit Tests". Bloquant : run vert confirmé sur la suite complète le
+    # 2026-07-17 (~33 min). À ajouter aux required checks (Settings→Branches) pour
+    # qu'il gate réellement les merges. Pas de services Linux : la suite unitaire
+    # tourne en SQLite + LocMemCache (animetix_project.test_settings), donc pas de
+    # docker-compose (indisponible sur les runners windows-latest).
     needs: [lint]
     runs-on: windows-latest
-    continue-on-error: true
     timeout-minutes: 60
     steps:
     - name: Checkout Code
