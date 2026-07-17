@@ -229,27 +229,15 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertEqual(res[0]["language"], "Français")
         self.assertEqual(res[1]["language"], "English")
 
-    def test_generate_otaku_meta_instructions_bilingual(self):
+    def test_generate_otaku_meta_instructions_french_only_without_client(self):
         from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_otaku_meta_instructions,
         )
 
         res = generate_otaku_meta_instructions(client=None)
-
-        fr_count = sum(1 for item in res if item.get("language") == "Français")
-        en_count = sum(1 for item in res if item.get("language") == "English")
-        self.assertGreater(fr_count, 0)
-        self.assertGreater(en_count, 0)
-
-        en_items = [item for item in res if item.get("language") == "English"]
-        self.assertTrue(
-            any(
-                "What does" in item["instruction"]
-                or "Who is" in item["instruction"]
-                or "What is the" in item["instruction"]
-                for item in en_items
-            )
-        )
+        self.assertGreater(len(res), 0)
+        # Sans client de traduction : tout en français, aucun code-switching.
+        self.assertTrue(all(item.get("language") == "Français" for item in res))
 
     def test_deduplicate_dataset_multiturn(self):
         from pipeline.mlops.finetuning_dataset import (  # noqa: E402

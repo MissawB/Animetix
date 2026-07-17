@@ -19,6 +19,14 @@ from .text_cleaning import clean_source_prose, clean_tags
 random = random.SystemRandom()  # type: ignore[assignment]  # intentional module-shadow: use CSPRNG
 
 
+def _studio_str(studios, lang):
+    """Nom(s) de studio, ou repli honnête si inconnu (jamais un studio fabriqué)."""
+    joined = ", ".join(studios) if studios else ""
+    if joined:
+        return joined
+    return "an unspecified studio" if lang == "English" else "un studio non précisé"
+
+
 def generate_multiturn_dialogues(
     animes, mangas, characters, otaku_vocab, count=1000
 ) -> List[dict]:
@@ -93,8 +101,8 @@ def generate_multiturn_dialogues(
             display_title = get_display_title(title)
             genres = anime.get("genres", ["Action"])
             genre = random.choice(genres) if genres else "Action"
-            studios = anime.get("studios", ["Pierrot"])
-            studio_str = ", ".join(studios)
+            studios = anime.get("studios") or []
+            studio_str = _studio_str(studios, lang)
             year = anime.get("year", 2002)
             tags = anime.get("tags", [])
             tags_str = ", ".join(clean_tags(tags, lang)[:4])
@@ -219,8 +227,8 @@ def generate_multiturn_dialogues(
             title2 = get_display_title(anime2.get("title", "Unknown"))
             genres1 = ", ".join(clean_tags(anime1.get("genres", []), lang))
             genres2 = ", ".join(clean_tags(anime2.get("genres", []), lang))
-            studio1 = ", ".join(anime1.get("studios", ["Pierrot"]))
-            studio2 = ", ".join(anime2.get("studios", ["Toei Animation"]))
+            studio1 = _studio_str(anime1.get("studios"), lang)
+            studio2 = _studio_str(anime2.get("studios"), lang)
             year1 = anime1.get("year", 2002)
             year2 = anime2.get("year", 1999)
 
@@ -276,7 +284,7 @@ def generate_multiturn_dialogues(
                     if genres
                     else ("Action" if lang == "English" else "Action")
                 )
-                studio = ", ".join(anime.get("studios", ["Pierrot"]))
+                studio = _studio_str(anime.get("studios"), lang)
                 year = anime.get("year", 2002)
                 genres_str = ", ".join(genres)
 
@@ -541,7 +549,7 @@ def generate_multiturn_dialogues(
                 mood_fr = "captivant et profond"
                 mood_en = "captivating and deep"
 
-            studio2 = ", ".join(anime2.get("studios", ["MAPPA"]))
+            studio2 = _studio_str(anime2.get("studios"), lang)
             year2 = anime2.get("year", 2021)
             (
                 ", ".join(clean_tags(tags2, lang)[:3])
