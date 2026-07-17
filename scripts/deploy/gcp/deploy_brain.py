@@ -5,6 +5,14 @@ import sys
 
 import yaml
 
+# Windows consoles/redirected pipes default to cp1252, which cannot encode the
+# ✅ (and other non-Latin-1) characters this script and gcloud emit. Without
+# this, a fully successful deploy crashes on its final status print with
+# UnicodeEncodeError and exits non-zero. Force UTF-8 so success reports as success.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 
 def run_command(cmd_args, check=True):
     resolved_cmd = shutil.which(cmd_args[0])
