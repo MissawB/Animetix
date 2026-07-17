@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional  # noqa: E402
 
 from adapters.inference.lazy_load_mixin import LazyLoadMixin  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
+from core.ports.inference_port import InferenceNotImplementedError  # noqa: E402, F401
 from core.utils.lazy_import import lazy_import  # noqa: E402
 from core.utils.model_registry import get_verified_revision  # noqa: E402
 
@@ -18,13 +19,17 @@ np = lazy_import("numpy")
 
 logger = logging.getLogger("animetix.inference.audio_mixin")
 
+STT_MODEL_ID = "kyutai/stt-1b-en_fr-trfs"
+DEFAULT_XTTS_SPEAKER = "Ana Florence"
+DEFAULT_S2S_SYSTEM = "Tu es un assistant vocal francophone. Réponds brièvement."
+
 
 class AudioMixin(LazyLoadMixin):
     """
     Mixin providing audio capabilities:
     - Voice Cloning (XTTS/RVC)
     - Soundscapes (AudioLDM)
-    - Native S2S (Moshi)
+    - Native S2S (Kyutai STT + XTTS cascade)
     """
 
     if TYPE_CHECKING:
@@ -91,7 +96,7 @@ class AudioMixin(LazyLoadMixin):
         if torch.cuda.is_available():
             self._audioldm_pipeline.to("cuda")
 
-    def _load_moshi(self):
+    def _load_stt(self):
         if not torch.cuda.is_available():
             logger.warning(
                 "⚠️ GPU CUDA non détecté. Chargement local des modèles audio désactivé."
@@ -99,17 +104,24 @@ class AudioMixin(LazyLoadMixin):
             raise InferenceError(
                 "CUDA GPU is not available. Local audio models loading is disabled."
             )
-        self._lazy_load("_moshi_model", self._build_moshi, label="Moshi")
+        self._lazy_load(
+            "_stt_model", self._build_stt, label="Kyutai STT", on_error="raise"
+        )
 
-    def _build_moshi(self):
-        from moshi.models import Moshi  # noqa: E402
+    def _build_stt(self):
+        from transformers import (  # noqa: E402
+            KyutaiSpeechToTextForConditionalGeneration,
+            KyutaiSpeechToTextProcessor,
+        )
 
-        logger.info("🗣️ Loading Kyutai Moshi (S2S)...")
-        model_id = "kyutai/moshiko-pytorch-bf16"
-        revision = get_verified_revision(model_id)
-        self._moshi_model = Moshi.from_pretrained(model_id, revision=revision)
-        if torch.cuda.is_available():
-            self._moshi_model.to("cuda")
+        logger.info("🗣️ Loading Kyutai STT (en_fr, transformers)...")
+        revision = get_verified_revision(STT_MODEL_ID)
+        self._stt_processor = KyutaiSpeechToTextProcessor.from_pretrained(
+            STT_MODEL_ID, revision=revision
+        )
+        self._stt_model = KyutaiSpeechToTextForConditionalGeneration.from_pretrained(
+            STT_MODEL_ID, revision=revision, device_map="cuda", torch_dtype="auto"
+        )
 
     def clone_voice(
         self, text: str, reference_audio: bytes, language: str = "fr"

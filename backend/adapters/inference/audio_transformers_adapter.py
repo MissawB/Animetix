@@ -20,7 +20,7 @@ class AudioTransformersAdapter(AudioMixin, LazyLocalModelAdapter):
     ENGINE_NAME = "audio_transformers"
 
     def _is_ready(self) -> bool:
-        return bool(self._tts_model or self._audioldm_pipeline or self._moshi_model)
+        return bool(self._tts_model or self._audioldm_pipeline or self._stt_model)
 
     def __init__(
         self,
@@ -31,7 +31,8 @@ class AudioTransformersAdapter(AudioMixin, LazyLocalModelAdapter):
         self.xtts_model_name = xtts_model_name
         self._tts_model = None
         self._audioldm_pipeline = None
-        self._moshi_model = None
+        self._stt_processor = None
+        self._stt_model = None
 
     def generate(
         self,

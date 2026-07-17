@@ -1,3 +1,8 @@
+# Eagerly import torch + torch.overrides BEFORE any patch.dict("sys.modules")
+# snapshot so teardown never evicts them (prevents "_has_torch_function already
+# has a docstring"). See plan Global Constraints.
+import torch  # noqa: F401, I001
+import torch.overrides  # noqa: F401
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -11,38 +16,29 @@ def mock_cuda_available():
 
 
 @pytest.fixture(autouse=True)
-def mock_dependencies():
-    """Inject fresh mocks into sys.modules for moshi/pydub on every test.
-
-    Creating new MagicMock objects per test avoids cross-test state leakage
-    (e.g. side_effect set in one test persisting into the next).
-    """
-    _moshi = MagicMock()
-    _moshi_models = MagicMock()
-    _pydub = MagicMock()
-    _pydub_segment = MagicMock()
-
-    _pydub.AudioSegment = _pydub_segment
-    _moshi_models.Moshi = MagicMock()
-
-    # Expose on module globals so tests can reference them
-    global mock_moshi, mock_moshi_models, mock_pydub, mock_pydub_segment
-    mock_moshi = _moshi
-    mock_moshi_models = _moshi_models
-    mock_pydub = _pydub
-    mock_pydub_segment = _pydub_segment
-
-    with patch.dict(
-        "sys.modules",
-        {"moshi": _moshi, "moshi.models": _moshi_models, "pydub": _pydub},
-    ):
+def mock_pydub():
+    """Provide a mock `pydub` so audio_mixin's `from pydub import AudioSegment` works
+    without the real package. Fresh mock per test to avoid state leakage."""
+    pydub = MagicMock()
+    global m_pydub_seg
+    m_pydub_seg = pydub.AudioSegment
+    with patch.dict("sys.modules", {"pydub": pydub}):
         yield
 
 
 from adapters.inference.audio_transformers_adapter import (  # noqa: E402
     AudioTransformersAdapter,
-)  # noqa: E402
+)
 from core.domain.exceptions import InferenceError  # noqa: E402
+
+
+@pytest.fixture
+def adapter():
+    adp = AudioTransformersAdapter()
+    adp._stt_processor = None
+    adp._stt_model = None
+    adp._tts_model = None
+    return adp
 
 
 class TestS2SInference:
@@ -57,12 +53,14 @@ class TestS2SInference:
     def test_speech_to_speech_success(self, mock_from_numpy, mock_cuda, adapter):
         # Setup Moshi mock
         mock_moshi_model = MagicMock()
-        mock_moshi_models.Moshi.from_pretrained.return_value = mock_moshi_model
+        moshi_cls = mock_moshi_models.Moshi  # noqa: F821
+        moshi_cls.from_pretrained.return_value = mock_moshi_model
         mock_moshi_model.device = "cpu"
 
         # Setup AudioSegment mock
         mock_audio = MagicMock()
-        mock_pydub_segment.from_file.return_value = mock_audio
+        segment_cls = mock_pydub_segment  # noqa: F821
+        segment_cls.from_file.return_value = mock_audio
         mock_audio.set_frame_rate.return_value = mock_audio
         mock_audio.set_channels.return_value = mock_audio
         mock_audio.sample_width = 2
@@ -103,7 +101,8 @@ class TestS2SInference:
         # Manually set a mock model to skip loading
         adapter._moshi_model = MagicMock()
         # Make pydub fail
-        mock_pydub_segment.from_file.side_effect = Exception("Pydub crash")
+        segment_cls = mock_pydub_segment  # noqa: F821
+        segment_cls.from_file.side_effect = Exception("Pydub crash")
 
         with pytest.raises(InferenceError, match="Native S2S failed"):
             adapter.speech_to_speech(b"some audio")
@@ -115,11 +114,13 @@ class TestS2SInference:
     ):
         # Setup Moshi mock
         mock_moshi_model = MagicMock()
-        mock_moshi_models.Moshi.from_pretrained.return_value = mock_moshi_model
+        moshi_cls = mock_moshi_models.Moshi  # noqa: F821
+        moshi_cls.from_pretrained.return_value = mock_moshi_model
         mock_moshi_model.device = "cpu"
 
         mock_audio = MagicMock()
-        mock_pydub_segment.from_file.return_value = mock_audio
+        segment_cls = mock_pydub_segment  # noqa: F821
+        segment_cls.from_file.return_value = mock_audio
         mock_audio.set_frame_rate.return_value = mock_audio
         mock_audio.set_channels.return_value = mock_audio
         mock_audio.sample_width = 2
@@ -157,3 +158,26 @@ class TestS2SInference:
         with patch("torch.cuda.is_available", return_value=False):
             with pytest.raises(InferenceError, match="CUDA GPU is not available"):
                 adapter.speech_to_speech(b"fake audio")
+
+
+class TestS2SLoaders:
+    @patch(
+        "adapters.inference.audio_mixin.get_verified_revision", return_value="deadbeef"
+    )
+    def test_load_stt_builds_processor_and_model(self, _rev, adapter):
+        proc_cls = MagicMock()
+        model_cls = MagicMock()
+        fake_transformers = MagicMock()
+        fake_transformers.KyutaiSpeechToTextProcessor = proc_cls
+        fake_transformers.KyutaiSpeechToTextForConditionalGeneration = model_cls
+        with patch.dict("sys.modules", {"transformers": fake_transformers}):
+            adapter._load_stt()
+        proc_cls.from_pretrained.assert_called_once()
+        model_cls.from_pretrained.assert_called_once()
+        assert adapter._stt_model is not None
+        assert adapter._stt_processor is not None
+
+    def test_load_stt_cuda_unavailable(self, adapter):
+        with patch("torch.cuda.is_available", return_value=False):
+            with pytest.raises(InferenceError, match="CUDA GPU is not available"):
+                adapter._load_stt()
