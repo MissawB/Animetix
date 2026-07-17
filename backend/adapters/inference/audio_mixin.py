@@ -33,6 +33,7 @@ class AudioMixin(LazyLoadMixin):
     """
 
     if TYPE_CHECKING:
+        from core.domain.entities.ai_schemas import InferenceResponse
 
         def _log_usage(
             self,
@@ -42,6 +43,16 @@ class AudioMixin(LazyLoadMixin):
             units: int = 0,
             allocated_budget: int = 0,
         ) -> None: ...
+
+        def generate(
+            self,
+            prompt: str,
+            system_prompt: str = "...",
+            thinking_budget: int = 0,
+            thinking_mode: bool = False,
+            include_logprobs: bool = False,
+            **kwargs: Any,
+        ) -> "InferenceResponse": ...
 
     def _load_xtts(self):
         if not torch.cuda.is_available():
