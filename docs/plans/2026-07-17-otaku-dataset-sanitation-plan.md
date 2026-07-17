@@ -853,16 +853,29 @@ BANNED_NUMERIC = [
     re.compile(r"number\s+\d+\s+of favorite", re.IGNORECASE),
 ]
 
+# Le routage langue est positionnel : idx pair -> FR (structuré, PAS de synopsis),
+# idx impair -> EN (synopsis réel intégré). Les entités dont on veut vérifier
+# l'ANCRAGE (demon lord / swordsman) DOIVENT donc être à un index IMPAIR.
 ANIMES = [
-    {"title": "AlphaWork", "genres": ["Action"], "studios": ["StudioX"], "tags": ["ninja"],
-     "popularity": 200000, "year": 2002,
-     "description": "AlphaHero trains hard to protect his village from the demon lord."},
+    # idx 0 -> FR (structuré, pas de synopsis) : remplisseur
     {"title": "BetaWork", "genres": ["Comedy"], "studios": ["StudioY"], "tags": ["school"],
      "popularity": 1000, "year": 2015,
      "description": "BetaHero navigates a chaotic high-school life full of clubs."},
+    # idx 1 -> EN (synopsis ancré) : AlphaWork, Tier-1
+    {"title": "AlphaWork", "genres": ["Action"], "studios": ["StudioX"], "tags": ["ninja"],
+     "popularity": 200000, "year": 2002,
+     "description": "AlphaHero trains hard to protect his village from the demon lord."},
+]
+MANGAS = [
+    {"title": "FillerManga", "genres": ["Action"], "tags": ["t"], "popularity": 1000,
+     "year": 2005, "description": "A filler manga synopsis."},
 ]
 CHARS = [
-    {"name": "GammaHero", "origin": "AlphaWork", "entities": {"organizations": ["Survey Corps"]},
+    # idx 0 -> FR (structuré) : remplisseur
+    {"name": "DeltaChar", "origin": "DeltaWork", "entities": {"organizations": []},
+     "popularity": {"favourites": 100, "rank": 9}, "metadata": {}, "biography": "A filler biography."},
+    # idx 1 -> EN (biographie ancrée) : GammaHero, Tier-1
+    {"name": "GammaHero", "origin": "GammaOrigin", "entities": {"organizations": ["Survey Corps"]},
      "popularity": {"favourites": 3000, "rank": 7}, "metadata": {"height": "180 cm"},
      "biography": "GammaHero is a fearless swordsman who lost his family to demons."},
 ]
@@ -889,23 +902,6 @@ def _specialized_outputs(data):
         if any(e in text for e in entities):
             outs.append(it["output"])
     return outs
-
-
-def _all_assistant_texts(data):
-    """TOUS les textes assistant, y compris ceux des dialogues multi-tours.
-
-    Les garde-fous DOIVENT couvrir les dialogues : le bruit numérique s'y était
-    glissé (dialogue_generators) et ré-enseignerait le bug sous forme conversationnelle.
-    """
-    texts = []
-    for it in data:
-        if "turns" in it:
-            for t in it["turns"]:
-                if t.get("assistant"):
-                    texts.append(t["assistant"])
-        elif it.get("output"):
-            texts.append(it["output"])
-    return texts
 
 
 # Personnage Tier-2 (favs>500) SANS biographie NI organisation : la sortie primaire
@@ -965,16 +961,25 @@ class TestDatasetSanitation(unittest.TestCase):
             self.assertLessEqual(top / len(self.outs), 0.5,
                                  "un 8-gramme domine les sorties (squelette ?)")
 
-    def test_no_banned_phrases_in_turns(self):
-        # Les dialogues multi-tours ne doivent PAS ré-introduire les motifs bannis.
-        for text in _all_assistant_texts(self.data):
-            for phrase in BANNED_PHRASES:
-                self.assertNotIn(phrase, text, f"phrase bannie (turn): {phrase!r}")
+    def test_no_banned_phrases_in_dialogue_turns(self):
+        # IMPORTANT : l'orchestrateur MOCKE generate_multiturn_dialogues, donc on
+        # appelle la VRAIE fonction directement pour tester les dialogues réels.
+        from pipeline.mlops.finetuning_dataset import generate_multiturn_dialogues
+        vocab = {"Tsundere": {"definition": "d", "examples": "e", "impact": "i", "origin": "o"}}
+        dialogues = generate_multiturn_dialogues(ANIMES, MANGAS, CHARS, vocab, count=14)
+        for d in dialogues:
+            for t in d["turns"]:
+                for phrase in BANNED_PHRASES:
+                    self.assertNotIn(phrase, t["assistant"], f"phrase bannie (dialogue): {phrase!r}")
 
-    def test_no_numeric_noise_in_turns(self):
-        for text in _all_assistant_texts(self.data):
-            for rx in BANNED_NUMERIC:
-                self.assertIsNone(rx.search(text), f"bruit numérique (turn): {rx.pattern}")
+    def test_no_numeric_noise_in_dialogue_turns(self):
+        from pipeline.mlops.finetuning_dataset import generate_multiturn_dialogues
+        vocab = {"Tsundere": {"definition": "d", "examples": "e", "impact": "i", "origin": "o"}}
+        dialogues = generate_multiturn_dialogues(ANIMES, MANGAS, CHARS, vocab, count=14)
+        for d in dialogues:
+            for t in d["turns"]:
+                for rx in BANNED_NUMERIC:
+                    self.assertIsNone(rx.search(t["assistant"]), f"bruit numérique (dialogue): {rx.pattern}")
 
     def test_collision_guard_keeps_outputs_distinct(self):
         # Personnage sans bio ni org : sur plusieurs graines, le garde-fou doit
