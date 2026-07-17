@@ -18,20 +18,16 @@ from adapters.inference.diffusers_adapter import DiffusersAdapter  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
-def _mock_heavy_modules():
+def _mock_heavy_modules(monkeypatch):
     # Install the mocks for the duration of the test only, touching just these
     # two keys so we don't disturb modules (e.g. torch) imported during the test.
-    saved = {name: sys.modules.get(name) for name in ("diffusers", "PIL")}
-    sys.modules["diffusers"] = mock_diffusers
-    sys.modules["PIL"] = mock_pil
-    try:
-        yield
-    finally:
-        for name, original in saved.items():
-            if original is None:
-                sys.modules.pop(name, None)
-            else:
-                sys.modules[name] = original
+    # `monkeypatch.setitem` restores the previous value (or removes the key if it
+    # was absent) at teardown, even on error — no raw `sys.modules[...] =` that
+    # leaks into later test modules when a restore is missed. This is the leak the
+    # global `_cleanup_module_pollution` snapshot in conftest was backstopping.
+    monkeypatch.setitem(sys.modules, "diffusers", mock_diffusers)
+    monkeypatch.setitem(sys.modules, "PIL", mock_pil)
+    yield
 
 
 @pytest.fixture(autouse=True)
