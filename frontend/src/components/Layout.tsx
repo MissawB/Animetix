@@ -2,7 +2,6 @@ import React, { ReactNode, useCallback, useEffect } from 'react';
 import Navbar from './Navbar';
 import AdminNavbar from './admin/AdminNavbar';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useLocation } from 'react-router-dom';
 import { queryClient } from '../utils/queryClient';
 import { useCustomConfig } from '../features/utils/hooks/useCustomConfig';
@@ -17,6 +16,14 @@ import Footer from './layout/Footer';
 import { useThemeSync } from './layout/useThemeSync';
 import { installLazyImageRescue } from '../utils/lazyImageRescue';
 
+const ReactQueryDevtools = import.meta.env.DEV
+  ? React.lazy(() =>
+      import('@tanstack/react-query-devtools').then((d) => ({
+        default: d.ReactQueryDevtools,
+      })),
+    )
+  : () => null;
+
 interface LayoutProps {
   children: ReactNode;
 }
@@ -26,8 +33,14 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
   const location = useLocation();
 
   const {
-    isSidebarOpen, isSettingsOpen, theme, currentLang,
-    toggleSidebar, toggleSettings, setTheme, setCurrentLang
+    isSidebarOpen,
+    isSettingsOpen,
+    theme,
+    currentLang,
+    toggleSidebar,
+    toggleSettings,
+    setTheme,
+    setCurrentLang,
   } = useUIStore();
 
   const { user, isAuthenticated } = useAuthStore();
@@ -44,11 +57,8 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-500">
-
       {/* OVERLAY (Visible when sidebar or settings drawer is open) */}
-      {(isSidebarOpen || isSettingsOpen) && (
-        <SidebarOverlay onClose={handleOverlayClose} />
-      )}
+      {(isSidebarOpen || isSettingsOpen) && <SidebarOverlay onClose={handleOverlayClose} />}
 
       {/* SIDEBAR (DRAWER - LEFT) */}
       <SidebarDrawer
@@ -84,9 +94,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
       {location.pathname.startsWith('/admin/') && <AdminNavbar />}
 
       {/* CONTENT WRAPPER — les transitions de route vivent dans AnimatedRoutes (AppRouter) */}
-      <main className="flex-grow">
-        {children}
-      </main>
+      <main className="flex-grow">{children}</main>
 
       <Footer />
       <CompanionOverlay />
@@ -98,7 +106,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <QueryClientProvider client={queryClient}>
       <LayoutContent>{children}</LayoutContent>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {import.meta.env.DEV && (
+        <React.Suspense fallback={null}>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </React.Suspense>
+      )}
     </QueryClientProvider>
   );
 };

@@ -28,7 +28,6 @@
     "@hookform/resolvers": "^5.4.0",
     "@sentry/react": "^10.53.1",
     "@tanstack/react-query": "^5.100.11",
-    "@tanstack/react-query-devtools": "^5.100.11",
     "@tanstack/react-query-persist-client": "^5.100.11",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "firebase": "^12.14.0",
@@ -51,6 +50,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@tanstack/react-query-devtools": "^5.100.11",
     "@axe-core/playwright": "^4.11.3",
     "@chromatic-com/storybook": "^5.2.1",
     "@eslint/js": "^10.0.1",
