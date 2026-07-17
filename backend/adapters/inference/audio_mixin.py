@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional  # noqa: E402
 
 from adapters.inference.lazy_load_mixin import LazyLoadMixin  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
-from core.ports.inference_port import InferenceNotImplementedError  # noqa: E402, F401
+from core.ports.inference_port import InferenceNotImplementedError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
 from core.utils.model_registry import get_verified_revision  # noqa: E402
 
@@ -147,6 +147,8 @@ class AudioMixin(LazyLoadMixin):
     def _synthesize(self, text: str) -> bytes:
         """Stage 3: reply text -> WAV bytes via XTTS-v2 (French)."""
         self._load_xtts()
+        if not self._tts_model:
+            raise InferenceError("XTTS model not loaded.")
         wav = self._tts_model.tts(
             text=text, speaker=DEFAULT_XTTS_SPEAKER, language="fr"
         )

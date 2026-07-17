@@ -89,6 +89,33 @@ class TestTranscribe:
         model.generate.assert_called_once()
         proc.batch_decode.assert_called_once_with("tokens", skip_special_tokens=True)
 
+    def test_transcribe_normalizes_pcm_and_calls_processor_correctly(self, adapter):
+        audio = MagicMock()
+        m_pydub_seg.from_file.return_value = audio
+        audio.set_frame_rate.return_value = audio
+        audio.set_channels.return_value = audio
+        audio.sample_width = 2
+        audio.get_array_of_samples.return_value = np.array([16384], dtype=np.int16)
+
+        proc = MagicMock()
+        inputs = MagicMock()
+        proc.return_value = inputs
+        inputs.to.return_value = inputs
+        proc.batch_decode.return_value = ["  bonjour  "]
+        adapter._stt_processor = proc
+        model = MagicMock()
+        model.generate.return_value = "tokens"
+        adapter._stt_model = model
+
+        out = adapter._transcribe(b"audio")
+        assert out == "bonjour"
+        model.generate.assert_called_once()
+        proc.batch_decode.assert_called_once_with("tokens", skip_special_tokens=True)
+
+        assert np.allclose(proc.call_args.args[0], np.array([0.5], dtype=np.float32))
+        assert proc.call_args.kwargs["sampling_rate"] == 24000
+        assert proc.call_args.kwargs["return_tensors"] == "pt"
+
 
 class TestSynthesize:
     def test_synthesize_returns_wav_bytes(self, adapter):
@@ -104,6 +131,13 @@ class TestSynthesize:
         assert kwargs["text"] == "bonjour"
         assert kwargs["language"] == "fr"
         assert kwargs["speaker"] == "Ana Florence"
+
+    def test_synthesize_raises_when_tts_model_not_loaded(self, adapter):
+        adapter._load_xtts = MagicMock()
+        adapter._tts_model = None
+
+        with pytest.raises(InferenceError, match="XTTS model not loaded"):
+            adapter._synthesize("bonjour")
 
 
 class TestSpeechToSpeech:
