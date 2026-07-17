@@ -12,22 +12,21 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Fine-tune otaku — l'adaptateur est corrompu, le dataset est à refaire** _(expérience contrôlée 2026-07-13)_
-  - `MissawB/otaku-qwen-7b-adapter` mergé dans sa vraie base et servi produit du **texte corrompu** : chiffres injectés au milieu des mots, personnages inventés (« Izanagi Eikichi1 » comme héros de Chainsaw Man). Même image, même quantification, même template : le modèle **stock** répond « Denji » proprement. La chaîne de service est donc saine — **c'est l'adaptateur**.
-  - **Cause** : il a mémorisé le **gabarit** de `MissawB/otaku-expert-dataset`, qui est synthétique et templaté (« jouit d'une immense popularité », « figure incontournable », « se plaçant au rang numéro… »), et il **remplit les emplacements numériques au hasard**. Il a appris la forme d'une réponse, pas son contenu.
-  - **Écartés** : désalignement du tokenizer (adaptateur et base partagent les mêmes 22 tokens ajoutés) et pollution du dataset (1 ligne sur 100 porte le motif, et c'est une formule mathématique).
-  - **À faire** : assainir le dataset (varier les formulations, ancrer les faits, purger les emplacements numériques) **avant** tout réentraînement. Le re-servir est un `LLM_MODEL_NAME=otaku-qwen:7b` (déjà baké dans l'image, aucun rebuild).
+- [/] **Fine-tune otaku — dataset assaini ✅ ; reste le réentraînement (bloqué GPU)** _(expérience contrôlée 2026-07-13 ; dataset refait 2026-07-17)_
+  - **Contexte** : l'adaptateur servi produisait du texte corrompu (chiffres injectés, persos inventés) car il avait mémorisé le **gabarit** synthétique/templaté de `MissawB/otaku-expert-dataset` et **remplissait les emplacements numériques au hasard** — la forme d'une réponse, pas son contenu.
+  - **✅ Fait 2026-07-17 (PR #87 mergée)** : dataset assaini de façon déterministe — générateurs réécrits pour **ancrer** les réponses dans les vrais `description`/`biography` (EN synopsis, FR structuré), **slots numériques purgés**, bug des sorties byte-identiques supprimé, suite de garde-fous `tests/mlops/test_dataset_sanitation.py`. Régénéré (39 392 lignes), validé propre, **re-uploadé sur `MissawB/otaku-expert-dataset`**. Spec/plan : `docs/specs|plans/2026-07-17-otaku-dataset-sanitation-*`.
+  - **Reste** : réentraîner sur ce dataset propre **dès qu'un GPU est dispo** (cf. dette GPU), puis re-servir via `LLM_MODEL_NAME=otaku-qwen:7b` (déjà baké dans l'image, aucun rebuild).
 
 - [ ] **Index visuel : phase 2 — peupler `character_ccip_space` (~35 000 portraits)** _(phase 1 livrée 2026-07-14 ; chaîne CCIP dé-risquée 2026-07-16, cf. HISTORY)_
   - `character_ccip_space` est **vide** (recherche perso → 503 honnête, sans facturer) ; la chaîne est dé-risquée (test d'intégration réel) et **le build est câblé en Cloud Run Job on-demand** `animetix-build-character-index` (cf. HISTORY). **Reste = geste opérateur** : `deploy_jobs.py` (crée/maj le job) puis `gcloud run jobs execute animetix-build-character-index --region=europe-west9`, Brain up ; reprenable, re-exécuter jusqu'à couvrir les ~35 000. Décision « tour texte CLIP non exposée » déjà tranchée (cf. HISTORY) — ne pas rebrancher `encode_text`.
 
-- [ ] **URI Neo4j locale morte — geste de config** _(constaté 2026-07-12 ; skip rendu visible 2026-07-16, cf. HISTORY)_
-  - L'instance locale (`a654e145…`) n'existe plus (prod = `1254b9b8`) ; le skip silencieux de `reconcile_db` est corrigé. **Reste purement de la config** : pointer `NEO4J_URI` local vers une instance vivante — creds/action opérateur, pas du code.
+- [x] **URI Neo4j locale morte — geste de config** _(constaté 2026-07-12 ; résolu 2026-07-17)_
+  - **Fait 2026-07-17** : conteneur Docker `animetix-neo4j` (neo4j:5, `--restart unless-stopped`, ports 7687/7474) + root `.env` re-pointé sur `bolt://localhost:7687` (bloc Aura mort `a654e145` conservé en commentaire). Connexion vérifiée au niveau app (`neo4j_manager.driver` actif, requête test OK → le skip de `reconcile_db` ne se déclenche plus). Graphe vide : peupler via `python manage.py sync_catalog` au besoin. _(à archiver dans HISTORY.md)_
 
 ## 🟡 Moyens
 
 - [ ] **Tests — hygiène : reliquat (2 gardes porteuses)** _(audit dette 2026-07-11 ; api_client/mock_engine/mock_prompt_manager centralisés 2026-07-16, cf. HISTORY)_
-  - Fixtures dupliquées : **fait** (`api_client`, `mock_engine`, `mock_prompt_manager` 18/21 dans conftest). Restent **deux gardes porteuses, à séquencer** (retrait risqué, non vérifiable en local) : le snapshot `sys.modules` autouse ([conftest:107-139](tests/conftest.py#L107-L139)) → fixer d'abord le mock fuyant `test_diffusers_adapter.py:25` AVANT de retirer le snapshot ; le `BRAIN_API_URL` forcé à l'import ([conftest:12](tests/conftest.py#L12)) → rendre la construction DI paresseuse (containers/inference.py `validate_inference_config` sur `django.setup()`) AVANT de retirer le default.
+  - Fixtures dupliquées : **fait**. Mock fuyant : **fait** (`tests/core/test_diffusers_adapter.py` passe en `monkeypatch.setitem`, cf. HISTORY). Restent **deux retraits de gardes, dangereux et non-autonomes** : (1) le snapshot `sys.modules` autouse ([conftest:107-139](tests/conftest.py#L107-L139)) — le retirer expose des pollutions **dépendantes de l'ordre des tests** (flaky : une passe CE verte ne prouve PAS que c'est sûr) ; auditer TOUS les remplacements de modules d'abord. (2) le `BRAIN_API_URL` forcé à l'import ([conftest:12](tests/conftest.py#L12)) — exige de rendre la construction DI paresseuse (`containers/inference.py` `validate_inference_config` sur `django.setup()`), refactor large touchant toute la chaîne d'inférence. À faire dans une passe dédiée avec runs CI en ordre randomisé, pas en slice.
 
 ## 🟢 Faibles
 
