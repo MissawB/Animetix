@@ -1,10 +1,11 @@
 """Real Kyutai STT + XTTS S2S cascade smoke test — brain/L4 only.
 
 Skipped unless a CUDA GPU is present (never in CI or on the dev box).
-Run on the brain: `pytest -m gpu tests/adapters/test_s2s_inference_gpu.py`.
+Run on the brain: `S2S_GPU_SMOKE=1 pytest -m gpu tests/adapters/test_s2s_inference_gpu.py`.
 """
 
 import io
+import os
 import wave
 
 import numpy as np
@@ -12,6 +13,12 @@ import pytest
 
 torch = pytest.importorskip("torch")
 pytest.importorskip("transformers")
+
+if not os.getenv("S2S_GPU_SMOKE"):
+    pytest.skip(
+        "Set S2S_GPU_SMOKE=1 to run the real Kyutai STT + XTTS cascade (brain only)",
+        allow_module_level=True,
+    )
 
 if not torch.cuda.is_available():
     pytest.skip("CUDA GPU required for S2S smoke test", allow_module_level=True)
