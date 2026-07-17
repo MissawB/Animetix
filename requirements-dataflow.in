@@ -11,7 +11,7 @@
 # Beam pinned in lockstep with the base image tag
 # (deploy/Dockerfile.dataflow: apache/beam_python3.12_sdk:2.74.0 — a mismatch
 # between the SDK in the image and this pin fails Dataflow job submission).
-# apache-beam 2.74.0 caps jsonpickle<4.0.0 → jsonpickle stays at 3.4.2
-# (CVE CWE-502, Snyk). Residual ACCEPTED: purely transitive, never imported by
-# our code, and the CVE requires deserializing untrusted input. See TODO.
-apache-beam==2.74.0
+# apache-beam 2.75.0 lifts the jsonpickle cap (now `jsonpickle<5.0.0,>=3.0.4`),
+# unfreezing jsonpickle 3.4.2 → 4.x (CVE CWE-502; purely transitive, never imported
+# by our code). Keep the Dockerfile.dataflow base tag (beam_python3.12_sdk) in lockstep.
+apache-beam==2.75.0
