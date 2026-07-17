@@ -37,9 +37,10 @@ _Aucun item ouvert._
     Le paquet `moshi` a été écarté (il plafonne safetensors<0.8.0, incompatible avec
     diffusers==0.39.0) ; aucune nouvelle dépendance (transformers + coqui-tts déjà
     verrouillés). Contrat batch `speech_to_speech` inchangé ; Gemini Live intact.
-    Voir docs/superpowers/specs/2026-07-17-brain-moshi-s2s-kyutai-cascade-design.md.
+    Implémentation dans [audio_mixin.py](backend/adapters/inference/audio_mixin.py)
+    (`_load_stt`/`_transcribe`/`_synthesize`/`speech_to_speech`).
     Reste : rebuild/redeploy manuel de l'image brain (poids STT téléchargés au 1er
-    appel), puis smoke test GPU.
+    appel), puis smoke test GPU (`S2S_GPU_SMOKE=1 pytest -m gpu`).
 - [ ] **Sécu deps — `jsonpickle` CVE résiduelle** _(risque réel faible, résiduel accepté)_
   - `jsonpickle 3.4.2` (CWE-502) reste capé `<4` par `apache-beam 2.74.0` (dernière release publiée). Purement **transitif** (jamais importé par notre code) et non exploitable chez nous. **Condition de déblocage** : la levée du cap (`jsonpickle>=3.0.4,<5.0.0`) n'existe que sur la branche `master` d'apache-beam ([PR #38769](https://github.com/apache/beam/pull/38769) ; prévue ~2.75.0, **non confirmée**). À ce moment-là : montée d'`apache-beam` dans [requirements.in](requirements.in) + re-`pip-compile` **complet** (beam co-épingle protobuf/grpcio/pyarrow/numpy/dill — pas d'épinglage chirurgical) + bump **lockstep** du tag de base [Dockerfile.dataflow:10](deploy/Dockerfile.dataflow#L10) (`apache/beam_python3.12_sdk:2.74.0`, sinon mismatch SDK worker ↔ pin = échec de soumission Dataflow). _Caveat_ : aucune release `jsonpickle` 4.x n'est à ce jour marquée comme corrigeant les CVE (CVE-2020-22083, CVE-2025-55136 : « Patched: None », disputées par le mainteneur) — la montée **défige** la version sans forcément clore formellement le finding. (Recherche multi-agents 2026-06-25.)
 - [ ] **Frontend — plotly.js (~4,6 Mo) importé statiquement dans 8 pages** _(audit dette 2026-07-11)_
