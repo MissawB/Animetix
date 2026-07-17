@@ -21,8 +21,7 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Tests — hygiène : reliquat (2 gardes porteuses)** _(audit dette 2026-07-11 ; api_client/mock_engine/mock_prompt_manager centralisés 2026-07-16, cf. HISTORY)_
-  - Fixtures dupliquées : **fait**. Mock fuyant : **fait** (`tests/core/test_diffusers_adapter.py` passe en `monkeypatch.setitem`, cf. HISTORY). Restent **deux retraits de gardes, dangereux et non-autonomes** : (1) le snapshot `sys.modules` autouse ([conftest:107-139](tests/conftest.py#L107-L139)) — le retirer expose des pollutions **dépendantes de l'ordre des tests** (flaky : une passe CE verte ne prouve PAS que c'est sûr) ; auditer TOUS les remplacements de modules d'abord. (2) le `BRAIN_API_URL` forcé à l'import ([conftest:12](tests/conftest.py#L12)) — exige de rendre la construction DI paresseuse (`containers/inference.py` `validate_inference_config` sur `django.setup()`), refactor large touchant toute la chaîne d'inférence. À faire dans une passe dédiée avec runs CI en ordre randomisé, pas en slice.
+_Aucun item ouvert._
 
 ## 🟢 Faibles
 
