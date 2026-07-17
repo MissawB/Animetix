@@ -31,13 +31,6 @@ def mock_web():
 
 
 @pytest.fixture
-def mock_prompt_manager():
-    pm = MagicMock()
-    pm.get_prompt.return_value = ("prompt", "system")
-    return pm
-
-
-@pytest.fixture
 def mock_guardrail():
     guard = MagicMock()
     guard.validate_input.return_value = {"is_safe": True}

@@ -202,3 +202,15 @@ def mock_engine():
     ~16 test files. Tests needing a pre-configured engine (stream_generate,
     generate, ...) define their own local `mock_engine`, which shadows this."""
     return MagicMock()
+
+
+@pytest.fixture
+def mock_prompt_manager():
+    """Shared mocked PromptManager — previously redefined in ~18 test files with
+    incidentally-different return strings that NO test asserts on (it's mocked
+    only so the service-under-test can run). `get_prompt` returns a default
+    (formatted, system) tuple. Tests needing a typed `spec=PromptManager` or a
+    per-key `side_effect` define their own local fixture, which shadows this."""
+    pm = MagicMock()
+    pm.get_prompt.return_value = ("formatted prompt", "system prompt")
+    return pm

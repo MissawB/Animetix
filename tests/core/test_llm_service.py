@@ -7,13 +7,6 @@ from core.domain.services.llm_service import LLMService
 
 
 @pytest.fixture
-def mock_prompt_manager():
-    pm = MagicMock()
-    pm.get_prompt.return_value = ("prompt", "system")
-    return pm
-
-
-@pytest.fixture
 def llm_service(mock_engine, mock_prompt_manager):
     return LLMService(inference_engine=mock_engine, prompt_manager=mock_prompt_manager)
 
