@@ -112,21 +112,37 @@ class TestFinetuningDataset(unittest.TestCase):
             make_english_manga_profile,
         )
 
-        # Test anime profile
+        # Test anime profile — grounded in real description
         anime_prof = make_english_anime_profile(
-            "Naruto", ["Action"], ["Pierrot"], ["Ninja"], 2002
+            "Naruto",
+            ["Action"],
+            ["Pierrot"],
+            ["Ninja"],
+            2002,
+            "Naruto Uzumaki is a young ninja seeking recognition and the Hokage title.",
         )
         self.assertIn("Naruto", anime_prof)
-        self.assertIn("Action", anime_prof)
-        self.assertIn("Pierrot", anime_prof)
-        self.assertIn("Ninja", anime_prof)
-        self.assertIn("2002", anime_prof)
+        self.assertIn("2002", anime_prof)  # year is the only allowed number
+        self.assertIn("Hokage", anime_prof)  # real fact from description
+        self.assertNotIn("landmark work", anime_prof)
+        self.assertNotIn("highly recommended", anime_prof)
 
-        # Test manga profile
-        manga_prof = make_english_manga_profile("One Piece", ["Adventure"], ["Pirates"])
+        # Empty description -> structured fallback still names the work + facts
+        anime_fallback = make_english_anime_profile(
+            "Naruto", ["Action"], ["Pierrot"], ["Ninja"], 2002, ""
+        )
+        self.assertIn("Naruto", anime_fallback)
+        self.assertIn("Pierrot", anime_fallback)
+
+        # Test manga profile — grounded in real description
+        manga_prof = make_english_manga_profile(
+            "One Piece",
+            ["Adventure"],
+            ["Pirates"],
+            "Monkey D. Luffy sails to find the One Piece treasure.",
+        )
         self.assertIn("One Piece", manga_prof)
-        self.assertIn("Adventure", manga_prof)
-        self.assertIn("Pirates", manga_prof)
+        self.assertIn("treasure", manga_prof)  # real fact
 
         # Test character bio — grounded in real biography, no numeric noise
         char_bio = make_english_character_bio(
