@@ -466,12 +466,14 @@ def generate_rag_context_instructions(
         )
         title = anime.get("title", "Unknown")
         genres = ", ".join(anime.get("genres", ["Action"]))
-        studio = ", ".join(anime.get("studios", ["Pierrot"]))
+        studio = ", ".join(anime.get("studios") or []) or (
+            "an unspecified studio" if lang == "English" else "un studio non précisé"
+        )
         year = anime.get("year", 2002)
 
         # Build clean info
         if lang == "English":
-            clean_doc = f"[Document A (Official profile)] The anime '{title}' was produced by the studio {studio} and released in the year {year}. It belongs to the genres: {genres}."
+            clean_doc = f"[Document A (Official profile)] The anime '{title}' was produced by {studio} and released in the year {year}. It belongs to the genres: {genres}."
             unrelated_anime = "One Piece" if title != "One Piece" else "Dragon Ball"
             noise_doc1 = f"[Document B (Trivia)] The manga '{unrelated_anime}' has sold millions of copies worldwide and is serialized in Weekly Shonen Jump."
             noise_doc2 = f"[Document C (Ads)] {random.choice(noise_en)}"
@@ -482,9 +484,9 @@ def generate_rag_context_instructions(
             context = "\n".join(docs)
 
             q = f"According to the provided documents, which studio produced the anime '{title}', in which year was it released, and which genres does it belong to?"
-            ans = f"Based on the provided documents (specifically Document A), the anime '{title}' was produced by the studio {studio} and released in {year}. It belongs to the genres: {genres}. The other documents contain unrelated trivia about '{unrelated_anime}' and an advertisement, which have been ignored."
+            ans = f"Based on the provided documents (specifically Document A), the anime '{title}' was produced by {studio} and released in {year}. It belongs to the genres: {genres}. The other documents contain unrelated trivia about '{unrelated_anime}' and an advertisement, which have been ignored."
         else:
-            clean_doc = f"[Document A (Fiche officielle)] L'anime '{title}' a été produit par le studio {studio} et est sorti en {year}. Il appartient aux genres : {genres}."
+            clean_doc = f"[Document A (Fiche officielle)] L'anime '{title}' a été produit par {studio} et est sorti en {year}. Il appartient aux genres : {genres}."
             unrelated_anime = "One Piece" if title != "One Piece" else "Dragon Ball"
             noise_doc1 = f"[Document B (Anecdotes)] Le manga '{unrelated_anime}' s'est vendu à des millions d'exemplaires et est prépublié dans le Weekly Shonen Jump."
             noise_doc2 = f"[Document C (Pub)] {random.choice(noise_fr)}"
@@ -495,7 +497,7 @@ def generate_rag_context_instructions(
             context = "\n".join(docs)
 
             q = f"D'après les documents fournis, quel studio a produit l'anime '{title}', en quelle année est-il sorti et à quels genres appartient-il ?"
-            ans = f"D'après le contexte fourni (spécifiquement le Document A), l'anime '{title}' a été produit par le studio {studio} et est sorti en {year}. Ses genres sont : {genres}. Les autres documents mentionnent des anecdotes sur '{unrelated_anime}' et une annonce publicitaire, qui ont été ignorées."
+            ans = f"D'après le contexte fourni (spécifiquement le Document A), l'anime '{title}' a été produit par {studio} et est sorti en {year}. Ses genres sont : {genres}. Les autres documents mentionnent des anecdotes sur '{unrelated_anime}' et une annonce publicitaire, qui ont été ignorées."
 
         instructions.append(
             {"instruction": q, "input": context, "output": ans, "language": lang}
