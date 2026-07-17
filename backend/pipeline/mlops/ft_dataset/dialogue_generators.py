@@ -138,21 +138,6 @@ def generate_multiturn_dialogues(
             ents = char.get("entities", {})
             orgs = ents.get("organizations", []) if isinstance(ents, dict) else []
             orgs_str = ", ".join(orgs) if orgs else "several groups"
-            favs = (
-                char.get("popularity", {}).get("favourites", 0)
-                if isinstance(char.get("popularity"), dict)
-                else 0
-            )
-            rank = (
-                char.get("popularity", {}).get("rank", 999)
-                if isinstance(char.get("popularity"), dict)
-                else 999
-            )
-            height = (
-                char.get("metadata", {}).get("height", "Unknown")
-                if isinstance(char.get("metadata"), dict)
-                else "Unknown"
-            )
 
             if lang == "English":
                 biography = clean_source_prose(char.get("biography", ""))
@@ -166,19 +151,14 @@ def generate_multiturn_dialogues(
                     },
                 ]
             else:
-                p_text = make_french_character_bio(
-                    name, origin, orgs, favs, rank, height
-                )
+                biography = clean_source_prose(char.get("biography", ""))
+                p_text = make_french_character_bio(name, origin, orgs)
                 t = fr_char_templates[0]
                 turns = [
                     {"user": t["t1"].format(name=display_name), "assistant": p_text},
                     {
                         "user": t["t2"],
                         "assistant": f"Il est principalement connu pour son affiliation avec : {orgs_str}.",
-                    },
-                    {
-                        "user": t["t3"],
-                        "assistant": f"Sa taille officielle est {height}. Il est classé au rang #{rank} des favoris avec {favs} votes d'admiration.",
                     },
                 ]
 

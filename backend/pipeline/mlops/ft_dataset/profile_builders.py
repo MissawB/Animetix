@@ -153,7 +153,16 @@ def make_french_manga_profile(title: str, genres: List[str], tags: List[str]) ->
     return " ".join(profile_parts)
 
 
-def make_french_character_bio(name, origin, orgs, favs, rank, height):
+_FR_CHAR_LEADINS = [
+    "{name}{syns} est un personnage de l'œuvre '{origin}'{osyns}.",
+    "{name}{syns} apparaît dans '{origin}'{osyns}.",
+    "Dans '{origin}'{osyns}, on trouve le personnage de {name}{syns}.",
+    "{name}{syns} fait partie de l'univers de '{origin}'{osyns}.",
+    "Voici {name}{syns}, issu de '{origin}'{osyns}.",
+]
+
+
+def make_french_character_bio(name, origin, orgs):
     org_mapping = {
         "Survey Corps": "le Bataillon d'exploration",
         "Straw Hat Pirates": "l'Équipage du Chapeau de paille",
@@ -167,45 +176,18 @@ def make_french_character_bio(name, origin, orgs, favs, rank, height):
         "Special Operations Squad": "l'Escouade tactique de Levi",
         "Black Bulls": "la compagnie du Taureau Noir (Black Bulls)",
     }
-
-    french_orgs = []
-    for org in orgs:
-        mapped = org_mapping.get(org, org)
-        french_orgs.append(mapped)
-
-    org_str = (
-        " et ".join(french_orgs)
-        if french_orgs
-        else "plusieurs factions et groupes de son univers"
-    )
+    french_orgs = [org_mapping.get(o, o) for o in orgs]
 
     syns = get_character_synonyms_string(name)
     origin_syns = get_synonyms_string(origin)
-
-    bio_parts = [
-        f"{name}{syns} est un personnage légendaire et de premier plan issu de l'œuvre à succès '{origin}'{origin_syns}.",
-        "Au sein de cette œuvre, son importance narrative est colossale.",
-    ]
-
+    lead = random.choice(_FR_CHAR_LEADINS).format(
+        name=name, syns=syns, origin=origin, osyns=origin_syns
+    )
+    parts = [lead]
     if french_orgs:
-        bio_parts.append(
-            f"Il est principalement connu pour son affiliation et son rôle majeur au sein de : {org_str}."
-        )
-
-    if height and height != "Unknown":
-        bio_parts.append(
-            f"Ses caractéristiques physiques et son profil officiel mentionnent notamment : {height}."
-        )
-
-    bio_parts.append(
-        f"Il jouit d'une immense popularité auprès de la communauté mondiale des passionnés de japanimation, se plaçant au rang numéro {rank} des personnages favoris avec pas moins de {favs} votes d'admiration."
-    )
-
-    bio_parts.append(
-        f"En tant que figure incontournable de '{origin}', {name} incarne les valeurs et les conflits majeurs de son univers, marquant profondément les spectateurs par son écriture et son développement scénaristique de premier ordre."
-    )
-
-    return " ".join(bio_parts)
+        org_str = " et ".join(french_orgs)
+        parts.append(f"Il est notamment associé à {org_str}.")
+    return " ".join(parts)
 
 
 def make_english_anime_profile(

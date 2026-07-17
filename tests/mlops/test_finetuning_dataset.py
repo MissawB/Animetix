@@ -146,6 +146,27 @@ class TestFinetuningDataset(unittest.TestCase):
 
         self.assertIsNone(_re.search(r"\d{3,}", char_bio))
 
+    def test_french_character_bio_structured(self):
+        from pipeline.mlops.finetuning_dataset import make_french_character_bio
+
+        bio = make_french_character_bio("Levi", "Shingeki no Kyojin", ["Survey Corps"])
+        self.assertIn("Levi", bio)
+        self.assertIn("Shingeki no Kyojin", bio)
+        # organisation traduite via le mapping conservé
+        self.assertIn("Bataillon d'exploration", bio)
+        # motifs corrupteurs bannis
+        for banned in [
+            "jouit d'une immense popularité",
+            "figure incontournable",
+            "rang numéro",
+            "votes d'admiration",
+            "incarne les valeurs",
+        ]:
+            self.assertNotIn(banned, bio)
+        import re as _re
+
+        self.assertIsNone(_re.search(r"\d{3,}", bio))
+
     @patch("pipeline.mlops.finetuning_dataset.load_dataset")
     def test_bilingual_general_instructions(self, mock_load_dataset):
         mock_ds_fr = [{"instruction": "Inst FR", "input": "", "output": "Rep FR"}]
