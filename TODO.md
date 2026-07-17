@@ -41,10 +41,7 @@ _Aucun item ouvert._
   - Un seul `ubuntu-latest` / Python 3.12, aucune matrix — alors que toute la logique anti-pollution async du conftest cible Windows ([tests/conftest.py:14-18](tests/conftest.py#L14-L18)). Angle mort jamais couvert → ajouter `windows-latest` à la matrice de tests dans le workflow GitHub Actions (`.github/workflows/ci.yml`).
 - [ ] **Frontend — composants > 500 lignes (reliquat)** _(audit dette 2026-07-11 ; BlindtestPage découpé le 2026-07-16, cf. HISTORY)_
   - `BlindtestPage` traité (753→324, hook + sous-composants). Restent, à découper au fil de l'eau (sous-composants + hooks métier) : `TransparencyPage` (614), `AudioLabPage` (573), `LabHubPage` (569), `SpeechToSpeechLabPage` (544).
-- [/] **Deps — doublons et divers** _(audit dette 2026-07-11)_
-  - Lock backend : 3 clients HTTP (aiohttp/httpx/requests), 2 sérialiseurs JSON (orjson/ujson) — souvent transitifs, à vérifier.
-  - [x] `@tanstack/react-query-devtools` déplacé en `devDependencies` et importé de manière conditionnelle dans [Layout.tsx](frontend/src/components/Layout.tsx) en développement uniquement (évité en prod).
-  - `docs/COST_AUDIT.md` cite encore GPT-4o/Claude 3 Sonnet (daté).
-  - [x] Full-scan Python évitable résolu dans [admin_api.py](backend/api/animetix/api/admin_api.py#L165-L175) via un filtre JSON `contains` optimisé et un fallback SQLite de secours.
+- [ ] **Deps — doublons et divers (reliquat)** _(audit dette 2026-07-11 ; devtools-prod + full-scan admin réglés 2026-07-16, cf. HISTORY)_
+  - Lock backend : 3 clients HTTP (aiohttp/httpx/requests), 2 sérialiseurs JSON (orjson/ujson) — souvent transitifs, à vérifier. `docs/COST_AUDIT.md` cite encore GPT-4o/Claude 3 Sonnet (daté), à rafraîchir.
 - [ ] **Backend — DI contourné et double voie Neo4j** _(audit dette 2026-07-11)_
   - [dependencies.py:14-19](backend/api/animetix/api/dependencies.py#L14-L19) résout via l'instance globale du container (work-around coverage documenté) au lieu de `@inject/Provide`. Les scripts pipeline instancient `Neo4jClient` directement ([neo4j_client.py:55](backend/pipeline/neo4j_client.py#L55), [neo4j_sync.py:29](backend/pipeline/neo4j_sync.py#L29)) hors container → deux voies d'accès Neo4j.
