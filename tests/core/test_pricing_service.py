@@ -3,12 +3,39 @@ from core.domain.services.pricing_service import PricingService
 
 def test_calculate_cost_llm():
     service = PricingService()
-    # GPT-4o: input 5.0, output 15.0 per 1M tokens
-    # 1M input + 1M output = 20.0 USD
+    # brain-api: input 1.0, output 2.0 per 1M tokens → 1M input + 1M output = 3.0 USD
     cost = service.calculate_cost(
-        "gpt-4o", input_tokens=1_000_000, output_tokens=1_000_000
+        "brain-api", input_tokens=1_000_000, output_tokens=1_000_000
     )
-    assert cost == 20.0
+    assert cost == 3.0
+
+
+def test_gemini_namespaced_engine_is_priced():
+    """Live Gemini calls log namespaced engines ("google_genai:<model>[:modality]");
+    these must resolve to the gemini price, not the $0 unknown-engine fallback."""
+    service = PricingService()
+    base = service.calculate_cost(
+        "google_genai:gemini-3.5-flash",
+        input_tokens=1_000_000,
+        output_tokens=1_000_000,
+    )
+    assert base > 0
+    # a modality suffix (vision/video) resolves to the same base price
+    vision = service.calculate_cost(
+        "google_genai:gemini-3.5-flash:vision",
+        input_tokens=1_000_000,
+        output_tokens=1_000_000,
+    )
+    assert vision == base
+
+
+def test_dead_openai_anthropic_keys_removed():
+    """The prod chain [brain_api, google_genai] never calls OpenAI/Anthropic;
+    those dead registry rows are dropped."""
+    service = PricingService()
+    assert service.get_pricing_info("gpt-4o") is None
+    assert service.get_pricing_info("gpt-3.5-turbo") is None
+    assert service.get_pricing_info("claude-3-sonnet") is None
 
 
 def test_calculate_cost_unit():

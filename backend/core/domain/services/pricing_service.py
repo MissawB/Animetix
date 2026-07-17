@@ -13,6 +13,15 @@ class PricingService:
         "pro": {"daily_tokens": 10000000, "daily_requests": 5000},
     }
 
+    # The runtime logs namespaced engines, e.g. "google_genai:gemini-3.5-flash:vision"
+    # (see google_genai_adapter._log_usage). These provider prefixes and modality
+    # suffixes are stripped when resolving a price (see _resolve_pricing) so the
+    # cost estimate lands on the base model instead of the $0 fallback.
+    _PROVIDER_PREFIXES = frozenset(
+        {"google_genai", "transformers", "brain_api", "ollama", "moshi"}
+    )
+    _MODALITY_SUFFIXES = frozenset({"vision", "video", "audio"})
+
     def __init__(self):
         # Pricing registry: USD per 1M tokens or per unit
         self._registry: Dict[str, Dict[str, float]] = {
@@ -26,9 +35,11 @@ class PricingService:
             "HuggingFaceTB/SmolVLM-Instruct": {"input": 0.20, "output": 0.20},
             "Qwen/Qwen3-VL-8B-Instruct": {"input": 0.30, "output": 0.30},
             "moondream2": {"input": 0.50, "output": 0.50},
-            "gpt-4o": {"input": 5.0, "output": 15.0},
-            "gpt-3.5-turbo": {"input": 0.5, "output": 1.5},
-            "claude-3-sonnet": {"input": 3.0, "output": 15.0},
+            # Cloud LLM actually used by the production chain [brain_api, google_genai].
+            # Flash-tier estimates (USD/1M tokens); logged as "google_genai:<model>[:vision]".
+            "gemini-3.5-flash": {"input": 0.15, "output": 0.60},
+            "gemini-live-2.5-flash-native-audio": {"input": 0.50, "output": 2.00},
+            "gemini-embedding-2": {"input": 0.15, "output": 0.0},
             "local-llama": {"input": 0.0, "output": 0.0},
             "brain-api": {"input": 1.0, "output": 2.0},
             "brain-api-slm": {"input": 0.1, "output": 0.1},
@@ -40,13 +51,30 @@ class PricingService:
             "xtts-v2": {"unit_cost": 0.005},  # USD per voice cloning request
         }
 
+    def _resolve_pricing(self, engine: str) -> Optional[Dict[str, float]]:
+        """Look up pricing, tolerating the namespaced engine strings the runtime
+        logs (e.g. "google_genai:gemini-3.5-flash:vision"). Tries an exact match
+        first, then strips a known provider prefix and a trailing modality suffix
+        and retries. Returns None if still unknown."""
+        pricing = self._registry.get(engine)
+        if pricing is not None:
+            return pricing
+        if ":" in engine:
+            parts = engine.split(":")
+            if parts[0] in self._PROVIDER_PREFIXES:
+                parts = parts[1:]
+            if parts and parts[-1] in self._MODALITY_SUFFIXES:
+                parts = parts[:-1]
+            return self._registry.get(":".join(parts))
+        return None
+
     def calculate_cost(
         self, engine: str, input_tokens: int = 0, output_tokens: int = 0, units: int = 0
     ) -> float:
         """
         Calculates the estimated cost based on engine and usage metrics.
         """
-        pricing = self._registry.get(engine)
+        pricing = self._resolve_pricing(engine)
         if not pricing:
             # Fallback for unknown engines
             return 0.0
