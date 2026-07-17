@@ -151,7 +151,6 @@ def generate_multiturn_dialogues(
                     },
                 ]
             else:
-                biography = clean_source_prose(char.get("biography", ""))
                 p_text = make_french_character_bio(name, origin, orgs)
                 t = fr_char_templates[0]
                 turns = [
@@ -309,7 +308,7 @@ def generate_multiturn_dialogues(
                         },
                         {
                             "user": "Thanks for the details. Are there any highly popular characters in it?",
-                            "assistant": f"Definitely! Within this universe, {char_name} is extremely popular among fans, ranking high with many votes of admiration.",
+                            "assistant": f"Definitely! Within this universe, {char_name} is one of the fan-favorite characters.",
                         },
                     ]
                 else:
@@ -324,7 +323,7 @@ def generate_multiturn_dialogues(
                         },
                         {
                             "user": "Merci pour ces détails. Est-ce qu'il y a des personnages très populaires dedans ?",
-                            "assistant": f"Absolument ! Si on regarde les personnages de cet univers, {char_name} est particulièrement apprécié de la communauté, se classant dans le top avec de nombreux votes d'admiration.",
+                            "assistant": f"Absolument ! Si on regarde les personnages de cet univers, {char_name} est particulièrement apprécié de la communauté des fans.",
                         },
                     ]
 
