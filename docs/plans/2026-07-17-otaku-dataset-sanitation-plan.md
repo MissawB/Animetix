@@ -977,6 +977,14 @@ cd backend && grep -nE "rank|favourites|favs|votes|numéro|number \{" pipeline/m
 
 Attendu (hypothèse du spec) : les relationnels/marché/méta sont **factuels ou à contenu écrit à la main** → sains. `otaku_generators.py` a 15 templates/concept mais chaque `output` diffère (projection de champs distincts) et le contenu est réel → sain, mais **vérifier** qu'aucun n'émet `rank`/`favs`.
 
+> **Sites déjà repérés (découverts pendant les Tasks 2-6) — à traiter dans cette tâche :**
+> 1. `dialogue_generators.py:~337 / ~352` : réponses de scénario « clarification » avec le filler fabriqué « ranking high with many votes of admiration » / « se classant dans le top avec de nombreux votes d'admiration ». Pas de nombre injecté, mais c'est le même trope de popularité fabriqué → **remplacer** par une formulation factuelle non-quantifiée (ou retirer la mention de popularité). MALADE → patcher.
+> 2. `dialogue_generators.py:~154` : ligne morte `biography = clean_source_prose(char.get("biography", ""))` dans la branche **FR** du scénario personnage (introduite en Task 3, `biography` non consommé côté FR) → **retirer** cette ligne.
+> 3. `synthetic_generators.py:~584 / ~595` : documents RAG simulés `[Document A]` qui contiennent `{favs} favorites` / `{favs} votes d'admiration`. Ici le nombre est **dans le contexte fourni en `input`** (donc conditionné) — vérifier que l'`output` correspondant n'invente pas de nombre non présent dans le contexte. Si l'output se contente d'utiliser/ignorer le doc fourni → **SAIN** (ne pas patcher : c'est le but de la simulation RAG). Documenter ce raisonnement.
+> 4. `synthetic_generators.py:566` : `{"favourites": 150000, "rank": 1}` est une **fixture d'entrée** (construction de données), pas une sortie → SAIN.
+>
+> Après patch de `dialogue_generators.py`, relancer `test_generate_multiturn_dialogues` et `test_generate_multiturn_dialogues_complex_scenarios` (structure ≥ 2 tours conservée).
+
 - [ ] **Step 2: Écrire le verdict**
 
 Créer `docs/analysis/2026-07-17-annex-generators-audit.md` avec, pour chaque fichier : `SAIN` ou `PATCHÉ` + justification d'une ligne. Exemple de forme :
