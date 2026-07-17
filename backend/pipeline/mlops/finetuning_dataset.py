@@ -37,6 +37,7 @@ from .ft_dataset.paths import (  # noqa: E402,F401
 )
 from .ft_dataset.text_cleaning import (  # noqa: E402,F401
     clean_description,
+    clean_source_prose,
     clean_tags,
     inject_query_noise,
 )
@@ -449,238 +450,74 @@ def run_generate_instruction_dataset():
                 if is_underrepresented:
                     effective_pop = max(pop, 150001) if pop > 50000 else 100000
 
-                if idx % 2 == 1:
-                    profile = make_english_anime_profile(
-                        title, genres, studios, tags, year
+                description = clean_source_prose(item.get("description", ""))
+                is_en = idx % 2 == 1
+                lang = "English" if is_en else "Français"
+                studios_str = (
+                    ", ".join(studios)
+                    if studios
+                    else ("an unspecified studio" if is_en else "un studio non précisé")
+                )
+                genres_str = (
+                    ", ".join(clean_tags(genres, lang))
+                    if genres
+                    else ("various genres" if is_en else "genres variés")
+                )
+
+                if is_en:
+                    primary = make_english_anime_profile(
+                        title, genres, studios, tags, year, description
                     )
-                    # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
-                    if effective_pop > 150000:
-                        if client and title in augmented_anime_titles:
-                            logger.info(
-                                f"Augmenting anime (Tier 1) '{title}' via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "enthousiaste"
-                            )
-                            p4 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                            p5 = paraphrase_text_via_gemini(
-                                profile, client, "analytique"
-                            )
-                        else:
-                            p1 = p2 = p3 = p4 = p5 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"Present the cult anime '{display_t}' in extreme detail.",
-                                "input": "",
-                                "output": p1,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Which studio is behind the masterpiece '{display_t}' and what is it about?",
-                                "input": "",
-                                "output": p2,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"What is the story of the major work '{display_t}'?",
-                                "input": "",
-                                "output": p3,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"What are the major themes and universe of '{display_t}'?",
-                                "input": "",
-                                "output": p4,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Why is '{display_t}' such an extremely popular and appreciated work among viewers?",
-                                "input": "",
-                                "output": p5,
-                                "language": "English",
-                            }
-                        )
-
-                    # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
-                    elif effective_pop > 50000:
-                        if client and title in augmented_anime_titles:
-                            logger.info(
-                                f"Augmenting anime (Tier 2) '{title}' via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                        else:
-                            p1 = p2 = p3 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"Present the popular anime '{display_t}' in detail.",
-                                "input": "",
-                                "output": p1,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Which studio produced '{display_t}' and what is it about?",
-                                "input": "",
-                                "output": p2,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"What are the major themes of the anime '{display_t}'?",
-                                "input": "",
-                                "output": p3,
-                                "language": "English",
-                            }
-                        )
-
-                    # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
-                    else:
-                        specialized_data.append(
-                            {
-                                "instruction": f"Present the anime '{display_t}' in detail.",
-                                "input": "",
-                                "output": profile,
-                                "language": "English",
-                            }
-                        )
+                    q_primary = f"Present the anime '{display_t}' in detail."
+                    aux1 = (
+                        f"Which studio produced '{display_t}' and when?",
+                        f"'{display_t}' was produced by {studios_str} and released in {year}.",
+                    )
+                    aux2 = (
+                        f"What genres define '{display_t}'?",
+                        f"'{display_t}' spans: {genres_str}.",
+                    )
                 else:
-                    profile = make_french_anime_profile(
+                    primary = make_french_anime_profile(
                         title, genres, studios, tags, year
                     )
-                    # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
-                    if effective_pop > 150000:
-                        if client and title in augmented_anime_titles:
-                            logger.info(
-                                f"Augmenting anime (Tier 1) '{title}' via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "enthousiaste"
-                            )
-                            p4 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                            p5 = paraphrase_text_via_gemini(
-                                profile, client, "analytique"
-                            )
-                        else:
-                            p1 = p2 = p3 = p4 = p5 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"Présente l'anime culte '{display_t}' de manière extrêmement détaillée.",
-                                "input": "",
-                                "output": p1,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Quel studio est derrière le chef-d'œuvre '{display_t}' et de quoi s'agit-il ?",
-                                "input": "",
-                                "output": p2,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"De quoi parle l'œuvre majeure '{display_t}' ?",
-                                "input": "",
-                                "output": p3,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Quelles sont les thématiques majeures et l'univers de '{display_t}' ?",
-                                "input": "",
-                                "output": p4,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Pourquoi '{display_t}' est-elle une œuvre extrêmement populaire et appréciée des spectateurs ?",
-                                "input": "",
-                                "output": p5,
-                                "language": "Français",
-                            }
-                        )
+                    q_primary = f"Présente l'anime '{display_t}' de manière détaillée."
+                    aux1 = (
+                        f"Quel studio a produit '{display_t}' et en quelle année ?",
+                        f"'{display_t}' a été produit par {studios_str} et est sorti en {year}.",
+                    )
+                    aux2 = (
+                        f"Quels sont les genres de '{display_t}' ?",
+                        f"'{display_t}' relève des genres : {genres_str}.",
+                    )
 
-                    # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
-                    elif effective_pop > 50000:
-                        if client and title in augmented_anime_titles:
-                            logger.info(
-                                f"Augmenting anime (Tier 2) '{title}' via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                        else:
-                            p1 = p2 = p3 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"Présente l'anime populaire '{display_t}' de manière détaillée.",
-                                "input": "",
-                                "output": p1,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Quel studio a produit '{display_t}' et de quoi ça parle ?",
-                                "input": "",
-                                "output": p2,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Quelles sont les thématiques majeures de l'anime '{display_t}' ?",
-                                "input": "",
-                                "output": p3,
-                                "language": "Français",
-                            }
-                        )
+                if client and title in augmented_anime_titles:
+                    primary = paraphrase_text_via_gemini(
+                        primary, client, "encyclopédique"
+                    )
 
-                    # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
-                    else:
-                        specialized_data.append(
-                            {
-                                "instruction": f"Présente l'anime '{display_t}' de manière détaillée.",
-                                "input": "",
-                                "output": profile,
-                                "language": "Français",
-                            }
-                        )
+                specialized_data.append(
+                    {
+                        "instruction": q_primary,
+                        "input": "",
+                        "output": primary,
+                        "language": lang,
+                    }
+                )
+                entity_outputs = {primary}
+                if effective_pop > 150000:  # Tier-1: +2 aux
+                    candidate_aux = (aux1, aux2)
+                elif effective_pop > 50000:  # Tier-2: +1 aux
+                    candidate_aux = (aux1,)
+                else:  # Tier-3: primary only
+                    candidate_aux = ()
+                for q, a in candidate_aux:
+                    if a in entity_outputs:
+                        continue
+                    specialized_data.append(
+                        {"instruction": q, "input": "", "output": a, "language": lang}
+                    )
+                    entity_outputs.add(a)
 
     # 3. MANGA DATABASE
     if os.path.exists(MANGA_DB):
@@ -731,234 +568,56 @@ def run_generate_instruction_dataset():
                 if is_underrepresented:
                     effective_pop = max(pop, 150001) if pop > 50000 else 100000
 
-                if idx % 2 == 1:
-                    profile = make_english_manga_profile(title, genres, tags)
-                    # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
-                    if effective_pop > 150000:
-                        if client and title in augmented_manga_titles:
-                            logger.info(
-                                f"Augmenting manga (Tier 1) '{title}' via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "enthousiaste"
-                            )
-                            p4 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                            p5 = paraphrase_text_via_gemini(
-                                profile, client, "analytique"
-                            )
-                        else:
-                            p1 = p2 = p3 = p4 = p5 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"What are the main themes of the cult manga '{display_t}'?",
-                                "input": "",
-                                "output": p1,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Analyze and summarize the iconic manga '{display_t}'.",
-                                "input": "",
-                                "output": p2,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Why has the manga '{display_t}' met with such great success with the public?",
-                                "input": "",
-                                "output": p3,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Present the universe and plot of the cult manga '{display_t}'.",
-                                "input": "",
-                                "output": p4,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"What is the cult manga '{display_t}' about?",
-                                "input": "",
-                                "output": p5,
-                                "language": "English",
-                            }
-                        )
+                description = clean_source_prose(item.get("description", ""))
+                is_en = idx % 2 == 1
+                lang = "English" if is_en else "Français"
+                genres_str = (
+                    ", ".join(clean_tags(genres, lang))
+                    if genres
+                    else ("various genres" if is_en else "genres variés")
+                )
 
-                    # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
-                    elif effective_pop > 50000:
-                        if client and title in augmented_manga_titles:
-                            logger.info(
-                                f"Augmenting manga (Tier 2) '{title}' via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                        else:
-                            p1 = p2 = p3 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"What are the main themes of the popular manga '{display_t}'?",
-                                "input": "",
-                                "output": p1,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"What is the popular manga '{display_t}' about?",
-                                "input": "",
-                                "output": p2,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Summarize the key themes of the manga '{display_t}'.",
-                                "input": "",
-                                "output": p3,
-                                "language": "English",
-                            }
-                        )
-
-                    # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
-                    else:
-                        specialized_data.append(
-                            {
-                                "instruction": f"What are the main themes of the manga '{display_t}'?",
-                                "input": "",
-                                "output": profile,
-                                "language": "English",
-                            }
-                        )
+                if is_en:
+                    primary = make_english_manga_profile(
+                        title, genres, tags, description
+                    )
+                    q_primary = f"What is the manga '{display_t}' about?"
+                    aux1 = (
+                        f"What genres define the manga '{display_t}'?",
+                        f"'{display_t}' spans: {genres_str}.",
+                    )
                 else:
-                    profile = make_french_manga_profile(title, genres, tags)
-                    # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
-                    if effective_pop > 150000:
-                        if client and title in augmented_manga_titles:
-                            logger.info(
-                                f"Augmenting manga (Tier 1) '{title}' via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "enthousiaste"
-                            )
-                            p4 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                            p5 = paraphrase_text_via_gemini(
-                                profile, client, "analytique"
-                            )
-                        else:
-                            p1 = p2 = p3 = p4 = p5 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"Quelles sont les thématiques principales du manga culte '{display_t}' ?",
-                                "input": "",
-                                "output": p1,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Analyse et résume le manga emblématique '{display_t}'.",
-                                "input": "",
-                                "output": p2,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Pourquoi le manga '{display_t}' a-t-il rencontré un si grand succès auprès du public ?",
-                                "input": "",
-                                "output": p3,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Présente l'univers et le scénario du manga culte '{display_t}'.",
-                                "input": "",
-                                "output": p4,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"De quoi parle le manga culte '{display_t}' ?",
-                                "input": "",
-                                "output": p5,
-                                "language": "Français",
-                            }
-                        )
+                    primary = make_french_manga_profile(title, genres, tags)
+                    q_primary = f"De quoi parle le manga '{display_t}' ?"
+                    aux1 = (
+                        f"Quels sont les genres du manga '{display_t}' ?",
+                        f"'{display_t}' relève des genres : {genres_str}.",
+                    )
 
-                    # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
-                    elif effective_pop > 50000:
-                        if client and title in augmented_manga_titles:
-                            logger.info(
-                                f"Augmenting manga (Tier 2) '{title}' via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                        else:
-                            p1 = p2 = p3 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"Quelles sont les thématiques principales du manga populaire '{display_t}' ?",
-                                "input": "",
-                                "output": p1,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"De quoi parle le manga populaire '{display_t}' ?",
-                                "input": "",
-                                "output": p2,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Résume les thèmes clés du manga '{display_t}'.",
-                                "input": "",
-                                "output": p3,
-                                "language": "Français",
-                            }
-                        )
+                if client and title in augmented_manga_titles:
+                    primary = paraphrase_text_via_gemini(
+                        primary, client, "encyclopédique"
+                    )
 
-                    # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
-                    else:
-                        specialized_data.append(
-                            {
-                                "instruction": f"Quelles sont les thématiques principales du manga '{display_t}' ?",
-                                "input": "",
-                                "output": profile,
-                                "language": "Français",
-                            }
-                        )
+                specialized_data.append(
+                    {
+                        "instruction": q_primary,
+                        "input": "",
+                        "output": primary,
+                        "language": lang,
+                    }
+                )
+                if (
+                    effective_pop > 50000 and aux1[1] != primary
+                ):  # Tier-1 & Tier-2: +1 aux
+                    specialized_data.append(
+                        {
+                            "instruction": aux1[0],
+                            "input": "",
+                            "output": aux1[1],
+                            "language": lang,
+                        }
+                    )
 
     # 4. CHARACTER DATABASE
     if os.path.exists(CHAR_DB):
@@ -977,262 +636,55 @@ def run_generate_instruction_dataset():
                 ents = c.get("entities", {})
                 orgs = [clean_description(o) for o in ents.get("organizations", [])]
                 favs = c.get("popularity", {}).get("favourites", 0)
-                rank = c.get("popularity", {}).get("rank", 9999)
-                height = clean_description(
-                    c.get("metadata", {}).get("height", "Unknown")
-                )
 
                 display_name = get_display_character(name)
                 display_origin = get_display_title(origin)
 
-                if idx % 2 == 1:
-                    profile = make_english_character_bio(
-                        name, origin, orgs, favs, rank, height
+                biography = clean_source_prose(c.get("biography", ""))
+                is_en = idx % 2 == 1
+                lang = "English" if is_en else "Français"
+
+                if is_en:
+                    primary = make_english_character_bio(
+                        display_name, display_origin, orgs, biography
                     )
-                    # Tier 1 : Ultra Populaire (> 2000 favoris) -> 5 variations
-                    if favs > 2000:
-                        if client and (name, origin) in augmented_char_names:
-                            logger.info(
-                                f"Augmenting character (Tier 1) '{name}' ({origin}) via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "enthousiaste"
-                            )
-                            p4 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                            p5 = paraphrase_text_via_gemini(
-                                profile, client, "analytique"
-                            )
-                        else:
-                            p1 = p2 = p3 = p4 = p5 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"Complete analysis of the cult character {display_name} in {display_origin}.",
-                                "input": "",
-                                "output": p1,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Who is {display_name} ?",
-                                "input": f"Context: {display_origin}",
-                                "output": p2,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"In-depth analysis of the psychology and role of {display_name} in '{display_origin}'.",
-                                "input": "",
-                                "output": p3,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"What are the outstanding traits and importance of the character of {display_name} ?",
-                                "input": f"Original work: {display_origin}",
-                                "output": p4,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Why is {display_name} one of the most iconic and beloved characters in '{display_origin}' ?",
-                                "input": "",
-                                "output": p5,
-                                "language": "English",
-                            }
-                        )
-
-                    # Tier 2 : Très Populaire (500 - 2000 favoris) -> 3 variations
-                    elif favs > 500:
-                        if client and (name, origin) in augmented_char_names:
-                            logger.info(
-                                f"Augmenting character (Tier 2) '{name}' ({origin}) via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                        else:
-                            p1 = p2 = p3 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"Analyze the popular character of {display_name} in {display_origin}.",
-                                "input": "",
-                                "output": p1,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Who is {display_name} ?",
-                                "input": f"Context: {display_origin}",
-                                "output": p2,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"What are the outstanding traits of the character of {display_name} in '{display_origin}' ?",
-                                "input": "",
-                                "output": p3,
-                                "language": "English",
-                            }
-                        )
-
-                    # Tier 3 : Standard (50 - 500 favoris) -> 2 variations
-                    else:
-                        specialized_data.append(
-                            {
-                                "instruction": f"Analyze the character of {display_name} in {display_origin}.",
-                                "input": "",
-                                "output": profile,
-                                "language": "English",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Who is {display_name} ?",
-                                "input": f"Context: {display_origin}",
-                                "output": profile,
-                                "language": "English",
-                            }
-                        )
+                    q_primary = f"Who is {display_name}?"
+                    aux1 = (
+                        f"Which work does {display_name} come from?",
+                        f"{display_name} is a character from '{display_origin}'.",
+                    )
                 else:
-                    profile = make_french_character_bio(
-                        name, origin, orgs, favs, rank, height
+                    primary = make_french_character_bio(
+                        display_name, display_origin, orgs
                     )
-                    # Tier 1 : Ultra Populaire (> 2000 favoris) -> 5 variations
-                    if favs > 2000:
-                        if client and (name, origin) in augmented_char_names:
-                            logger.info(
-                                f"Augmenting character (Tier 1) '{name}' ({origin}) via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "enthousiaste"
-                            )
-                            p4 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                            p5 = paraphrase_text_via_gemini(
-                                profile, client, "analytique"
-                            )
-                        else:
-                            p1 = p2 = p3 = p4 = p5 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"Analyse complète du personnage culte {display_name} dans {display_origin}.",
-                                "input": "",
-                                "output": p1,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Qui est {display_name} ?",
-                                "input": f"Contexte : {display_origin}",
-                                "output": p2,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Analyse approfondie de la psychologie et du rôle de {display_name} dans '{display_origin}'.",
-                                "input": "",
-                                "output": p3,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Quels sont les traits marquants et l'importance du personnage de {display_name} ?",
-                                "input": f"Œuvre d'origine : {display_origin}",
-                                "output": p4,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Pourquoi {display_name} est-il l'un des personnages les plus emblématiques et adorés de '{display_origin}' ?",
-                                "input": "",
-                                "output": p5,
-                                "language": "Français",
-                            }
-                        )
+                    q_primary = f"Qui est {display_name} ?"
+                    aux1 = (
+                        f"De quelle œuvre vient {display_name} ?",
+                        f"{display_name} est un personnage de '{display_origin}'.",
+                    )
 
-                    # Tier 2 : Très Populaire (500 - 2000 favoris) -> 3 variations
-                    elif favs > 500:
-                        if client and (name, origin) in augmented_char_names:
-                            logger.info(
-                                f"Augmenting character (Tier 2) '{name}' ({origin}) via Gemini..."
-                            )
-                            p1 = paraphrase_text_via_gemini(
-                                profile, client, "encyclopédique"
-                            )
-                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                            p3 = paraphrase_text_via_gemini(
-                                profile, client, "décontracté"
-                            )
-                        else:
-                            p1 = p2 = p3 = profile
-                        specialized_data.append(
-                            {
-                                "instruction": f"Analyse le personnage populaire de {display_name} dans {display_origin}.",
-                                "input": "",
-                                "output": p1,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Qui est {display_name} ?",
-                                "input": f"Contexte : {display_origin}",
-                                "output": p2,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Quels sont les traits marquants du personnage de {display_name} dans '{display_origin}' ?",
-                                "input": "",
-                                "output": p3,
-                                "language": "Français",
-                            }
-                        )
+                if client and (name, origin) in augmented_char_names:
+                    primary = paraphrase_text_via_gemini(
+                        primary, client, "encyclopédique"
+                    )
 
-                    # Tier 3 : Standard (50 - 500 favoris) -> 2 variations
-                    else:
-                        specialized_data.append(
-                            {
-                                "instruction": f"Analyse le personnage de {display_name} dans {display_origin}.",
-                                "input": "",
-                                "output": profile,
-                                "language": "Français",
-                            }
-                        )
-                        specialized_data.append(
-                            {
-                                "instruction": f"Qui est {display_name} ?",
-                                "input": f"Contexte : {display_origin}",
-                                "output": profile,
-                                "language": "Français",
-                            }
-                        )
+                specialized_data.append(
+                    {
+                        "instruction": q_primary,
+                        "input": "",
+                        "output": primary,
+                        "language": lang,
+                    }
+                )
+                if favs > 500 and aux1[1] != primary:  # Tier-1 & Tier-2: +1 aux
+                    specialized_data.append(
+                        {
+                            "instruction": aux1[0],
+                            "input": "",
+                            "output": aux1[1],
+                            "language": lang,
+                        }
+                    )
 
     # Déduplication
     specialized_data = deduplicate_dataset(specialized_data)

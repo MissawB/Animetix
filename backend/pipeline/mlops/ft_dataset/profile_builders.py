@@ -115,45 +115,64 @@ def get_display_character(name):
     return name
 
 
+_FR_ANIME_LEADINS = [
+    "L'anime '{title}'{syns} est sorti en {year} et relève des genres {genres}.",
+    "'{title}'{syns} ({year}) est un anime des genres {genres}.",
+    "Sorti en {year}, l'anime '{title}'{syns} appartient aux genres {genres}.",
+    "'{title}'{syns} est un anime de {year}, classé dans {genres}.",
+]
+
+
 def make_french_anime_profile(
     title: str, genres: List[str], studios: List[str], tags: List[str], year: int
 ) -> str:
-    cleaned_tags = clean_tags(tags)
     cleaned_genres = clean_tags(genres)
-
-    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "genres indéterminés"
-    studios_str = ", ".join(studios) if studios else "un studio de talent non spécifié"
-    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else "thématiques diverses"
+    cleaned_tags = clean_tags(tags)
+    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "genres variés"
+    studios_str = ", ".join(studios) if studios else "un studio non précisé"
+    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else ""
     syns = get_synonyms_string(title)
+    lead = random.choice(_FR_ANIME_LEADINS).format(
+        title=title, syns=syns, year=year, genres=genres_str
+    )
+    parts = [lead, f"Il a été produit par {studios_str}."]
+    if tags_str:
+        parts.append(f"Ses thématiques incluent : {tags_str}.")
+    return " ".join(parts)
 
-    profile_parts = [
-        f"L'anime '{title}'{syns} est une œuvre marquante de la japanimation sortie en {year}.",
-        f"Elle s'inscrit avec brio dans les genres de type {genres_str}.",
-        f"Produite de manière impressionnante par le studio {studios_str}, cette série s'est imposée par sa réalisation soignée.",
-        f"Son univers aborde des thématiques profondes telles que {tags_str}.",
-        f"En raison de ses grandes qualités artistiques et de son scénario palpitant, '{title}' est grandement recommandée pour les passionnés du genre.",
-    ]
-    return " ".join(profile_parts)
+
+_FR_MANGA_LEADINS = [
+    "'{title}'{syns} est un manga des genres {genres}.",
+    "Le manga '{title}'{syns} relève des genres {genres}.",
+    "'{title}'{syns} est un manga classé dans {genres}.",
+]
 
 
 def make_french_manga_profile(title: str, genres: List[str], tags: List[str]) -> str:
-    cleaned_tags = clean_tags(tags)
     cleaned_genres = clean_tags(genres)
-
-    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "genres indéterminés"
-    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else "thématiques diverses"
+    cleaned_tags = clean_tags(tags)
+    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "genres variés"
+    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else ""
     syns = get_synonyms_string(title)
+    lead = random.choice(_FR_MANGA_LEADINS).format(
+        title=title, syns=syns, genres=genres_str
+    )
+    parts = [lead]
+    if tags_str:
+        parts.append(f"Ses thématiques incluent : {tags_str}.")
+    return " ".join(parts)
 
-    profile_parts = [
-        f"Le manga culte '{title}'{syns} est une œuvre majeure très appréciée des lecteurs.",
-        f"Elle s'illustre particulièrement dans les registres éditoriaux et genres suivants : {genres_str}.",
-        f"Ce manga propose une intrigue riche, se démarquant par ses thématiques fortes telles que {tags_str}.",
-        f"À travers un découpage graphique saisissant et un scénario dense, '{title}' reste une référence incontournable de sa catégorie.",
-    ]
-    return " ".join(profile_parts)
+
+_FR_CHAR_LEADINS = [
+    "{name}{syns} est un personnage de l'œuvre '{origin}'{osyns}.",
+    "{name}{syns} apparaît dans '{origin}'{osyns}.",
+    "Dans '{origin}'{osyns}, on trouve le personnage de {name}{syns}.",
+    "{name}{syns} fait partie de l'univers de '{origin}'{osyns}.",
+    "Voici {name}{syns}, issu de '{origin}'{osyns}.",
+]
 
 
-def make_french_character_bio(name, origin, orgs, favs, rank, height):
+def make_french_character_bio(name, origin, orgs):
     org_mapping = {
         "Survey Corps": "le Bataillon d'exploration",
         "Straw Hat Pirates": "l'Équipage du Chapeau de paille",
@@ -167,116 +186,94 @@ def make_french_character_bio(name, origin, orgs, favs, rank, height):
         "Special Operations Squad": "l'Escouade tactique de Levi",
         "Black Bulls": "la compagnie du Taureau Noir (Black Bulls)",
     }
-
-    french_orgs = []
-    for org in orgs:
-        mapped = org_mapping.get(org, org)
-        french_orgs.append(mapped)
-
-    org_str = (
-        " et ".join(french_orgs)
-        if french_orgs
-        else "plusieurs factions et groupes de son univers"
-    )
+    french_orgs = [org_mapping.get(o, o) for o in orgs]
 
     syns = get_character_synonyms_string(name)
     origin_syns = get_synonyms_string(origin)
-
-    bio_parts = [
-        f"{name}{syns} est un personnage légendaire et de premier plan issu de l'œuvre à succès '{origin}'{origin_syns}.",
-        "Au sein de cette œuvre, son importance narrative est colossale.",
-    ]
-
+    lead = random.choice(_FR_CHAR_LEADINS).format(
+        name=name, syns=syns, origin=origin, osyns=origin_syns
+    )
+    parts = [lead]
     if french_orgs:
-        bio_parts.append(
-            f"Il est principalement connu pour son affiliation et son rôle majeur au sein de : {org_str}."
-        )
+        org_str = " et ".join(french_orgs)
+        parts.append(f"Il est notamment associé à {org_str}.")
+    return " ".join(parts)
 
-    if height and height != "Unknown":
-        bio_parts.append(
-            f"Ses caractéristiques physiques et son profil officiel mentionnent notamment : {height}."
-        )
 
-    bio_parts.append(
-        f"Il jouit d'une immense popularité auprès de la communauté mondiale des passionnés de japanimation, se plaçant au rang numéro {rank} des personnages favoris avec pas moins de {favs} votes d'admiration."
-    )
-
-    bio_parts.append(
-        f"En tant que figure incontournable de '{origin}', {name} incarne les valeurs et les conflits majeurs de son univers, marquant profondément les spectateurs par son écriture et son développement scénaristique de premier ordre."
-    )
-
-    return " ".join(bio_parts)
+_EN_ANIME_LEADINS = [
+    "'{title}'{syns} is a {year} anime in the {genres} genre(s).",
+    "'{title}'{syns} ({year}) is an anime spanning {genres}.",
+    "The anime '{title}'{syns}, released in {year}, falls under {genres}.",
+    "Released in {year}, the anime '{title}'{syns} covers {genres}.",
+]
 
 
 def make_english_anime_profile(
-    title: str, genres: List[str], studios: List[str], tags: List[str], year: int
+    title: str,
+    genres: List[str],
+    studios: List[str],
+    tags: List[str],
+    year: int,
+    description: str = "",
 ) -> str:
-    cleaned_tags = clean_tags(tags, "English")
     cleaned_genres = clean_tags(genres, "English")
-
-    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "undetermined genres"
-    studios_str = ", ".join(studios) if studios else "unspecified talented studio"
-    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else "various themes"
+    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "various genres"
+    studios_str = ", ".join(studios) if studios else "an unspecified studio"
     syns = get_synonyms_string(title, "English")
-
-    profile_parts = [
-        f"The anime '{title}'{syns} is a landmark work of Japanese animation released in {year}.",
-        f"It fits brilliantly into the {genres_str} genres.",
-        f"Produced impressively by the studio {studios_str}, this series has established itself through its careful direction and production quality.",
-        f"Its story and universe address deep thematic concepts such as {tags_str}.",
-        f"Due to its high artistic quality and thrilling plot, '{title}' is highly recommended for anime fans.",
-    ]
-    return " ".join(profile_parts)
-
-
-def make_english_manga_profile(title: str, genres: List[str], tags: List[str]) -> str:
-    cleaned_tags = clean_tags(tags, "English")
-    cleaned_genres = clean_tags(genres, "English")
-
-    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "undetermined genres"
-    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else "various themes"
-    syns = get_synonyms_string(title, "English")
-
-    profile_parts = [
-        f"The cult manga '{title}'{syns} is a major work highly appreciated by readers.",
-        f"It is particularly famous in the following genres and publishing categories: {genres_str}.",
-        f"This manga offers a rich plot, standing out for its strong themes such as {tags_str}.",
-        f"With its striking graphic panels and a dense story, '{title}' remains an essential reference in its category.",
-    ]
-    return " ".join(profile_parts)
-
-
-def make_english_character_bio(name, origin, orgs, favs, rank, height):
-    org_str = (
-        " and ".join(orgs) if orgs else "several factions and groups in their universe"
+    lead = random.choice(_EN_ANIME_LEADINS).format(
+        title=title, syns=syns, year=year, genres=genres_str
     )
+    parts = [lead, f"It was produced by {studios_str}."]
+    body = (description or "").strip()
+    if body:
+        parts.append(body)
+    return " ".join(parts)
 
+
+_EN_MANGA_LEADINS = [
+    "'{title}'{syns} is a manga in the {genres} genre(s).",
+    "The manga '{title}'{syns} spans {genres}.",
+    "'{title}'{syns} is a manga covering {genres}.",
+]
+
+
+def make_english_manga_profile(
+    title: str, genres: List[str], tags: List[str], description: str = ""
+) -> str:
+    cleaned_genres = clean_tags(genres, "English")
+    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "various genres"
+    syns = get_synonyms_string(title, "English")
+    lead = random.choice(_EN_MANGA_LEADINS).format(
+        title=title, syns=syns, genres=genres_str
+    )
+    parts = [lead]
+    body = (description or "").strip()
+    if body:
+        parts.append(body)
+    return " ".join(parts)
+
+
+_EN_CHAR_LEADINS = [
+    "{name}{syns} is a character from '{origin}'{osyns}.",
+    "{name}{syns} appears in '{origin}'{osyns}.",
+    "In '{origin}'{osyns}, {name}{syns} is one of the cast.",
+    "Meet {name}{syns}, from the series '{origin}'{osyns}.",
+    "{name}{syns} belongs to the world of '{origin}'{osyns}.",
+    "Here is {name}{syns}, a figure of '{origin}'{osyns}.",
+]
+
+
+def make_english_character_bio(name, origin, orgs, biography):
     syns = get_character_synonyms_string(name, "English")
     origin_syns = get_synonyms_string(origin, "English")
-
-    formatted_favs = f"{favs:,}"
-
-    bio_parts = [
-        f"{name}{syns} is a legendary and prominent character from the hit series '{origin}'{origin_syns}.",
-        "Within this work, their narrative importance is colossal.",
-    ]
-
+    lead = random.choice(_EN_CHAR_LEADINS).format(
+        name=name, syns=syns, origin=origin, osyns=origin_syns
+    )
+    parts = [lead]
     if orgs:
-        bio_parts.append(
-            f"They are primarily known for their affiliation and major role within: {org_str}."
-        )
-
-    if height and height != "Unknown":
-        bio_parts.append(
-            f"Their physical characteristics and official profile notably mention: {height}."
-        )
-
-    bio_parts.append(
-        f"They enjoy immense popularity among the global community of anime fans, ranking at number {rank} of favorite characters with no less than {formatted_favs} votes of admiration."
-    )
-
-    bio_parts.append(
-        f"As an essential figure in '{origin}', {name} embodies the values and major conflicts of their universe, deeply marking the audience with their writing and top-tier character development."
-    )
-
-    return " ".join(bio_parts)
+        org_str = " and ".join(orgs)
+        parts.append(f"They are affiliated with {org_str}.")
+    bio = biography.strip() if biography else ""
+    if bio:
+        parts.append(bio)
+    return " ".join(parts)
