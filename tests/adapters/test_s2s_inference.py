@@ -181,3 +181,29 @@ class TestS2SLoaders:
         with patch("torch.cuda.is_available", return_value=False):
             with pytest.raises(InferenceError, match="CUDA GPU is not available"):
                 adapter._load_stt()
+
+
+class TestTranscribe:
+    def test_transcribe_decodes_stt_output(self, adapter):
+        audio = MagicMock()
+        m_pydub_seg.from_file.return_value = audio
+        audio.set_frame_rate.return_value = audio
+        audio.set_channels.return_value = audio
+        audio.sample_width = 2
+        audio.get_array_of_samples.return_value = np.zeros(2400, dtype=np.int16)
+
+        proc = MagicMock()
+        inputs = MagicMock()
+        proc.return_value = inputs
+        inputs.to.return_value = inputs
+        proc.batch_decode.return_value = ["  bonjour  "]
+        adapter._stt_processor = proc
+        model = MagicMock()
+        model.generate.return_value = "tokens"
+        adapter._stt_model = model
+
+        out = adapter._transcribe(b"audio")
+        assert out == "bonjour"
+        proc.assert_called_once()
+        model.generate.assert_called_once()
+        proc.batch_decode.assert_called_once_with("tokens", skip_special_tokens=True)

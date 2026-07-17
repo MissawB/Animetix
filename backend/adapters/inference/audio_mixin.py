@@ -123,6 +123,27 @@ class AudioMixin(LazyLoadMixin):
             STT_MODEL_ID, revision=revision, device_map="cuda", torch_dtype="auto"
         )
 
+    def _transcribe(self, audio_input: bytes) -> str:
+        """Stage 1: input audio bytes -> transcript text (EN/FR)."""
+        from pydub import AudioSegment  # noqa: E402
+
+        audio = (
+            AudioSegment.from_file(io.BytesIO(audio_input))
+            .set_frame_rate(24000)
+            .set_channels(1)
+        )
+        samples = np.array(audio.get_array_of_samples()).astype(np.float32)
+        samples /= float(1 << (8 * audio.sample_width - 1))
+
+        inputs = self._stt_processor(
+            samples, sampling_rate=24000, return_tensors="pt"
+        ).to("cuda")
+        with torch.no_grad():
+            tokens = self._stt_model.generate(**inputs)
+        return self._stt_processor.batch_decode(tokens, skip_special_tokens=True)[
+            0
+        ].strip()
+
     def clone_voice(
         self, text: str, reference_audio: bytes, language: str = "fr"
     ) -> bytes:
