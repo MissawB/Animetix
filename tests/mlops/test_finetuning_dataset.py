@@ -882,7 +882,7 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
 
     def test_integration_happy_path_assembles_all_sections(self):
         animes = [
-            {  # idx 0 -> French branch; Tier-1 (>150k) -> 5 variations
+            {  # idx 0 -> French branch; Tier-1 (>150k) -> 1 primary + 2 aux
                 "title": "TestAnimeAlpha",
                 "genres": ["Action"],
                 "studios": ["S"],
@@ -964,11 +964,14 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
         self.assertTrue(any(instr(it) in ("general-fr", "general-en") for it in data))
         self.assertTrue(any("turns" in it for it in data))
 
-        # Tier-variation counts (augmentation off, noise off -> instructions pristine).
+        # Tier-variation counts after sanitation (augmentation off, noise off).
         alpha = [it for it in data if "TestAnimeAlpha" in instr(it)]
         beta = [it for it in data if "TestAnimeBeta" in instr(it)]
-        self.assertEqual(len(alpha), 5, "Tier-1 anime should yield 5 variations")
-        self.assertEqual(len(beta), 1, "Tier-3 anime should yield 1 variation")
+        self.assertEqual(len(alpha), 3, "Tier-1 anime -> 1 primary + 2 aux")
+        self.assertEqual(len(beta), 1, "Tier-3 anime -> 1 primary only")
+        # No two outputs for the same entity are identical.
+        alpha_outputs = [it["output"] for it in alpha]
+        self.assertEqual(len(alpha_outputs), len(set(alpha_outputs)))
 
     def test_client_initialized_when_augmentation_enabled(self):
         genai_mock = MagicMock()
@@ -1010,7 +1013,7 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
         genai_mock = MagicMock()
         paraphrase_mock = MagicMock(return_value="paraphrased")
         animes = [
-            {  # Tier-1 (>150k) -> enters the augmented set -> 5 paraphrase calls
+            {  # Tier-1 (>150k) -> enters the augmented set -> primary is paraphrased
                 "title": "AugAnime",
                 "genres": ["Action"],
                 "studios": ["S"],
@@ -1034,8 +1037,8 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
                 paraphrase_mock=paraphrase_mock,
             ):
                 fd.run_generate_instruction_dataset()
-        # One Tier-1 anime in the augmented set triggers the 5-variation paraphrase branch.
-        self.assertEqual(paraphrase_mock.call_count, 5)
+        # Tier-1 primary profile is the only paraphrase target now (aux are short facts).
+        self.assertEqual(paraphrase_mock.call_count, 1)
 
     def test_invalid_noise_rate_falls_back_without_error(self):
         animes = [
