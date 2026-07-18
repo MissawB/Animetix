@@ -87,11 +87,11 @@ supervisor==4.2.5
 # crashes supervisord with "No module named 'pkg_resources'". Pin <81 to keep
 # pkg_resources; 80.x still satisfies the Snyk setuptools CVEs (>=78.1.1).
 setuptools<81
-# apache-beam 2.74.0 cape `jsonpickle<4.0.0` → jsonpickle reste en 3.4.2 (CVE CWE-502,
-# Snyk). Résiduel ACCEPTÉ : jsonpickle est purement transitif (jamais importé par notre
-# code) et la CVE exige de désérialiser de l'input non fiable, ce que nous ne faisons pas.
-# Non corrigeable sans monter apache-beam (gros chantier, fige Dockerfile.dataflow). Cf. TODO.
-apache-beam==2.74.0
+# apache-beam 2.75.0 lève le cap jsonpickle (désormais `jsonpickle<5.0.0,>=3.0.4`),
+# défigeant jsonpickle 3.4.2 → 4.x (CVE CWE-502 ; jsonpickle reste purement transitif,
+# jamais importé par notre code, non exploitable chez nous). Bump lockstep avec le tag de
+# base Dockerfile.dataflow (beam_python3.12_sdk:2.75.0), sinon mismatch SDK → échec Dataflow.
+apache-beam==2.75.0
 dbt-core==1.11.11
 dbt-sqlite==1.10.0
 dbt-bigquery==1.10.3

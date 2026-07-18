@@ -1,5 +1,7 @@
 from typing import Dict, Optional
 
+from core.utils.gemini_models import GEMINI_EMBEDDING, GEMINI_FLASH, GEMINI_LIVE
+
 
 class PricingService:
     """
@@ -37,9 +39,9 @@ class PricingService:
             "moondream2": {"input": 0.50, "output": 0.50},
             # Cloud LLM actually used by the production chain [brain_api, google_genai].
             # Flash-tier estimates (USD/1M tokens); logged as "google_genai:<model>[:vision]".
-            "gemini-3.5-flash": {"input": 0.15, "output": 0.60},
-            "gemini-live-2.5-flash-native-audio": {"input": 0.50, "output": 2.00},
-            "gemini-embedding-2": {"input": 0.15, "output": 0.0},
+            GEMINI_FLASH: {"input": 0.15, "output": 0.60},
+            GEMINI_LIVE: {"input": 0.50, "output": 2.00},
+            GEMINI_EMBEDDING: {"input": 0.15, "output": 0.0},
             "local-llama": {"input": 0.0, "output": 0.0},
             "brain-api": {"input": 1.0, "output": 2.0},
             "brain-api-slm": {"input": 0.1, "output": 0.1},

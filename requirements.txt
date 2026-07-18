@@ -33,7 +33,7 @@ anyio==4.14.0
     #   google-genai
     #   httpx
     #   starlette
-apache-beam==2.74.0
+apache-beam==2.75.0
     # via -r requirements.in
 asgiref==3.11.1
     # via
@@ -447,7 +447,7 @@ joblib==1.5.3
     # via
     #   librosa
     #   scikit-learn
-jsonpickle==3.4.2
+jsonpickle==4.1.2
     # via apache-beam
 jsonschema==4.26.0
     # via
@@ -555,26 +555,6 @@ numpy==1.26.4
     #   tensorboard
     #   torchvision
     #   transformers
-    # via
-    #   nvidia-cudnn-cu12
-    #   nvidia-cusolver-cu12
-    #   torch
-    # via torch
-    # via torch
-    # via torch
-    # via torch
-    # via torch
-    # via torch
-    # via torch
-    # via
-    #   nvidia-cusolver-cu12
-    #   torch
-    # via torch
-    # via
-    #   nvidia-cusolver-cu12
-    #   nvidia-cusparse-cu12
-    #   torch
-    # via torch
 oauthlib==3.3.1
     # via requests-oauthlib
 objsize==0.7.1
@@ -942,7 +922,6 @@ transformers==4.57.6
     #   peft
     #   sentence-transformers
     #   trl
-    # via torch
 trl==0.12.1
     # via -r requirements.in
 twisted==26.4.0
