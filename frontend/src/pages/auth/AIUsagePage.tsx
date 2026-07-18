@@ -16,11 +16,7 @@ import {
 import { Link } from 'react-router-dom';
 import { socialService } from '../../features/social/services/socialService';
 import { AIUsageData } from '../../types';
-import _Plot from 'react-plotly.js';
-
-const Plot =
-  (_Plot as unknown as { default?: React.ComponentType<Record<string, unknown>> }).default ??
-  (_Plot as unknown as React.ComponentType<Record<string, unknown>>);
+import Plot from '../../components/LazyPlot';
 
 const chartLayout = {
   autosize: true,

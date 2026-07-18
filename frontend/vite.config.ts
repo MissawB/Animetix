@@ -89,13 +89,28 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // react-plotly.js is a thin wrapper that statically pulls in
+          // plotly.js (~4.6 MB). It must NOT be assigned to a manual vendor
+          // chunk: the greedy `node_modules/react` rule below would otherwise
+          // capture it into the eager react-vendor chunk (dragging plotly onto
+          // every page's critical path), and forcing it into plotly-vendor
+          // instead inverts the dependency graph (React gets hoisted into
+          // plotly-vendor). Leaving it unassigned lets Rollup place it in the
+          // async chunk created by its lazy import() in LazyPlot, so plotly
+          // loads only when a chart actually mounts.
+          if (id.includes('node_modules/react-plotly.js')) {
+            return undefined;
+          }
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
             return 'react-vendor';
           }
           if (id.includes('node_modules/@tanstack')) {
             return 'query-vendor';
           }
-          if (id.includes('node_modules/plotly.js') || id.includes('node_modules/react-plotly.js')) {
+          // plotly.js only (react-plotly.js is handled above); this chunk is now
+          // reachable solely through the lazy import, so it stays out of the
+          // eager graph.
+          if (id.includes('node_modules/plotly.js')) {
             return 'plotly-vendor';
           }
           if (id.includes('node_modules/lucide-react')) {

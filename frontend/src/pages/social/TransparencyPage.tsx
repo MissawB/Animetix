@@ -24,13 +24,9 @@ import { Badge } from '../../components/ui/Badge';
 
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import _Plot from 'react-plotly.js';
+import Plot from '../../components/LazyPlot';
 
 import { TransparencyData } from '../../types';
-
-const Plot =
-  (_Plot as unknown as { default?: React.ComponentType<Record<string, unknown>> }).default ??
-  (_Plot as unknown as React.ComponentType<Record<string, unknown>>);
 
 // Comparatif curé : notre modèle de base (Qwen3.5-9B, servi en local et
 // fine-tuné DPO en continu → "Champion") face aux meilleurs LLM open source
