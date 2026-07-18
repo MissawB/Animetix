@@ -116,6 +116,12 @@ export default defineConfig({
           if (id.includes('node_modules/lucide-react')) {
             return 'ui-vendor';
           }
+          // three.js (incl. examples/jsm loaders) — trailing slash keeps this
+          // from greedily matching packages like `three-stdlib`. Reachable only
+          // through the lazy GLBViewer import, so it stays out of the eager graph.
+          if (id.includes('node_modules/three/')) {
+            return 'three-vendor';
+          }
         }
       }
     },
