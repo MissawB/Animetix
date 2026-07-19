@@ -13,10 +13,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Train — `deploy/Dockerfile.train` non reproductible (bloquant avant le réentraînement otaku)** _(audit dette 2026-07-19)_
-  - Preuve : base `pytorch/pytorch:2.5.1-...` sans digest (`Dockerfile.train:11`) + deps flottantes `trl>=0.12.0`, `transformers>=4.57.0`, `peft>=0.7.0` (`:17-25`) alors que le service pinne `trl==0.12.1`, `transformers==4.57.6`, `peft==0.17.1` → LoRA entraîné sur des versions jamais testées en prod.
-  - Fix : installer via un lock dédié (ou `-c requirements.txt`) + épingler la base par digest.
-
 - [ ] **CI — action tierce `jlumbroso/free-disk-space@main` non épinglée (supply-chain)** _(audit dette 2026-07-19)_
   - Preuve : `@main` mutable dans 6 jobs (`ci.yml:36,68,94,208,287` + `security_audit.yml:22`) → un push amont modifie silencieusement la CI.
   - Fix : épingler sur tag ou SHA de commit.

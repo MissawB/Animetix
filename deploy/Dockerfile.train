@@ -8,21 +8,27 @@
 # Built from a minimal context (this file + the script), not the repo root: the
 # 674 MB repo context makes `gcloud builds submit` die on Windows with a
 # temp-file lock (WinError 32), and none of it is needed here anyway.
-FROM pytorch/pytorch:2.5.1-cuda12.1-cudnn9-runtime
+# Pinned by digest (tag 2.5.1-cuda12.1-cudnn9-runtime, amd64, fetched
+# 2026-07-19): a mutable tag rebuilt upstream would silently change the env.
+FROM pytorch/pytorch:2.5.1-cuda12.1-cudnn9-runtime@sha256:831247999fbf7e08f61b3e39f6d77ee434f38f6f07f769d00db451e853878067
 
 ENV PYTHONUNBUFFERED=1 \
     HF_XET_HIGH_PERFORMANCE=1 \
     HF_HOME=/tmp/hf
 
+# trl/peft/transformers/accelerate/datasets/bitsandbytes are kept in lockstep
+# with requirements.txt (the serving env) — enforced by
+# tests/deploy/test_dockerfile_train.py; bump both together.
+# trackio/hf_transfer are training-only (absent from the locks).
 RUN pip install --no-cache-dir \
-    "trl>=0.12.0" \
-    "peft>=0.7.0" \
-    "transformers>=4.57.0" \
-    "accelerate>=0.24.0" \
-    "datasets" \
-    "trackio" \
-    "bitsandbytes" \
-    "hf_transfer"
+    "trl==0.12.1" \
+    "peft==0.17.1" \
+    "transformers==4.57.6" \
+    "accelerate==1.13.0" \
+    "datasets==5.0.0" \
+    "trackio==0.31.5" \
+    "bitsandbytes==0.49.2" \
+    "hf_transfer==0.1.9"
 
 WORKDIR /app
 COPY hf_train_qwen35.py /app/train.py
