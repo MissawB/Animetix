@@ -2,6 +2,10 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-19] Pricing registry reliquat closed — Gemini-role coverage guard added
+
+Closes the `registre de prix désynchronisé` audit reliquat. The registry fix itself already shipped (Gemini rows added via the `gemini_models` constants — see the 2026-07-18 entry — and the dead `gpt-4o`/`gpt-3.5-turbo`/`claude-3-sonnet` rows dropped in commit `f0cfa2fa`), with a `tests/core/test_pricing_service.py` covering namespaced-engine resolution and the removed rows. The one gap: that test only exercised `GEMINI_FLASH` via a literal, so dropping the `GEMINI_LIVE`/`GEMINI_EMBEDDING` rows would go uncaught. Added two guards via the constants (PR #97) — `test_all_gemini_roles_priced_nonzero` (loops all three roles, asserts a real input price) and `test_unknown_engine_falls_back_to_zero` (locks the `0.0` fallback) — so the whole "silent $0 → wrong Bx attribution" hazard is now pinned. Test-only; 9/9 green, ruff clean, gemini-literal guard still passes.
+
 ## [2026-07-19] Session: >500-line page components decomposed (LabHub, Transparency, AudioLab, SpeechToSpeech)
 
 Closed the `composants > 500 lignes` audit reliquat — the four remaining oversized page components were decomposed into co-located `components/` (following the BlindtestPage precedent), each with **no behaviour change**. A read-only survey mapped the seams and ranked the risk first; the three untested pages each gained a characterization test written against the original code and confirmed green before **and** after the split.
