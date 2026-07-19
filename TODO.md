@@ -13,10 +13,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Config — `.env.example` désynchronisé (~18 clés réelles absentes)** _(audit dette 2026-07-19)_
-  - Preuve : `GEMINI_API_KEY`, `OPENAI_API_KEY`, `COHERE_API_KEY`, `TAVILY_API_KEY`, `TMDB_API_KEY`, `IGDB_CLIENT_ID/SECRET`, `HF_TOKEN`, `WANDB_API_KEY`, `NEO4J_USERNAME/DATABASE`… manquantes de l'exemple → onboarding/repro cassés.
-  - Fix : régénérer `.env.example` à partir des noms de clés réellement lus par settings/adapters (noms uniquement, pas de valeurs).
-
 - [ ] **Train — `deploy/Dockerfile.train` non reproductible (bloquant avant le réentraînement otaku)** _(audit dette 2026-07-19)_
   - Preuve : base `pytorch/pytorch:2.5.1-...` sans digest (`Dockerfile.train:11`) + deps flottantes `trl>=0.12.0`, `transformers>=4.57.0`, `peft>=0.7.0` (`:17-25`) alors que le service pinne `trl==0.12.1`, `transformers==4.57.6`, `peft==0.17.1` → LoRA entraîné sur des versions jamais testées en prod.
   - Fix : installer via un lock dédié (ou `-c requirements.txt`) + épingler la base par digest.
