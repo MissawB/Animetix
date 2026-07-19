@@ -331,7 +331,10 @@ class PGVectorRepositoryAdapter(RepositoryPort):
                     )
                 return metadata
         except Exception:
-            pass
+            logger.warning(
+                "MangaCover DB read failed; falling back to manga_covers.json",
+                exc_info=True,
+            )
 
         covers = self.load_covers()
         metadata = []
@@ -356,18 +359,24 @@ class PGVectorRepositoryAdapter(RepositoryPort):
         try:
             from animetix.models import MangaCover
 
-            c = MangaCover.objects.get(manga_id=manga_id)
-            return {
-                "title": c.title,
-                "mangadex_id": c.mangadex_id,
-                "covers": c.covers,
-                "title_english": c.title_english,
-                "title_native": c.title_native,
-                "synonyms": c.synonyms,
-                "author": c.author,
-            }
+            # filter().first(): a plain miss is a normal state (file fallback),
+            # only a real DB failure should reach the except below.
+            c = MangaCover.objects.filter(manga_id=manga_id).first()
+            if c:
+                return {
+                    "title": c.title,
+                    "mangadex_id": c.mangadex_id,
+                    "covers": c.covers,
+                    "title_english": c.title_english,
+                    "title_native": c.title_native,
+                    "synonyms": c.synonyms,
+                    "author": c.author,
+                }
         except Exception:
-            pass
+            logger.warning(
+                "MangaCover DB read failed; falling back to manga_covers.json",
+                exc_info=True,
+            )
 
         covers = self.load_covers()
         info = covers.get(manga_id)
@@ -399,7 +408,10 @@ class PGVectorRepositoryAdapter(RepositoryPort):
                     "author": c.author,
                 }
         except Exception:
-            pass
+            logger.warning(
+                "MangaCover DB read failed; falling back to manga_covers.json",
+                exc_info=True,
+            )
 
         covers = self.load_covers()
         for mid, info in covers.items():

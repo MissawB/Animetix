@@ -475,6 +475,100 @@ def test_load_latent_space_none_when_nothing_on_disk(adapter):
     assert adapter.load_latent_space("manga", "scenario") is None
 
 
+# --- manga covers: DB failure must be logged, not swallowed --------------
+#
+# Bug (audit dette 2026-07-19): the three MangaCover readers wrapped the DB
+# path in `except Exception: pass` — a real DB outage silently degraded to
+# the (possibly stale) manga_covers.json file with zero trace in the logs.
+# A plain "not found" miss, however, is a normal state and must NOT warn.
+
+
+def _write_covers_file(tmp_path):
+    _write_catalog(
+        tmp_path,
+        "data/processed/manga_covers.json",
+        {
+            "5": {
+                "title": "Berserk",
+                "mangadex_id": "mdx-5",
+                "covers": {"ja": "u"},
+                "synonyms": [],
+            }
+        },
+    )
+
+
+def _broken_manga_cover(mocker, error=RuntimeError("db down")):
+    fake = MagicMock(name="MangaCover")
+    fake.objects.all.side_effect = error
+    fake.objects.filter.side_effect = error
+    mocker.patch("animetix.models.MangaCover", fake)
+    return fake
+
+
+def _spy_warning(mocker):
+    # The "animetix" logger does not propagate to root (Django LOGGING), so
+    # caplog never sees its records — spy the module logger instead.
+    import adapters.persistence.pgvector_repository_adapter as pgvra
+
+    return mocker.spy(pgvra.logger, "warning")
+
+
+def test_get_manga_covers_metadata_logs_db_failure_then_falls_back(
+    adapter, tmp_path, mocker
+):
+    _write_covers_file(tmp_path)
+    _broken_manga_cover(mocker)
+    warn = _spy_warning(mocker)
+
+    out = adapter.get_manga_covers_metadata()
+
+    assert [m["title"] for m in out] == ["Berserk"]  # file fallback still works
+    assert warn.call_count == 1
+    assert "MangaCover" in warn.call_args[0][0]
+
+
+def test_get_manga_cover_by_id_logs_db_failure_then_falls_back(
+    adapter, tmp_path, mocker
+):
+    _write_covers_file(tmp_path)
+    _broken_manga_cover(mocker)
+    warn = _spy_warning(mocker)
+
+    out = adapter.get_manga_cover_by_id("5")
+
+    assert out["mangadex_id"] == "mdx-5"
+    assert warn.call_count == 1
+    assert "MangaCover" in warn.call_args[0][0]
+
+
+def test_get_manga_cover_by_id_plain_miss_does_not_warn(adapter, tmp_path, mocker):
+    _write_covers_file(tmp_path)
+    fake = MagicMock(name="MangaCover")
+    fake.objects.filter.return_value.first.return_value = None  # DB up, row absent
+    mocker.patch("animetix.models.MangaCover", fake)
+    warn = _spy_warning(mocker)
+
+    out = adapter.get_manga_cover_by_id("5")
+
+    assert out["title"] == "Berserk"  # falls back to the file
+    warn.assert_not_called()  # a miss is a normal state, not an incident
+
+
+def test_get_manga_cover_by_title_logs_db_failure_then_falls_back(
+    adapter, tmp_path, mocker
+):
+    _write_covers_file(tmp_path)
+    _broken_manga_cover(mocker)
+    warn = _spy_warning(mocker)
+
+    out = adapter.get_manga_cover_by_title("Berserk")
+
+    assert out["mangadex_id"] == "mdx-5"
+    assert warn.call_count == 1
+    assert "MangaCover" in warn.call_args[0][0]
+
+
 # --- search_media_items -------------------------------------------------
 
 
