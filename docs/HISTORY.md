@@ -2,6 +2,10 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-19] Stripe .env keys — false alarm, the three entries were empty; lines removed
+
+Closes the third `audit dette 2026-07-19` élevé, downgraded on inspection: `STRIPE_SECRET_KEY`/`STRIPE_PUBLISHABLE_KEY`/`STRIPE_WEBHOOK_SECRET` were still *named* in the local `.env` but all three values were **empty** — nothing to revoke on the Stripe dashboard (the audit compared key names only, by design, without reading values). The three dead lines were removed from `.env` (untracked file, no commit carries it). Verified before removal: zero `STRIPE` reference left in `backend/` (the `scrubbing.py` key-masking regex is a deliberate keeper per the 2026-07-07 removal plan). The genuinely-open cousin stays tracked elsewhere: TRIPO/MAPBOX keys still hold real values and still await external-dashboard revocation.
+
 ## [2026-07-19] Beam trigger — DATABASE_URL moved from subprocess argv to child env
 
 Closes the second `audit dette 2026-07-19` élevé. `PipelineControlView`'s `run_beam_ingestion` action (staff-only) spawned `lore_ingestion_beam.py` with `--database_url=<credentials>` on the command line — argv is world-readable via `ps`/`/proc`. The flag is gone from `cmd`; the URL now travels through the child's environment (`subprocess.Popen(cmd, env=os.environ | {"DATABASE_URL": ...})`). No pipeline change needed: the Beam DoFns' `setup()` only exports `DATABASE_URL` when the CLI flag was provided, and Django settings read it from the process env otherwise — so the DirectRunner child inherits it transparently. Caveat (pre-existing): a DataflowRunner submission would need the URL delivered to *remote* workers some other way, but that path was already flagged unvalidated (2026-07-18 entry) and shipping credentials in Dataflow job args was equally leaky. TDD: new `tests/api/test_pipeline_control.py` (2 tests: no `database_url`/password fragment in argv; child env carries `DATABASE_URL` on top of the inherited environment). 2/2 green, ruff clean.

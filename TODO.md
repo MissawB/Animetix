@@ -13,10 +13,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Secrets — clés Stripe mortes dans `.env` à révoquer** _(audit dette 2026-07-19)_
-  - Preuve : `STRIPE_PUBLISHABLE_KEY`/`STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` encore présentes alors que le stack Stripe a été supprimé le 2026-07-07 (ROADMAP). Même famille que TRIPO/MAPBOX (révocation externe).
-  - Fix : révoquer côté dashboard Stripe, puis retirer les 3 clés du `.env`.
-
 - [ ] **Config — `.env.example` désynchronisé (~18 clés réelles absentes)** _(audit dette 2026-07-19)_
   - Preuve : `GEMINI_API_KEY`, `OPENAI_API_KEY`, `COHERE_API_KEY`, `TAVILY_API_KEY`, `TMDB_API_KEY`, `IGDB_CLIENT_ID/SECRET`, `HF_TOKEN`, `WANDB_API_KEY`, `NEO4J_USERNAME/DATABASE`… manquantes de l'exemple → onboarding/repro cassés.
   - Fix : régénérer `.env.example` à partir des noms de clés réellement lus par settings/adapters (noms uniquement, pas de valeurs).
