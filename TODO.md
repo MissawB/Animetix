@@ -13,14 +13,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Backend — erreurs DB avalées en silence dans l'adapter pgvector** _(audit dette 2026-07-19)_
-  - Preuve : 3 × `except Exception: pass` sans log dans `backend/adapters/persistence/pgvector_repository_adapter.py:333,369,401` ; en cas d'erreur DB réelle, bascule silencieuse sur les données fichier (potentiellement périmées), panne masquée.
-  - Fix : `logger.warning`/`logger.exception` avant le fallback + restreindre le `except` à l'erreur DB attendue.
-
-- [ ] **Backend — `DATABASE_URL` (identifiants inclus) passée en argv d'un sous-processus** _(audit dette 2026-07-19)_
-  - Preuve : `monitoring.py:59-62` — `f"--database_url={settings.DATABASE_URL}"` dans `subprocess.Popen(cmd)` → visible via `ps`/`/proc`. Endpoint staff-only, mais fuite réelle.
-  - Fix : passer via l'environnement du sous-processus (`env=`), pas en ligne de commande.
-
 - [ ] **Secrets — clés Stripe mortes dans `.env` à révoquer** _(audit dette 2026-07-19)_
   - Preuve : `STRIPE_PUBLISHABLE_KEY`/`STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` encore présentes alors que le stack Stripe a été supprimé le 2026-07-07 (ROADMAP). Même famille que TRIPO/MAPBOX (révocation externe).
   - Fix : révoquer côté dashboard Stripe, puis retirer les 3 clés du `.env`.
