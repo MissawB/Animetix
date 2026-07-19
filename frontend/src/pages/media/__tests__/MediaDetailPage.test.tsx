@@ -50,6 +50,23 @@ beforeEach(() => {
   } as unknown as ReturnType<typeof useMediaDetail>);
 });
 
+it('hides the micro-tags section when micro_tags is empty', () => {
+  renderPage();
+  expect(screen.queryByText(/micro-tags ia/i)).toBeNull();
+  expect(screen.queryByText(/analyse en cours/i)).toBeNull();
+});
+
+it('shows the micro-tags section when micro_tags has entries', () => {
+  mockedUseMediaDetail.mockReturnValue({
+    data: { ...item, micro_tags: ['revenge', 'sibling-bond'] },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaDetail>);
+  renderPage();
+  expect(screen.getByText(/micro-tags ia/i)).toBeInTheDocument();
+  expect(screen.getByText('revenge')).toBeInTheDocument();
+});
+
 it('renders the loading skeleton while fetching', () => {
   mockedUseMediaDetail.mockReturnValue({
     data: undefined,

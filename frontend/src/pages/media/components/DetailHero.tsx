@@ -27,13 +27,13 @@ export const DetailHero: React.FC<DetailHeroProps> = ({ item, mediaType, itemId 
   const subTitles = [item.title_native, item.title_english].filter(Boolean);
 
   return (
-    <header className="relative min-h-[55vh] w-full overflow-hidden flex flex-col">
+    <header className="relative min-h-[55vh] w-full overflow-hidden flex flex-col bg-navy-950 text-white">
       <div className="absolute inset-0 pointer-events-none">
         <img
           src={item.image}
           className="w-full h-full object-cover blur-2xl scale-110 opacity-30"
           alt=""
-          loading="lazy"
+          fetchPriority="high"
           decoding="async"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-navy-950/60 to-navy-950" />
@@ -52,7 +52,7 @@ export const DetailHero: React.FC<DetailHeroProps> = ({ item, mediaType, itemId 
               src={item.image}
               className="w-44 md:w-52 aspect-[2/3] object-cover rounded-xl shadow-2xl border border-white/10"
               alt={item.title}
-              loading="lazy"
+              fetchPriority="high"
               decoding="async"
             />
             <Badge
@@ -87,10 +87,15 @@ export const DetailHero: React.FC<DetailHeroProps> = ({ item, mediaType, itemId 
                 <Calendar className="w-4 h-4 text-blue-400" aria-hidden="true" />
                 {item.year || 'TBA'}
               </span>
-              <span className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-emerald-400" aria-hidden="true" />
-                {`#${item.popularity || 'N/A'}`}
-              </span>
+              {item.popularity != null && (
+                <span
+                  className="flex items-center gap-2"
+                  title={t('media.detail.popularity', 'Popularité')}
+                >
+                  <TrendingUp className="w-4 h-4 text-blue-400" aria-hidden="true" />
+                  {item.popularity.toLocaleString('fr-FR')}
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap gap-3 pt-2">
               {isManga ? (
@@ -98,15 +103,13 @@ export const DetailHero: React.FC<DetailHeroProps> = ({ item, mediaType, itemId 
                   as={Link}
                   to={`/media/manga/${itemId}/1/`}
                   variant="primary"
-                  className="bg-anime-accent text-white border-none group shadow-[0_0_20px_rgba(255,0,120,0.3)]"
+                  className="bg-anime-accent text-white border-none group"
                 >
-                  <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform" />{' '}
-                  {t('media.detail.read_manga', 'LIRE LE MANGA')}
+                  <BookOpen className="w-5 h-5" /> {t('media.detail.read_manga', 'LIRE LE MANGA')}
                 </Button>
               ) : (
                 <Button variant="primary" className="bg-yellow-400 text-black border-none group">
-                  <Play className="w-5 h-5 group-hover:scale-110 transition-transform" />{' '}
-                  {t('media.detail.watch', 'VOIR')}
+                  <Play className="w-5 h-5" /> {t('media.detail.watch', 'VOIR')}
                 </Button>
               )}
               <Button variant="primary" className="bg-white/10 text-white border-none group">

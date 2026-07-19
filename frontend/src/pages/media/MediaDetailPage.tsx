@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Tag, Play, Network, Sparkles, Mic } from 'lucide-react';
+import { Tag, Cpu, Network, Sparkles, Mic } from 'lucide-react';
 import { useMediaDetail } from '../../features/media/hooks/useMediaDetail';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -41,7 +41,7 @@ const MediaDetailPage: React.FC = () => {
           {t('media.detail.not_found', 'Œuvre introuvable')}
         </h2>
         <p className="text-gray-500 font-bold uppercase tracking-widest mb-12">
-          {t('media.detail.not_found_desc', "Le Nexus s'est peut-être effondré...")}
+          {t('media.detail.not_found_desc', 'Le Nexus s’est peut-être effondré…')}
         </p>
         <Button as={Link} to="/explore/" variant="outline">
           {t('media.detail.back_nexus', 'RETOURNER AU NEXUS')}
@@ -53,10 +53,10 @@ const MediaDetailPage: React.FC = () => {
     <AnimatedPage>
       <DetailHero item={item} mediaType={mediaType || 'Anime'} itemId={itemId || ''} />
 
-      <div className="max-w-7xl mx-auto px-6 pb-24 relative z-10 space-y-16">
-        <section>
+      <div className="max-w-7xl mx-auto px-6 pb-24 relative z-10 space-y-12">
+        <section className="pt-4">
           <SectionHeader title="Synopsis" icon={Tag} iconClassName="text-blue-400" />
-          <p className="text-sm leading-relaxed opacity-80 font-medium italic max-w-3xl">
+          <p className="text-sm leading-relaxed font-medium max-w-3xl">
             {item.description ||
               t('media.detail.no_synopsis', 'Aucun synopsis disponible dans le Nexus.')}
           </p>
@@ -70,15 +70,17 @@ const MediaDetailPage: React.FC = () => {
           <SectionHeader
             title={t('media.detail.creative_team', 'Équipe Créative')}
             icon={Sparkles}
-            iconClassName="text-yellow-400"
+            iconClassName="text-blue-400"
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-2xl border border-white/5">
-              <span className="text-[10px] font-black opacity-30 uppercase">Studio</span>
-              <span className="font-bold italic text-sm">{item.studios?.[0] || 'N/A'}</span>
+            <div className="flex items-center justify-between p-4 bg-gray-900 rounded-2xl border border-white/5">
+              <span className="text-[10px] font-black text-gray-500 uppercase">Studio</span>
+              <span className="font-bold italic text-sm text-white">
+                {item.studios?.[0] || 'N/A'}
+              </span>
             </div>
-            <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-2xl border border-white/5">
-              <span className="text-[10px] font-black opacity-30 uppercase">
+            <div className="flex items-center justify-between p-4 bg-gray-900 rounded-2xl border border-white/5">
+              <span className="text-[10px] font-black text-gray-500 uppercase">
                 {t('media.detail.author', 'Auteur')}
               </span>
               <span className="font-bold italic text-sm text-yellow-400">
@@ -93,42 +95,39 @@ const MediaDetailPage: React.FC = () => {
             <SectionHeader
               title={t('media.detail.seiyuu', 'Seiyuu')}
               icon={Mic}
-              iconClassName="text-pink-400"
+              iconClassName="text-blue-400"
             />
             <SeiyuuGrid seiyuu={item.seiyuu} />
           </section>
         )}
 
-        <section>
-          <SectionHeader
-            title={t('media.detail.micro_tags', 'Micro-Tags IA')}
-            icon={Play}
-            iconClassName="text-emerald-400"
-          />
-          <div className="flex flex-wrap gap-2">
-            {item.micro_tags?.slice(0, 10).map((tag: string) => (
-              <Badge
-                key={tag}
-                variant="neutral"
-                className="bg-black text-[8px] uppercase tracking-tighter opacity-50"
-              >
-                {tag}
-              </Badge>
-            ))}
-            {(!item.micro_tags || item.micro_tags.length === 0) && (
-              <p className="text-xs opacity-20 italic">
-                {t('media.detail.analysis_running', 'Analyse en cours...')}
-              </p>
-            )}
-          </div>
-        </section>
+        {item.micro_tags && item.micro_tags.length > 0 && (
+          <section>
+            <SectionHeader
+              title={t('media.detail.micro_tags', 'Micro-Tags IA')}
+              icon={Cpu}
+              iconClassName="text-blue-400"
+            />
+            <div className="flex flex-wrap gap-2">
+              {item.micro_tags.slice(0, 10).map((tag: string) => (
+                <Badge
+                  key={tag}
+                  variant="neutral"
+                  className="bg-gray-900 text-gray-300 text-[8px] uppercase tracking-tighter"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </section>
+        )}
 
         {item.related_items && item.related_items.length > 0 && (
-          <section>
+          <section className="!mt-20">
             <SectionHeader
               title={t('media.detail.related_works', 'Œuvres Liées dans le Graphe')}
               icon={Network}
-              iconClassName="text-purple-400"
+              iconClassName="text-blue-400"
             />
             <RelatedCarousel items={item.related_items} mediaType={mediaType || 'Anime'} />
           </section>

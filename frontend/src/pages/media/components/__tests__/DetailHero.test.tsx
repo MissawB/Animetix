@@ -35,7 +35,7 @@ it('renders title, genres, meta and native/english sub-line', () => {
   expect(screen.getByRole('heading', { level: 1, name: /kimetsu no yaiba/i })).toBeInTheDocument();
   expect(screen.getByText('Action')).toBeInTheDocument();
   expect(screen.getByText('2019')).toBeInTheDocument();
-  expect(screen.getByText('#3')).toBeInTheDocument();
+  expect(screen.getByTitle('Popularité')).toHaveTextContent('3');
   expect(screen.getByText('鬼滅の刃 · Demon Slayer')).toBeInTheDocument();
 });
 
@@ -55,9 +55,9 @@ it('shows VOIR for anime and LIRE LE MANGA link for manga', () => {
   );
 });
 
-it('renders N/A for missing popularity', () => {
+it('omits the popularity chip when popularity is missing', () => {
   renderHero({ ...baseItem, popularity: undefined } as unknown as MediaDetail);
-  expect(screen.getByText('#N/A')).toBeInTheDocument();
+  expect(screen.queryByTitle('Popularité')).toBeNull();
 });
 
 it('renders hero background image', () => {
