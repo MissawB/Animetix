@@ -23,6 +23,6 @@ it('renders the hero title, rating, year and CTA', () => {
   expect(screen.getByText('1998')).toBeInTheDocument();
   expect(screen.getByRole('link', { name: /voir la fiche/i })).toHaveAttribute(
     'href',
-    '/media/anime/1/',
+    '/media/Anime/1/',
   );
 });

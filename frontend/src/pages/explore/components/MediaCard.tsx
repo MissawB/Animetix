@@ -74,7 +74,7 @@ export const MediaCard: React.FC<{ item: FeedItem }> = ({ item }) => {
         )}
         <div className="flex gap-2">
           <Link
-            to={`/media/${item.media_type.toLowerCase()}/${item.id}/`}
+            to={`/media/${item.media_type}/${item.id}/`}
             aria-label="Voir la fiche"
             className="p-2 bg-white text-black rounded-full hover:bg-gray-200 transition-colors"
           >

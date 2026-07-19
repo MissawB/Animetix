@@ -21,7 +21,7 @@ it('shows rating, year and a type badge when present', () => {
   expect(screen.getByText('8.5')).toBeInTheDocument();
   expect(screen.getByText('2021')).toBeInTheDocument();
   expect(screen.getByText('ANIME')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: /fiche/i })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /fiche/i })).toHaveAttribute('href', '/media/Anime/1/');
 });
 
 it('omits the rating when absent', () => {

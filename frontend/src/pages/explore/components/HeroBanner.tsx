@@ -42,7 +42,7 @@ export const HeroBanner: React.FC<{ hero: FeedItem; mediaType: string }> = ({
         </p>
       )}
       <Link
-        to={`/media/${hero.media_type.toLowerCase()}/${hero.id}/`}
+        to={`/media/${hero.media_type}/${hero.id}/`}
         className="inline-flex px-8 py-4 bg-white text-black font-black uppercase italic rounded-xl items-center gap-2 hover:bg-gray-200 transition-all hover:scale-105 no-underline"
       >
         <Info size={20} /> Voir la fiche
