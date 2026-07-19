@@ -13,26 +13,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Secrets — clés Stripe mortes dans `.env` à révoquer** _(audit dette 2026-07-19)_
-  - Preuve : `STRIPE_PUBLISHABLE_KEY`/`STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` encore présentes alors que le stack Stripe a été supprimé le 2026-07-07 (ROADMAP). Même famille que TRIPO/MAPBOX (révocation externe).
-  - Fix : révoquer côté dashboard Stripe, puis retirer les 3 clés du `.env`.
-
-- [ ] **Config — `.env.example` désynchronisé (~18 clés réelles absentes)** _(audit dette 2026-07-19)_
-  - Preuve : `GEMINI_API_KEY`, `OPENAI_API_KEY`, `COHERE_API_KEY`, `TAVILY_API_KEY`, `TMDB_API_KEY`, `IGDB_CLIENT_ID/SECRET`, `HF_TOKEN`, `WANDB_API_KEY`, `NEO4J_USERNAME/DATABASE`… manquantes de l'exemple → onboarding/repro cassés.
-  - Fix : régénérer `.env.example` à partir des noms de clés réellement lus par settings/adapters (noms uniquement, pas de valeurs).
-
-- [ ] **Train — `deploy/Dockerfile.train` non reproductible (bloquant avant le réentraînement otaku)** _(audit dette 2026-07-19)_
-  - Preuve : base `pytorch/pytorch:2.5.1-...` sans digest (`Dockerfile.train:11`) + deps flottantes `trl>=0.12.0`, `transformers>=4.57.0`, `peft>=0.7.0` (`:17-25`) alors que le service pinne `trl==0.12.1`, `transformers==4.57.6`, `peft==0.17.1` → LoRA entraîné sur des versions jamais testées en prod.
-  - Fix : installer via un lock dédié (ou `-c requirements.txt`) + épingler la base par digest.
-
-- [ ] **CI — action tierce `jlumbroso/free-disk-space@main` non épinglée (supply-chain)** _(audit dette 2026-07-19)_
-  - Preuve : `@main` mutable dans 6 jobs (`ci.yml:36,68,94,208,287` + `security_audit.yml:22`) → un push amont modifie silencieusement la CI.
-  - Fix : épingler sur tag ou SHA de commit.
-
-- [ ] **CI — gate de couverture désaligné pre-push (75) vs CI (76)** _(audit dette 2026-07-19)_
-  - Preuve : `.pre-commit-config.yaml:52` `--cov-fail-under=75` vs `ci.yml:143` + `pyproject.toml:77` à 76 → pre-push vert, CI rouge.
-  - Fix : aligner le hook sur 76 (« kept in lockstep » du pyproject).
-
 - [ ] **Frontend — contenu de démo Google câblé dans le flux sponsor (facturation)** _(audit dette 2026-07-19)_
   - Preuve : `frontend/src/features/billing/components/SponsorStreamModal.tsx:13-23` — vidéos `gtv-videos-bucket/sample/` + `AD_TAG_URL` d'exemple DoubleClick (`single_ad_samples`) servis tels quels.
   - Fix : externaliser en config/env avec de vrais créatifs, ou masquer le composant tant qu'aucun sponsor réel.

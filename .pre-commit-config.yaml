@@ -5,7 +5,7 @@
 #     - lint-staged (eslint + prettier + check-types) sur les fichiers frontend stagés.
 #   - pre-push  (plus lourd, avant push)   :
 #     - mypy (type-debt baseline)
-#     - pytest (tests unitaires, avec barrière de couverture backend >= 75%)
+#     - pytest (tests unitaires, avec barrière de couverture backend >= 76%)
 #     - vitest (tests unitaires frontend)
 #
 # Setup unique :
@@ -48,8 +48,10 @@ repos:
         pass_filenames: false
         stages: [pre-push]
       - id: pytest
-        name: pytest (tests unitaires, barrière couverture 75% — miroir CI)
-        entry: python scripts/run_in_venv.py -m pytest -m "not integration" --cov=backend --cov-fail-under=75 --cov-report=term-missing --cov-report=xml
+        name: pytest (tests unitaires, barrière couverture 76% — miroir CI)
+        # Gate kept in lockstep with ci.yml + pyproject.toml — enforced by
+        # tests/deploy/test_coverage_gate.py; bump the three together.
+        entry: python scripts/run_in_venv.py -m pytest -m "not integration" --cov=backend --cov-fail-under=76 --cov-report=term-missing --cov-report=xml
         language: system
         types: [python]
         pass_filenames: false
