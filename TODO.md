@@ -13,10 +13,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **CI — action tierce `jlumbroso/free-disk-space@main` non épinglée (supply-chain)** _(audit dette 2026-07-19)_
-  - Preuve : `@main` mutable dans 6 jobs (`ci.yml:36,68,94,208,287` + `security_audit.yml:22`) → un push amont modifie silencieusement la CI.
-  - Fix : épingler sur tag ou SHA de commit.
-
 - [ ] **CI — gate de couverture désaligné pre-push (75) vs CI (76)** _(audit dette 2026-07-19)_
   - Preuve : `.pre-commit-config.yaml:52` `--cov-fail-under=75` vs `ci.yml:143` + `pyproject.toml:77` à 76 → pre-push vert, CI rouge.
   - Fix : aligner le hook sur 76 (« kept in lockstep » du pyproject).
