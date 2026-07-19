@@ -1,90 +1,19 @@
 import React from 'react';
-import {
-  ShieldCheck,
-  TrendingUp,
-  AlertCircle,
-  Zap,
-  Activity,
-  Clock,
-  Cpu,
-  Trophy,
-  Users,
-  Database,
-  Lock,
-  Brain,
-  AlertTriangle,
-  Scale,
-} from 'lucide-react';
+import { Activity, Zap, Users, Database, Brain, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';
-import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
-
-import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import Plot from '../../components/LazyPlot';
 
 import { TransparencyData } from '../../types';
-
-// Comparatif curé : notre modèle de base (Qwen3.5-9B, servi en local et
-// fine-tuné DPO en continu → "Champion") face aux meilleurs LLM open source
-// du marché. Liste volontairement locale à cette page — le service SOTA
-// backend alimente d'autres écrans (admin) et n'est pas modifié.
-interface ComparisonModel {
-  model_id: string;
-  provider: string;
-  params: string;
-  license: string;
-  elo_score: number;
-  mmlu_score: number;
-  isOurs?: boolean;
-}
-
-const MODEL_COMPARISON: ComparisonModel[] = [
-  {
-    model_id: 'Qwen/Qwen3.5-9B',
-    provider: 'Animetix · base Qwen (Alibaba)',
-    params: '9B',
-    license: 'Apache 2.0',
-    elo_score: 1248,
-    mmlu_score: 79.8,
-    isOurs: true,
-  },
-  {
-    model_id: 'deepseek-ai/DeepSeek-V3.2',
-    provider: 'DeepSeek',
-    params: '671B MoE',
-    license: 'MIT',
-    elo_score: 1445,
-    mmlu_score: 90.8,
-  },
-  {
-    model_id: 'Qwen/Qwen3-235B-A22B',
-    provider: 'Alibaba',
-    params: '235B MoE',
-    license: 'Apache 2.0',
-    elo_score: 1438,
-    mmlu_score: 89.9,
-  },
-  {
-    model_id: 'moonshotai/Kimi-K2',
-    provider: 'Moonshot AI',
-    params: '1T MoE',
-    license: 'MIT modifiée',
-    elo_score: 1432,
-    mmlu_score: 89.5,
-  },
-  {
-    model_id: 'meta-llama/Llama-4-Maverick',
-    provider: 'Meta',
-    params: '400B MoE',
-    license: 'Llama 4',
-    elo_score: 1417,
-    mmlu_score: 88.6,
-  },
-];
+import { MODEL_COMPARISON } from './transparencyData';
+import { TransparencyKpiCard } from './components/TransparencyKpiCard';
+import { TransparencyEvolutionChart } from './components/TransparencyEvolutionChart';
+import { ModelComparisonCard } from './components/ModelComparisonCard';
+import { DriftAuditCard } from './components/DriftAuditCard';
+import { EthicsCommitmentsCard } from './components/EthicsCommitmentsCard';
+import { SecurityAuditSection } from './components/SecurityAuditSection';
 
 const TransparencyPage: React.FC = () => {
   const { t } = useTranslation();
@@ -156,119 +85,31 @@ const TransparencyPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 py-20 space-y-24">
         {/* Key Performance Indicators */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <Card className="!bg-navy-900/20 !border-white/5 p-8 flex flex-col items-center text-center transition-all hover:scale-105">
-            <Users className="w-8 h-8 text-blue-500 mb-4" />
-            <span className="text-4xl font-black italic mb-1">
-              {(metrics?.total_feedbacks || 0).toLocaleString()}
-            </span>
-            <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">
-              {t('social.transparency.kpi_feedbacks', 'Feedbacks Reçus')}
-            </span>
-          </Card>
-          <Card className="!bg-navy-900/20 !border-white/5 p-8 flex flex-col items-center text-center transition-all hover:scale-105">
-            <Database className="w-8 h-8 text-emerald-500 mb-4" />
-            <span className="text-4xl font-black italic mb-1">
-              {(metrics?.knowledge_nodes || 0).toLocaleString()}
-            </span>
-            <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">
-              {t('social.transparency.kpi_engrams', 'Engrammes Indexés')}
-            </span>
-          </Card>
-          <Card className="!bg-navy-900/20 !border-white/5 p-8 flex flex-col items-center text-center transition-all hover:scale-105">
-            <Brain className="w-8 h-8 text-purple-500 mb-4" />
-            <span className="text-4xl font-black italic mb-1">
-              {(metrics?.community_satisfaction * 100).toFixed(0)}%
-            </span>
-            <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">
-              {t('social.transparency.kpi_satisfaction', 'Satisfaction IA')}
-            </span>
-          </Card>
-          <Card className="!bg-navy-900/20 !border-white/5 p-8 flex flex-col items-center text-center transition-all hover:scale-105">
-            <Zap className="w-8 h-8 text-yellow-500 mb-4" />
-            <span className="text-2xl font-black italic mb-1 uppercase line-clamp-1">
-              {metrics?.model_version || 'Champion v2.4'}
-            </span>
-            <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">
-              {t('social.transparency.kpi_version', 'Version Actuelle')}
-            </span>
-          </Card>
+          <TransparencyKpiCard
+            icon={<Users className="w-8 h-8 text-blue-500 mb-4" />}
+            value={(metrics?.total_feedbacks || 0).toLocaleString()}
+            label={t('social.transparency.kpi_feedbacks', 'Feedbacks Reçus')}
+          />
+          <TransparencyKpiCard
+            icon={<Database className="w-8 h-8 text-emerald-500 mb-4" />}
+            value={(metrics?.knowledge_nodes || 0).toLocaleString()}
+            label={t('social.transparency.kpi_engrams', 'Engrammes Indexés')}
+          />
+          <TransparencyKpiCard
+            icon={<Brain className="w-8 h-8 text-purple-500 mb-4" />}
+            value={`${(metrics?.community_satisfaction * 100).toFixed(0)}%`}
+            label={t('social.transparency.kpi_satisfaction', 'Satisfaction IA')}
+          />
+          <TransparencyKpiCard
+            icon={<Zap className="w-8 h-8 text-yellow-500 mb-4" />}
+            value={metrics?.model_version || 'Champion v2.4'}
+            label={t('social.transparency.kpi_version', 'Version Actuelle')}
+            valueClassName="text-2xl font-black italic mb-1 uppercase line-clamp-1"
+          />
         </div>
 
         {/* Evolution Chart */}
-        <section>
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-4xl font-black italic uppercase manga-font tracking-tighter flex items-center gap-4">
-              <TrendingUp className="w-10 h-10 text-blue-500" />{' '}
-              {t('social.transparency.evolution_title', 'Évolution du Modèle Expert')}
-            </h2>
-            <Badge
-              variant="neutral"
-              className="!bg-white/5 !border-white/10 uppercase text-[10px] py-2 px-4"
-            >
-              Metric: Semantic Accuracy
-            </Badge>
-          </div>
-
-          <Card className="!bg-navy-900/20 !border-white/5 p-10 h-[450px]">
-            {timeline.length >= 2 ? (
-              <Plot
-                data={[
-                  {
-                    x: timeline.map((d) => d.date),
-                    y: timeline.map((d) => d.accuracy),
-                    type: 'scatter',
-                    mode: 'lines',
-                    fill: 'tozeroy',
-                    line: { color: '#3b82f6', width: 4, shape: 'spline' },
-                    fillcolor: 'rgba(59,130,246,0.18)',
-                    hovertemplate: 'Accuracy: %{y:.0%}<extra></extra>',
-                  },
-                ]}
-                layout={{
-                  autosize: true,
-                  paper_bgcolor: 'rgba(0,0,0,0)',
-                  plot_bgcolor: 'rgba(0,0,0,0)',
-                  margin: { l: 44, r: 20, t: 10, b: 36 },
-                  xaxis: {
-                    gridcolor: 'rgba(255,255,255,0.03)',
-                    tickfont: { color: '#ffffff33', size: 10 },
-                    showline: false,
-                    zeroline: false,
-                  },
-                  yaxis: {
-                    gridcolor: 'rgba(255,255,255,0.03)',
-                    tickfont: { color: '#ffffff33', size: 10 },
-                    showline: false,
-                    zeroline: false,
-                    tickformat: '.0%',
-                  },
-                  font: { family: 'Montserrat', color: '#fff' },
-                  hovermode: 'x unified',
-                  showlegend: false,
-                }}
-                config={{ responsive: true, displayModeBar: false }}
-                style={{ width: '100%', height: '100%' }}
-                useResizeHandler
-              />
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
-                <TrendingUp className="w-12 h-12 mb-4" />
-                <p className="text-xs font-black uppercase tracking-widest">
-                  {t(
-                    'social.transparency.not_enough_data',
-                    "Pas encore assez de données d'évaluation",
-                  )}
-                </p>
-                <p className="text-[10px] font-bold uppercase tracking-widest mt-1 opacity-60">
-                  {t(
-                    'social.transparency.chart_hint',
-                    "La courbe apparaîtra dès plusieurs cycles d'évaluation enregistrés.",
-                  )}
-                </p>
-              </div>
-            )}
-          </Card>
-        </section>
+        <TransparencyEvolutionChart timeline={timeline} />
 
         {/* SOTA Benchmarks & Embedding Drift */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
@@ -290,88 +131,7 @@ const TransparencyPage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {MODEL_COMPARISON.map((model, i) => (
-                <motion.div
-                  key={model.model_id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className={model.isOurs ? 'md:col-span-2' : ''}
-                >
-                  <Card
-                    padding="none"
-                    className={`overflow-hidden group transition-all hover:scale-[1.02] ${
-                      model.isOurs
-                        ? '!bg-blue-950/40 border-2 !border-yellow-400/60 shadow-[0_0_40px_rgba(250,204,21,0.15)]'
-                        : '!bg-black !border-white/5 hover:!border-blue-500/30'
-                    }`}
-                  >
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center ${model.isOurs ? 'bg-yellow-400/15 text-yellow-400' : 'bg-blue-500/10 text-blue-500'}`}
-                        >
-                          <Cpu className="w-5 h-5" />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {/* !bg/!text : les classes du variant Badge gagneraient sinon (ordre CSS). */}
-                          {model.isOurs && (
-                            <Badge
-                              variant="warning"
-                              className="text-[8px] py-0.5 px-2 !bg-yellow-400 !text-black border-none"
-                            >
-                              {t('social.transparency.our_model_badge', 'NOTRE MODÈLE DE BASE')}
-                            </Badge>
-                          )}
-                          <Badge variant="success" className="text-[8px] py-0.5 px-2">
-                            OPEN SOURCE
-                          </Badge>
-                        </div>
-                      </div>
-                      <h3
-                        className="text-lg font-black italic uppercase truncate mb-1"
-                        title={model.model_id}
-                      >
-                        {model.model_id.split('/').pop()}
-                      </h3>
-                      <p className="text-[10px] font-bold opacity-30 uppercase mb-6 tracking-widest">
-                        {model.provider}
-                      </p>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
-                          <p className="text-[8px] font-black opacity-30 uppercase mb-1 flex items-center gap-1">
-                            <Trophy className="w-2 h-2" />{' '}
-                            {t('social.transparency.elo_label', 'ELO (ARENA)')}
-                          </p>
-                          <p
-                            className={`text-xl font-black italic manga-font ${model.isOurs ? 'text-yellow-400' : 'text-emerald-500'}`}
-                          >
-                            {model.elo_score}
-                          </p>
-                        </div>
-                        <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
-                          <p className="text-[8px] font-black opacity-30 uppercase mb-1 flex items-center gap-1">
-                            <Zap className="w-2 h-2" /> MMLU
-                          </p>
-                          <p
-                            className={`text-xl font-black italic manga-font ${model.isOurs ? 'text-yellow-400' : 'text-blue-500'}`}
-                          >
-                            {model.mmlu_score}%
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-white/5 border-t border-white/5 flex justify-between items-center text-[10px] font-black uppercase text-blue-400 opacity-60">
-                      <span className="flex items-center gap-1">
-                        <Activity className="w-2 h-2" />{' '}
-                        {t('social.transparency.params_label', '{{params}} paramètres', {
-                          params: model.params,
-                        })}
-                      </span>
-                      <span>{model.license}</span>
-                    </div>
-                  </Card>
-                </motion.div>
+                <ModelComparisonCard key={model.model_id} model={model} index={i} />
               ))}
             </div>
 
@@ -395,139 +155,16 @@ const TransparencyPage: React.FC = () => {
 
             <div className="space-y-4">
               {data.embedding_drift &&
-                Object.entries(data.embedding_drift).map(
-                  ([key, info]: [
-                    string,
-                    { status: string; p_value?: number; sample_size?: number },
-                  ]) => (
-                    <div
-                      key={key}
-                      className="p-6 bg-white/5 rounded-3xl border border-white/5 flex flex-col gap-4 group hover:bg-white/10 transition-all"
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="font-black italic uppercase text-xs tracking-widest">
-                          {key}
-                        </span>
-                        <Badge
-                          variant={
-                            info.status === 'healthy'
-                              ? 'success'
-                              : info.status === 'alert'
-                                ? 'danger'
-                                : 'neutral'
-                          }
-                        >
-                          {info.status}
-                        </Badge>
-                      </div>
-                      <div className="flex items-end justify-between">
-                        <div>
-                          <p className="text-[8px] font-black opacity-30 uppercase mb-1">
-                            P-Value (KS Test)
-                          </p>
-                          <p
-                            className={`text-2xl font-black italic manga-font ${info.p_value == null ? 'text-gray-500' : info.p_value < 0.05 ? 'text-red-500' : 'text-emerald-500'}`}
-                          >
-                            {info.p_value != null ? info.p_value.toFixed(4) : 'N/A'}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[8px] font-black opacity-30 uppercase mb-1">
-                            {t('social.transparency.sample', 'Échantillon')}
-                          </p>
-                          <p className="text-sm font-bold uppercase tracking-tighter">
-                            {info.sample_size != null ? `${info.sample_size} items` : '—'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ),
-                )}
+                Object.entries(data.embedding_drift).map(([key, info]) => (
+                  <DriftAuditCard key={key} name={key} info={info} />
+                ))}
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Ethics & Commitments */}
-          {/* !important : sinon le bg-surface-card du composant Card gagne sur bg-blue-600. */}
-          <Card
-            padding="lg"
-            className="!bg-blue-600 text-white border-none relative overflow-hidden flex flex-col justify-between h-full shadow-blue-600/20 rounded-[3rem]"
-          >
-            <AlertCircle className="w-40 h-40 absolute -right-8 -bottom-8 opacity-10" />
-            <div>
-              <h3 className="text-4xl font-black italic manga-font mb-8 leading-tight uppercase tracking-tighter">
-                {t('social.transparency.ethics_title', 'ENGAGEMENTS ÉTHIQUES')}
-              </h3>
-              <div className="space-y-6 opacity-90 font-bold text-sm italic uppercase tracking-wider">
-                <p className="flex items-center gap-4">
-                  <ShieldCheck className="w-5 h-5 text-blue-200" />{' '}
-                  {t('social.transparency.ethics_1', "Aucune donnée utilisateur n'est revendue.")}
-                </p>
-                <p className="flex items-center gap-4">
-                  <ShieldCheck className="w-5 h-5 text-blue-200" />{' '}
-                  {t('social.transparency.ethics_2', 'Modèles IA prioritairement Open Source.')}
-                </p>
-                <p className="flex items-center gap-4">
-                  <ShieldCheck className="w-5 h-5 text-blue-200" />{' '}
-                  {t('social.transparency.ethics_3', 'Infrastructure 100% transparente.')}
-                </p>
-              </div>
-            </div>
-            <div className="mt-12 pt-8 border-t border-white/20">
-              <div className="flex justify-between items-end">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-60 italic">
-                  Algorithmic Trust Score
-                </span>
-                {data.ethics_score != null ? (
-                  <span className="text-7xl font-black italic manga-font leading-none drop-shadow-lg">
-                    {data.ethics_score}%
-                  </span>
-                ) : (
-                  <span className="text-lg font-black italic uppercase tracking-widest opacity-70">
-                    {t('social.transparency.insufficient_data', 'Données insuffisantes')}
-                  </span>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          {/* Ethics Audit & Hallucination */}
-          <section className="p-10 rounded-[3rem] bg-navy-900/40 border border-white/5 space-y-10">
-            <h3 className="text-2xl font-black italic uppercase manga-font tracking-tight flex items-center gap-3 text-purple-400">
-              <Scale className="w-6 h-6" />{' '}
-              {t('social.transparency.security_audit', 'Audit de Sécurité')}
-            </h3>
-            <div className="space-y-8">
-              <AuditRow
-                label={t('social.transparency.safety_compliance', 'Conformité Sécurité')}
-                value={
-                  data.ethics_audit?.safety_compliance != null
-                    ? (data.ethics_audit.safety_compliance * 100).toFixed(1)
-                    : t('social.transparency.insufficient_data', 'Données insuffisantes')
-                }
-                suffix={data.ethics_audit?.safety_compliance != null ? '%' : ''}
-                icon={<Lock className="text-purple-400" />}
-              />
-              <AuditRow
-                label={t('social.transparency.hallucination_rate', "Taux d'Hallucination")}
-                value={
-                  data.ethics_audit?.hallucination_rate != null
-                    ? (data.ethics_audit.hallucination_rate * 100).toFixed(1)
-                    : t('social.transparency.insufficient_data', 'Données insuffisantes')
-                }
-                suffix={data.ethics_audit?.hallucination_rate != null ? '%' : ''}
-                icon={<AlertTriangle className="text-purple-400" />}
-              />
-            </div>
-
-            <p className="pt-8 border-t border-white/5 text-[10px] font-bold opacity-30 uppercase tracking-widest leading-relaxed">
-              {t(
-                'social.transparency.audit_footnote',
-                "Conformité = part des interactions évaluées non bloquées par le garde-fou. Hallucination = part des réponses signalées par l'évaluation automatique.",
-              )}
-            </p>
-          </section>
+          <EthicsCommitmentsCard ethicsScore={data.ethics_score} />
+          <SecurityAuditSection ethicsAudit={data.ethics_audit} />
         </div>
 
         {/* Participation CTA */}
@@ -581,30 +218,5 @@ const TransparencyPage: React.FC = () => {
     </div>
   );
 };
-
-const AuditRow = ({
-  label,
-  value,
-  suffix,
-  icon,
-}: {
-  label: string;
-  value: number | string;
-  suffix: string;
-  icon: React.ReactNode;
-}) => (
-  <div className="flex items-center justify-between group">
-    <div className="flex items-center gap-4">
-      <div className="p-3 bg-white/5 rounded-2xl group-hover:bg-purple-500/10 transition-colors">
-        {icon}
-      </div>
-      <span className="text-[11px] font-black uppercase tracking-widest opacity-60">{label}</span>
-    </div>
-    <span className="font-black italic text-sm">
-      {typeof value === 'number' && value < 1 ? value.toFixed(3) : value}
-      {suffix}
-    </span>
-  </div>
-);
 
 export default TransparencyPage;
