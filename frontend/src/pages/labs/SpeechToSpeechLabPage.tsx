@@ -1,30 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  Mic,
-  Square,
-  Volume2,
-  Radio,
-  Loader2,
-  RefreshCw,
-  MessageSquare,
-  Search,
-  User,
-  Star,
-  Sparkles,
-} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { Badge } from "../../components/ui/Badge";
-import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { apiClient } from "../../utils/apiClient";
-import { auth } from "../../utils/firebase";
+import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { apiClient } from '../../utils/apiClient';
+import { auth } from '../../utils/firebase';
 import { useAuthStore } from '../../store/authStore';
 import { VoiceProfile } from '../../types';
 import { logger } from '../../utils/logger';
+import { S2SCastingSidebar } from './components/S2SCastingSidebar';
+import { S2SControlPanel, type S2SStatus } from './components/S2SControlPanel';
+import { S2STranscriptConsole } from './components/S2STranscriptConsole';
+import { S2SGuideSection } from './components/S2SGuideSection';
 
 const SpeechToSpeechLabPage: React.FC = () => {
-  const [status, setStatus] = useState<'connecting' | 'ready' | 'recording' | 'thinking' | 'playing' | 'error'>('connecting');
+  const [status, setStatus] = useState<S2SStatus>('connecting');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [transcripts, setTranscripts] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -35,7 +23,9 @@ const SpeechToSpeechLabPage: React.FC = () => {
   const [langFilter, setLangFilter] = useState('');
 
   // Fetch Voice Profiles
-  const { data: profilesData, isLoading: isLoadingProfiles } = useQuery<{ results: VoiceProfile[] }>({
+  const { data: profilesData, isLoading: isLoadingProfiles } = useQuery<{
+    results: VoiceProfile[];
+  }>({
     queryKey: ['voice-profiles-s2s', searchQuery, langFilter],
     queryFn: () => {
       let url = `/api/v1/labs/audio/seiyuu/?q=${encodeURIComponent(searchQuery)}`;
@@ -65,7 +55,7 @@ const SpeechToSpeechLabPage: React.FC = () => {
   const playNextInQueue = useCallback(() => {
     if (audioQueueRef.current.length === 0) {
       isPlayingRef.current = false;
-      setStatus(prev => prev === 'playing' ? 'ready' : prev);
+      setStatus((prev) => (prev === 'playing' ? 'ready' : prev));
       return;
     }
 
@@ -79,7 +69,7 @@ const SpeechToSpeechLabPage: React.FC = () => {
       playNextInQueueRef.current();
     };
 
-    audio.play().catch(err => {
+    audio.play().catch((err) => {
       console.error('Audio playback failed:', err);
       playNextInQueueRef.current();
     });
@@ -89,18 +79,21 @@ const SpeechToSpeechLabPage: React.FC = () => {
     playNextInQueueRef.current = playNextInQueue;
   }, [playNextInQueue]);
 
-  const queueAudioChunk = useCallback((audioB64: string) => {
-    const audioUrl = `data:audio/wav;base64,${audioB64}`;
-    audioQueueRef.current.push(audioUrl);
-    if (!isPlayingRef.current) {
-      playNextInQueue();
-    }
-  }, [playNextInQueue]);
+  const queueAudioChunk = useCallback(
+    (audioB64: string) => {
+      const audioUrl = `data:audio/wav;base64,${audioB64}`;
+      audioQueueRef.current.push(audioUrl);
+      if (!isPlayingRef.current) {
+        playNextInQueue();
+      }
+    },
+    [playNextInQueue],
+  );
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
       mediaRecorderRef.current = null;
       setIsRecording(false);
       setStatus('thinking');
@@ -114,7 +107,7 @@ const SpeechToSpeechLabPage: React.FC = () => {
     // Session S2S Live = GPU (Gemini Live) : requiert login + coûte des Berrix.
     // On gate avant d'ouvrir le socket plutôt que d'encaisser un close 4401 brut.
     if (!useAuthStore.getState().isAuthenticated) {
-      setErrorMessage('Connexion requise : ce mode utilise l\'IA (GPU) et coûte des Berrix.');
+      setErrorMessage("Connexion requise : ce mode utilise l'IA (GPU) et coûte des Berrix.");
       setStatus('error');
       return;
     }
@@ -139,9 +132,7 @@ const SpeechToSpeechLabPage: React.FC = () => {
     }
 
     logger.log(`Connecting to Gemini Live WebSocket: ${wsUrl}`);
-    const socket = token
-      ? new WebSocket(wsUrl, ['bearer', token])
-      : new WebSocket(wsUrl);
+    const socket = token ? new WebSocket(wsUrl, ['bearer', token]) : new WebSocket(wsUrl);
     socketRef.current = socket;
 
     socket.onopen = () => {
@@ -159,7 +150,7 @@ const SpeechToSpeechLabPage: React.FC = () => {
           queueAudioChunk(data.audio);
         } else if (data.type === 'text_chunk') {
           setStatus('thinking');
-          setTranscripts(prev => {
+          setTranscripts((prev) => {
             const newTranscripts = [...prev, data.text];
             if (newTranscripts.length > 5) newTranscripts.shift();
             return newTranscripts;
@@ -182,7 +173,7 @@ const SpeechToSpeechLabPage: React.FC = () => {
             ? 'Berrix insuffisants pour une session Speech-to-Speech.'
             : event.code === 4408
               ? 'Session terminée (durée maximale atteinte).'
-              : 'Connexion requise pour ce mode IA (GPU).'
+              : 'Connexion requise pour ce mode IA (GPU).',
         );
         setStatus('error');
         return;
@@ -212,7 +203,7 @@ const SpeechToSpeechLabPage: React.FC = () => {
     stopRecording();
     stopAudioPlayback();
     if (socketRef.current) {
-      socketRef.current.close(1000, "Component unmounted/reconnecting");
+      socketRef.current.close(1000, 'Component unmounted/reconnecting');
       socketRef.current = null;
     }
   }, [stopRecording, stopAudioPlayback]);
@@ -241,14 +232,20 @@ const SpeechToSpeechLabPage: React.FC = () => {
       mediaRecorderRef.current = recorder;
 
       recorder.ondataavailable = async (e) => {
-        if (e.data.size > 0 && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+        if (
+          e.data.size > 0 &&
+          socketRef.current &&
+          socketRef.current.readyState === WebSocket.OPEN
+        ) {
           const reader = new FileReader();
           reader.onloadend = () => {
             const base64Data = (reader.result as string).split(',')[1];
-            socketRef.current?.send(JSON.stringify({
-              type: 'audio',
-              data: base64Data
-            }));
+            socketRef.current?.send(
+              JSON.stringify({
+                type: 'audio',
+                data: base64Data,
+              }),
+            );
           };
           reader.readAsDataURL(e.data);
         }
@@ -258,8 +255,8 @@ const SpeechToSpeechLabPage: React.FC = () => {
       setIsRecording(true);
       setStatus('recording');
     } catch (err) {
-      console.error("Failed to start voice capture", err);
-      setErrorMessage("Could not access microphone.");
+      console.error('Failed to start voice capture', err);
+      setErrorMessage('Could not access microphone.');
       setStatus('error');
     }
   };
@@ -278,264 +275,45 @@ const SpeechToSpeechLabPage: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Casting Panel (Left Sidebar) */}
-          <Card padding="lg" className="lg:col-span-4 h-fit bg-gray-900/40 border-white/5 shadow-2xl space-y-6">
-            <div>
-              <h3 className="text-xs font-black uppercase opacity-40 mb-4 tracking-widest flex items-center gap-2">
-                <User className="w-4 h-4" /> Casting Persona
-              </h3>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                Sélectionnez une voix pour cloner la réponse de l'IA en temps réel.
-              </p>
-            </div>
-
-            {/* Language filter tab */}
-            <div className="flex gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
-              {[
-                { label: 'Tous', value: '' },
-                { label: 'Seiyuu (JP)', value: 'japanese' },
-                { label: 'VF (FR)', value: 'french' }
-              ].map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setLangFilter(opt.value)}
-                  className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
-                    langFilter === opt.value
-                      ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                      : 'text-white/40 hover:text-white border border-transparent'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <input
-                type="text"
-                aria-label="Rechercher une voix"
-                placeholder="Rechercher une voix..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-black/40 border border-white/5 rounded-xl pl-10 pr-4 py-3 font-bold text-xs outline-none focus:border-blue-500/50"
-              />
-            </div>
-
-            {/* Profiles List */}
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-              {/* Default Option (No profile) */}
-              <button
-                onClick={() => setSelectedProfile(null)}
-                className={`w-full px-4 py-3 rounded-xl text-left text-xs font-black transition-all border flex items-center justify-between group ${
-                  selectedProfile === null
-                    ? 'border-blue-500 bg-blue-500/10 text-white shadow-lg'
-                    : 'border-white/5 bg-black/25 text-white/50 hover:border-white/10 hover:text-white'
-                }`}
-              >
-                <div className="flex flex-col gap-0.5 truncate">
-                  <span>Gemini Native Voice</span>
-                  <span className="text-[8px] opacity-40 font-medium uppercase tracking-wide">
-                    Sans post-clonage RVC
-                  </span>
-                </div>
-                <Badge variant="neutral" className="text-[7px] font-black uppercase bg-black/40">
-                  ⚡ DEFAULT
-                </Badge>
-              </button>
-
-              {isLoadingProfiles ? (
-                <div className="py-10 text-center">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" />
-                </div>
-              ) : profilesData?.results && profilesData.results.length > 0 ? (
-                profilesData.results.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedProfile(p)}
-                    className={`w-full px-4 py-3 rounded-xl text-left text-xs font-black transition-all border flex items-center justify-between group ${
-                      selectedProfile?.id === p.id
-                        ? 'border-blue-500 bg-blue-500/10 text-white shadow-lg'
-                        : 'border-white/5 bg-black/25 text-white/50 hover:border-white/10 hover:text-white'
-                    }`}
-                  >
-                    <div className="flex flex-col gap-0.5 truncate pr-2">
-                      <span className="truncate">{p.name}</span>
-                      <span className="text-[8px] opacity-40 truncate font-medium uppercase tracking-wide">
-                        {p.roles || 'Doubleur'}
-                      </span>
-                    </div>
-                    <Badge variant="neutral" className="text-[7px] font-black uppercase shrink-0 bg-black/40">
-                      {p.language === 'japanese' ? '🇯🇵 JP' : p.language === 'french' ? '🇫🇷 FR' : '🌐'}
-                    </Badge>
-                  </button>
-                ))
-              ) : (
-                <div className="py-10 text-center text-white/20">
-                  <span className="text-[10px] font-black uppercase">Aucune voix trouvée</span>
-                </div>
-              )}
-            </div>
-
-            {selectedProfile && (
-              <Card padding="md" className="bg-blue-500/10 border-blue-500/20 text-blue-200 space-y-2">
-                <span className="text-[8px] font-black uppercase tracking-wider text-blue-400 flex items-center gap-1">
-                  <Star className="w-3 h-3 fill-current text-blue-400" /> Acteur Actif
-                </span>
-                <h4 className="font-black text-sm uppercase">{selectedProfile.name}</h4>
-                <p className="text-[10px] opacity-60 leading-relaxed italic">
-                  "{selectedProfile.definition || 'Profil vocal configuré pour le doublage conversationnel.'}"
-                </p>
-              </Card>
-            )}
-          </Card>
+          <S2SCastingSidebar
+            profilesData={profilesData}
+            isLoadingProfiles={isLoadingProfiles}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            langFilter={langFilter}
+            setLangFilter={setLangFilter}
+            selectedProfile={selectedProfile}
+            setSelectedProfile={setSelectedProfile}
+          />
 
           {/* S2S Main Console (Right) */}
           <div className="lg:col-span-8 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-              {/* Control Panel */}
-              <div className="md:col-span-4 space-y-8">
-                <Card padding="lg" className="bg-navy-900/40 border-white/5 relative overflow-hidden h-full flex flex-col justify-between">
-                  <div className="absolute top-0 right-0 p-4">
-                    {isRecording && <div className="w-3 h-3 bg-red-500 rounded-full animate-ping" />}
-                    {status === 'connecting' && <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />}
-                  </div>
+              <S2SControlPanel
+                status={status}
+                isRecording={isRecording}
+                errorMessage={errorMessage}
+                startRecording={startRecording}
+                stopRecording={stopRecording}
+                connectWebSocket={connectWebSocket}
+              />
 
-                  <h3 className="text-xs font-black uppercase opacity-40 tracking-widest flex items-center gap-2">
-                    <Radio className="w-4 h-4" /> Liaison Live Edge
-                  </h3>
-
-                  <div className="flex flex-col items-center justify-center py-10 space-y-8">
-                    <button
-                      onClick={isRecording ? stopRecording : startRecording}
-                      disabled={status === 'connecting' || status === 'error'}
-                      className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl ${
-                        isRecording
-                          ? 'bg-red-500 scale-110 shadow-red-500/40'
-                          : 'bg-blue-500 hover:scale-105 shadow-blue-500/40 hover:bg-blue-600'
-                      } ${(status === 'connecting' || status === 'error') ? 'opacity-30 cursor-not-allowed' : ''}`}
-                    >
-                      {isRecording ? (
-                        <Square className="w-12 h-12 text-white fill-current" />
-                      ) : (
-                        <Mic className="w-12 h-12 text-white" />
-                      )}
-                    </button>
-
-                    <div className="text-center">
-                      <p className="text-sm font-black uppercase tracking-widest mb-2">
-                        {status === 'connecting' && "CONNEXION..."}
-                        {status === 'ready' && "CLIQUEZ POUR PARLER"}
-                        {status === 'recording' && "ENREGISTREMENT..."}
-                        {status === 'thinking' && "RÉPONSE EN COURS..."}
-                        {status === 'playing' && "LECTURE DE LA RÉPONSE..."}
-                        {status === 'error' && "ERREUR DE CONNEXION"}
-                      </p>
-                      <p className="text-[10px] font-bold opacity-30 uppercase">
-                        {status === 'error' ? errorMessage : "Flux vocal continu sans latence"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {status === 'error' && (
-                    <Button onClick={connectWebSocket} variant="outline" fullWidth className="flex items-center justify-center gap-2">
-                      <RefreshCw className="w-4 h-4" /> Réessayer
-                    </Button>
-                  )}
-                </Card>
-              </div>
-
-              {/* Response / Transcription Area */}
-              <div className="md:col-span-8">
-                <div className="bg-black rounded-[4rem] border-4 border-white/5 min-h-[400px] flex flex-col p-10 relative overflow-hidden shadow-2xl justify-between h-full">
-
-                  {/* Top Status Badge */}
-                  <div className="flex justify-between items-center w-full mb-6 border-b border-white/5 pb-4">
-                    <span className="text-xs font-black uppercase tracking-widest opacity-40">Transcription en Direct</span>
-                    <Badge variant={status === 'playing' ? 'primary' : 'neutral'}>
-                      {status.toUpperCase()}
-                    </Badge>
-                  </div>
-
-                  {/* Subtitles / Real-time speech view */}
-                  <div className="flex-grow flex flex-col justify-center space-y-4 my-4">
-                    {transcripts.length === 0 && !isRecording && status !== 'playing' && (
-                      <div className="text-center opacity-10 py-16">
-                        <Volume2 className="w-24 h-24 mx-auto mb-4" />
-                        <span className="text-xl font-black italic manga-font uppercase">Aucune parole détectée</span>
-                      </div>
-                    )}
-
-                    {isRecording && transcripts.length === 0 && (
-                      <div className="text-center space-y-4 opacity-50 py-16">
-                        <Loader2 className="w-8 h-8 text-blue-400 animate-spin mx-auto" />
-                        <p className="text-xs font-bold uppercase tracking-widest">Écoute en cours...</p>
-                      </div>
-                    )}
-
-                    {transcripts.map((text, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex items-start gap-4 p-4 rounded-2xl transition-all duration-300 ${
-                          idx === transcripts.length - 1 ? 'bg-blue-500/10 border border-blue-500/20 text-white scale-100' : 'opacity-40 scale-95'
-                        }`}
-                      >
-                        <MessageSquare className="w-4 h-4 mt-1 text-blue-400 flex-shrink-0" />
-                        <p className="text-sm font-medium leading-relaxed">{text}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Reset or Action button */}
-                  {(transcripts.length > 0 || status === 'playing') && (
-                    <Button
-                      onClick={() => {
-                        stopAudioPlayback();
-                        setTranscripts([]);
-                        setStatus('ready');
-                      }}
-                      variant="outline"
-                      fullWidth
-                      className="border-white/5 text-white/20 hover:text-white mt-6"
-                    >
-                      RÉINITIALISER LA SESSION
-                    </Button>
-                  )}
-                </div>
-              </div>
+              <S2STranscriptConsole
+                status={status}
+                isRecording={isRecording}
+                transcripts={transcripts}
+                onReset={() => {
+                  stopAudioPlayback();
+                  setTranscripts([]);
+                  setStatus('ready');
+                }}
+              />
             </div>
           </div>
         </div>
 
         {/* Guide & Protocole */}
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card padding="lg" className="bg-white dark:bg-black/40 border-blue-500/20 shadow-[0_0_50px_rgba(59,130,246,0.1)] relative overflow-hidden group">
-                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <Radio className="w-64 h-64 text-blue-500" />
-                </div>
-                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                    <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" /> Guide du Live
-                </h4>
-                <div className="space-y-4 relative z-10">
-                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-blue-600 dark:text-blue-400">La Conversation :</span> Cliquez sur le micro, parlez, puis relâchez : l'IA vous écoute et vous répond à voix haute, comme un appel téléphonique.
-                    </p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-blue-600 dark:text-blue-400">Le Casting :</span> Choisissez une voix dans le panneau de gauche pour que la réponse de l'IA soit prononcée avec le timbre d'un seiyuu ou d'un doubleur VF.
-                    </p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-blue-600 dark:text-blue-400">La Transcription :</span> Le texte de la réponse s'affiche en direct pendant la lecture audio, pour suivre la conversation à l'écrit.
-                    </p>
-                </div>
-            </Card>
-
-            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-blue-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
-                <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-blue-800/70 dark:text-blue-200/60">
-                    Liaison WebSocket bidirectionnelle vers l'API Gemini Live : l'audio du micro est streamé en chunks base64, la réponse revient en flux (texte + audio). <br />
-                    Si un profil vocal est sélectionné, la sortie passe par une étape de conversion voix-à-voix RVC pour cloner le timbre choisi avant lecture.
-                </p>
-            </div>
-        </div>
+        <S2SGuideSection />
       </div>
     </AnimatedPage>
   );
