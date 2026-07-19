@@ -16,24 +16,29 @@ import {
 import { Link } from 'react-router-dom';
 import { socialService } from '../../features/social/services/socialService';
 import { AIUsageData } from '../../types';
-import Plot from '../../components/LazyPlot';
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from 'recharts';
 
-const chartLayout = {
-  autosize: true,
-  paper_bgcolor: 'rgba(0,0,0,0)',
-  plot_bgcolor: 'rgba(0,0,0,0)',
-  margin: { l: 10, r: 10, t: 10, b: 30 },
-  xaxis: {
-    tickfont: { color: '#888', size: 10 },
-    showgrid: false,
-    zeroline: false,
-    showline: false,
-  },
-  yaxis: { visible: false },
-  font: { family: 'Montserrat' },
-  hovermode: 'x' as const,
-  showlegend: false,
-};
+// The two charts here are simple 2D line/bar plots, so they use recharts
+// (~100 KB) rather than plotly.js (~4.6 MB), which this account page would
+// otherwise pull in just to draw a 7-day history.
+const AXIS_TICK = { fill: '#888', fontSize: 10 } as const;
+const CHART_MARGIN = { top: 10, right: 10, left: 10, bottom: 0 } as const;
+const TOOLTIP_STYLE = {
+  background: 'rgba(20,20,30,0.92)',
+  border: 'none',
+  borderRadius: 8,
+  fontSize: 12,
+  color: '#fff',
+} as const;
 
 const fmtDate = (val: string) => val.split('-').slice(1).reverse().join('/');
 
@@ -76,6 +81,12 @@ const AIUsagePage: React.FC = () => {
   }
 
   const { usage_today, limits, tier, history } = usageData;
+
+  const chartData = history.map((h) => ({
+    label: fmtDate(h.date),
+    tokens: h.tokens,
+    requests: h.requests,
+  }));
 
   return (
     <AnimatedPage>
@@ -207,24 +218,26 @@ const AIUsagePage: React.FC = () => {
                 {t('auth.usage.berrix_history', 'Historique des Berrix (7j)')}
               </h3>
               <div className="h-64 w-full">
-                <Plot
-                  data={[
-                    {
-                      x: history.map((h) => fmtDate(h.date)),
-                      y: history.map((h) => h.tokens),
-                      type: 'scatter',
-                      mode: 'lines',
-                      fill: 'tozeroy',
-                      line: { color: '#3b82f6', width: 3, shape: 'spline' },
-                      fillcolor: 'rgba(59,130,246,0.18)',
-                      hovertemplate: '%{y:,} Bx<extra></extra>',
-                    },
-                  ]}
-                  layout={chartLayout}
-                  config={{ responsive: true, displayModeBar: false }}
-                  style={{ width: '100%', height: '100%' }}
-                  useResizeHandler
-                />
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={CHART_MARGIN}>
+                    <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+                    <YAxis hide />
+                    <Tooltip
+                      contentStyle={TOOLTIP_STYLE}
+                      labelStyle={{ color: '#aaa' }}
+                      cursor={{ stroke: '#3b82f6', strokeOpacity: 0.25 }}
+                      formatter={(value) => [`${Number(value).toLocaleString()} Bx`, '']}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="tokens"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      fill="#3b82f6"
+                      fillOpacity={0.18}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </Card>
 
@@ -234,21 +247,22 @@ const AIUsagePage: React.FC = () => {
                 {t('auth.usage.api_calls_per_day', 'Appels API par Jour')}
               </h3>
               <div className="h-64 w-full">
-                <Plot
-                  data={[
-                    {
-                      x: history.map((h) => fmtDate(h.date)),
-                      y: history.map((h) => h.requests),
-                      type: 'bar',
-                      marker: { color: '#10b981' },
-                      hovertemplate: t('auth.usage.calls_tooltip', '%{y} appels<extra></extra>'),
-                    },
-                  ]}
-                  layout={chartLayout}
-                  config={{ responsive: true, displayModeBar: false }}
-                  style={{ width: '100%', height: '100%' }}
-                  useResizeHandler
-                />
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} margin={CHART_MARGIN}>
+                    <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+                    <YAxis hide />
+                    <Tooltip
+                      contentStyle={TOOLTIP_STYLE}
+                      labelStyle={{ color: '#aaa' }}
+                      cursor={{ fill: 'rgba(16,185,129,0.1)' }}
+                      formatter={(value) => [
+                        `${value} ${t('auth.usage.calls_unit', 'appels')}`,
+                        '',
+                      ]}
+                    />
+                    <Bar dataKey="requests" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </Card>
           </div>
