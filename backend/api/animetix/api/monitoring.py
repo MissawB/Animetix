@@ -56,10 +56,16 @@ class PipelineControlView(APIView):
                     pipeline_path,
                     f"--runner={runner}",
                     f"--pubsub_subscription=projects/{getattr(settings, 'GCP_PROJECT_ID', 'animetix')}/subscriptions/lore-ingestion-sub",
-                    f"--database_url={getattr(settings, 'DATABASE_URL', '')}",
                     f"--django_env={'production' if not settings.DEBUG else 'development'}",
                 ]
-                subprocess.Popen(cmd)  # nosec B603
+                # DATABASE_URL carries credentials: it must travel through the
+                # child's environment, never argv (world-readable via ps//proc).
+                # The Beam DoFns fall back to os.environ when the flag is absent.
+                child_env = os.environ.copy()
+                database_url = getattr(settings, "DATABASE_URL", "")
+                if database_url:
+                    child_env["DATABASE_URL"] = database_url
+                subprocess.Popen(cmd, env=child_env)  # nosec B603
                 return Response(
                     {"status": f"Beam pipeline ({runner}) triggered in background"}
                 )
