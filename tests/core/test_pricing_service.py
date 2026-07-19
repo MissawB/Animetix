@@ -1,4 +1,5 @@
 from core.domain.services.pricing_service import PricingService
+from core.utils.gemini_models import GEMINI_EMBEDDING, GEMINI_FLASH, GEMINI_LIVE
 
 
 def test_calculate_cost_llm():
@@ -36,6 +37,29 @@ def test_dead_openai_anthropic_keys_removed():
     assert service.get_pricing_info("gpt-4o") is None
     assert service.get_pricing_info("gpt-3.5-turbo") is None
     assert service.get_pricing_info("claude-3-sonnet") is None
+
+
+def test_all_gemini_roles_priced_nonzero():
+    """All three canonical Gemini roles (flash / live / embedding) must carry a
+    real input price, so none silently falls through to the $0 fallback. Uses the
+    constants, so it also catches a LIVE/EMBEDDING row being dropped — cases the
+    namespaced-flash test above does not exercise."""
+    service = PricingService()
+    for model in (GEMINI_FLASH, GEMINI_LIVE, GEMINI_EMBEDDING):
+        pricing = service.get_pricing_info(model)
+        assert pricing is not None, f"{model} missing from the pricing registry"
+        assert pricing["input"] > 0, f"{model} has a zero input price"
+
+
+def test_unknown_engine_falls_back_to_zero():
+    """Genuinely unknown engines return the 0.0 fallback (billed as free)."""
+    service = PricingService()
+    assert (
+        service.calculate_cost(
+            "totally-unknown-model", input_tokens=1_000_000, output_tokens=1_000_000
+        )
+        == 0.0
+    )
 
 
 def test_calculate_cost_unit():

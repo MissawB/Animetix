@@ -35,6 +35,3 @@ _Aucun item ouvert._
     (`_load_stt`/`_transcribe`/`_synthesize`/`speech_to_speech`).
     Reste : rebuild/redeploy manuel de l'image brain (poids STT téléchargés au 1er
     appel), puis smoke test GPU (`S2S_GPU_SMOKE=1 pytest -m gpu`).
-- [ ] **Deps — registre de prix désynchronisé (reliquat)** _(audit dette 2026-07-11 ; lock-doublons + COST_AUDIT réglés 2026-07-17)_
-  - **Fait 2026-07-17** : lock backend vérifié — aiohttp/httpx/requests/ujson sont **tous transitifs** (via fsspec / datasets+diffusers / apache-beam+colpali / autobahn ; aucun dans [requirements.in](requirements.in)), donc **rien à dédupliquer** ; seul `orjson` est direct (légitime). [docs/COST_AUDIT.md](docs/COST_AUDIT.md) rafraîchi sur la vraie chaîne (Gemini 3.5 Flash + Qwen3.5 + brain-api ; chemin `deploy_brain.py` corrigé).
-  - **Reste** : [`PricingService`](backend/core/domain/services/pricing_service.py) est désynchronisé — il tarifie `gpt-4o`/`gpt-3.5-turbo`/`claude-3-sonnet` (jamais appelés par la chaîne prod `[brain_api, google_genai]`) et n'a **aucune entrée `gemini-*`**, donc chaque appel Gemini live retombe sur le fallback `0.0` (facturé gratuit → attribution Bx fausse). Ajouter `gemini-3.5-flash` / `gemini-live-2.5-flash-native-audio` au registre + retirer les lignes OpenAI/Anthropic mortes.
