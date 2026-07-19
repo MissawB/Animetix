@@ -13,10 +13,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Frontend — contenu de démo Google câblé dans le flux sponsor (facturation)** _(audit dette 2026-07-19)_
-  - Preuve : `frontend/src/features/billing/components/SponsorStreamModal.tsx:13-23` — vidéos `gtv-videos-bucket/sample/` + `AD_TAG_URL` d'exemple DoubleClick (`single_ad_samples`) servis tels quels.
-  - Fix : externaliser en config/env avec de vrais créatifs, ou masquer le composant tant qu'aucun sponsor réel.
-
 - [/] **Fine-tune otaku — dataset assaini ✅ (PR #87) ; reste le réentraînement (bloqué GPU)** _(2026-07-13→17 ; détail cf. HISTORY 2026-07-17)_
   - **Reste** : réentraîner sur le dataset propre (`MissawB/otaku-expert-dataset`) **dès qu'un GPU est dispo** (cf. dette GPU), puis re-servir via `LLM_MODEL_NAME=otaku-qwen:7b` (déjà baké, aucun rebuild).
 

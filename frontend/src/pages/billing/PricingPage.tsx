@@ -21,6 +21,10 @@ export const PricingPage: React.FC = () => {
   const [activeModal, setActiveModal] = useState<'boost' | 'refill' | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
 
+  // Flux pub récompensée dormant tant qu'aucun vrai ad tag n'est configuré
+  // (VITE_SPONSOR_AD_TAG) : aucun contenu de démo ne doit tourner en prod.
+  const sponsorConfigured = Boolean(import.meta.env.VITE_SPONSOR_AD_TAG);
+
   const handleConfirmBoost = async () => {
     try {
       await socialService.updateAccountSettings({ tier: 'premium' });
@@ -52,6 +56,7 @@ export const PricingPage: React.FC = () => {
   };
 
   const handleAction = (type: 'boost' | 'refill') => {
+    if (!sponsorConfigured) return;
     if (!user) {
       navigate('/login?redirect=/pricing/');
       return;
@@ -176,8 +181,11 @@ export const PricingPage: React.FC = () => {
               fullWidth
               className="py-5 font-black uppercase italic tracking-wider mt-6"
               onClick={() => handleAction('refill')}
+              disabled={!sponsorConfigured}
             >
-              {t('billing.pricing.refill_cta', 'RECHARGER MON QUOTA')}
+              {sponsorConfigured
+                ? t('billing.pricing.refill_cta', 'RECHARGER MON QUOTA')
+                : t('billing.pricing.sponsor_soon', 'SPONSORS BIENTÔT DISPONIBLES')}
             </Button>
           </motion.div>
 
@@ -228,11 +236,13 @@ export const PricingPage: React.FC = () => {
               fullWidth
               className="py-5 font-black uppercase italic tracking-wider mt-6"
               onClick={() => handleAction('boost')}
-              disabled={user?.tier === 'premium'}
+              disabled={!sponsorConfigured || user?.tier === 'premium'}
             >
               {user?.tier === 'premium'
                 ? t('billing.pricing.boost_active', 'BOOST ACTIF')
-                : t('billing.pricing.boost_cta', 'ACTIVER LE BOOST')}
+                : sponsorConfigured
+                  ? t('billing.pricing.boost_cta', 'ACTIVER LE BOOST')
+                  : t('billing.pricing.sponsor_soon', 'SPONSORS BIENTÔT DISPONIBLES')}
             </Button>
           </motion.div>
         </div>
