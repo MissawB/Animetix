@@ -89,6 +89,23 @@ describe('ExplorePage', () => {
     expect(screen.queryByRole('button', { name: /commencer/i })).toBeNull();
   });
 
+  it('shows the empty state when all rows have zero items', async () => {
+    mockedApiClient.mockResolvedValue({
+      personalized: true,
+      rows: [
+        {
+          kind: 'top',
+          title: 'Top',
+          reason: '',
+          seed: null,
+          items: [],
+        },
+      ],
+    });
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/aucune reco/i)).toBeInTheDocument());
+  });
+
   it('shows a skeleton while the feed is loading', () => {
     let resolve: (value: unknown) => void = () => {};
     mockedApiClient.mockReturnValue(

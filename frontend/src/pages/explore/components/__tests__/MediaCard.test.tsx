@@ -29,19 +29,9 @@ it('omits the rating when absent', () => {
   expect(screen.queryByText(/^\d+\.\d$/)).toBeNull();
 });
 
-it('adds a non-manga item to favorites with plan_to_watch', async () => {
-  mockedApiClient.mockResolvedValue({});
+it('does not render a favorite button for a non-manga item', () => {
   renderCard({ id: '10', title: 'Neon', media_type: 'Anime' });
-  fireEvent.click(screen.getByRole('button', { name: /favoris/i }));
-  await waitFor(() =>
-    expect(mockedApiClient).toHaveBeenCalledWith(
-      '/api/v1/media/Anime/10/favorite/',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ status: 'plan_to_watch' }),
-      }),
-    ),
-  );
+  expect(screen.queryByRole('button', { name: /favoris/i })).toBeNull();
 });
 
 it('adds a manga item to favorites with plan_to_read', async () => {

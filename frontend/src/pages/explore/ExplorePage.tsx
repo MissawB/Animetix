@@ -1,5 +1,5 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
@@ -24,6 +24,7 @@ const ExplorePage: React.FC = () => {
   const { data, isLoading, isError, refetch } = useQuery<ExploreFeed>({
     queryKey: ['explore', mediaType],
     queryFn: () => apiClient(`/api/v1/explore/?media_type=${mediaType}`),
+    placeholderData: keepPreviousData,
   });
 
   const rows = data?.rows ?? [];
@@ -102,7 +103,7 @@ const ExplorePage: React.FC = () => {
 
         {isFiltering ? (
           <ResultsGrid items={results} onClear={clearFilters} />
-        ) : rows.length === 0 ? (
+        ) : rows.length === 0 || rows.every((r) => r.items.length === 0) ? (
           <EmptyState />
         ) : (
           <section className="space-y-12">

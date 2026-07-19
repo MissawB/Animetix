@@ -18,13 +18,13 @@ export type FeedItem = {
 
 export const MediaCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const [saved, setSaved] = React.useState(false);
-  const status = item.media_type === 'Manga' ? 'plan_to_read' : 'plan_to_watch';
+  const isManga = item.media_type === 'Manga';
 
   const toggleFavorite = async () => {
     try {
-      await apiClient(`/api/v1/media/${item.media_type}/${item.id}/favorite/`, {
+      await apiClient(`/api/v1/media/Manga/${item.id}/favorite/`, {
         method: 'POST',
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status: 'plan_to_read' }),
       });
       setSaved(true);
     } catch {
@@ -80,13 +80,15 @@ export const MediaCard: React.FC<{ item: FeedItem }> = ({ item }) => {
           >
             <Info size={14} />
           </Link>
-          <button
-            onClick={toggleFavorite}
-            aria-label="Ajouter aux favoris"
-            className="p-2 bg-gray-800/80 text-white rounded-full hover:bg-gray-700 transition-colors"
-          >
-            <Star size={14} fill={saved ? 'currentColor' : 'none'} />
-          </button>
+          {isManga && (
+            <button
+              onClick={toggleFavorite}
+              aria-label="Ajouter aux favoris"
+              className="p-2 bg-gray-800/80 text-white rounded-full hover:bg-gray-700 transition-colors"
+            >
+              <Star size={14} fill={saved ? 'currentColor' : 'none'} />
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
