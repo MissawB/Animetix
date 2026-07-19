@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ExplorePage from '../ExplorePage';
@@ -87,5 +87,48 @@ describe('ExplorePage', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText(/Top/i)).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: /commencer/i })).toBeNull();
+  });
+
+  it('shows a skeleton while the feed is loading', () => {
+    let resolve: (value: unknown) => void = () => {};
+    mockedApiClient.mockReturnValue(
+      new Promise((r) => {
+        resolve = r;
+      }),
+    );
+    renderPage();
+    expect(screen.getByTestId('feed-skeleton')).toBeInTheDocument();
+    resolve({ rows: [], personalized: true });
+  });
+
+  it('shows an error state with a retry button on failure', async () => {
+    mockedApiClient.mockRejectedValue(new Error('boom'));
+    renderPage();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /réessayer/i })).toBeInTheDocument(),
+    );
+  });
+
+  it('switches to results mode and filters when a query is typed', async () => {
+    mockedApiClient.mockResolvedValue({
+      personalized: true,
+      rows: [
+        {
+          kind: 'top',
+          title: 'Top',
+          reason: '',
+          seed: null,
+          items: [
+            { id: '1', title: 'Naruto', media_type: 'Anime' },
+            { id: '2', title: 'Bleach', media_type: 'Anime' },
+          ],
+        },
+      ],
+    });
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Top')).toBeInTheDocument());
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'naruto' } });
+    await waitFor(() => expect(screen.getByText(/1 résultat/i)).toBeInTheDocument());
+    expect(screen.queryByText('Bleach')).toBeNull();
   });
 });
