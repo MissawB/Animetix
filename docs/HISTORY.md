@@ -2,6 +2,10 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-19] Coverage gate realigned — pre-push hook 75 → 76, lockstep guard added
+
+Closes the seventh `audit dette 2026-07-19` élevé. The pre-push pytest hook gated at `--cov-fail-under=75` while `ci.yml` and `pyproject.toml` gate at 76 — a push could pass locally at 75.x% and then fail CI. Hook (and its two comments) realigned to 76. TDD: new `tests/deploy/test_coverage_gate.py` parses the three declarations and fails whenever they diverge (was RED with `{75} vs {76,76}`) — the "kept in lockstep" promise in pyproject is now enforced, and a future ratchet bump must touch the three together. 1/1 green, ruff clean.
+
 ## [2026-07-19] CI — free-disk-space action pinned to the v1.3.1 commit SHA, mutable-branch guard added
 
 Closes the sixth `audit dette 2026-07-19` élevé (supply-chain). `jlumbroso/free-disk-space@main` appeared in 6 jobs (`ci.yml` ×5 + `security_audit.yml`) — a mutable branch ref lets any upstream push silently change what runs in CI. All 6 now pin `@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1` (the commit the `v1.3.1` release tag points to, resolved via the GitHub API). TDD: new `tests/deploy/test_workflow_action_pins.py` scans every workflow's `uses:` refs and fails on any action pinned to a mutable branch (`main`/`master`/`dev`/…) — tag or SHA pins pass, so the repo's `@v5`-style convention for GitHub-owned actions is untouched. 1/1 green (was RED with exactly the 6 offenders), ruff clean.

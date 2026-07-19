@@ -13,10 +13,6 @@ _Aucun item ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **CI — gate de couverture désaligné pre-push (75) vs CI (76)** _(audit dette 2026-07-19)_
-  - Preuve : `.pre-commit-config.yaml:52` `--cov-fail-under=75` vs `ci.yml:143` + `pyproject.toml:77` à 76 → pre-push vert, CI rouge.
-  - Fix : aligner le hook sur 76 (« kept in lockstep » du pyproject).
-
 - [ ] **Frontend — contenu de démo Google câblé dans le flux sponsor (facturation)** _(audit dette 2026-07-19)_
   - Preuve : `frontend/src/features/billing/components/SponsorStreamModal.tsx:13-23` — vidéos `gtv-videos-bucket/sample/` + `AD_TAG_URL` d'exemple DoubleClick (`single_ad_samples`) servis tels quels.
   - Fix : externaliser en config/env avec de vrais créatifs, ou masquer le composant tant qu'aucun sponsor réel.
