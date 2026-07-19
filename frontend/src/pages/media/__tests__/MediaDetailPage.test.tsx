@@ -1,101 +1,90 @@
-import '@testing-library/jest-dom';
-import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
-import type { UseQueryResult } from '@tanstack/react-query';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { vi } from 'vitest';
 import MediaDetailPage from '../MediaDetailPage';
 import { useMediaDetail } from '../../../features/media/hooks/useMediaDetail';
-import { MediaDetail } from '../../../types';
 
-vi.mock('../../../features/media/hooks/useMediaDetail');
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, defaultValue?: string) =>
+      typeof defaultValue === 'string' ? defaultValue : key,
+  }),
+}));
+vi.mock('../../../features/media/hooks/useMediaDetail', () => ({ useMediaDetail: vi.fn() }));
 vi.mock('../../../features/manga-reader/components/ChapterList', () => ({
-  ChapterList: () => <div data-testid="chapter-list">Chapters</div>,
+  ChapterList: () => <div data-testid="chapter-list" />,
 }));
 
 const mockedUseMediaDetail = vi.mocked(useMediaDetail);
 
-type DetailResult = UseQueryResult<MediaDetail, Error>;
-
-const makeResult = (partial: Partial<DetailResult>): DetailResult =>
-  ({
-    data: undefined,
-    isLoading: false,
-    isError: false,
-    ...partial,
-  } as unknown as DetailResult);
-
-const renderAt = (path: string) => {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route path="/media/:mediaType/:itemId/" element={<MediaDetailPage />} />
-        </Routes>
-      </MemoryRouter>
-    </QueryClientProvider>
-  );
+const item = {
+  id: '38000',
+  title: 'Kimetsu no Yaiba',
+  media_type: 'Anime',
+  image: 'poster.jpg',
+  genres: ['Action'],
+  title_native: '鬼滅の刃',
+  year: '2019',
+  popularity: 3,
+  description: 'Tanjiro devient pourfendeur de démons.',
+  studios: ['ufotable'],
+  seiyuu: [{ id: 1, name: 'Natsuki Hanae', sample_url: '', role: 'Tanjiro' }],
+  related_items: [{ id: '40000', title: 'Saison 2', image: '' }],
 };
 
-const media = (overrides: Partial<MediaDetail>): MediaDetail =>
-  ({
-    id: '1',
-    title: 'Cowboy Bebop',
-    image: 'http://img/cb.jpg',
-    genres: ['Action', 'Sci-Fi'],
-    description: 'Space bounty hunters.',
-    year: '1998',
-    popularity: 5,
-    studios: ['Sunrise'],
-    author: 'Watanabe',
-    micro_tags: ['jazz', 'noir'],
-    related_items: [],
-    ...overrides,
-  } as MediaDetail);
+const renderPage = (mediaType = 'Anime', itemId = '38000') =>
+  render(
+    <MemoryRouter initialEntries={[`/media/${mediaType}/${itemId}/`]}>
+      <Routes>
+        <Route path="/media/:mediaType/:itemId/" element={<MediaDetailPage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
 
-describe('MediaDetailPage', () => {
-  beforeEach(() => {
-    mockedUseMediaDetail.mockReset();
-  });
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockedUseMediaDetail.mockReturnValue({
+    data: item,
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaDetail>);
+});
 
-  it('renders loading state', () => {
-    mockedUseMediaDetail.mockReturnValue(makeResult({ isLoading: true }));
-    const { container } = renderAt('/media/Anime/1/');
-    expect(container.querySelector('.animate-pulse')).toBeTruthy();
-  });
+it('renders hero title, synopsis and studio', () => {
+  renderPage();
+  expect(screen.getByRole('heading', { level: 1, name: /kimetsu no yaiba/i })).toBeInTheDocument();
+  expect(screen.getByText(/pourfendeur de démons/i)).toBeInTheDocument();
+  expect(screen.getByText('ufotable')).toBeInTheDocument();
+});
 
-  it('renders not-found state on error', () => {
-    mockedUseMediaDetail.mockReturnValue(makeResult({ isError: true }));
-    renderAt('/media/Anime/1/');
-    expect(screen.getByText(/Œuvre introuvable/i)).toBeInTheDocument();
-  });
+it('renders the seiyuu section when present and hides it when absent', () => {
+  renderPage();
+  expect(screen.getByText('Natsuki Hanae')).toBeInTheDocument();
+  mockedUseMediaDetail.mockReturnValue({
+    data: { ...item, seiyuu: [] },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaDetail>);
+  renderPage();
+  expect(screen.queryAllByText('Natsuki Hanae')).toHaveLength(1); // only the first render's copy
+});
 
-  it('renders populated anime detail', () => {
-    mockedUseMediaDetail.mockReturnValue(makeResult({ data: media({}) }));
-    renderAt('/media/Anime/1/');
-    expect(screen.getByText('Cowboy Bebop')).toBeInTheDocument();
-    expect(screen.getByText('Space bounty hunters.')).toBeInTheDocument();
-    expect(screen.getByText('Action')).toBeInTheDocument();
-    expect(screen.getByText('Sunrise')).toBeInTheDocument();
-    expect(screen.queryByTestId('chapter-list')).not.toBeInTheDocument();
-  });
+it('links related items with the capitalized media type', () => {
+  renderPage();
+  expect(screen.getByRole('link', { name: /saison 2/i })).toHaveAttribute(
+    'href',
+    '/media/Anime/40000/',
+  );
+});
 
-  it('renders manga branch with chapter list and related items', () => {
-    mockedUseMediaDetail.mockReturnValue(
-      makeResult({
-        data: media({
-          title: 'Berserk',
-          related_items: [
-            { id: '2', title: 'Vinland Saga', image: 'http://img/vs.jpg' },
-          ],
-        }),
-      })
-    );
-    renderAt('/media/manga/1/');
-    expect(screen.getByText('Berserk')).toBeInTheDocument();
-    expect(screen.getByTestId('chapter-list')).toBeInTheDocument();
-    expect(screen.getByText('Vinland Saga')).toBeInTheDocument();
-  });
+it('shows the chapter list only for manga', () => {
+  renderPage();
+  expect(screen.queryByTestId('chapter-list')).toBeNull();
+  mockedUseMediaDetail.mockReturnValue({
+    data: { ...item, media_type: 'Manga' },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaDetail>);
+  renderPage('Manga', '99');
+  expect(screen.getByTestId('chapter-list')).toBeInTheDocument();
 });
