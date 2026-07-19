@@ -35,8 +35,6 @@ _Aucun item ouvert._
     (`_load_stt`/`_transcribe`/`_synthesize`/`speech_to_speech`).
     Reste : rebuild/redeploy manuel de l'image brain (poids STT téléchargés au 1er
     appel), puis smoke test GPU (`S2S_GPU_SMOKE=1 pytest -m gpu`).
-- [ ] **Frontend — plotly.js (~4,6 Mo) importé statiquement dans 8 pages** _(audit dette 2026-07-11)_
-  - [AIUsagePage.tsx:18](frontend/src/pages/auth/AIUsagePage.tsx#L18), `LatentSpacePage`, `LiquidNeuralNetworkLabPage`, `StrategyLabPage`, `SeichijunreiMapPage`, `ArchetypeNexusPage`, `TransparencyPage`… Le chunk est isolé (`plotly-vendor`, [vite.config.ts:98](frontend/vite.config.ts#L98)) mais chaque visite télécharge 4,6 Mo — `AIUsagePage` n'affiche qu'un historique simple. + three.js dans 5 fichiers. **Reco** : lazy-import interne ou lib légère pour les graphes simples ; auditer via `stats.html` déjà généré.
 - [ ] **Frontend — composants > 500 lignes (reliquat)** _(audit dette 2026-07-11 ; BlindtestPage découpé le 2026-07-16, cf. HISTORY)_
   - `BlindtestPage` traité (753→324, hook + sous-composants). Restent, à découper au fil de l'eau (sous-composants + hooks métier) : `TransparencyPage` (614), `AudioLabPage` (573), `LabHubPage` (569), `SpeechToSpeechLabPage` (544).
 - [ ] **Deps — registre de prix désynchronisé (reliquat)** _(audit dette 2026-07-11 ; lock-doublons + COST_AUDIT réglés 2026-07-17)_
