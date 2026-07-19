@@ -131,4 +131,29 @@ describe('ExplorePage', () => {
     await waitFor(() => expect(screen.getByText(/1 résultat/i)).toBeInTheDocument());
     expect(screen.queryByText('Bleach')).toBeNull();
   });
+
+  it('resets selected genres when the media type changes', async () => {
+    mockedApiClient.mockResolvedValue({
+      personalized: true,
+      rows: [
+        {
+          kind: 'top',
+          title: 'Top',
+          reason: '',
+          seed: null,
+          items: [
+            { id: '1', title: 'Naruto', media_type: 'Anime', genres: ['Action'] },
+            { id: '2', title: 'Bleach', media_type: 'Anime', genres: ['Drame'] },
+          ],
+        },
+      ],
+    });
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Top')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Action' }));
+    await waitFor(() => expect(screen.getByText(/1 résultat/i)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Mangas' }));
+    await waitFor(() => expect(screen.getByText('Top')).toBeInTheDocument());
+    expect(screen.queryByText(/1 résultat/i)).toBeNull();
+  });
 });

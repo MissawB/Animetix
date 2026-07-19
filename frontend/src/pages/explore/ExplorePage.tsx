@@ -34,6 +34,11 @@ const ExplorePage: React.FC = () => {
   const heroRowIndex = rows.findIndex((r) => r.items.length > 0);
   const hero = heroRowIndex >= 0 ? rows[heroRowIndex].items[0] : undefined;
 
+  const changeMediaType = (type: string) => {
+    setMediaType(type);
+    setSelectedGenres(new Set());
+  };
+
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) => {
       const next = new Set(prev);
@@ -71,7 +76,7 @@ const ExplorePage: React.FC = () => {
       <div className="px-12 -mt-12 relative z-20 space-y-16 pb-24">
         <ExploreToolbar
           mediaType={mediaType}
-          onMediaTypeChange={setMediaType}
+          onMediaTypeChange={changeMediaType}
           query={query}
           onQueryChange={setQuery}
           genres={derivedGenres}
