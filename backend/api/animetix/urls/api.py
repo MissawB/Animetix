@@ -89,6 +89,11 @@ urlpatterns = [
         name="api_suwayomi_image_proxy",
     ),
     path(
+        "media/<str:media_type>/<str:item_id>/characters/",
+        api_views.MediaCharactersView.as_view(),
+        name="api_media_characters",
+    ),
+    path(
         "media/<str:media_type>/<str:item_id>/",
         api_views.MediaDetailView.as_view(),
         name="api_media_detail",

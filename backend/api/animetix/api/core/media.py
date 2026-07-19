@@ -300,3 +300,37 @@ class MediaDetailView(APIView):
                 return Response(item)
 
         return Response({"error": "Item not found"}, status=404)
+
+
+class MediaCharactersView(APIView):
+    """Personnages associés à une œuvre (match metadata.origin == titre)."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, media_type, item_id):
+        from django.db.models import F
+
+        from ...models import MediaItem
+
+        try:
+            item = MediaItem.objects.filter(
+                media_type=media_type, external_id=item_id
+            ).first()
+            if item is None:
+                return Response({"error": "Item not found"}, status=404)
+
+            characters = MediaItem.objects.filter(
+                media_type="Character", metadata__origin=item.title
+            ).order_by(F("popularity").desc(nulls_last=True))[:12]
+
+            return Response(
+                {
+                    "characters": [
+                        {"id": c.external_id, "name": c.title, "image": c.image_url}
+                        for c in characters
+                    ]
+                }
+            )
+        except Exception:
+            logger.exception("Error in MediaCharactersView")
+            return Response({"error": "Internal server error"}, status=500)
