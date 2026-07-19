@@ -50,6 +50,26 @@ beforeEach(() => {
   } as unknown as ReturnType<typeof useMediaDetail>);
 });
 
+it('renders the loading skeleton while fetching', () => {
+  mockedUseMediaDetail.mockReturnValue({
+    data: undefined,
+    isLoading: true,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaDetail>);
+  const { container } = renderPage();
+  expect(container.querySelector('.animate-pulse')).toBeTruthy();
+});
+
+it('renders the not-found state on error', () => {
+  mockedUseMediaDetail.mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isError: true,
+  } as unknown as ReturnType<typeof useMediaDetail>);
+  renderPage();
+  expect(screen.getByText(/œuvre introuvable/i)).toBeInTheDocument();
+});
+
 it('renders hero title, synopsis and studio', () => {
   renderPage();
   expect(screen.getByRole('heading', { level: 1, name: /kimetsu no yaiba/i })).toBeInTheDocument();
