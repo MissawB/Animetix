@@ -22,9 +22,10 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Backend — god-files du pipeline MLOps, sans aucun test dédié** _(audit dette 2026-07-19)_
-  - Preuve : `dpo_dataset_compiler.py` (1086 l.), `ft_dataset/synthetic_generators.py` (917), `dialogue_generators.py` (716), `finetuning_dataset.py` (871), `creators_db.py` (600) — 0 fichier de test correspondant ; angle mort masqué par le 76 % global. Idem cœur Django : `models.py` (1005), `presenters.py` (857), `serializers.py` (707).
-  - Fix : découper par responsabilité (génération vs compilation vs I/O) + tests ciblés ; scinder `models.py` en package par domaine.
+- [ ] **Backend — modules utilitaires ft_dataset/rlhf sous-couverts (reliquat mesuré du point god-files)** _(audit dette 2026-07-19, re-mesuré 2026-07-20)_
+  - Le gros de l'item initial était périmé (cf. HISTORY 2026-07-20 : dpo_compiler 95 %, synthetic 100 %, finetuning 94 %, dialogue 93 %, models 89 %, serializers 96 % ; `ArchetypistPresenter` mort supprimé). Reliquat réel :
+  - **Sous-couverts (tests ciblés à écrire)** : `ft_dataset/relation_generators.py` 32 %, `rlhf_pipeline.py` 32 %, `ft_dataset/paraphrase.py` 46 %, `market_profile_generators.py` 58 %, `otaku_generators.py` 64 %.
+  - **0 % assumé (ne pas re-signaler)** : les scripts train/infra GPU-offline (`train_expert_model`, `train_preference`, `train_embeddings`, `lore_ingestion_beam`, `vertex_pipelines`, `merge_lora_weights`, `fandom_lore_scraper`, `graph_*`, `latent_space_viz`) sont intestables en CI.
 
 - [ ] **Backend — `InferencePort` obèse (violation ISP)** _(audit dette 2026-07-19)_
   - Preuve : `fallback_adapter.py` (833 l.) contient ~30 méthodes de pure délégation `return self._fallback_call(...)` (l.~509-785) — chaque adapter doit couvrir toute la surface du port.
