@@ -749,6 +749,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Configuration publique de l'app (type frontend ``AppConfig``).
+         *
+         *     Porte aussi le mode maintenance : le frontend polle cet endpoint pendant
+         *     la maintenance pour détecter la sortie, d'où le throttle minute-seulement
+         *     (le day-cap anonyme par défaut couperait le poll) et son exemption dans
+         *     ``MaintenanceModeMiddleware``.
+         */
         get: operations["api_v1_config_retrieve"];
         put?: never;
         post?: never;
@@ -962,7 +970,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Explore le catalogue par popularité et catégories. */
+        /** @description Feed personnalisé IA de la page Explorer (cascade de fallback). */
         get: operations["api_v1_explore_retrieve"];
         put?: never;
         post?: never;
@@ -1932,7 +1940,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/game/world-boss/attack/": {
+    "/api/v1/game/world-boss/answer/": {
         parameters: {
             query?: never;
             header?: never;
@@ -1941,7 +1949,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["api_v1_game_world_boss_attack_create"];
+        /** @description Corrects the pending question, applies the damage, moves the ladder. */
+        post: operations["api_v1_game_world_boss_answer_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1958,6 +1967,23 @@ export interface paths {
         get: operations["api_v1_game_world_boss_leaderboard_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/game/world-boss/question/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Draws the next question of the run. The answer stays here. */
+        post: operations["api_v1_game_world_boss_question_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2018,6 +2044,12 @@ export interface paths {
         /**
          * @description Vue macroscopique du Knowledge Graph.
          *     Expose les communautés sémantiques (Leiden/Louvain) et leurs résumés.
+         *
+         *     **Lecture seule.** La carte se génère hors requête (commande
+         *     ``generate_world_map``, exécutée par le job MLOps) : le partitionnement
+         *     enchaîne un appel LLM par communauté et dépassait systématiquement le
+         *     timeout de requête (503 observé en prod), si bien que le cache n'était
+         *     jamais peuplé et que tous les appelants recevaient le 202 « generating ».
          */
         get: operations["api_v1_graph_world_map_retrieve"];
         put?: never;
@@ -2554,6 +2586,30 @@ export interface paths {
         get: operations["api_v1_media_favorites_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/search/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Recherche d'œuvres via SQL ou Multi-Modale (CLIP). */
+        get: operations["api_v1_media_search_retrieve"];
+        put?: never;
+        /**
+         * @description Recherche par image, par cible (`work` ou `character`).
+         *
+         *     Requiert Authentification + Quota. Le garde-fou anti-facturation est
+         *     par cible : l'index des œuvres peut exister sans celui des
+         *     personnages, et chacun doit répondre honnêtement pour lui-même.
+         */
+        post: operations["api_v1_media_search_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3123,7 +3179,13 @@ export interface paths {
         /** @description Recherche d'œuvres via SQL ou Multi-Modale (CLIP). */
         get: operations["api_v1_search_retrieve"];
         put?: never;
-        /** @description Recherche par image (Cross-Modal). Requiert Authentification + Quota. */
+        /**
+         * @description Recherche par image, par cible (`work` ou `character`).
+         *
+         *     Requiert Authentification + Quota. Le garde-fou anti-facturation est
+         *     par cible : l'index des œuvres peut exister sans celui des
+         *     personnages, et chacun doit répondre honnêtement pour lui-même.
+         */
         post: operations["api_v1_search_create"];
         delete?: never;
         options?: never;
@@ -3138,7 +3200,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Endpoint pour g├®rer l'├®tat du jeu via API. */
+        /** @description Endpoint pour gérer l'état du jeu via API. */
         get: operations["api_v1_session_retrieve"];
         put?: never;
         post?: never;
@@ -6777,7 +6839,7 @@ export interface operations {
             };
         };
     };
-    api_v1_game_world_boss_attack_create: {
+    api_v1_game_world_boss_answer_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6796,6 +6858,24 @@ export interface operations {
         };
     };
     api_v1_game_world_boss_leaderboard_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_game_world_boss_question_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -7459,6 +7539,42 @@ export interface operations {
         };
     };
     api_v1_media_favorites_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_media_search_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_media_search_create: {
         parameters: {
             query?: never;
             header?: never;

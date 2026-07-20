@@ -310,7 +310,7 @@ class FavoriteMangaSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def get_unread_chapters_count(self, obj):
+    def get_unread_chapters_count(self, obj) -> int:
         if hasattr(obj, "unread_chapters_count_annotated"):
             return obj.unread_chapters_count_annotated
         return MangaChapter.objects.filter(
@@ -353,7 +353,7 @@ class CreativeFusionSerializer(serializers.ModelSerializer):
         model = CreativeFusion
         fields = "__all__"
 
-    def get_likes_count(self, obj):
+    def get_likes_count(self, obj) -> int:
         if (
             hasattr(obj, "_prefetched_objects_cache")
             and "likes" in obj._prefetched_objects_cache
@@ -478,7 +478,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
             "is_participant",
         ]
 
-    def get_participants_count(self, obj):
+    def get_participants_count(self, obj) -> int:
         if hasattr(obj, "participants_count_annotated"):
             return obj.participants_count_annotated
         if (
@@ -523,7 +523,7 @@ class DiscoveryClubSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["creator"]
 
-    def get_members_count(self, obj):
+    def get_members_count(self, obj) -> int:
         if hasattr(obj, "members_count_annotated"):
             return obj.members_count_annotated
         return obj.members.count()

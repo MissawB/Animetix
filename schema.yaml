@@ -850,6 +850,13 @@ paths:
   /api/v1/config/:
     get:
       operationId: api_v1_config_retrieve
+      description: |-
+        Configuration publique de l'app (type frontend ``AppConfig``).
+
+        Porte aussi le mode maintenance : le frontend polle cet endpoint pendant
+        la maintenance pour détecter la sortie, d'où le throttle minute-seulement
+        (le day-cap anonyme par défaut couperait le poll) et son exemption dans
+        ``MaintenanceModeMiddleware``.
       tags:
       - api
       security:
@@ -1153,7 +1160,7 @@ paths:
   /api/v1/explore/:
     get:
       operationId: api_v1_explore_retrieve
-      description: Explore le catalogue par popularité et catégories.
+      description: Feed personnalisé IA de la page Explorer (cascade de fallback).
       tags:
       - api
       security:
@@ -1939,9 +1946,10 @@ paths:
       responses:
         '200':
           description: No response body
-  /api/v1/game/world-boss/attack/:
+  /api/v1/game/world-boss/answer/:
     post:
-      operationId: api_v1_game_world_boss_attack_create
+      operationId: api_v1_game_world_boss_answer_create
+      description: Corrects the pending question, applies the damage, moves the ladder.
       tags:
       - api
       responses:
@@ -1954,6 +1962,15 @@ paths:
       - api
       security:
       - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/world-boss/question/:
+    post:
+      operationId: api_v1_game_world_boss_question_create
+      description: Draws the next question of the run. The answer stays here.
+      tags:
+      - api
       responses:
         '200':
           description: No response body
@@ -1995,6 +2012,12 @@ paths:
       description: |-
         Vue macroscopique du Knowledge Graph.
         Expose les communautés sémantiques (Leiden/Louvain) et leurs résumés.
+
+        **Lecture seule.** La carte se génère hors requête (commande
+        ``generate_world_map``, exécutée par le job MLOps) : le partitionnement
+        enchaîne un appel LLM par communauté et dépassait systématiquement le
+        timeout de requête (503 observé en prod), si bien que le cache n'était
+        jamais peuplé et que tous les appelants recevaient le 202 « generating ».
       tags:
       - api
       security:
@@ -2362,6 +2385,32 @@ paths:
       description: Liste tous les mangas favoris de l'utilisateur.
       tags:
       - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/media/search/:
+    get:
+      operationId: api_v1_media_search_retrieve
+      description: Recherche d'œuvres via SQL ou Multi-Modale (CLIP).
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_media_search_create
+      description: |-
+        Recherche par image, par cible (`work` ou `character`).
+
+        Requiert Authentification + Quota. Le garde-fou anti-facturation est
+        par cible : l'index des œuvres peut exister sans celui des
+        personnages, et chacun doit répondre honnêtement pour lui-même.
+      tags:
+      - api
+      security:
+      - {}
       responses:
         '200':
           description: No response body
@@ -3135,8 +3184,12 @@ paths:
           description: No response body
     post:
       operationId: api_v1_search_create
-      description: Recherche par image (Cross-Modal). Requiert Authentification +
-        Quota.
+      description: |-
+        Recherche par image, par cible (`work` ou `character`).
+
+        Requiert Authentification + Quota. Le garde-fou anti-facturation est
+        par cible : l'index des œuvres peut exister sans celui des
+        personnages, et chacun doit répondre honnêtement pour lui-même.
       tags:
       - api
       security:
@@ -3147,7 +3200,7 @@ paths:
   /api/v1/session/:
     get:
       operationId: api_v1_session_retrieve
-      description: Endpoint pour g├®rer l'├®tat du jeu via API.
+      description: Endpoint pour gérer l'état du jeu via API.
       tags:
       - api
       security:
