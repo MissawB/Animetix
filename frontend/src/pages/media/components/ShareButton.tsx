@@ -17,9 +17,13 @@ export const ShareButton: React.FC<{ title: string }> = ({ title }) => {
         return;
       }
     }
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // presse-papier indisponible (contexte non sécurisé / API absente) — rien à faire
+    }
   };
 
   return (
