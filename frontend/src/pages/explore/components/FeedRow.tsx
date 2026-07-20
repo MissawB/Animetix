@@ -29,11 +29,11 @@ export const FeedRow: React.FC<{ row: FeedRowData; rowId: string }> = ({ row, ro
         )}
         <span className="h-px bg-blue-500/30 flex-1" />
       </h2>
-      <div className="relative group">
+      <div className="relative group/row">
         <button
           onClick={() => scrollBy(-400)}
           aria-label="Défiler à gauche"
-          className="absolute left-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+          className="absolute left-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center"
         >
           <ChevronLeft size={32} />
         </button>
@@ -45,7 +45,7 @@ export const FeedRow: React.FC<{ row: FeedRowData; rowId: string }> = ({ row, ro
         <button
           onClick={() => scrollBy(400)}
           aria-label="Défiler à droite"
-          className="absolute right-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+          className="absolute right-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center"
         >
           <ChevronRight size={32} />
         </button>
