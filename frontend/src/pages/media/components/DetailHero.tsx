@@ -1,18 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  ArrowLeft,
-  BookOpen,
-  Bookmark,
-  Calendar,
-  Heart,
-  Play,
-  Share2,
-  TrendingUp,
-} from 'lucide-react';
+import { ArrowLeft, BookOpen, Calendar, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
+import { WatchButton } from './WatchButton';
+import { LibraryButton } from './LibraryButton';
+import { ShareButton } from './ShareButton';
 import type { MediaDetail } from '../../../types';
 
 interface DetailHeroProps {
@@ -99,37 +93,21 @@ export const DetailHero: React.FC<DetailHeroProps> = ({ item, mediaType, itemId 
             </div>
             <div className="flex flex-wrap gap-3 pt-2">
               {isManga ? (
-                <Button
-                  as={Link}
-                  to={`/media/manga/${itemId}/1/`}
-                  variant="primary"
-                  className="bg-anime-accent text-white border-none group"
-                >
-                  <BookOpen className="w-5 h-5" /> {t('media.detail.read_manga', 'LIRE LE MANGA')}
-                </Button>
+                <>
+                  <Button
+                    as={Link}
+                    to={`/media/manga/${itemId}/1/`}
+                    variant="primary"
+                    className="bg-anime-accent text-white border-none group"
+                  >
+                    <BookOpen className="w-5 h-5" /> {t('media.detail.read_manga', 'LIRE LE MANGA')}
+                  </Button>
+                  <LibraryButton mediaId={itemId} />
+                </>
               ) : (
-                <Button variant="primary" className="bg-yellow-400 text-black border-none group">
-                  <Play className="w-5 h-5" /> {t('media.detail.watch', 'VOIR')}
-                </Button>
+                <WatchButton title={item.title} platforms={item.streaming_platforms ?? []} />
               )}
-              <Button variant="primary" className="bg-white/10 text-white border-none group">
-                <Bookmark className="w-5 h-5 group-hover:fill-current" />{' '}
-                {t('media.detail.add', 'AJOUTER')}
-              </Button>
-              <Button
-                variant="outline"
-                className="border-white/10 hover:bg-red-500/10 hover:text-red-500 group"
-              >
-                <Heart className="w-5 h-5 group-hover:fill-current" />{' '}
-                {t('media.detail.favorites', 'FAVORIS')}
-              </Button>
-              <Button
-                variant="outline"
-                aria-label={t('media.detail.share_club', 'Partager dans le club')}
-                className="border-white/5 bg-white/5 hover:bg-white/10"
-              >
-                <Share2 className="w-4 h-4" />
-              </Button>
+              <ShareButton title={item.title} />
             </div>
           </div>
         </div>

@@ -1,7 +1,8 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Tag, Cpu, Network, Sparkles, Mic } from 'lucide-react';
+import { Tag, Cpu, Network, Sparkles, Mic, Users } from 'lucide-react';
 import { useMediaDetail } from '../../features/media/hooks/useMediaDetail';
+import { useMediaCharacters } from '../../features/media/hooks/useMediaCharacters';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
@@ -11,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { DetailHero } from './components/DetailHero';
 import { SectionHeader } from './components/SectionHeader';
 import { SeiyuuGrid } from './components/SeiyuuGrid';
+import { CharacterGrid } from './components/CharacterGrid';
 import { RelatedCarousel } from './components/RelatedCarousel';
 import { MediaDetail } from '../../types';
 
@@ -26,6 +28,8 @@ const MediaDetailPage: React.FC = () => {
     isLoading: boolean;
     isError: boolean;
   };
+  const { data: charactersData } = useMediaCharacters(mediaType, itemId);
+  const characters = charactersData?.characters ?? [];
 
   if (isLoading)
     return (
@@ -61,6 +65,17 @@ const MediaDetailPage: React.FC = () => {
               t('media.detail.no_synopsis', 'Aucun synopsis disponible dans le Nexus.')}
           </p>
         </section>
+
+        {characters.length > 0 && (
+          <section>
+            <SectionHeader
+              title={t('media.detail.characters', 'Personnages')}
+              icon={Users}
+              iconClassName="text-blue-400"
+            />
+            <CharacterGrid characters={characters} />
+          </section>
+        )}
 
         {mediaType?.toLowerCase() === 'manga' && itemId && (
           <ChapterList mediaId={itemId} mediaTitle={item.title} />

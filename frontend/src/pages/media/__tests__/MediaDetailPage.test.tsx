@@ -1,21 +1,35 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import MediaDetailPage from '../MediaDetailPage';
 import { useMediaDetail } from '../../../features/media/hooks/useMediaDetail';
+import { useMediaCharacters } from '../../../features/media/hooks/useMediaCharacters';
+import { useAuthStore } from '../../../store/authStore';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, defaultValue?: string) =>
       typeof defaultValue === 'string' ? defaultValue : key,
   }),
+  // authStore.ts (imported for real below so the test can call
+  // useAuthStore.setState) pulls in src/i18n/config.ts, which calls
+  // i18n.use(initReactI18next) at module load. Without this export the
+  // per-file mock above shadows the global setup.ts mock and that call
+  // throws on import.
+  initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 vi.mock('../../../features/media/hooks/useMediaDetail', () => ({ useMediaDetail: vi.fn() }));
+vi.mock('../../../features/media/hooks/useMediaCharacters', () => ({
+  useMediaCharacters: vi.fn(),
+}));
 vi.mock('../../../features/manga-reader/components/ChapterList', () => ({
   ChapterList: () => <div data-testid="chapter-list" />,
 }));
+vi.mock('../../../utils/apiClient', () => ({ apiClient: vi.fn() }));
 
 const mockedUseMediaDetail = vi.mocked(useMediaDetail);
+const mockedUseMediaCharacters = vi.mocked(useMediaCharacters);
 
 const item = {
   id: '38000',
@@ -32,22 +46,32 @@ const item = {
   related_items: [{ id: '40000', title: 'Saison 2', image: '' }],
 };
 
-const renderPage = (mediaType = 'Anime', itemId = '38000') =>
-  render(
-    <MemoryRouter initialEntries={[`/media/${mediaType}/${itemId}/`]}>
-      <Routes>
-        <Route path="/media/:mediaType/:itemId/" element={<MediaDetailPage />} />
-      </Routes>
-    </MemoryRouter>,
+const renderPage = (mediaType = 'Anime', itemId = '38000') => {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <MemoryRouter initialEntries={[`/media/${mediaType}/${itemId}/`]}>
+        <Routes>
+          <Route path="/media/:mediaType/:itemId/" element={<MediaDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
+  useAuthStore.setState({ isAuthenticated: false });
   mockedUseMediaDetail.mockReturnValue({
     data: item,
     isLoading: false,
     isError: false,
   } as unknown as ReturnType<typeof useMediaDetail>);
+  mockedUseMediaCharacters.mockReturnValue({
+    data: { characters: [] },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaCharacters>);
 });
 
 it('hides the micro-tags section when micro_tags is empty', () => {
@@ -124,4 +148,23 @@ it('shows the chapter list only for manga', () => {
   } as unknown as ReturnType<typeof useMediaDetail>);
   renderPage('Manga', '99');
   expect(screen.getByTestId('chapter-list')).toBeInTheDocument();
+});
+
+it('shows the characters section when characters exist', () => {
+  mockedUseMediaCharacters.mockReturnValue({
+    data: { characters: [{ id: '126071', name: 'Tanjirou Kamado', image: '' }] },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaCharacters>);
+  renderPage();
+  expect(screen.getByText(/personnages/i)).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /tanjirou kamado/i })).toHaveAttribute(
+    'href',
+    '/media/Character/126071/',
+  );
+});
+
+it('hides the characters section when empty', () => {
+  renderPage();
+  expect(screen.queryByText(/personnages/i)).toBeNull();
 });
