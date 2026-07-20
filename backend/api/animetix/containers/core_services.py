@@ -141,6 +141,10 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         ),
     )
 
+    synopsis_translator = providers.Singleton(
+        LazyClass("core.domain.services.synopsis_translator", "SynopsisTranslator"),
+    )
+
     feed_composer = providers.Factory(
         LazyClass("core.domain.services.explore.feed_composer", "FeedComposer"),
         catalog_service=catalog_service,
