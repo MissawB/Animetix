@@ -26,10 +26,6 @@ _Aucun item ouvert._
   - Preuve : `fallback_adapter.py` (833 l.) contient ~30 méthodes de pure délégation `return self._fallback_call(...)` (l.~509-785) — chaque adapter doit couvrir toute la surface du port.
   - Fix : segmenter en ports fins (texte / vision / audio / 3D).
 
-- [ ] **Frontend — fetch impératif hors react-query, erreurs avalées** _(audit dette 2026-07-19)_
-  - Preuve : `ClusterHealthPanel.tsx:345-382` refait state/loading/`setInterval` à la main alors que `useHealth` + `refetchInterval` existent ; `MangaLibraryPage.tsx:34-38` avale l'échec sans retour utilisateur (`:28`).
-  - Fix : migrer vers `useQuery`/`useMutation` + surfacer les erreurs.
-
 - [ ] **Frontend — 8 pages encore > 500 lignes ; `VsBattlePage` (651 l.) sans test** _(audit dette 2026-07-19)_
   - Preuve : `VsBattlePage` (651), `ClassicGamePage` (608), `LoreWorldMapPage` (604), `SeiyuuDiscoveryPage` (531), `PowerStationPage` (523), `TreeOfThoughtsPage` (509), `ProfilePage` (506), `ClusterHealthPanel` (500). Seuils vitest bas (38 % stmts, `vite.config.ts:149-154`), ~114 pages sans test.
   - Fix : poursuivre le découpage (pattern PR #93-96) + test de rendu pour `VsBattlePage`, ratcheter les seuils.
