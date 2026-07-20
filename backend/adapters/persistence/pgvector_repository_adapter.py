@@ -307,6 +307,32 @@ class PGVectorRepositoryAdapter(RepositoryPort):
                 return orjson.loads(f.read())
         return {}
 
+    @staticmethod
+    def _cover_detail_from_model(c) -> Dict:
+        """Detail dict of a MangaCover DB row (get_manga_cover_by_id/_by_title)."""
+        return {
+            "title": c.title,
+            "mangadex_id": c.mangadex_id,
+            "covers": c.covers,
+            "title_english": c.title_english,
+            "title_native": c.title_native,
+            "synonyms": c.synonyms,
+            "author": c.author,
+        }
+
+    @staticmethod
+    def _cover_detail_from_file(info: Dict) -> Dict:
+        """Same detail dict, built from a manga_covers.json entry (file fallback)."""
+        return {
+            "title": info.get("title", ""),
+            "mangadex_id": info.get("mangadex_id"),
+            "covers": info.get("covers", {}),
+            "title_english": info.get("title_english"),
+            "title_native": info.get("title_native"),
+            "synonyms": info.get("synonyms", []),
+            "author": info.get("author"),
+        }
+
     def get_manga_covers_metadata(self) -> List[Dict]:
         try:
             from animetix.models import MangaCover
@@ -363,15 +389,7 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             # only a real DB failure should reach the except below.
             c = MangaCover.objects.filter(manga_id=manga_id).first()
             if c:
-                return {
-                    "title": c.title,
-                    "mangadex_id": c.mangadex_id,
-                    "covers": c.covers,
-                    "title_english": c.title_english,
-                    "title_native": c.title_native,
-                    "synonyms": c.synonyms,
-                    "author": c.author,
-                }
+                return self._cover_detail_from_model(c)
         except Exception:
             logger.warning(
                 "MangaCover DB read failed; falling back to manga_covers.json",
@@ -382,15 +400,7 @@ class PGVectorRepositoryAdapter(RepositoryPort):
         info = covers.get(manga_id)
         if not info:
             return None
-        return {
-            "title": info.get("title", ""),
-            "mangadex_id": info.get("mangadex_id"),
-            "covers": info.get("covers", {}),
-            "title_english": info.get("title_english"),
-            "title_native": info.get("title_native"),
-            "synonyms": info.get("synonyms", []),
-            "author": info.get("author"),
-        }
+        return self._cover_detail_from_file(info)
 
     def get_manga_cover_by_title(self, title: str) -> Optional[Dict]:
         try:
@@ -398,15 +408,7 @@ class PGVectorRepositoryAdapter(RepositoryPort):
 
             c = MangaCover.objects.filter(title=title).first()
             if c:
-                return {
-                    "title": c.title,
-                    "mangadex_id": c.mangadex_id,
-                    "covers": c.covers,
-                    "title_english": c.title_english,
-                    "title_native": c.title_native,
-                    "synonyms": c.synonyms,
-                    "author": c.author,
-                }
+                return self._cover_detail_from_model(c)
         except Exception:
             logger.warning(
                 "MangaCover DB read failed; falling back to manga_covers.json",
@@ -414,17 +416,9 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             )
 
         covers = self.load_covers()
-        for mid, info in covers.items():
+        for _mid, info in covers.items():
             if info.get("title") == title:
-                return {
-                    "title": info.get("title", ""),
-                    "mangadex_id": info.get("mangadex_id"),
-                    "covers": info.get("covers", {}),
-                    "title_english": info.get("title_english"),
-                    "title_native": info.get("title_native"),
-                    "synonyms": info.get("synonyms", []),
-                    "author": info.get("author"),
-                }
+                return self._cover_detail_from_file(info)
         return None
 
     def search_media_items(

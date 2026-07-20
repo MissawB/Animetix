@@ -569,6 +569,65 @@ def test_get_manga_cover_by_title_logs_db_failure_then_falls_back(
     assert "MangaCover" in warn.call_args[0][0]
 
 
+# --- manga covers: DB-hit path returns the model-shaped dict --------------
+#
+# Characterization (locks the dict shape before the _cover_detail refactor):
+# a real DB row must serialize to the full detail dict, from the model
+# attributes, without touching the file.
+
+
+def _model_cover(**over):
+    c = MagicMock(name="MangaCoverRow")
+    c.title = over.get("title", "Berserk")
+    c.mangadex_id = over.get("mangadex_id", "mdx-5")
+    c.covers = over.get("covers", {"ja": "u"})
+    c.title_english = over.get("title_english", "Berserk")
+    c.title_native = over.get("title_native", "ベルセルク")
+    c.synonyms = over.get("synonyms", ["Berserk: The Black Swordsman"])
+    c.author = over.get("author", "Kentaro Miura")
+    return c
+
+
+DETAIL_KEYS = {
+    "title",
+    "mangadex_id",
+    "covers",
+    "title_english",
+    "title_native",
+    "synonyms",
+    "author",
+}
+
+
+def test_get_manga_cover_by_id_returns_model_dict_without_file(adapter, mocker):
+    fake = MagicMock(name="MangaCover")
+    fake.objects.filter.return_value.first.return_value = _model_cover()
+    mocker.patch("animetix.models.MangaCover", fake)
+    load_covers = mocker.spy(adapter, "load_covers")
+
+    out = adapter.get_manga_cover_by_id("5")
+
+    assert set(out) == DETAIL_KEYS
+    assert out["mangadex_id"] == "mdx-5"
+    assert out["title_native"] == "ベルセルク"
+    assert out["synonyms"] == ["Berserk: The Black Swordsman"]
+    load_covers.assert_not_called()  # DB hit never reads the file
+
+
+def test_get_manga_cover_by_title_returns_model_dict_without_file(adapter, mocker):
+    fake = MagicMock(name="MangaCover")
+    fake.objects.filter.return_value.first.return_value = _model_cover(title="Vinland")
+    mocker.patch("animetix.models.MangaCover", fake)
+    load_covers = mocker.spy(adapter, "load_covers")
+
+    out = adapter.get_manga_cover_by_title("Vinland")
+
+    assert set(out) == DETAIL_KEYS
+    assert out["title"] == "Vinland"
+    assert out["author"] == "Kentaro Miura"
+    load_covers.assert_not_called()
+
+
 # --- search_media_items -------------------------------------------------
 
 
