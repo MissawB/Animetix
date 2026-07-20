@@ -26,10 +26,6 @@ _Aucun item ouvert._
   - Preuve : `fallback_adapter.py` (833 l.) contient ~30 méthodes de pure délégation `return self._fallback_call(...)` (l.~509-785) — chaque adapter doit couvrir toute la surface du port.
   - Fix : segmenter en ports fins (texte / vision / audio / 3D).
 
-- [ ] **Duplication backend + frontend** _(audit dette 2026-07-19)_
-  - Backend : `permission_classes = [AllowAny]` + `throttle_classes = [CpuGameThrottle]` répété ~30× dans `api/games/*.py` → classe de base `CpuGameAPIView`. Mapping `MangaCover → dict` copié 3× dans `pgvector_repository_adapter.py:316-400` → `_cover_to_dict()`.
-  - Frontend : `norm()` (strip diacritiques) copiée dans 4 fichiers (`VsBattlePage.tsx:27`, `ClassicGamePage.tsx:33`, `CovertestPage.tsx:10`, `useBlindtestGame.ts:13`) → `utils/normalizeText.ts` ; sélecteur de difficulté dupliqué dans 4 lobbies → `<DifficultySelector>` partagé.
-
 - [ ] **Frontend — fetch impératif hors react-query, erreurs avalées** _(audit dette 2026-07-19)_
   - Preuve : `ClusterHealthPanel.tsx:345-382` refait state/loading/`setInterval` à la main alors que `useHealth` + `refetchInterval` existent ; `MangaLibraryPage.tsx:34-38` avale l'échec sans retour utilisateur (`:28`).
   - Fix : migrer vers `useQuery`/`useMutation` + surfacer les erreurs.
