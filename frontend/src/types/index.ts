@@ -530,6 +530,13 @@ export type Uncertainty = components['schemas']['Uncertainty'];
 export type AgentTraceStep = components['schemas']['AgentTraceStep'];
 export type XaiReport = components['schemas']['XaiReport'];
 
+export interface StreamingPlatform {
+  platform: string;
+  has_vf?: boolean;
+  has_vostfr?: boolean;
+  status?: string;
+}
+
 export interface MediaDetail extends MediaItem {
   genres?: string[];
   title_english?: string;
@@ -542,6 +549,7 @@ export interface MediaDetail extends MediaItem {
   title_native?: string;
   popularity?: number;
   seiyuu?: Seiyuu[];
+  streaming_platforms?: StreamingPlatform[];
 }
 
 export interface Appearance {
