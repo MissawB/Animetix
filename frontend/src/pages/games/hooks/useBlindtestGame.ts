@@ -2,17 +2,17 @@ import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useBlindtestStore } from '../../../features/games/stores/blindtestStore';
 import { blindtestService } from '../../../features/games/services/blindtestService';
+import { normalizeText } from '../../../utils/normalizeText';
+
+// Local binding used across the hook; also re-exported under its historical
+// name for any consumer that imported `norm` from here.
+const norm = normalizeText;
+export { norm };
 
 export type HintType = 'invert' | 'blur' | 'grayscale' | 'hue' | 'noise';
 export const HINT_TYPES: HintType[] = ['invert', 'blur', 'grayscale', 'hue', 'noise'];
 export const SCORE_TIERS = [100, 50, 25, 10, 0];
 export const PLAYABLE_LOCALES = ['ja', 'fr'];
-
-export const norm = (s: string) =>
-  s
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase();
 
 export const pickHint = (): HintType => HINT_TYPES[Math.floor(Math.random() * HINT_TYPES.length)];
 

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { normalizeText as norm } from '../../utils/normalizeText';
 import {
   Swords,
   Trophy,
@@ -22,11 +23,6 @@ import { queryClient } from '../../utils/queryClient';
 
 import { VsBattleArenaEntry, ArenaCharacter, VsBattleResult } from '../../types';
 
-const norm = (s: string) =>
-  s
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase();
 type Slot = 'A' | 'B';
 
 const slotTheme = (slot: Slot) =>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { normalizeText as norm } from '../../utils/normalizeText';
 import {
   Search,
   Trophy,
@@ -27,12 +28,6 @@ import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { classicGameService } from '../../features/games/services/classicService';
 import type { ClassicGuess, ClassicHintKey, ClassicReason } from '../../types';
-
-const norm = (s: string) =>
-  s
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase();
 
 const HINT_META: Record<ClassicHintKey, { icon: React.ElementType; tone: string }> = {
   year: { icon: Calendar, tone: 'text-blue-500' },

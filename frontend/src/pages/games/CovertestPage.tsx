@@ -1,21 +1,56 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Send, RotateCcw, ArrowRight, Trophy, ImageIcon, Check, X, ChevronRight, Loader2 } from 'lucide-react';
+import {
+  Send,
+  RotateCcw,
+  ArrowRight,
+  Trophy,
+  ImageIcon,
+  Check,
+  X,
+  ChevronRight,
+  Loader2,
+} from 'lucide-react';
 import { useCovertest } from '../../features/games/hooks/useCovertest';
-import { covertestService, type CovertestTitle } from '../../features/games/services/covertestService';
+import {
+  covertestService,
+  type CovertestTitle,
+} from '../../features/games/services/covertestService';
 import { Card } from '../../components/ui/Card';
 import { CardSkeleton } from '../../components/ui/Skeleton';
+import { normalizeText as norm } from '../../utils/normalizeText';
 
-const norm = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
-
-const MAX_ATTEMPTS: Record<string, number> = { Easy: 6, Normal: 4, Hard: 3, Impossible: 2, Tryhard: 3 };
+const MAX_ATTEMPTS: Record<string, number> = {
+  Easy: 6,
+  Normal: 4,
+  Hard: 3,
+  Impossible: 2,
+  Tryhard: 3,
+};
 
 // Tryhard: a random COMBINATION of distortions stacked on top of the blur. Each
 // effect eases off to identity as guesses are used (0 at reveal), and the combo is
 // re-rolled every round so two covers are never mangled the same way.
-type FxKind = 'invert' | 'grayscale' | 'hue' | 'sepia' | 'saturate' | 'contrast' | 'bright' | 'posterize';
-const FX_KINDS: FxKind[] = ['invert', 'grayscale', 'hue', 'sepia', 'saturate', 'contrast', 'bright', 'posterize'];
+type FxKind =
+  | 'invert'
+  | 'grayscale'
+  | 'hue'
+  | 'sepia'
+  | 'saturate'
+  | 'contrast'
+  | 'bright'
+  | 'posterize';
+const FX_KINDS: FxKind[] = [
+  'invert',
+  'grayscale',
+  'hue',
+  'sepia',
+  'saturate',
+  'contrast',
+  'bright',
+  'posterize',
+];
 type FxCombo = { kind: FxKind; seed: number }[];
 
 // 2–4 distinct effects, each with its own random seed for intensity/direction.
@@ -36,17 +71,26 @@ const pickFxCombo = (): FxCombo => {
 
 const fxFragment = (kind: FxKind, L: number, seed: number): string => {
   switch (kind) {
-    case 'invert': return `invert(${L.toFixed(2)})`;
-    case 'grayscale': return `grayscale(${L.toFixed(2)})`;
-    case 'hue': return `hue-rotate(${Math.round(L * (140 + seed * 220))}deg)`;
-    case 'sepia': return `sepia(${L.toFixed(2)})`;
-    case 'saturate': return `saturate(${(1 + L * (2.5 + seed * 4)).toFixed(2)})`;
-    case 'contrast': return `contrast(${(1 + L * (0.7 + seed * 1.8)).toFixed(2)})`;
+    case 'invert':
+      return `invert(${L.toFixed(2)})`;
+    case 'grayscale':
+      return `grayscale(${L.toFixed(2)})`;
+    case 'hue':
+      return `hue-rotate(${Math.round(L * (140 + seed * 220))}deg)`;
+    case 'sepia':
+      return `sepia(${L.toFixed(2)})`;
+    case 'saturate':
+      return `saturate(${(1 + L * (2.5 + seed * 4)).toFixed(2)})`;
+    case 'contrast':
+      return `contrast(${(1 + L * (0.7 + seed * 1.8)).toFixed(2)})`;
     // brightness: randomly darken or wash out depending on the seed.
-    case 'bright': return `brightness(${(1 + L * (seed < 0.5 ? -(0.2 + seed * 0.7) : (0.35 + seed * 0.9))).toFixed(2)})`;
+    case 'bright':
+      return `brightness(${(1 + L * (seed < 0.5 ? -(0.2 + seed * 0.7) : 0.35 + seed * 0.9)).toFixed(2)})`;
     // posterize-ish: harsh invert + heavy contrast for a solarised look.
-    case 'posterize': return `invert(${(L * 0.9).toFixed(2)}) contrast(${(1 + L * 1.4).toFixed(2)})`;
-    default: return '';
+    case 'posterize':
+      return `invert(${(L * 0.9).toFixed(2)}) contrast(${(1 + L * 1.4).toFixed(2)})`;
+    default:
+      return '';
   }
 };
 
@@ -62,7 +106,14 @@ const CovertestPage: React.FC = () => {
   const { gameState, loading, handleGuess, isGuessing, startGame, revealAnswer } = useCovertest();
   const location = useLocation();
   const navigate = useNavigate();
-  const cfg = location.state as { mode?: 'session' | 'single'; difficulty?: string; length?: number; guessVolume?: boolean; guessAuthor?: boolean; origin?: string } | null;
+  const cfg = location.state as {
+    mode?: 'session' | 'single';
+    difficulty?: string;
+    length?: number;
+    guessVolume?: boolean;
+    guessAuthor?: boolean;
+    origin?: string;
+  } | null;
   const mode = cfg?.mode ?? 'single';
   const sessionLength = cfg?.length ?? 1;
   const difficulty = cfg?.difficulty ?? 'Normal';
@@ -107,14 +158,23 @@ const CovertestPage: React.FC = () => {
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    startGame({ origin }).catch(() => {}).finally(() => setInitializing(false));
+    startGame({ origin })
+      .catch(() => {})
+      .finally(() => setInitializing(false));
   }, [startGame, origin]);
 
   // Manga titles for the guess autocomplete (fetched once).
   useEffect(() => {
     let active = true;
-    covertestService.getTitles().then((t) => { if (active) setTitles(t); }).catch(() => {});
-    return () => { active = false; };
+    covertestService
+      .getTitles()
+      .then((t) => {
+        if (active) setTitles(t);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, []);
 
   const guesses = gameState?.guesses ?? [];
@@ -132,9 +192,8 @@ const CovertestPage: React.FC = () => {
   }, [gameState, over, won, outOfTries, revealAnswer]);
 
   const winningIdx = guesses.findIndex((g) => g.is_correct);
-  const baseScore = won && winningIdx >= 0
-    ? Math.max(5, Math.round(100 * (1 - winningIdx / maxAttempts)))
-    : 0;
+  const baseScore =
+    won && winningIdx >= 0 ? Math.max(5, Math.round(100 * (1 - winningIdx / maxAttempts))) : 0;
   // Bonus objectives (only when enabled, won, and the data is available).
   const volumeAvailable = gameState?.volume != null && gameState?.volume !== '';
   const authorAvailable = !!gameState?.author;
@@ -168,7 +227,9 @@ const CovertestPage: React.FC = () => {
       const g = norm(authorGuess);
       const want = norm(String(gameState?.author ?? ''));
       // Match if the guess overlaps the author string (handles "Name" vs "Name, Other").
-      setAuthorCorrect(!!g && g.length >= 2 && (want.includes(g) || g.includes(want.split(',')[0].trim())));
+      setAuthorCorrect(
+        !!g && g.length >= 2 && (want.includes(g) || g.includes(want.split(',')[0].trim())),
+      );
     }
     setBonusDone(true);
   };
@@ -182,14 +243,27 @@ const CovertestPage: React.FC = () => {
   const onChange = (val: string) => {
     setGuess(val);
     const q = norm(val.trim());
-    if (q.length < 2) { setSuggestions([]); setShowSug(false); return; }
+    if (q.length < 2) {
+      setSuggestions([]);
+      setShowSug(false);
+      return;
+    }
     const starts: { title: string; via?: string }[] = [];
     const incl: { title: string; via?: string }[] = [];
     for (const t of titles) {
-      if (norm(t.title).startsWith(q)) { starts.push({ title: t.title }); continue; }
+      if (norm(t.title).startsWith(q)) {
+        starts.push({ title: t.title });
+        continue;
+      }
       const aliasStart = t.aliases.find((a) => norm(a).startsWith(q));
-      if (aliasStart) { starts.push({ title: t.title, via: aliasStart }); continue; }
-      if (norm(t.title).includes(q)) { incl.push({ title: t.title }); continue; }
+      if (aliasStart) {
+        starts.push({ title: t.title, via: aliasStart });
+        continue;
+      }
+      if (norm(t.title).includes(q)) {
+        incl.push({ title: t.title });
+        continue;
+      }
       const aliasIncl = t.aliases.find((a) => norm(a).includes(q));
       if (aliasIncl) incl.push({ title: t.title, via: aliasIncl });
     }
@@ -203,7 +277,11 @@ const CovertestPage: React.FC = () => {
   const titleByNorm = useMemo(() => {
     const m = new Map<string, string>();
     for (const t of titles) m.set(norm(t.title), t.title);
-    for (const t of titles) for (const a of t.aliases) { const k = norm(a); if (!m.has(k)) m.set(k, t.title); }
+    for (const t of titles)
+      for (const a of t.aliases) {
+        const k = norm(a);
+        if (!m.has(k)) m.set(k, t.title);
+      }
     return m;
   }, [titles]);
   // Valid when the text exactly matches a known name (canonical or alias) OR when at
@@ -219,7 +297,11 @@ const CovertestPage: React.FC = () => {
     setShowSug(false);
     setGuess('');
     setSuggestions([]);
-    try { await handleGuess({ guess: canonical }); } catch { /* toast already shown */ }
+    try {
+      await handleGuess({ guess: canonical });
+    } catch {
+      /* toast already shown */
+    }
   };
 
   const finishRound = async () => {
@@ -247,7 +329,11 @@ const CovertestPage: React.FC = () => {
   };
 
   if (initializing || (loading && !gameState)) {
-    return <div className="max-w-3xl mx-auto px-6 py-16"><CardSkeleton /></div>;
+    return (
+      <div className="max-w-3xl mx-auto px-6 py-16">
+        <CardSkeleton />
+      </div>
+    );
   }
 
   // ── Session summary ──────────────────────────────────────────
@@ -258,14 +344,29 @@ const CovertestPage: React.FC = () => {
       <div className="max-w-2xl mx-auto px-6 py-20">
         <Card padding="lg" className="text-center">
           <Trophy className="w-14 h-14 text-yellow-400 mx-auto mb-4" />
-          <h1 className="text-4xl font-black italic manga-font uppercase text-black dark:text-white">{t('games.covertest.session_over_title', 'Session terminée')}</h1>
+          <h1 className="text-4xl font-black italic manga-font uppercase text-black dark:text-white">
+            {t('games.covertest.session_over_title', 'Session terminée')}
+          </h1>
           <p className="mt-6 text-6xl font-black manga-font text-yellow-500">{totalScore}</p>
-          <p className="text-xs font-black uppercase tracking-widest text-gray-400 mt-1">{t('games.covertest.session_score_summary', { defaultValue: 'sur {{maxScore}} points · {{wins}}/{{total}} trouvés', maxScore, wins, total: sessionLength })}</p>
+          <p className="text-xs font-black uppercase tracking-widest text-gray-400 mt-1">
+            {t('games.covertest.session_score_summary', {
+              defaultValue: 'sur {{maxScore}} points · {{wins}}/{{total}} trouvés',
+              maxScore,
+              wins,
+              total: sessionLength,
+            })}
+          </p>
           <div className="mt-8 grid grid-cols-5 sm:grid-cols-10 gap-1.5">
             {results.map((r, i) => (
               <div
                 key={i}
-                title={t('games.covertest.round_tooltip', { defaultValue: 'Manche {{num}}: {{score}} pts', num: i + 1, score: r.score }) + (r.secret ? ` — ${r.secret}` : '')}
+                title={
+                  t('games.covertest.round_tooltip', {
+                    defaultValue: 'Manche {{num}}: {{score}} pts',
+                    num: i + 1,
+                    score: r.score,
+                  }) + (r.secret ? ` — ${r.secret}` : '')
+                }
                 className={`h-8 rounded-md grid place-items-center text-[10px] font-black ${r.won ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/15 text-red-500'}`}
               >
                 {r.score}
@@ -273,7 +374,10 @@ const CovertestPage: React.FC = () => {
             ))}
           </div>
           <div className="flex gap-3 justify-center mt-10">
-            <button onClick={() => navigate('/covertest/')} className="px-8 py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic manga-font tracking-wide shadow-xl transition-all hover:scale-105 active:scale-95">
+            <button
+              onClick={() => navigate('/covertest/')}
+              className="px-8 py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic manga-font tracking-wide shadow-xl transition-all hover:scale-105 active:scale-95"
+            >
               {t('games.covertest.new_session', 'NOUVELLE SESSION')}
             </button>
           </div>
@@ -292,11 +396,25 @@ const CovertestPage: React.FC = () => {
       {/* Session progress */}
       {isSession && (
         <div className="mb-8 flex items-center justify-between gap-4">
-          <span className="text-[11px] font-black uppercase tracking-widest text-gray-400">{t('games.covertest.round_progress', { defaultValue: 'Manche {{round}}/{{total}}', round, total: sessionLength })}</span>
+          <span className="text-[11px] font-black uppercase tracking-widest text-gray-400">
+            {t('games.covertest.round_progress', {
+              defaultValue: 'Manche {{round}}/{{total}}',
+              round,
+              total: sessionLength,
+            })}
+          </span>
           <div className="flex-1 h-2 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
-            <div className="h-full rounded-full bg-yellow-400 transition-all duration-500" style={{ width: `${((round - 1) / sessionLength) * 100}%` }} />
+            <div
+              className="h-full rounded-full bg-yellow-400 transition-all duration-500"
+              style={{ width: `${((round - 1) / sessionLength) * 100}%` }}
+            />
           </div>
-          <span className="text-[11px] font-black uppercase tracking-widest text-yellow-500">{t('games.covertest.points_abbr', { defaultValue: '{{points}} pts', points: totalScore })}</span>
+          <span className="text-[11px] font-black uppercase tracking-widest text-yellow-500">
+            {t('games.covertest.points_abbr', {
+              defaultValue: '{{points}} pts',
+              points: totalScore,
+            })}
+          </span>
         </div>
       )}
 
@@ -324,7 +442,9 @@ const CovertestPage: React.FC = () => {
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="bg-black/50 backdrop-blur-md px-5 py-3 rounded-full border-2 border-white/15 flex items-center gap-2 text-white/80">
                   <ImageIcon className="w-5 h-5" />
-                  <span className="text-xs font-black uppercase tracking-widest">{t('games.covertest.blurred_cover', 'Couverture floutée')}</span>
+                  <span className="text-xs font-black uppercase tracking-widest">
+                    {t('games.covertest.blurred_cover', 'Couverture floutée')}
+                  </span>
                 </div>
               </div>
             )}
@@ -343,7 +463,11 @@ const CovertestPage: React.FC = () => {
               <span
                 key={i}
                 className={`h-2 flex-1 rounded-full transition-colors ${
-                  i < attemptsUsed ? (won && i === winningIdx ? 'bg-green-500' : 'bg-red-500/70') : 'bg-black/10 dark:bg-white/10'
+                  i < attemptsUsed
+                    ? won && i === winningIdx
+                      ? 'bg-green-500'
+                      : 'bg-red-500/70'
+                    : 'bg-black/10 dark:bg-white/10'
                 }`}
               />
             ))}
@@ -356,8 +480,15 @@ const CovertestPage: React.FC = () => {
                   type="text"
                   value={guess}
                   onChange={(e) => onChange(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }}
-                  onFocus={() => { if (suggestions.length) setShowSug(true); }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      submit();
+                    }
+                  }}
+                  onFocus={() => {
+                    if (suggestions.length) setShowSug(true);
+                  }}
                   onBlur={() => setTimeout(() => setShowSug(false), 150)}
                   placeholder={t('games.covertest.guess_placeholder', 'Quel manga est-ce ?')}
                   aria-label={t('games.covertest.guess_aria', 'Titre du manga')}
@@ -371,12 +502,19 @@ const CovertestPage: React.FC = () => {
                       <li key={s.title}>
                         <button
                           type="button"
-                          onMouseDown={(e) => { e.preventDefault(); submit(s.title); }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            submit(s.title);
+                          }}
                           className="w-full text-left px-4 py-3 hover:bg-yellow-400/10 font-bold text-sm transition-colors flex items-center gap-2"
                         >
                           <ChevronRight className="w-3.5 h-3.5 opacity-40 shrink-0" />
                           <span className="truncate">{s.title}</span>
-                          {s.via && <span className="ml-auto shrink-0 max-w-[45%] truncate text-[10px] font-bold italic opacity-50">{s.via}</span>}
+                          {s.via && (
+                            <span className="ml-auto shrink-0 max-w-[45%] truncate text-[10px] font-bold italic opacity-50">
+                              {s.via}
+                            </span>
+                          )}
                         </button>
                       </li>
                     ))}
@@ -386,21 +524,43 @@ const CovertestPage: React.FC = () => {
               <button
                 onClick={() => submit()}
                 disabled={!guessValid || isGuessing}
-                title={guess.trim() && !guessValid ? t('games.covertest.pick_from_list', 'Choisis un manga de la liste') : undefined}
+                title={
+                  guess.trim() && !guessValid
+                    ? t('games.covertest.pick_from_list', 'Choisis un manga de la liste')
+                    : undefined
+                }
                 className="w-full py-4 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic manga-font tracking-wide shadow-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-40 disabled:hover:scale-100 flex items-center justify-center gap-2"
               >
-                <Send className="w-5 h-5" /> {isGuessing ? t('games.covertest.checking', 'VÉRIFICATION…') : t('games.covertest.guess_btn', 'DEVINER')}
+                <Send className="w-5 h-5" />{' '}
+                {isGuessing
+                  ? t('games.covertest.checking', 'VÉRIFICATION…')
+                  : t('games.covertest.guess_btn', 'DEVINER')}
               </button>
               <p className="text-center text-[10px] font-black uppercase tracking-widest opacity-30">
-                {t('games.covertest.attempts_remaining', { defaultValue: '{{count}} essai{{plural}} restant{{plural}} · le flou diminue à chaque essai', count: maxAttempts - attemptsUsed, plural: maxAttempts - attemptsUsed > 1 ? 's' : '' })}
+                {t('games.covertest.attempts_remaining', {
+                  defaultValue:
+                    '{{count}} essai{{plural}} restant{{plural}} · le flou diminue à chaque essai',
+                  count: maxAttempts - attemptsUsed,
+                  plural: maxAttempts - attemptsUsed > 1 ? 's' : '',
+                })}
               </p>
             </div>
           ) : bonusPending ? (
             <div className="p-6 rounded-2xl text-center border-2 bg-green-500/10 border-green-500">
-              <p className="font-black text-2xl italic manga-font text-green-500">{t('games.covertest.found_points', { defaultValue: '🎉 Trouvé ! +{{points}} pts', points: baseScore })}</p>
-              <p className="text-lg font-bold mt-2">{t('games.covertest.it_was', "C'était :")} <span className="text-yellow-500">{gameState.secret_title}</span></p>
+              <p className="font-black text-2xl italic manga-font text-green-500">
+                {t('games.covertest.found_points', {
+                  defaultValue: '🎉 Trouvé ! +{{points}} pts',
+                  points: baseScore,
+                })}
+              </p>
+              <p className="text-lg font-bold mt-2">
+                {t('games.covertest.it_was', "C'était :")}{' '}
+                <span className="text-yellow-500">{gameState.secret_title}</span>
+              </p>
               <div className="mt-5 pt-5 border-t border-white/10 space-y-3 max-w-xs mx-auto text-left">
-                <p className="text-[11px] font-black uppercase tracking-widest text-yellow-500 text-center">{t('games.covertest.bonus_header', 'Bonus (+30 pts chacun)')}</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-yellow-500 text-center">
+                  {t('games.covertest.bonus_header', 'Bonus (+30 pts chacun)')}
+                </p>
                 {volumeOn && (
                   <input
                     type="number"
@@ -420,19 +580,54 @@ const CovertestPage: React.FC = () => {
                     className="w-full p-3 rounded-xl bg-black/[0.04] dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
                   />
                 )}
-                <button onClick={validateBonus} className="w-full py-3 rounded-xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic">{t('games.covertest.validate_bonus', 'VALIDER LE BONUS')}</button>
+                <button
+                  onClick={validateBonus}
+                  className="w-full py-3 rounded-xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic"
+                >
+                  {t('games.covertest.validate_bonus', 'VALIDER LE BONUS')}
+                </button>
               </div>
             </div>
           ) : (
-            <div className={`p-6 rounded-2xl text-center border-2 ${won ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
-              <p className={`font-black text-2xl italic manga-font ${won ? 'text-green-500' : 'text-red-500'}`}>
-                {won ? t('games.covertest.found_points', { defaultValue: '🎉 Trouvé ! +{{points}} pts', points: roundScore }) : t('games.covertest.missed', '😵 Raté !')}
+            <div
+              className={`p-6 rounded-2xl text-center border-2 ${won ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}
+            >
+              <p
+                className={`font-black text-2xl italic manga-font ${won ? 'text-green-500' : 'text-red-500'}`}
+              >
+                {won
+                  ? t('games.covertest.found_points', {
+                      defaultValue: '🎉 Trouvé ! +{{points}} pts',
+                      points: roundScore,
+                    })
+                  : t('games.covertest.missed', '😵 Raté !')}
               </p>
-              <p className="text-lg font-bold mt-2">{t('games.covertest.it_was', "C'était :")} <span className="text-yellow-500">{gameState.secret_title}</span></p>
+              <p className="text-lg font-bold mt-2">
+                {t('games.covertest.it_was', "C'était :")}{' '}
+                <span className="text-yellow-500">{gameState.secret_title}</span>
+              </p>
               {bonusActive && bonusDone && (
                 <div className="mt-2 space-y-1 text-sm font-black uppercase tracking-wide">
-                  {volumeOn && <p className={volumeCorrect ? 'text-green-500' : 'text-red-400'}>{volumeCorrect ? t('games.covertest.volume_correct', 'Bon tome ! +30') : t('games.covertest.volume_answer', { defaultValue: 'Tome : n°{{volume}}', volume: gameState.volume })}</p>}
-                  {authorOn && <p className={authorCorrect ? 'text-green-500' : 'text-red-400'}>{authorCorrect ? t('games.covertest.author_correct', 'Bon mangaka ! +30') : t('games.covertest.author_answer', { defaultValue: 'Mangaka : {{author}}', author: gameState.author })}</p>}
+                  {volumeOn && (
+                    <p className={volumeCorrect ? 'text-green-500' : 'text-red-400'}>
+                      {volumeCorrect
+                        ? t('games.covertest.volume_correct', 'Bon tome ! +30')
+                        : t('games.covertest.volume_answer', {
+                            defaultValue: 'Tome : n°{{volume}}',
+                            volume: gameState.volume,
+                          })}
+                    </p>
+                  )}
+                  {authorOn && (
+                    <p className={authorCorrect ? 'text-green-500' : 'text-red-400'}>
+                      {authorCorrect
+                        ? t('games.covertest.author_correct', 'Bon mangaka ! +30')
+                        : t('games.covertest.author_answer', {
+                            defaultValue: 'Mangaka : {{author}}',
+                            author: gameState.author,
+                          })}
+                    </p>
+                  )}
                 </div>
               )}
               <button
@@ -440,24 +635,51 @@ const CovertestPage: React.FC = () => {
                 disabled={advancing}
                 className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic manga-font tracking-wide shadow-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-60"
               >
-                {isSession
-                  ? (<>{lastRound ? t('games.covertest.see_result', 'Voir le résultat') : t('games.covertest.next_round', 'Manche suivante')} <ArrowRight className="w-5 h-5" /></>)
-                  : (<><RotateCcw className="w-5 h-5" /> {t('games.covertest.replay', 'Rejouer')}</>)}
+                {isSession ? (
+                  <>
+                    {lastRound
+                      ? t('games.covertest.see_result', 'Voir le résultat')
+                      : t('games.covertest.next_round', 'Manche suivante')}{' '}
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="w-5 h-5" /> {t('games.covertest.replay', 'Rejouer')}
+                  </>
+                )}
               </button>
             </div>
           )}
 
           {/* Journal */}
           <div className="mt-10 space-y-3">
-            <h4 className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] mb-2">{t('games.covertest.attempts_log', 'Journal des tentatives')}</h4>
-            {guesses.length === 0 && <p className="text-center py-6 opacity-20 italic text-sm">{t('games.covertest.no_attempts', 'Aucune tentative pour le moment.')}</p>}
+            <h4 className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] mb-2">
+              {t('games.covertest.attempts_log', 'Journal des tentatives')}
+            </h4>
+            {guesses.length === 0 && (
+              <p className="text-center py-6 opacity-20 italic text-sm">
+                {t('games.covertest.no_attempts', 'Aucune tentative pour le moment.')}
+              </p>
+            )}
             {guesses.map((g, i) => (
-              <div key={i} className={`flex items-center gap-3 p-3 rounded-2xl border-l-4 ${g.is_correct ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
-                {g.image
-                  ? <img src={g.image} alt="" className="w-9 h-12 object-cover rounded-lg shrink-0" loading="lazy" />
-                  : <span className="w-9 h-12 rounded-lg bg-black/10 dark:bg-white/10 shrink-0" />}
+              <div
+                key={i}
+                className={`flex items-center gap-3 p-3 rounded-2xl border-l-4 ${g.is_correct ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}
+              >
+                {g.image ? (
+                  <img
+                    src={g.image}
+                    alt=""
+                    className="w-9 h-12 object-cover rounded-lg shrink-0"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="w-9 h-12 rounded-lg bg-black/10 dark:bg-white/10 shrink-0" />
+                )}
                 <span className="font-bold flex-grow truncate">{g.title}</span>
-                <span className={`shrink-0 grid place-items-center w-7 h-7 rounded-full ${g.is_correct ? 'bg-green-500' : 'bg-red-500'} text-white`}>
+                <span
+                  className={`shrink-0 grid place-items-center w-7 h-7 rounded-full ${g.is_correct ? 'bg-green-500' : 'bg-red-500'} text-white`}
+                >
                   {g.is_correct ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                 </span>
               </div>
