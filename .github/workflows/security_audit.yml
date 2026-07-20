@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [ main ]
     paths:
+      # Code paths too: a Bandit regression in application code (or a Dockerfile
+      # smell) must fail the PR, not sit until the nightly cron up to 24h later.
+      - 'backend/**'
+      - 'deploy/**'
       - 'requirements.txt'
       - 'frontend/package-lock.json'
       - '.github/workflows/security_audit.yml'
@@ -18,28 +22,17 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - name: Free Disk Space
-      uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
-      with:
-        tool-cache: false
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: true
-        docker-images: true
-        swap-storage: true
+    # No "Free Disk Space" step: it only existed to make room for the torch +
+    # requirements install, which bandit (static) doesn't need — see below.
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-        cache: 'pip'
 
-    - name: Install Python dependencies
-      run: |
-        pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-        pip install --no-cache-dir -r requirements.txt
-
+    # Bandit is static AST analysis — it never imports the project, so the app's
+    # dependencies (torch + requirements, ~5 min) are NOT installed here. This
+    # keeps the job cheap enough to run on every backend PR (see paths above).
     - name: Static Analysis (Bandit)
       run: |
         pip install bandit

@@ -18,6 +18,10 @@ on:
         description: 'Deploy brain to prod (animetix-brain) after the checks pass'
         type: boolean
         default: false # opt-in: a brain deploy must be ticked explicitly
+      run_perf:
+        description: 'Run the RAG performance benchmark (calls billed Gemini/OpenAI)'
+        type: boolean
+        default: false # opt-in: don't bill LLM APIs on a plain dispatch
 
 # Cancel superseded runs on the same ref (e.g. rapid PR pushes) to stop redundant
 # work piling up. The event_name is part of the group so a push to main never
@@ -292,11 +296,14 @@ jobs:
   perf-test:
     name: RAG Performance Test
     needs: test
-    # Calls REAL Gemini/OpenAI APIs (cost + flakiness): only runs on manual
-    # workflow_dispatch runs. The prod deploy is dispatch-only, so its
-    # perf-test gate is preserved unchanged; push/PR runs skip this job (and
-    # deploy-to-prod skips with it, which it already did via its own `if`).
-    if: github.event_name == 'workflow_dispatch'
+    # Calls REAL Gemini/OpenAI APIs (cost + flakiness). Opt-in only: runs when
+    # `run_perf` is ticked OR a web deploy (`deploy_to_prod`) is requested — the
+    # web serves the RAG, so its deploy keeps the accuracy gate. A plain manual
+    # dispatch (checks only) or a brain-only deploy no longer bills the LLM APIs;
+    # `deploy-brain` accordingly dropped this job from its `needs`. push/PR skip.
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.run_perf || inputs.deploy_to_prod)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -525,7 +532,10 @@ jobs:
 
   deploy-brain-to-prod:
     name: Deploy Brain to Production
-    needs: [lint, test, integration-test, perf-test, frontend-checks, frontend-test]
+    # No perf-test in needs: the RAG accuracy benchmark gates the web (which
+    # serves the RAG), not a brain image swap — so a brain deploy no longer runs
+    # (nor bills) it. The web deploy keeps perf-test in its own `needs`.
+    needs: [lint, test, integration-test, frontend-checks, frontend-test]
     # Manual trigger only, from main, with the deploy_brain box explicitly ticked.
     # Independent of deploy_to_prod: you can deploy the brain without the web and
     # vice versa. The brain was previously undeployable from CI because
