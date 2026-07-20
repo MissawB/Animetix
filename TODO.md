@@ -34,10 +34,6 @@ _Aucun item ouvert._
   - Fait : perf-test gaté (`run_perf`/`deploy_to_prod`), bandit/hadolint sur PR `backend`/`deploy`, hygiène versions (setup-python v5, codecov v5).
   - **Reste (action GitHub, hors repo)** : `test-windows` est déjà bloquant mais pas un *required check* — l'inscrire via Settings→Branches pour qu'il gate réellement les merges.
 
-- [ ] **Deploy — tags `:latest` mutables + `.dockerignore` incomplet** _(audit dette 2026-07-19)_
-  - Preuve : `cloudbuild.yaml:4` (`_TAG: latest`) → rollback impossible par tag ; `.dockerignore` n'exclut pas `tests/`, `docs/`, `dev/`, `coverage.xml` (1,2 Mo) alors que `deploy/Dockerfile:80` fait `COPY . .`.
-  - Fix : builder/déployer par `:${SHORT_SHA}` ; compléter `.dockerignore` (aligné `.gcloudignore`).
-
 ## 🟢 Faibles
 
 - [ ] **Vrac audit 2026-07-19 (traitable en une passe)** _(audit dette 2026-07-19)_
