@@ -30,9 +30,10 @@ jobs:
         swap-storage: true
 
     - name: Set up Python
-      uses: actions/setup-python@v4 # Changed to v4 as v5 might not be available or stable in all runners yet
+      uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+        cache: 'pip'
 
     - name: Install Python dependencies
       run: |
