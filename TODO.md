@@ -38,10 +38,6 @@ _Aucun item ouvert._
   - Preuve : `VsBattlePage` (651), `ClassicGamePage` (608), `LoreWorldMapPage` (604), `SeiyuuDiscoveryPage` (531), `PowerStationPage` (523), `TreeOfThoughtsPage` (509), `ProfilePage` (506), `ClusterHealthPanel` (500). Seuils vitest bas (38 % stmts, `vite.config.ts:149-154`), ~114 pages sans test.
   - Fix : poursuivre le découpage (pattern PR #93-96) + test de rendu pour `VsBattlePage`, ratcheter les seuils.
 
-- [ ] **API — `schema.yaml` figé au 2026-07-07, types front potentiellement désynchronisés** _(audit dette 2026-07-19)_
-  - Preuve : dernier commit du schéma 2026-07-07 alors que l'API a été décomposée/étendue depuis (HISTORY 2026-07-10, pricing 2026-07-19) ; consommé par `generate:api` (openapi-typescript).
-  - Fix : régénérer + ajouter un check CI (drift `spectacular` vs fichier commité).
-
 - [ ] **CI — coût/couverture : job Windows non-bloquant, perf-test facturé, bandit hors PR** _(audit dette 2026-07-19)_
   - Preuve : `test-windows` (~33 min, `ci.yml:154-196`) rejoue toute la suite sans gater les merges ; `perf-test` (`ci.yml:273-321`) appelle Gemini/OpenAI à CHAQUE `workflow_dispatch` (même un simple deploy brain) ; bandit/hadolint ne tournent sur PR que si requirements/lock changent (`security_audit.yml:7-12`).
   - Fix : required-check ou filtrage OS-sensible pour Windows ; input dédié `run_perf` ; déclencher bandit sur les PR touchant `backend/`/`deploy/`.

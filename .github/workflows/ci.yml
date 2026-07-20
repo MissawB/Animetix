@@ -150,6 +150,25 @@ jobs:
         files: ./coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: false
+    - name: Check OpenAPI schema is up to date
+      # The committed schema.yaml is the source of truth for the frontend types
+      # (frontend/src/types/api.d.ts, via `npm run generate:api`). A serializer or
+      # route change that isn't re-exported leaves the front typed against a stale
+      # contract. Regenerate here and fail if it drifts — the schema is
+      # deterministic (fixed VERSION, no timestamps), so any diff is real. Runs
+      # without SENTRY_DSN, so Django boots without pulling the torch/langchain
+      # stack. `git diff` honours .gitattributes, so pure line-ending differences
+      # never trip it.
+      env:
+        DATABASE_URL: 'sqlite:///:memory:'
+        DJANGO_SECRET_KEY: test-secret-key
+        DJANGO_DEBUG: "True"
+      run: |
+        python backend/api/manage.py spectacular --file schema.yaml
+        git diff --exit-code schema.yaml || {
+          echo "::error::schema.yaml is stale. Run 'python scripts/sync_api.py' and commit schema.yaml + frontend/src/types/api.d.ts."
+          exit 1
+        }
 
   test-windows:
     name: Run Unit Tests (Windows)
