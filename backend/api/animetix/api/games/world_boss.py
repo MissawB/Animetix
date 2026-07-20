@@ -33,6 +33,7 @@ from animetix.api.throttles import CpuGameThrottle
 from ...containers import Container
 from ...models import BossParticipation, GlobalBoss, Profile
 from ...serializers import BossParticipationSerializer, GlobalBossSerializer
+from .base import CpuGameAPIView
 
 logger = logging.getLogger("animetix.worldboss")
 
@@ -176,10 +177,7 @@ def _question_payload(participation: BossParticipation) -> dict:
     }
 
 
-class ActiveWorldBossView(views.APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [CpuGameThrottle]
-
+class ActiveWorldBossView(CpuGameAPIView):
     def get(self, request):
         boss = _active_boss()
         if not boss:
@@ -398,10 +396,7 @@ class WorldBossAnswerView(views.APIView):
         )
 
 
-class WorldBossLeaderboardView(views.APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [CpuGameThrottle]
-
+class WorldBossLeaderboardView(CpuGameAPIView):
     def get(self, request):
         boss_id = request.query_params.get("boss_id")
         if boss_id:

@@ -1,9 +1,7 @@
 from django.core.cache import cache
-from rest_framework import permissions
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from animetix.api.throttles import CpuGameThrottle
+from .base import CpuGameAPIView
 
 __all__ = ["UndercoverPublicRoomsView"]
 
@@ -11,7 +9,7 @@ __all__ = ["UndercoverPublicRoomsView"]
 INDEX_KEY = "undercover_room_index"
 
 
-class UndercoverPublicRoomsView(APIView):
+class UndercoverPublicRoomsView(CpuGameAPIView):
     """Lists the currently-open *public* Undercover rooms so players can browse and
     join them. Private rooms stay hidden (reachable only by code/URL).
 
@@ -19,11 +17,6 @@ class UndercoverPublicRoomsView(APIView):
     anon day cap). The cache can't enumerate keys, so the consumer keeps an index
     of room codes; we resolve each to its live room here and prune dead ones.
     """
-
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     def get(self, request):
         codes = cache.get(INDEX_KEY) or []

@@ -13,15 +13,14 @@ import random
 
 from animetix_project.logging_config import get_logger
 from dependency_injector.wiring import Provide, inject
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
-from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
 from ...models import GameplaySession
+from .base import CpuGameAPIView
 
 logger = get_logger("animetix." + __name__)
 
@@ -36,12 +35,7 @@ def _title(item):
     return item.get("title") or item.get("name") or "?"
 
 
-class QuiEstCeStartView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class QuiEstCeStartView(CpuGameAPIView):
     @inject
     def post(
         self,
@@ -130,12 +124,7 @@ class QuiEstCeStartView(APIView):
         )
 
 
-class QuiEstCeAskView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class QuiEstCeAskView(CpuGameAPIView):
     @inject
     def post(
         self,
@@ -208,12 +197,7 @@ class QuiEstCeAskView(APIView):
         )
 
 
-class QuiEstCeGuessView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class QuiEstCeGuessView(CpuGameAPIView):
     @inject
     def post(
         self,

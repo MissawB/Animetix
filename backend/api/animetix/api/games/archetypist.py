@@ -9,10 +9,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
-from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
 from ...models import CreativeFusion
+from .base import CpuGameAPIView
 
 logger = get_logger("animetix." + __name__)
 
@@ -162,12 +162,7 @@ class ArchetypistStartFusionView(APIView):
         )
 
 
-class ArchetypistTaskStatusView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class ArchetypistTaskStatusView(CpuGameAPIView):
     def get(self, request):
         task_id = request.query_params.get("task_id")
         fusion_id = request.query_params.get("fusion_id")

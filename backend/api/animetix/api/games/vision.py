@@ -9,23 +9,18 @@ from rest_framework.views import APIView
 
 from animetix.api.billing import deduct_berrix
 from animetix.api.dependencies import get_session_service
-from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
 from ...forms import VisionQuestForm
 from ...models import GameplaySession
+from .base import CpuGameAPIView
 
 logger = get_logger("animetix." + __name__)
 
 # --- VISION QUEST ---
 
 
-class VisionGameStateView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class VisionGameStateView(CpuGameAPIView):
     @inject
     def get(self, request, vision_quest_service=Provide[Container.core.vision_service]):
         session_service = get_session_service(request)
@@ -49,12 +44,7 @@ class VisionGameStateView(APIView):
         )
 
 
-class VisionGameStartView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class VisionGameStartView(CpuGameAPIView):
     @inject
     def post(
         self,

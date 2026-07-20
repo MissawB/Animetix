@@ -2,15 +2,14 @@ import unicodedata
 
 from animetix_project.logging_config import get_logger
 from dependency_injector.wiring import Provide, inject
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
-from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
 from ...models import GameplaySession
+from .base import CpuGameAPIView
 
 logger = get_logger("animetix." + __name__)
 
@@ -82,12 +81,7 @@ def _start_game(port, catalog_service, emoji_service, media_type, difficulty="No
     return secret, media_type
 
 
-class EmojiGameStateView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class EmojiGameStateView(CpuGameAPIView):
     @inject
     def get(
         self,
@@ -128,12 +122,7 @@ class EmojiGameStateView(APIView):
         )
 
 
-class EmojiGameStartView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class EmojiGameStartView(CpuGameAPIView):
     @inject
     def post(
         self,
@@ -171,12 +160,7 @@ class EmojiGameStartView(APIView):
         )
 
 
-class EmojiGameGuessView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class EmojiGameGuessView(CpuGameAPIView):
     @inject
     def post(
         self,
@@ -280,16 +264,11 @@ class EmojiGameGuessView(APIView):
         )
 
 
-class EmojiGameGiveUpView(APIView):
+class EmojiGameGiveUpView(CpuGameAPIView):
     """Abandon the current game: reveal the answer and record a loss.
 
     CPU game → AllowAny + throttle-exempt. No win credited.
     """
-
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     def post(self, request):
         port = get_session_service(request).port
@@ -325,7 +304,7 @@ class EmojiGameGiveUpView(APIView):
         )
 
 
-class EmojiGameSuggestView(APIView):
+class EmojiGameSuggestView(CpuGameAPIView):
     """Rich autocomplete for the guess box.
 
     Suggestions are drawn from the SAME catalog the game validates against, so
@@ -333,10 +312,6 @@ class EmojiGameSuggestView(APIView):
     and the cover image. CPU only → AllowAny + throttle-exempt.
     """
 
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
     MAX_SUGGESTIONS = 8
 
     @inject

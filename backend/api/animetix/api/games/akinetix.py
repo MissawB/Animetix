@@ -2,15 +2,14 @@ from animetix_project.logging_config import get_logger  # noqa: E402
 from dependency_injector.wiring import Provide, inject
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service  # noqa: E402
-from animetix.api.throttles import CpuGameThrottle  # noqa: E402
 
 from ...containers import Container  # noqa: E402
 from ...models import GameplaySession  # noqa: E402
+from .base import CpuGameAPIView
 
 logger = get_logger("animetix." + __name__)
 
@@ -25,12 +24,7 @@ from ...serializers import (  # noqa: E402
 # --- AKINETIX MODE ---
 
 
-class AkinetixGameStateView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class AkinetixGameStateView(CpuGameAPIView):
     @inject
     def get(self, request, akinetix_service=Provide[Container.core.akinetix_service]):
         session_service = get_session_service(request)
@@ -60,12 +54,7 @@ class AkinetixGameStateView(APIView):
 @method_decorator(
     ratelimit(key="user_or_ip", rate="60/m", method="POST", block=True), name="post"
 )
-class AkinetixGameStartView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class AkinetixGameStartView(CpuGameAPIView):
     @inject
     def post(
         self,
@@ -127,12 +116,7 @@ class AkinetixGameStartView(APIView):
 @method_decorator(
     ratelimit(key="user_or_ip", rate="60/m", method="POST", block=True), name="post"
 )
-class AkinetixGameAnswerView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class AkinetixGameAnswerView(CpuGameAPIView):
     @inject
     def post(
         self,
@@ -193,12 +177,7 @@ class AkinetixGameAnswerView(APIView):
 @method_decorator(
     ratelimit(key="user", rate="2/m", method="POST", block=True), name="dispatch"
 )
-class AkinetixGameConfirmView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class AkinetixGameConfirmView(CpuGameAPIView):
     @inject
     def post(self, request, akinetix_service=Provide[Container.core.akinetix_service]):
         session_service = get_session_service(request)

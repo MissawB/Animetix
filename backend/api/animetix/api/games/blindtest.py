@@ -2,15 +2,14 @@ import datetime
 
 from animetix_project.logging_config import get_logger
 from dependency_injector.wiring import Provide, inject
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
-from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
 from ...models import GameplaySession
+from .base import CpuGameAPIView
 
 logger = get_logger("animetix.games.blindtest")
 
@@ -34,13 +33,8 @@ def _secret_image(catalog_service, secret: str) -> str | None:
         return None
 
 
-class BlindtestTitlesView(APIView):
+class BlindtestTitlesView(CpuGameAPIView):
     """Anime titles for the guess autocomplete (same catalog used to validate)."""
-
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def get(self, request, catalog_service=Provide[Container.core.catalog_service]):
@@ -49,12 +43,7 @@ class BlindtestTitlesView(APIView):
         return Response({"titles": titles})
 
 
-class BlindtestGameStateView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class BlindtestGameStateView(CpuGameAPIView):
     @inject
     def get(
         self,
@@ -96,12 +85,7 @@ class BlindtestGameStateView(APIView):
         )
 
 
-class BlindtestGameStartView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class BlindtestGameStartView(CpuGameAPIView):
     @inject
     def post(
         self,
@@ -166,12 +150,7 @@ class BlindtestGameStartView(APIView):
         )
 
 
-class BlindtestGameGuessView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU game, no Bx: minute-cap only, never the day cap
-
+class BlindtestGameGuessView(CpuGameAPIView):
     @inject
     def post(
         self,

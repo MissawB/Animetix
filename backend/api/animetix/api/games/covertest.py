@@ -3,15 +3,14 @@ import re
 
 from animetix_project.logging_config import get_logger
 from dependency_injector.wiring import Provide, inject
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
-from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
 from ...models import GameplaySession
+from .base import CpuGameAPIView
 
 logger = get_logger("animetix." + __name__)
 
@@ -66,17 +65,12 @@ def _aliases_for(item, canonical):
     return out
 
 
-class CovertestTitlesView(APIView):
+class CovertestTitlesView(CpuGameAPIView):
     """Only manga that actually have a cover — the only guessable / valid answers.
 
     Each entry carries its English/native aliases so players can search a manga
     by its Japanese (romaji) name OR its English name.
     """
-
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU quiz, no Bx/GPU: minute-cap only, never the day cap
 
     @inject
     def get(
@@ -105,12 +99,7 @@ class CovertestTitlesView(APIView):
         return Response({"titles": titles})
 
 
-class CovertestGameStateView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU quiz, no Bx/GPU: minute-cap only, never the day cap
-
+class CovertestGameStateView(CpuGameAPIView):
     @inject
     def get(
         self,
@@ -140,12 +129,7 @@ class CovertestGameStateView(APIView):
         return Response(_cover_payload(state))
 
 
-class CovertestGameStartView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU quiz, no Bx/GPU: minute-cap only, never the day cap
-
+class CovertestGameStartView(CpuGameAPIView):
     @inject
     def post(
         self,
@@ -168,13 +152,8 @@ class CovertestGameStartView(APIView):
         return Response(_cover_payload(session_service.get_covertest_state()))
 
 
-class CovertestGameRevealView(APIView):
+class CovertestGameRevealView(CpuGameAPIView):
     """Ends the round and reveals the answer (used on loss / give-up)."""
-
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU quiz, no Bx/GPU: minute-cap only, never the day cap
 
     def post(self, request):
         session_service = get_session_service(request)
@@ -188,12 +167,7 @@ class CovertestGameRevealView(APIView):
         return Response(_cover_payload(state, reveal=True))
 
 
-class CovertestGameGuessView(APIView):
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [
-        CpuGameThrottle
-    ]  # CPU quiz, no Bx/GPU: minute-cap only, never the day cap
-
+class CovertestGameGuessView(CpuGameAPIView):
     @inject
     def post(
         self,
