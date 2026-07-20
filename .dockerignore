@@ -38,3 +38,14 @@ data/raw/
 data/models/
 data/mlops/
 data/audio/
+
+# Code/artefacts jamais utilisés au runtime de l'image web (le Dockerfile fait
+# `COPY . .`) — vérifié : le backend n'importe ni tests/ ni dev/, collectstatic
+# lit frontend/dist (copié du stage 1), schema.yaml ne sert qu'à la génération
+# des types front. Les garder ne ferait que gonfler le contexte et l'image.
+tests/
+docs/
+dev/
+.github/
+coverage.xml
+schema.yaml
