@@ -226,6 +226,9 @@ class MediaItemSerializer(serializers.Serializer):
     studios = serializers.ListField(child=serializers.CharField(), required=False)
     author = serializers.CharField(required=False, allow_null=True)
     related_items = serializers.ListField(child=serializers.DictField(), required=False)
+    streaming_platforms = serializers.ListField(
+        child=serializers.DictField(), required=False
+    )
 
     @staticmethod
     def _media_type(obj):
@@ -262,6 +265,7 @@ class MediaItemSerializer(serializers.Serializer):
                 "studios": manga_metadata.get("studios", []),
                 "author": manga_metadata.get("author", None),
                 "related_items": manga_metadata.get("related_items", []),
+                "streaming_platforms": manga_metadata.get("streaming_platforms") or [],
             }
             instance = mapped_instance
 
@@ -273,6 +277,9 @@ class MediaItemSerializer(serializers.Serializer):
                 **instance,
                 "popularity": int(instance["popularity"].get("favourites") or 0),
             }
+
+        if isinstance(instance, dict) and "streaming_platforms" not in instance:
+            instance = {**instance, "streaming_platforms": []}
 
         ret = super().to_representation(instance)
         # Sécurisation des contenus potentiellement générés par l'IA ou utilisateurs
