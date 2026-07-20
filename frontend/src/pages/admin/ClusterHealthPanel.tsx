@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import {
   Cpu,
   Server,
@@ -18,7 +18,7 @@ import {
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { useTranslation } from 'react-i18next';
-import { apiClient } from '../../utils/apiClient';
+import { useClusterHealth } from '../../features/admin/hooks/useHealth';
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface GpuInfo {
@@ -78,15 +78,55 @@ interface ClusterHealthData {
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 const statusConfig = {
-  online: { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', glow: 'shadow-emerald-500/20', icon: CheckCircle2, label: 'ONLINE' },
-  offline: { color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30', glow: 'shadow-red-500/20', icon: XCircle, label: 'OFFLINE' },
-  unconfigured: { color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', glow: 'shadow-yellow-500/20', icon: AlertTriangle, label: 'N/C' },
-  throttled: { color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', glow: 'shadow-amber-500/20', icon: AlertTriangle, label: 'THROTTLED' },
-  degraded: { color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', glow: 'shadow-yellow-500/20', icon: AlertTriangle, label: 'DEGRADED' },
+  online: {
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500/10',
+    border: 'border-emerald-500/30',
+    glow: 'shadow-emerald-500/20',
+    icon: CheckCircle2,
+    label: 'ONLINE',
+  },
+  offline: {
+    color: 'text-red-400',
+    bg: 'bg-red-500/10',
+    border: 'border-red-500/30',
+    glow: 'shadow-red-500/20',
+    icon: XCircle,
+    label: 'OFFLINE',
+  },
+  unconfigured: {
+    color: 'text-yellow-400',
+    bg: 'bg-yellow-500/10',
+    border: 'border-yellow-500/30',
+    glow: 'shadow-yellow-500/20',
+    icon: AlertTriangle,
+    label: 'N/C',
+  },
+  throttled: {
+    color: 'text-amber-400',
+    bg: 'bg-amber-500/10',
+    border: 'border-amber-500/30',
+    glow: 'shadow-amber-500/20',
+    icon: AlertTriangle,
+    label: 'THROTTLED',
+  },
+  degraded: {
+    color: 'text-yellow-400',
+    bg: 'bg-yellow-500/10',
+    border: 'border-yellow-500/30',
+    glow: 'shadow-yellow-500/20',
+    icon: AlertTriangle,
+    label: 'DEGRADED',
+  },
 };
 
 const globalStatusConfig = {
-  healthy: { color: 'text-emerald-400', bg: 'bg-emerald-500', label: 'HEALTHY', pulse: 'animate-pulse' },
+  healthy: {
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500',
+    label: 'HEALTHY',
+    pulse: 'animate-pulse',
+  },
   degraded: { color: 'text-amber-400', bg: 'bg-amber-500', label: 'DEGRADED', pulse: '' },
   critical: { color: 'text-red-400', bg: 'bg-red-500', label: 'CRITICAL', pulse: '' },
 };
@@ -107,19 +147,34 @@ const nodeTypeAccent = {
 
 // ─── GPU Mini Bar ────────────────────────────────────────────────────
 const GpuMiniBar: React.FC<{ gpu: GpuInfo }> = ({ gpu }) => {
-  const tempColor = gpu.temperature_c > 75 ? 'bg-red-500' : gpu.temperature_c > 55 ? 'bg-amber-500' : 'bg-emerald-500';
-  const utilColor = gpu.utilization_pct > 85 ? 'bg-red-500' : gpu.utilization_pct > 50 ? 'bg-cyan-500' : 'bg-emerald-500';
+  const tempColor =
+    gpu.temperature_c > 75
+      ? 'bg-red-500'
+      : gpu.temperature_c > 55
+        ? 'bg-amber-500'
+        : 'bg-emerald-500';
+  const utilColor =
+    gpu.utilization_pct > 85
+      ? 'bg-red-500'
+      : gpu.utilization_pct > 50
+        ? 'bg-cyan-500'
+        : 'bg-emerald-500';
   const memPct = (gpu.memory_used_gb / gpu.memory_total_gb) * 100;
 
   return (
     <div className="flex items-center gap-3 py-1.5 px-2 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors group">
-      <span className="text-[9px] font-black uppercase opacity-30 w-16 shrink-0 tracking-wider">{gpu.name}</span>
+      <span className="text-[9px] font-black uppercase opacity-30 w-16 shrink-0 tracking-wider">
+        {gpu.name}
+      </span>
 
       {/* Temperature */}
       <div className="flex items-center gap-1.5 w-20">
         <Thermometer className="w-3 h-3 opacity-30" />
         <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-          <div className={`h-full ${tempColor} transition-all duration-700`} style={{ width: `${Math.min(gpu.temperature_c, 100)}%` }} />
+          <div
+            className={`h-full ${tempColor} transition-all duration-700`}
+            style={{ width: `${Math.min(gpu.temperature_c, 100)}%` }}
+          />
         </div>
         <span className="text-[9px] font-bold opacity-40 w-7 text-right">{gpu.temperature_c}°</span>
       </div>
@@ -128,18 +183,28 @@ const GpuMiniBar: React.FC<{ gpu: GpuInfo }> = ({ gpu }) => {
       <div className="flex items-center gap-1.5 w-20">
         <Activity className="w-3 h-3 opacity-30" />
         <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-          <div className={`h-full ${utilColor} transition-all duration-700`} style={{ width: `${gpu.utilization_pct}%` }} />
+          <div
+            className={`h-full ${utilColor} transition-all duration-700`}
+            style={{ width: `${gpu.utilization_pct}%` }}
+          />
         </div>
-        <span className="text-[9px] font-bold opacity-40 w-7 text-right">{gpu.utilization_pct}%</span>
+        <span className="text-[9px] font-bold opacity-40 w-7 text-right">
+          {gpu.utilization_pct}%
+        </span>
       </div>
 
       {/* Memory */}
       <div className="flex items-center gap-1.5 w-24">
         <HardDrive className="w-3 h-3 opacity-30" />
         <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-          <div className="h-full bg-violet-500 transition-all duration-700" style={{ width: `${memPct}%` }} />
+          <div
+            className="h-full bg-violet-500 transition-all duration-700"
+            style={{ width: `${memPct}%` }}
+          />
         </div>
-        <span className="text-[9px] font-bold opacity-40 w-14 text-right">{gpu.memory_used_gb}/{gpu.memory_total_gb}G</span>
+        <span className="text-[9px] font-bold opacity-40 w-14 text-right">
+          {gpu.memory_used_gb}/{gpu.memory_total_gb}G
+        </span>
       </div>
     </div>
   );
@@ -153,7 +218,9 @@ const StatusDot: React.FC<{ status: string; size?: 'sm' | 'md' }> = ({ status, s
     <span className="relative flex items-center">
       <span className={`${sizeClass} rounded-full ${config.bg} ${config.border} border`} />
       {status === 'online' && (
-        <span className={`absolute ${sizeClass} rounded-full bg-emerald-400 animate-ping opacity-30`} />
+        <span
+          className={`absolute ${sizeClass} rounded-full bg-emerald-400 animate-ping opacity-30`}
+        />
       )}
     </span>
   );
@@ -167,9 +234,14 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
   const accentColor = nodeTypeAccent[node.type] || 'text-white';
 
   return (
-    <Card padding="lg" className={`bg-black/40 border-white/5 hover:${config.border} transition-all duration-500 group relative overflow-hidden`}>
+    <Card
+      padding="lg"
+      className={`bg-black/40 border-white/5 hover:${config.border} transition-all duration-500 group relative overflow-hidden`}
+    >
       {/* Ambient glow */}
-      <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full ${config.bg} blur-3xl opacity-30 group-hover:opacity-50 transition-opacity`} />
+      <div
+        className={`absolute -top-20 -right-20 w-40 h-40 rounded-full ${config.bg} blur-3xl opacity-30 group-hover:opacity-50 transition-opacity`}
+      />
 
       {/* Header */}
       <div className="flex justify-between items-start mb-6 relative z-10">
@@ -189,17 +261,29 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
         {node.name}
       </h3>
       <p className="text-[10px] font-bold uppercase opacity-30 tracking-wider mb-6 relative z-10">
-        {node.type === 'gpu' ? 'Compute Cluster' : node.type === 'inference' ? 'LLM Engine' : 'Knowledge Base'}
+        {node.type === 'gpu'
+          ? 'Compute Cluster'
+          : node.type === 'inference'
+            ? 'LLM Engine'
+            : 'Knowledge Base'}
       </p>
 
       {/* Latency */}
       {node.latency_ms !== null && (
         <div className="flex items-center gap-2 mb-4 relative z-10">
           <Clock className="w-3 h-3 opacity-30" />
-          <span className="text-[10px] font-bold uppercase opacity-40">{t('admin.cluster.latency', 'Latence')}</span>
-          <span className={`text-sm font-black ml-auto ${
-            node.latency_ms < 50 ? 'text-emerald-400' : node.latency_ms < 200 ? 'text-amber-400' : 'text-red-400'
-          }`}>
+          <span className="text-[10px] font-bold uppercase opacity-40">
+            {t('admin.cluster.latency', 'Latence')}
+          </span>
+          <span
+            className={`text-sm font-black ml-auto ${
+              node.latency_ms < 50
+                ? 'text-emerald-400'
+                : node.latency_ms < 200
+                  ? 'text-amber-400'
+                  : 'text-red-400'
+            }`}
+          >
             {node.latency_ms}ms
           </span>
         </div>
@@ -211,30 +295,51 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <p className="text-[9px] font-black uppercase opacity-25 mb-1">GPUs</p>
-              <p className="text-2xl font-black italic manga-font text-green-400">{node.details.gpu_count}</p>
+              <p className="text-2xl font-black italic manga-font text-green-400">
+                {node.details.gpu_count}
+              </p>
             </div>
             <div>
               <p className="text-[9px] font-black uppercase opacity-25 mb-1">VRAM Total</p>
-              <p className="text-2xl font-black italic manga-font">{node.details.total_vram_gb}<span className="text-xs opacity-40">GB</span></p>
+              <p className="text-2xl font-black italic manga-font">
+                {node.details.total_vram_gb}
+                <span className="text-xs opacity-40">GB</span>
+              </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 mt-3">
             <div>
-              <p className="text-[9px] font-black uppercase opacity-25 mb-1">{t('admin.cluster.temp_avg', 'Temp Moy.')}</p>
-              <p className={`text-lg font-black ${
-                (node.details.avg_temperature_c ?? 0) > 75 ? 'text-red-400' : (node.details.avg_temperature_c ?? 0) > 55 ? 'text-amber-400' : 'text-emerald-400'
-              }`}>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-1">
+                {t('admin.cluster.temp_avg', 'Temp Moy.')}
+              </p>
+              <p
+                className={`text-lg font-black ${
+                  (node.details.avg_temperature_c ?? 0) > 75
+                    ? 'text-red-400'
+                    : (node.details.avg_temperature_c ?? 0) > 55
+                      ? 'text-amber-400'
+                      : 'text-emerald-400'
+                }`}
+              >
                 {node.details.avg_temperature_c}°C
               </p>
             </div>
             <div>
-              <p className="text-[9px] font-black uppercase opacity-25 mb-1">{t('admin.cluster.util_avg', 'Util. Moy.')}</p>
-              <p className="text-lg font-black text-cyan-400">{node.details.avg_utilization_pct}%</p>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-1">
+                {t('admin.cluster.util_avg', 'Util. Moy.')}
+              </p>
+              <p className="text-lg font-black text-cyan-400">
+                {node.details.avg_utilization_pct}%
+              </p>
             </div>
           </div>
           <div className="pt-3 border-t border-white/5 flex justify-between">
-            <span className="text-[9px] font-bold opacity-25 uppercase">CUDA {node.details.cuda_version}</span>
-            <span className="text-[9px] font-bold opacity-25 uppercase">Driver {node.details.driver_version}</span>
+            <span className="text-[9px] font-bold opacity-25 uppercase">
+              CUDA {node.details.cuda_version}
+            </span>
+            <span className="text-[9px] font-bold opacity-25 uppercase">
+              Driver {node.details.driver_version}
+            </span>
           </div>
         </div>
       )}
@@ -247,15 +352,22 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
           </div>
           {node.details.loaded_models && node.details.loaded_models.length > 0 && (
             <div>
-              <p className="text-[9px] font-black uppercase opacity-25 mb-2">{t('admin.cluster.loaded_models', 'Modèles Chargés')} ({node.details.model_count})</p>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-2">
+                {t('admin.cluster.loaded_models', 'Modèles Chargés')} ({node.details.model_count})
+              </p>
               <div className="flex flex-wrap gap-1">
                 {node.details.loaded_models.slice(0, 6).map((m: string, i: number) => (
-                  <span key={i} className="px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-[9px] font-bold text-cyan-400 uppercase">
+                  <span
+                    key={i}
+                    className="px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-[9px] font-bold text-cyan-400 uppercase"
+                  >
                     {m}
                   </span>
                 ))}
                 {node.details.loaded_models.length > 6 && (
-                  <span className="px-2 py-0.5 text-[9px] font-bold opacity-30">+{node.details.loaded_models.length - 6}</span>
+                  <span className="px-2 py-0.5 text-[9px] font-bold opacity-30">
+                    +{node.details.loaded_models.length - 6}
+                  </span>
                 )}
               </div>
             </div>
@@ -263,7 +375,9 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
           {node.details.error && (
             <div className="flex items-center gap-2 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
               <AlertTriangle className="w-3 h-3 text-red-400 shrink-0" />
-              <span className="text-[9px] font-bold text-red-400 uppercase break-all">{node.details.error}</span>
+              <span className="text-[9px] font-bold text-red-400 uppercase break-all">
+                {node.details.error}
+              </span>
             </div>
           )}
         </div>
@@ -293,7 +407,9 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
           {node.details.error && (
             <div className="flex items-center gap-2 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
               <AlertTriangle className="w-3 h-3 text-red-400 shrink-0" />
-              <span className="text-[9px] font-bold text-red-400 uppercase break-all">{node.details.error}</span>
+              <span className="text-[9px] font-bold text-red-400 uppercase break-all">
+                {node.details.error}
+              </span>
             </div>
           )}
         </div>
@@ -303,16 +419,22 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
         <div className="space-y-3 relative z-10">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="text-[9px] font-black uppercase opacity-25 mb-1">{t('admin.cluster.queue_length', "File d'attente")}</p>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-1">
+                {t('admin.cluster.queue_length', "File d'attente")}
+              </p>
               <p className="text-2xl font-black italic manga-font text-pink-400">
                 {node.details.queue_length || 0}
               </p>
             </div>
             <div>
-              <p className="text-[9px] font-black uppercase opacity-25 mb-1">{t('admin.cluster.worker_status', 'Statut Worker')}</p>
-              <p className={`text-sm font-black uppercase ${
-                node.details.worker_status === 'active' ? 'text-pink-300' : 'text-emerald-400'
-              }`}>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-1">
+                {t('admin.cluster.worker_status', 'Statut Worker')}
+              </p>
+              <p
+                className={`text-sm font-black uppercase ${
+                  node.details.worker_status === 'active' ? 'text-pink-300' : 'text-emerald-400'
+                }`}
+              >
                 {node.details.worker_status || 'idle'}
               </p>
             </div>
@@ -326,11 +448,20 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
             </div>
           )}
           <div className="pt-3 border-t border-white/5 flex justify-between items-center">
-            <span className="text-[9px] font-bold opacity-25 uppercase">{t('admin.cluster.api_fallback', 'Repli API')}</span>
-            <Badge variant="neutral" className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
-              node.details.fallback_mode === 'active' ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
-            }`}>
-              {node.details.fallback_mode === 'active' ? t('admin.cluster.fallback_active', 'ACTIF (Budget Dépassé)') : 'NOMINAL'}
+            <span className="text-[9px] font-bold opacity-25 uppercase">
+              {t('admin.cluster.api_fallback', 'Repli API')}
+            </span>
+            <Badge
+              variant="neutral"
+              className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
+                node.details.fallback_mode === 'active'
+                  ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+                  : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+              }`}
+            >
+              {node.details.fallback_mode === 'active'
+                ? t('admin.cluster.fallback_active', 'ACTIF (Budget Dépassé)')
+                : 'NOMINAL'}
             </Badge>
           </div>
         </div>
@@ -342,44 +473,15 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
 // ─── Main Component ──────────────────────────────────────────────────
 const ClusterHealthPanel: React.FC = () => {
   const { t } = useTranslation();
-  const [data, setData] = useState<ClusterHealthData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const fetchHealth = useCallback(async () => {
-    try {
-      const result = await apiClient('/api/monitoring/cluster-health/', { skipToast: true });
-      setData(result);
-      setError(null);
-      setLastRefresh(new Date());
-    } catch (err) {
-      const e = err as Error;
-      setError(e.message || 'Failed to fetch cluster health');
-    } finally {
-      setLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  const refresh = useCallback(() => {
-    setIsRefreshing(true);
-    void fetchHealth();
-  }, [fetchHealth]);
-
-  useEffect(() => {
-    // Kick off the initial fetch in a microtask so the effect body does not
-    // synchronously reach setState (avoids cascading renders). The interval
-    // then drives subsequent auto-refreshes (every 15s).
-    queueMicrotask(() => {
-      void fetchHealth();
-    });
-    const interval = setInterval(() => {
-      void fetchHealth();
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [fetchHealth]);
+  // react-query gère le polling (15s), le cache, la dédup et le retry — voir
+  // useClusterHealth (remplace un setInterval + 5 useState maison).
+  const query = useClusterHealth();
+  const data = (query.data as ClusterHealthData | undefined) ?? null;
+  const loading = query.isPending;
+  const error = query.error ? (query.error as Error).message : null;
+  const lastRefresh = query.dataUpdatedAt ? new Date(query.dataUpdatedAt) : null;
+  const isRefreshing = query.isFetching;
+  const refresh = () => void query.refetch();
 
   if (loading && !data) {
     return (
@@ -389,7 +491,7 @@ const ClusterHealthPanel: React.FC = () => {
           <div className="h-8 w-64 bg-white/5 rounded-lg animate-pulse" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="h-72 bg-white/[0.02] rounded-2xl animate-pulse" />
           ))}
         </div>
@@ -403,11 +505,14 @@ const ClusterHealthPanel: React.FC = () => {
         <div className="flex items-center gap-4">
           <WifiOff className="w-8 h-8 text-red-400" />
           <div>
-            <h3 className="text-lg font-black italic manga-font uppercase text-red-400">Cluster Unreachable</h3>
+            <h3 className="text-lg font-black italic manga-font uppercase text-red-400">
+              Cluster Unreachable
+            </h3>
             <p className="text-[10px] font-bold uppercase opacity-40 mt-1">{error}</p>
           </div>
           <button
             onClick={refresh}
+            aria-label={t('admin.cluster.refresh', 'Rafraîchir')}
             className="ml-auto p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all"
           >
             <RefreshCw className="w-4 h-4 text-red-400" />
@@ -418,7 +523,7 @@ const ClusterHealthPanel: React.FC = () => {
   }
 
   const gStatus = data ? globalStatusConfig[data.global_status] : globalStatusConfig.critical;
-  const gpuNode = data?.nodes.find(n => n.type === 'gpu');
+  const gpuNode = data?.nodes.find((n) => n.type === 'gpu');
 
   return (
     <div className="space-y-8" id="cluster-health-panel">
@@ -436,11 +541,15 @@ const ClusterHealthPanel: React.FC = () => {
               Cluster <span className={gStatus.color}>Status</span>
             </h2>
             <p className="text-[10px] font-bold uppercase opacity-30 tracking-widest mt-0.5">
-              {t('admin.cluster.status_summary', '{{online}}/{{total}} systèmes opérationnels • {{percentage}}% disponibilité', {
-                online: data?.online_count,
-                total: data?.total_count,
-                percentage: data?.health_percentage
-              })}
+              {t(
+                'admin.cluster.status_summary',
+                '{{online}}/{{total}} systèmes opérationnels • {{percentage}}% disponibilité',
+                {
+                  online: data?.online_count,
+                  total: data?.total_count,
+                  percentage: data?.health_percentage,
+                },
+              )}
             </p>
           </div>
         </div>
@@ -468,7 +577,7 @@ const ClusterHealthPanel: React.FC = () => {
 
       {/* ── Node Cards Grid ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {data?.nodes.map(node => (
+        {data?.nodes.map((node) => (
           <NodeCard key={node.id} node={node} />
         ))}
       </div>
@@ -481,13 +590,19 @@ const ClusterHealthPanel: React.FC = () => {
               <Cpu className="w-4 h-4 text-green-400" /> GPU Instance Detail
             </h3>
             <div className="flex items-center gap-4 text-[9px] font-bold uppercase opacity-25 tracking-wider">
-              <span className="flex items-center gap-1"><Thermometer className="w-3 h-3" /> Temp</span>
-              <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> Util</span>
-              <span className="flex items-center gap-1"><HardDrive className="w-3 h-3" /> VRAM</span>
+              <span className="flex items-center gap-1">
+                <Thermometer className="w-3 h-3" /> Temp
+              </span>
+              <span className="flex items-center gap-1">
+                <Activity className="w-3 h-3" /> Util
+              </span>
+              <span className="flex items-center gap-1">
+                <HardDrive className="w-3 h-3" /> VRAM
+              </span>
             </div>
           </div>
           <div className="space-y-0.5">
-            {gpuNode.gpus.map(gpu => (
+            {gpuNode.gpus.map((gpu) => (
               <GpuMiniBar key={gpu.id} gpu={gpu} />
             ))}
           </div>

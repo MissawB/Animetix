@@ -1,9 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
-  ArrowLeft, BookOpen, Compass, Loader2, Folder, 
-  Search, SlidersHorizontal, Trash2, CheckCircle2, Bookmark, BookmarkCheck
+import { useQuery, useMutation } from '@tanstack/react-query';
+import {
+  ArrowLeft,
+  BookOpen,
+  Compass,
+  Loader2,
+  Folder,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+  CheckCircle2,
+  Bookmark,
+  BookmarkCheck,
+  WifiOff,
 } from 'lucide-react';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { FavoriteManga } from '../../types';
@@ -12,47 +23,42 @@ import { apiClient } from '../../utils/apiClient';
 export const MangaLibraryPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  
-  const [favorites, setFavorites] = useState<FavoriteManga[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'all' | 'reading' | 'plan_to_read' | 'completed'>('all');
+
+  const [activeTab, setActiveTab] = useState<'all' | 'reading' | 'plan_to_read' | 'completed'>(
+    'all',
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'title' | 'unread' | 'date_added'>('title');
 
-  const fetchFavorites = async () => {
-    try {
-      // skipToast: favorites loading is best-effort (e.g. unauthenticated users).
-      const data = await apiClient('/api/v1/media/favorites/', { skipToast: true });
-      setFavorites(data);
-    } catch {
-      // keep the current list on failure
-    } finally {
-      setLoading(false);
-    }
-  };
+  // react-query gère cache/dédup/retry. skipToast: le chargement est
+  // best-effort (anonymes) — on affiche un état d'erreur inline plutôt qu'un
+  // toast, mais on ne masque plus l'échec derrière une "bibliothèque vide".
+  const {
+    data: favorites = [],
+    isPending: loading,
+    isError,
+    refetch,
+  } = useQuery<FavoriteManga[]>({
+    queryKey: ['manga-favorites'],
+    queryFn: () => apiClient('/api/v1/media/favorites/', { skipToast: true }),
+  });
 
-  useEffect(() => {
-    // Legitimate on-mount data load; setState occurs in the async callback.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchFavorites();
-  }, []);
-
-  const handleUpdateStatus = async (mediaId: string, status: string | null) => {
-    try {
-      // apiClient injects the CSRF token + Firebase auth header.
-      await apiClient(`/api/v1/media/Manga/${mediaId}/favorite/`, {
+  // apiClient (sans skipToast) surface l'échec de la mutation via un toast.
+  const updateStatus = useMutation({
+    mutationFn: ({ mediaId, status }: { mediaId: string; status: string | null }) =>
+      apiClient(`/api/v1/media/Manga/${mediaId}/favorite/`, {
         method: 'POST',
         body: status ? JSON.stringify({ status }) : undefined,
-      });
-      await fetchFavorites();
-    } catch {
-      // toast already surfaced by apiClient
-    }
-  };
+      }),
+    onSuccess: () => refetch(),
+  });
+
+  const handleUpdateStatus = (mediaId: string, status: string | null) =>
+    updateStatus.mutate({ mediaId, status });
 
   const getCount = (tab: 'all' | 'reading' | 'plan_to_read' | 'completed') => {
     if (tab === 'all') return favorites.length;
-    return favorites.filter(f => f.status === tab).length;
+    return favorites.filter((f) => f.status === tab).length;
   };
 
   const getStatusIcon = (status: 'reading' | 'plan_to_read' | 'completed') => {
@@ -78,7 +84,7 @@ export const MangaLibraryPage: React.FC = () => {
   };
 
   const filteredFavorites = favorites
-    .filter(f => {
+    .filter((f) => {
       if (activeTab !== 'all' && f.status !== activeTab) return false;
       if (searchQuery) {
         const title = f.manga.title.toLowerCase();
@@ -104,7 +110,7 @@ export const MangaLibraryPage: React.FC = () => {
       <div className="min-h-screen bg-[#05050a] text-white">
         <header className="sticky top-0 z-50 bg-[#05050a]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <button 
+            <button
               onClick={() => navigate(-1)}
               className="p-2 hover:bg-white/5 rounded-full transition-colors animate-hover"
             >
@@ -127,13 +133,13 @@ export const MangaLibraryPage: React.FC = () => {
           <div className="flex flex-col md:flex-row gap-6 justify-between items-center mb-8 border-b border-white/5 pb-6">
             {/* Tabs */}
             <div className="flex bg-white/5 p-1.5 rounded-2xl gap-1 w-full md:w-auto">
-              {(['all', 'reading', 'plan_to_read', 'completed'] as const).map(tab => (
+              {(['all', 'reading', 'plan_to_read', 'completed'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`flex-grow md:flex-grow-0 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
-                    activeTab === tab 
-                      ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg font-black scale-105' 
+                    activeTab === tab
+                      ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg font-black scale-105'
                       : 'text-white/60 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -141,7 +147,9 @@ export const MangaLibraryPage: React.FC = () => {
                   {tab === 'reading' && t('library.tab_reading', 'En cours')}
                   {tab === 'plan_to_read' && t('library.tab_plan', 'À lire')}
                   {tab === 'completed' && t('library.tab_completed', 'Terminés')}
-                  <span className={`ml-2 px-1.5 py-0.5 rounded-md text-[9px] ${activeTab === tab ? 'bg-black/20 text-black' : 'bg-white/10 text-white/60'}`}>
+                  <span
+                    className={`ml-2 px-1.5 py-0.5 rounded-md text-[9px] ${activeTab === tab ? 'bg-black/20 text-black' : 'bg-white/10 text-white/60'}`}
+                  >
                     {getCount(tab)}
                   </span>
                 </button>
@@ -158,7 +166,7 @@ export const MangaLibraryPage: React.FC = () => {
                   aria-label={t('library.search_placeholder', 'Rechercher un manga...')}
                   placeholder={t('library.search_placeholder', 'Rechercher un manga...')}
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-11 pr-4 py-2.5 bg-white/5 border border-white/5 hover:border-white/10 focus:border-yellow-400/50 outline-none rounded-2xl text-xs transition-all text-white placeholder-white/40"
                 />
               </div>
@@ -169,12 +177,18 @@ export const MangaLibraryPage: React.FC = () => {
                 <select
                   aria-label={t('library.sort_label', 'Trier par')}
                   value={sortBy}
-                  onChange={e => setSortBy(e.target.value as 'title' | 'unread' | 'date_added')}
+                  onChange={(e) => setSortBy(e.target.value as 'title' | 'unread' | 'date_added')}
                   className="bg-transparent text-xs font-black uppercase tracking-wider text-white border-none outline-none cursor-pointer"
                 >
-                  <option value="title" className="bg-[#05050a]">{t('library.sort_title', 'Titre')}</option>
-                  <option value="unread" className="bg-[#05050a]">{t('library.sort_unread', 'Non lus')}</option>
-                  <option value="date_added" className="bg-[#05050a]">{t('library.sort_date', 'Ajoutés')}</option>
+                  <option value="title" className="bg-[#05050a]">
+                    {t('library.sort_title', 'Titre')}
+                  </option>
+                  <option value="unread" className="bg-[#05050a]">
+                    {t('library.sort_unread', 'Non lus')}
+                  </option>
+                  <option value="date_added" className="bg-[#05050a]">
+                    {t('library.sort_date', 'Ajoutés')}
+                  </option>
                 </select>
               </div>
             </div>
@@ -183,7 +197,30 @@ export const MangaLibraryPage: React.FC = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-32 gap-4">
               <Loader2 className="w-8 h-8 animate-spin text-yellow-400" />
-              <p className="text-xs font-black uppercase tracking-widest text-white/40">{t('library.loading', 'Synchronisation de la bibliothèque...')}</p>
+              <p className="text-xs font-black uppercase tracking-widest text-white/40">
+                {t('library.loading', 'Synchronisation de la bibliothèque...')}
+              </p>
+            </div>
+          ) : isError && favorites.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center gap-6 bg-red-500/5 border border-red-500/20 rounded-3xl p-8">
+              <WifiOff className="w-16 h-16 text-red-400/60" />
+              <div>
+                <h2 className="text-xl font-black uppercase tracking-widest text-red-400 mb-2">
+                  {t('library.error_title', 'Bibliothèque indisponible')}
+                </h2>
+                <p className="text-sm text-white/40 max-w-md mx-auto">
+                  {t(
+                    'library.error_subtitle',
+                    'Impossible de charger vos mangas. Vérifiez votre connexion ou reconnectez-vous, puis réessayez.',
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={() => void refetch()}
+                className="flex items-center gap-2 px-6 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-300 text-xs font-black uppercase tracking-wider rounded-2xl transition-all active:scale-95"
+              >
+                {t('library.error_retry', 'Réessayer')}
+              </button>
             </div>
           ) : filteredFavorites.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center gap-6 bg-white/5 border border-white/5 backdrop-blur-xl rounded-3xl p-8">
@@ -193,10 +230,13 @@ export const MangaLibraryPage: React.FC = () => {
                   {t('library.empty_title', 'Bibliothèque vide')}
                 </h2>
                 <p className="text-sm text-white/40 max-w-md mx-auto">
-                  {t('library.empty_subtitle', 'Ajoutez des mangas à votre bibliothèque depuis l\'explorateur pour les organiser et suivre votre lecture.')}
+                  {t(
+                    'library.empty_subtitle',
+                    "Ajoutez des mangas à votre bibliothèque depuis l'explorateur pour les organiser et suivre votre lecture.",
+                  )}
                 </p>
               </div>
-              <Link 
+              <Link
                 to="/explore/tachidesk/"
                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-black text-xs font-black uppercase tracking-wider rounded-2xl transition-all shadow-lg active:scale-95 border-b-4 border-orange-700"
               >
@@ -206,20 +246,20 @@ export const MangaLibraryPage: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredFavorites.map(fav => (
-                <div 
+              {filteredFavorites.map((fav) => (
+                <div
                   key={fav.id}
                   className="bg-white/5 border border-white/5 hover:border-white/10 backdrop-blur-xl rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 group hover:scale-[1.02] hover:bg-white/[0.07]"
                 >
                   <div className="relative aspect-[3/4] overflow-hidden bg-gray-900">
-                    <img 
-                      src={fav.manga.image || '/assets/manga-placeholder.png'} 
+                    <img
+                      src={fav.manga.image || '/assets/manga-placeholder.png'}
                       alt={fav.manga.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                       decoding="async"
                     />
-                    
+
                     {/* Unread badge */}
                     {fav.unread_chapters_count > 0 && (
                       <div className="absolute top-4 right-4 bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-full shadow-[0_0_15px_rgba(220,38,38,0.5)] border border-red-500 animate-pulse">
@@ -244,7 +284,7 @@ export const MangaLibraryPage: React.FC = () => {
                           {fav.manga.author}
                         </p>
                       )}
-                      
+
                       <div className="mt-3 text-[10px] font-bold text-white/50 bg-white/5 p-2.5 rounded-xl border border-white/5">
                         <div className="flex justify-between items-center">
                           <span>{t('library.last_read', 'Lu')}</span>
@@ -254,8 +294,10 @@ export const MangaLibraryPage: React.FC = () => {
                     </div>
 
                     <div className="mt-5 flex flex-col gap-2">
-                      <button 
-                        onClick={() => navigate(`/media/manga/${fav.manga.id}/${fav.last_read_chapter + 1}/`)}
+                      <button
+                        onClick={() =>
+                          navigate(`/media/manga/${fav.manga.id}/${fav.last_read_chapter + 1}/`)
+                        }
                         className="flex items-center justify-center gap-2 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-black text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
                       >
                         <BookOpen className="w-3.5 h-3.5" />
@@ -267,17 +309,23 @@ export const MangaLibraryPage: React.FC = () => {
                         <div className="relative flex-grow">
                           <select
                             value={fav.status}
-                            onChange={e => handleUpdateStatus(fav.manga.id, e.target.value)}
+                            onChange={(e) => handleUpdateStatus(fav.manga.id, e.target.value)}
                             className="w-full text-center py-2 bg-white/5 hover:bg-white/10 text-white/80 text-[9px] font-black uppercase tracking-wider rounded-xl border border-white/5 outline-none cursor-pointer appearance-none"
                           >
-                            <option value="reading" className="bg-[#05050a] text-white">{t('library.status_reading', 'En cours')}</option>
-                            <option value="plan_to_read" className="bg-[#05050a] text-white">{t('library.status_plan', 'À lire')}</option>
-                            <option value="completed" className="bg-[#05050a] text-white">{t('library.status_completed', 'Terminé')}</option>
+                            <option value="reading" className="bg-[#05050a] text-white">
+                              {t('library.status_reading', 'En cours')}
+                            </option>
+                            <option value="plan_to_read" className="bg-[#05050a] text-white">
+                              {t('library.status_plan', 'À lire')}
+                            </option>
+                            <option value="completed" className="bg-[#05050a] text-white">
+                              {t('library.status_completed', 'Terminé')}
+                            </option>
                           </select>
                         </div>
 
                         {/* Remove button */}
-                        <button 
+                        <button
                           onClick={() => handleUpdateStatus(fav.manga.id, null)}
                           className="p-2 bg-red-600/10 hover:bg-red-600/20 text-red-500 rounded-xl transition-colors border border-red-500/10 hover:border-red-500/20 active:scale-95"
                           title={t('library.remove_favorite', 'Retirer des favoris')}
