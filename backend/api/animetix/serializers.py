@@ -261,7 +261,9 @@ class MediaItemSerializer(serializers.Serializer):
                 "genres": manga_metadata.get("genres", []),
                 "tags": manga_metadata.get("tags", []),
                 "micro_tags": manga_metadata.get("micro_tags", []),
-                "description": getattr(instance, "description", ""),
+                "description": getattr(instance, "synopsis_fr", None)
+                or getattr(instance, "description", "")
+                or "",
                 "studios": manga_metadata.get("studios", []),
                 "author": manga_metadata.get("author", None),
                 "related_items": manga_metadata.get("related_items", []),
