@@ -30,9 +30,9 @@ _Aucun item ouvert._
   - Preuve : `VsBattlePage` (651), `ClassicGamePage` (608), `LoreWorldMapPage` (604), `SeiyuuDiscoveryPage` (531), `PowerStationPage` (523), `TreeOfThoughtsPage` (509), `ProfilePage` (506), `ClusterHealthPanel` (500). Seuils vitest bas (38 % stmts, `vite.config.ts:149-154`), ~114 pages sans test.
   - Fix : poursuivre le découpage (pattern PR #93-96) + test de rendu pour `VsBattlePage`, ratcheter les seuils.
 
-- [ ] **CI — coût/couverture : job Windows non-bloquant, perf-test facturé, bandit hors PR** _(audit dette 2026-07-19)_
-  - Preuve : `test-windows` (~33 min, `ci.yml:154-196`) rejoue toute la suite sans gater les merges ; `perf-test` (`ci.yml:273-321`) appelle Gemini/OpenAI à CHAQUE `workflow_dispatch` (même un simple deploy brain) ; bandit/hadolint ne tournent sur PR que si requirements/lock changent (`security_audit.yml:7-12`).
-  - Fix : required-check ou filtrage OS-sensible pour Windows ; input dédié `run_perf` ; déclencher bandit sur les PR touchant `backend/`/`deploy/`.
+- [ ] **CI — reliquat infra : inscrire `test-windows` en required check** _(audit dette 2026-07-19 ; in-file fait 2026-07-21, cf. HISTORY)_
+  - Fait : perf-test gaté (`run_perf`/`deploy_to_prod`), bandit/hadolint sur PR `backend`/`deploy`, hygiène versions (setup-python v5, codecov v5).
+  - **Reste (action GitHub, hors repo)** : `test-windows` est déjà bloquant mais pas un *required check* — l'inscrire via Settings→Branches pour qu'il gate réellement les merges.
 
 - [ ] **Deploy — tags `:latest` mutables + `.dockerignore` incomplet** _(audit dette 2026-07-19)_
   - Preuve : `cloudbuild.yaml:4` (`_TAG: latest`) → rollback impossible par tag ; `.dockerignore` n'exclut pas `tests/`, `docs/`, `dev/`, `coverage.xml` (1,2 Mo) alors que `deploy/Dockerfile:80` fait `COPY . .`.
