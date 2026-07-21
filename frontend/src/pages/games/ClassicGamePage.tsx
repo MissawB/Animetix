@@ -5,19 +5,9 @@ import {
   Search,
   Trophy,
   RotateCcw,
-  Lock,
   Flame,
   Target,
   Gauge,
-  Globe,
-  Tags,
-  Clapperboard,
-  ScrollText,
-  Calendar,
-  Shapes,
-  Hash,
-  CaseSensitive,
-  Check,
   Sparkles,
   ChevronRight,
   SlidersHorizontal,
@@ -27,18 +17,11 @@ import { useClassicGame } from '../../features/games/hooks/useClassicGame';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { classicGameService } from '../../features/games/services/classicService';
-import type { ClassicGuess, ClassicHintKey, ClassicReason } from '../../types';
-
-const HINT_META: Record<ClassicHintKey, { icon: React.ElementType; tone: string }> = {
-  year: { icon: Calendar, tone: 'text-blue-500' },
-  origin: { icon: Globe, tone: 'text-teal-500' },
-  tags: { icon: Tags, tone: 'text-yellow-500' },
-  genres: { icon: Shapes, tone: 'text-orange-500' },
-  studio: { icon: Clapperboard, tone: 'text-purple-500' },
-  letter: { icon: CaseSensitive, tone: 'text-pink-500' },
-  words: { icon: Hash, tone: 'text-cyan-500' },
-  desc: { icon: ScrollText, tone: 'text-green-500' },
-};
+import type { ClassicGuess, ClassicHintKey } from '../../types';
+import { StatusPill } from './components/StatusPill';
+import { ClassicGuessTrail } from './components/ClassicGuessTrail';
+import { ClassicHintsPanel } from './components/ClassicHintsPanel';
+import { ClassicHowToPanel } from './components/ClassicHowToPanel';
 
 const ClassicGamePage: React.FC = () => {
   const { t } = useTranslation();
@@ -361,243 +344,27 @@ const ClassicGamePage: React.FC = () => {
             )}
 
             {/* ── La piste (tentatives) ────────────────────────── */}
-            <div className="rounded-[2rem] border-2 border-black/5 dark:border-white/10 bg-surface-card p-6 md:p-7 shadow-token-card">
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-[11px] font-black uppercase tracking-widest opacity-40">
-                  {t('games.classic.game.your_attempts', 'Vos tentatives')}
-                </h3>
-                {guessCount > 0 && (
-                  <span className="text-[10px] font-black uppercase tracking-widest opacity-30">
-                    {t('games.classic.game.closest_first', 'les plus proches en tête')}
-                  </span>
-                )}
-              </div>
-
-              {guessCount === 0 ? (
-                <div className="text-center py-12">
-                  <Target className="w-12 h-12 mx-auto mb-4 opacity-15" />
-                  <p className="font-black italic uppercase opacity-30 text-sm">
-                    {t('games.classic.game.no_lead_title', "Aucune piste pour l'instant")}
-                  </p>
-                  <p className="text-xs font-bold opacity-25 mt-1">
-                    {t(
-                      'games.classic.game.no_lead_desc',
-                      "Lancez une première tentative pour ouvrir l'enquête.",
-                    )}
-                  </p>
-                </div>
-              ) : (
-                <ul className="space-y-3">
-                  {gameState.guesses.map((g, i) => {
-                    const heat = heatOf(g);
-                    const score = Math.round(g.score ?? 0);
-                    return (
-                      <li
-                        key={`${g.title}-${i}`}
-                        className={`rounded-2xl border p-4 animate-fade-in ${
-                          g.is_correct
-                            ? 'border-green-500 bg-green-500/[0.08]'
-                            : `border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] ${heat.glow}`
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-3 mb-2.5">
-                          <div className="min-w-0">
-                            <p className="font-black truncate leading-tight">{g.title}</p>
-                            {g.title_english && g.title_english !== g.title && (
-                              <p className="text-[11px] font-bold opacity-40 truncate">
-                                {g.title_english}
-                              </p>
-                            )}
-                          </div>
-                          {g.is_correct ? (
-                            <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-black uppercase px-3 py-1.5 rounded-full bg-green-500 text-white">
-                              <Check className="w-3.5 h-3.5" />{' '}
-                              {t('games.classic.game.found', 'Trouvé')}
-                            </span>
-                          ) : (
-                            <div className="shrink-0 flex items-center gap-2">
-                              <span
-                                className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${heat.chip}`}
-                              >
-                                {heat.label}
-                              </span>
-                              <span className="text-lg font-black tabular-nums w-12 text-right">
-                                {score}%
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        {!g.is_correct && (
-                          <div className="h-2 rounded-full bg-black/5 dark:bg-white/5 overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${heat.bar} transition-all duration-700`}
-                              style={{ width: `${Math.max(4, score)}%` }}
-                            />
-                          </div>
-                        )}
-                        {(g.reasons ?? []).length > 0 && (
-                          <ul className="mt-2 space-y-1 pl-1">
-                            {(g.reasons ?? []).map((reason: ClassicReason) => (
-                              <li
-                                key={reason.kind}
-                                className="text-xs text-gray-600 dark:text-gray-400"
-                              >
-                                <span className="font-semibold text-gray-700 dark:text-gray-300">
-                                  {reason.label}
-                                </span>
-                                {reason.detail.length > 0 && (
-                                  <span className="text-gray-500 dark:text-gray-500">
-                                    {' '}
-                                    — {reason.detail.join(' · ')}
-                                  </span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
+            <ClassicGuessTrail guesses={gameState.guesses} heatOf={heatOf} />
           </div>
 
           {/* ── Colonne latérale ───────────────────────────────── */}
           <div className="space-y-6">
             {/* Indices */}
-            <div className="rounded-[2rem] border-2 border-black/5 dark:border-white/10 bg-surface-card p-6 shadow-token-card">
-              <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest opacity-40 mb-5">
-                <Sparkles className="w-4 h-4 text-yellow-500" />{' '}
-                {t('games.classic.game.hints_title', 'Indices')}
-              </div>
-              <div className="space-y-3">
-                {hintKeys.length === 0 && (
-                  <p className="text-xs font-bold opacity-30 text-center py-4">
-                    {t('games.classic.game.no_hints', 'Aucun indice pour cette partie.')}
-                  </p>
-                )}
-                {hintKeys.map((key) => {
-                  const h = hints?.[key];
-                  const meta = HINT_META[key];
-                  const Icon = meta.icon;
-                  const label = h?.label ?? key;
-                  const unlockAt = h?.unlocks_at ?? 0;
-                  const canReveal = h?.can_reveal ?? false;
-                  const revealed = h?.revealed ?? false;
-                  const progress = unlockAt > 0 ? Math.min(1, guessCount / unlockAt) : 1;
-
-                  return (
-                    <div
-                      key={key}
-                      className={`rounded-2xl border p-3.5 transition-all ${
-                        revealed
-                          ? 'border-yellow-500/40 bg-yellow-500/[0.06]'
-                          : 'border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wide">
-                          <Icon className={`w-4 h-4 ${revealed ? meta.tone : 'opacity-30'}`} />
-                          {label}
-                        </span>
-                        {revealed ? (
-                          <Check className="w-4 h-4 text-yellow-500" />
-                        ) : canReveal ? (
-                          <button
-                            type="button"
-                            onClick={() => revealHint(key)}
-                            disabled={revealingHint}
-                            className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-yellow-500 text-black hover:scale-105 active:scale-95 transition-transform disabled:opacity-50"
-                          >
-                            {t('games.classic.game.reveal', 'Révéler')}
-                          </button>
-                        ) : (
-                          <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider opacity-40">
-                            <Lock className="w-3 h-3" />{' '}
-                            {t('games.classic.game.unlock_at', {
-                              defaultValue: '{{count}} essais',
-                              count: unlockAt,
-                            })}
-                          </span>
-                        )}
-                      </div>
-
-                      {revealed && h?.value && (
-                        <p className="mt-2 text-sm font-semibold leading-snug text-yellow-700 dark:text-yellow-200/90">
-                          {h.value}
-                        </p>
-                      )}
-                      {!revealed && !canReveal && (
-                        <div className="mt-2.5 h-1 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-yellow-500/60 transition-all duration-500"
-                            style={{ width: `${progress * 100}%` }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <ClassicHintsPanel
+              hintKeys={hintKeys}
+              hints={hints}
+              guessCount={guessCount}
+              onReveal={revealHint}
+              revealing={revealingHint}
+            />
 
             {/* Comment jouer */}
-            <div className="rounded-[2rem] border-2 border-black/5 dark:border-white/10 bg-surface-card p-6 shadow-token-card">
-              <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest opacity-40 mb-5">
-                <Target className="w-4 h-4 text-blue-500" />{' '}
-                {t('games.classic.game.how_to_title', 'Comment jouer')}
-              </div>
-              <ol className="space-y-4">
-                {HOW_TO.map((s, i) => (
-                  <li key={s.t} className="flex gap-3.5">
-                    <span className="shrink-0 w-7 h-7 rounded-xl bg-blue-500/10 text-blue-500 grid place-items-center font-black text-sm">
-                      {i + 1}
-                    </span>
-                    <div>
-                      <p className="font-black text-sm leading-tight">{s.t}</p>
-                      <p className="text-xs font-medium opacity-55 leading-snug mt-0.5">{s.d}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-
-              <div className="mt-6 pt-5 border-t border-black/5 dark:border-white/10">
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-3">
-                  {t('games.classic.game.heat_scale', 'Échelle de chaleur')}
-                </p>
-                <div className="grid grid-cols-4 gap-2">
-                  {HEAT_LEGEND.map(({ key, range }) => (
-                    <div key={key} className="text-center">
-                      <div className={`h-1.5 rounded-full ${HEAT[key].bar} mb-1.5`} />
-                      <p className="text-[10px] font-black uppercase leading-none">
-                        {HEAT[key].label}
-                      </p>
-                      <p className="text-[9px] font-bold opacity-40 tabular-nums mt-0.5">{range}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <ClassicHowToPanel howTo={HOW_TO} heat={HEAT} heatLegend={HEAT_LEGEND} />
           </div>
         </div>
       </div>
     </AnimatedPage>
   );
 };
-
-const StatusPill: React.FC<{ icon: React.ElementType; label: string; value: string }> = ({
-  icon: Icon,
-  label,
-  value,
-}) => (
-  <div className="flex items-center gap-2.5 rounded-2xl border border-black/5 dark:border-white/10 bg-surface-card px-4 py-2.5 shadow-sm">
-    <Icon className="w-4 h-4 opacity-40" />
-    <div className="leading-none">
-      <p className="text-[9px] font-black uppercase tracking-widest opacity-40">{label}</p>
-      <p className="text-sm font-black mt-0.5">{value}</p>
-    </div>
-  </div>
-);
 
 export default ClassicGamePage;
