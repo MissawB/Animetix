@@ -167,6 +167,11 @@ jobs:
         DATABASE_URL: 'sqlite:///:memory:'
         DJANGO_SECRET_KEY: test-secret-key
         DJANGO_DEBUG: "True"
+        # containers/inference.py runs validate_inference_config() at import,
+        # which requires a well-formed BRAIN_API_URL. The pytest step gets this
+        # from tests/conftest.py, but `manage.py spectacular` doesn't load
+        # conftest, so set a dummy here or Django won't boot.
+        BRAIN_API_URL: 'http://localhost:8001'
       run: |
         python backend/api/manage.py spectacular --file schema.yaml
         git diff --exit-code schema.yaml || {

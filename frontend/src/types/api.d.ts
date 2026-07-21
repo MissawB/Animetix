@@ -2506,6 +2506,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/media/{media_type}/{item_id}/characters/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Personnages associés à une œuvre (match metadata.origin == titre). */
+        get: operations["api_v1_media_characters_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/media/Manga/{media_id}/chapters/": {
         parameters: {
             query?: never;
@@ -3660,6 +3677,7 @@ export interface components {
             name: string;
             description: string;
             icon: string;
+            /** Format: int64 */
             xp_reward?: number;
             rarity?: string;
         };
@@ -3719,7 +3737,9 @@ export interface components {
             scenario_text: string;
             /** Format: uri */
             image_url?: string | null;
+            /** Format: int64 */
             chaos_level?: number;
+            /** Format: int64 */
             universe_balance?: number;
             art_style?: string;
             vn_script?: unknown;
@@ -4017,7 +4037,9 @@ export interface components {
             scenario_text?: string;
             /** Format: uri */
             image_url?: string | null;
+            /** Format: int64 */
             chaos_level?: number;
+            /** Format: int64 */
             universe_balance?: number;
             art_style?: string;
             vn_script?: unknown;
@@ -4080,19 +4102,27 @@ export interface components {
         PatchedProfile: {
             readonly id?: number;
             readonly user?: components["schemas"]["User"];
+            /** Format: int64 */
             xp?: number;
+            /** Format: int64 */
             current_streak?: number;
+            /** Format: int64 */
             max_streak?: number;
             /** Format: date */
             last_win_date?: string | null;
+            /** Format: int64 */
             total_wins?: number;
+            /** Format: int64 */
             total_games?: number;
+            /** Format: int64 */
             ranked_points?: number;
+            /** Format: int64 */
             ranked_max_points?: number;
             readonly rank?: string;
             unlocked_badges?: unknown;
             custom_username_color?: string | null;
             tier?: components["schemas"]["TierEnum"];
+            /** Format: int64 */
             wallet_balance?: number;
             personalization_settings?: unknown;
             readonly has_api_key?: string;
@@ -4100,19 +4130,27 @@ export interface components {
         Profile: {
             readonly id: number;
             readonly user: components["schemas"]["User"];
+            /** Format: int64 */
             xp?: number;
+            /** Format: int64 */
             current_streak?: number;
+            /** Format: int64 */
             max_streak?: number;
             /** Format: date */
             last_win_date?: string | null;
+            /** Format: int64 */
             total_wins?: number;
+            /** Format: int64 */
             total_games?: number;
+            /** Format: int64 */
             ranked_points?: number;
+            /** Format: int64 */
             ranked_max_points?: number;
             readonly rank: string;
             unlocked_badges?: unknown;
             custom_username_color?: string | null;
             tier?: components["schemas"]["TierEnum"];
+            /** Format: int64 */
             wallet_balance?: number;
             personalization_settings?: unknown;
             readonly has_api_key: string;
@@ -7416,6 +7454,27 @@ export interface operations {
         };
     };
     api_v1_media_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+                media_type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_media_characters_retrieve: {
         parameters: {
             query?: never;
             header?: never;
