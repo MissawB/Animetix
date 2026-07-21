@@ -26,8 +26,8 @@ _Aucun item ouvert._
   - Preuve : `fallback_adapter.py` (833 l.) contient ~30 méthodes de pure délégation `return self._fallback_call(...)` (l.~509-785) — chaque adapter doit couvrir toute la surface du port.
   - Fix : segmenter en ports fins (texte / vision / audio / 3D).
 
-- [/] **Frontend — pages > 500 lignes (2/8 faits : VsBattlePage 647→207 +test, ClassicGamePage 603→370, cf. HISTORY 2026-07-21)** _(audit dette 2026-07-19)_
-  - Reste (mesuré 2026-07-21) : `ClusterHealthPanel` (615), `LoreWorldMapPage` (604), `SeiyuuDiscoveryPage` (531), `PowerStationPage` (523), `TreeOfThoughtsPage` (509), `ProfilePage` (506). Pattern rodé : test de caractérisation d'abord (surtout pour les non-testés : Seiyuu/PowerStation/TreeOfThoughts/Profile), puis extraire des composants co-localisés en gardant état+handlers dans la page.
+- [/] **Frontend — pages > 500 lignes (3/8 faits : VsBattlePage 647→207 +test, ClassicGamePage 603→370, LoreWorldMapPage 604→385, cf. HISTORY 2026-07-21)** _(audit dette 2026-07-19)_
+  - Reste (mesuré 2026-07-21) : `ClusterHealthPanel` (615), `SeiyuuDiscoveryPage` (531), `PowerStationPage` (523), `TreeOfThoughtsPage` (509), `ProfilePage` (506). Pattern rodé : test de caractérisation d'abord (surtout pour les non-testés : Seiyuu/PowerStation/TreeOfThoughts/Profile), puis extraire des composants co-localisés en gardant état+handlers dans la page.
   - Aussi : ratcheter les seuils vitest (`vite.config.ts:149-154`, 38 % stmts) au fil des tests ajoutés.
 
 - [ ] **CI — reliquat infra : inscrire `test-windows` en required check** _(audit dette 2026-07-19 ; in-file fait 2026-07-21, cf. HISTORY)_
