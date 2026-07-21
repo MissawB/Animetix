@@ -45,7 +45,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 
       <div className="space-y-10">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-6">
             {t('nav.appearance', 'Apparence')}
           </p>
           <div className="grid grid-cols-3 gap-3">
@@ -77,7 +77,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
         </div>
 
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-6">
             {t('nav.lang', 'Langue')}
           </p>
           <div className="space-y-3">
@@ -95,7 +95,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
         </div>
 
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-6">
             {t('settings.ads', 'Publicités')}
           </p>
           <button
@@ -122,7 +122,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               />
             </span>
           </button>
-          <p className="mt-3 text-[10px] leading-relaxed text-gray-400 px-1">
+          <p className="mt-3 text-[10px] leading-relaxed text-gray-500 dark:text-gray-400 px-1">
             {t(
               'settings.adsHint',
               'Désactiver les pubs met aussi en pause le minage passif de Bx.',
@@ -140,7 +140,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
         </div>
       </div>
 
-      <div className="mt-auto opacity-30 text-center text-black dark:text-white">
+      <div className="mt-auto opacity-60 text-center text-black dark:text-white">
         <p className="manga-font text-[8px] tracking-widest">Animetix v6.0.4</p>
       </div>
     </aside>
