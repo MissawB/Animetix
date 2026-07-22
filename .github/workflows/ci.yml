@@ -47,7 +47,7 @@ jobs:
         docker-images: true
         swap-storage: true
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: '3.12'
     - name: Install Tools
@@ -107,7 +107,7 @@ jobs:
     - name: Start Services
       run: docker compose -f deploy/docker-compose.test.yml up -d
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: '3.12'
         # Cache pip's wheel cache (~/.cache/pip, untouched by Free Disk Space) so the
@@ -196,7 +196,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: '3.12'
         cache: 'pip'
@@ -272,7 +272,7 @@ jobs:
     - name: Start Services
       run: docker compose -f deploy/docker-compose.test.yml up -d
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: '3.12'
         cache: 'pip'
@@ -325,7 +325,7 @@ jobs:
         docker-images: true
         swap-storage: true
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: '3.12'
         cache: 'pip'
