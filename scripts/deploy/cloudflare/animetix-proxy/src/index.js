@@ -28,14 +28,30 @@ const isFirebaseReservedPath = (pathname) =>
 // but AdSense requires it at exactly /ads.txt — hence serving it from the Worker.
 const ADS_TXT = "google.com, pub-7900304271811221, DIRECT, f08c47fec0942fa0\n";
 
+// robots.txt served from the edge for the same reason as ads.txt (the SPA
+// catch-all otherwise 302s it to /fr/, which crawlers read as "no robots.txt").
+// Everything is crawlable except the Django admin and the JSON API.
+const ROBOTS_TXT = [
+  "User-agent: *",
+  "Disallow: /admin/",
+  "Disallow: /api/",
+  "Allow: /",
+  "",
+].join("\n");
+
 export default {
   async fetch(request) {
     const url = new URL(request.url);
     const visitorHost = url.host; // animetix.xyz (or www.animetix.xyz)
 
-    // ads.txt → return directly from the edge, no origin round-trip.
+    // ads.txt / robots.txt → return directly from the edge, no origin round-trip.
     if (url.pathname === "/ads.txt") {
       return new Response(ADS_TXT, {
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      });
+    }
+    if (url.pathname === "/robots.txt") {
+      return new Response(ROBOTS_TXT, {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });
     }

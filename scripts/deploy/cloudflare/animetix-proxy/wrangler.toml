@@ -9,4 +9,8 @@ account_id = "29eda086da32f3db443edfe3980ab419"
 # the free way to put the custom domain in front of Cloud Run).
 routes = [
   { pattern = "animetix.xyz/*", zone_name = "animetix.xyz" },
+  # www needs BOTH this route and a proxied DNS record (CNAME www -> animetix.xyz,
+  # orange cloud) in the Cloudflare dashboard — without the DNS record the
+  # hostname is NXDOMAIN and traffic never reaches the Worker.
+  { pattern = "www.animetix.xyz/*", zone_name = "animetix.xyz" },
 ]
