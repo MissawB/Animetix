@@ -555,7 +555,7 @@ class ScriptedLiveSession(FakeLiveSession):
         await asyncio.sleep(3600)
 
 
-async def _drive_session(consumer, fake_client, *, settle=0.15):
+async def _drive_session(consumer, fake_client, *, settle=0.35):
     """Run run_gemini_session until the response loop has been pumped, then cancel."""
     with patch.object(s2s.genai, "Client", return_value=fake_client):
         task = asyncio.create_task(consumer.run_gemini_session())

@@ -44,7 +44,6 @@ psycopg2-binary
 redis
 
 # 3. ML/AI (CPU: embeddings, rerank fallback, in-process job training)
-bitsandbytes
 google-genai
 numba
 numpy

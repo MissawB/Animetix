@@ -19,8 +19,8 @@ try:
     django.setup()
     django_available = True
     from animetix.models import AIFeedback  # type: ignore[no-redef]
-except Exception:
-    pass
+except Exception as e:
+    logger.debug(f"Django setup fallback/bypass in dpo_feedback_loop: {e}")
 
 
 class DPOFeedbackLoop:

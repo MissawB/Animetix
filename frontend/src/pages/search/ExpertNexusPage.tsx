@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSSE, type SSEEvent } from '../../hooks/useSSE';
 import {
@@ -15,11 +16,11 @@ import { useSearchParams, Link } from 'react-router-dom';
 
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import ForceGraph2D, {
-  type ForceGraphMethods,
-  type NodeObject,
-  type LinkObject,
-} from 'react-force-graph-2d';
+import { type ForceGraphMethods, type NodeObject, type LinkObject } from 'react-force-graph-2d';
+
+const ForceGraph2D = React.lazy(
+  () => import('react-force-graph-2d'),
+) as unknown as React.ComponentType<any>;
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -55,6 +56,18 @@ interface GraphLink {
   color: string;
 }
 
+const AGENT_NODE_COLORS: Record<string, string> = {
+  'Semantic Router': '#3b82f6',
+  'State Machine': '#a855f7',
+  TTC: '#ef4444',
+  'Graph User Memory': '#10b981',
+  Judge: '#10b981',
+  Synthesizer: '#eab308',
+  Root: '#ffffff',
+};
+
+const getAgentColorCode = (agent?: string) => (agent && AGENT_NODE_COLORS[agent]) || '#64748b';
+
 const ExpertNexusPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation();
@@ -75,27 +88,6 @@ const ExpertNexusPage: React.FC = () => {
 
   // Mutable ref to track last graph node id across SSE events
   const lastNodeIdRef = useRef('root');
-
-  const getAgentColorCode = (agent?: string) => {
-    switch (agent) {
-      case 'Semantic Router':
-        return '#3b82f6'; // blue-500
-      case 'State Machine':
-        return '#a855f7'; // purple-500
-      case 'TTC':
-        return '#ef4444'; // red-500
-      case 'Graph User Memory':
-        return '#10b981'; // emerald-500
-      case 'Judge':
-        return '#10b981'; // emerald-500
-      case 'Synthesizer':
-        return '#eab308'; // yellow-500
-      case 'Root':
-        return '#ffffff';
-      default:
-        return '#64748b'; // slate-500
-    }
-  };
 
   const [sseUrl, setSseUrl] = useState('');
 
@@ -319,27 +311,35 @@ const ExpertNexusPage: React.FC = () => {
             >
               {graphData.nodes.length > 0 ? (
                 <div className="absolute inset-0">
-                  <ForceGraph2D
-                    ref={graphRef}
-                    graphData={graphData}
-                    nodeLabel="agent"
-                    nodeColor="color"
-                    nodeVal="val"
-                    linkColor="color"
-                    linkWidth={2}
-                    backgroundColor="#000000"
-                    onEngineStop={() => graphRef.current?.zoomToFit(400, 20)}
-                    nodeCanvasObjectMode={() => 'after'}
-                    nodeCanvasObject={(node: GraphNode, ctx, globalScale) => {
-                      const label = node.agent;
-                      const fontSize = 12 / globalScale;
-                      ctx.font = `${fontSize}px Sans-Serif`;
-                      ctx.textAlign = 'center';
-                      ctx.textBaseline = 'middle';
-                      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Text color
-                      ctx.fillText(label, node.x || 0, (node.y || 0) + 12);
-                    }}
-                  />
+                  <React.Suspense
+                    fallback={
+                      <div className="flex items-center justify-center h-full text-blue-500">
+                        Loading graph canvas...
+                      </div>
+                    }
+                  >
+                    <ForceGraph2D
+                      ref={graphRef as any}
+                      graphData={graphData}
+                      nodeLabel="agent"
+                      nodeColor="color"
+                      nodeVal="val"
+                      linkColor="color"
+                      linkWidth={2}
+                      backgroundColor="#000000"
+                      onEngineStop={() => (graphRef.current as any)?.zoomToFit(400, 20)}
+                      nodeCanvasObjectMode={() => 'after'}
+                      nodeCanvasObject={(node: GraphNode, ctx: any, globalScale: any) => {
+                        const label = node.agent;
+                        const fontSize = 12 / globalScale;
+                        ctx.font = `${fontSize}px Sans-Serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Text color
+                        ctx.fillText(label, node.x || 0, (node.y || 0) + 12);
+                      }}
+                    />
+                  </React.Suspense>
                 </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center opacity-10 text-center py-24">

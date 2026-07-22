@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from ..models import AdEvent, AITokenUsage, DataCurationTicket, Profile
 from ..serializers import DataCurationTicketSerializer, UserAdminSerializer
+from .throttles import BurstAnonRateThrottle
 
 
 class UserManagementViewSet(viewsets.ModelViewSet):
@@ -115,6 +116,7 @@ class TTCMonitoringAPIView(APIView):
 
 class AdEventLoggingAPIView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [BurstAnonRateThrottle]
 
     def post(self, request):
         event_type = request.data.get("event_type")

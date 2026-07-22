@@ -60,7 +60,7 @@ jobs:
         black --check .
         # Run from backend/ so first-party imports (core.*, adapters.*) resolve
         # to single module names; config (incl. type-debt baseline) is in pyproject.
-        cd backend && mypy . --config-file ../pyproject.toml
+        cd backend && mypy . --config-file ../pyproject.toml --no-site-packages
 
   docker-build:
     name: Validate Docker Build

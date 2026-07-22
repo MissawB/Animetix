@@ -29,6 +29,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+        cache: 'pip'
 
     # Bandit is static AST analysis — it never imports the project, so the app's
     # dependencies (torch + requirements, ~5 min) are NOT installed here. This

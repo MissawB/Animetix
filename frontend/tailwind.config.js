@@ -52,6 +52,10 @@ export default {
           900: '#1a1a2e',
           950: '#0f0f1a',
         },
+        cream: {
+          50: '#fffcf0',
+          DEFAULT: '#fffcf0',
+        },
       },
       borderRadius: {
         'token-card': 'var(--radius-card)',

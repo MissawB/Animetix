@@ -64,8 +64,8 @@ def extract_json(text: Any) -> Dict[str, Any]:
             data = json.loads(cleaned_text[start : end + 1])
             if isinstance(data, dict):
                 return data
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Standard json extraction fallback failed: {e}")
 
     logger.debug(
         f"Failed to parse JSON from AI output. Output was: {cleaned_text[:200]}..."

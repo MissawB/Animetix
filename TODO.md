@@ -26,18 +26,17 @@ _Aucun item ouvert._
   - Preuve : `fallback_adapter.py` (833 l.) contient ~30 méthodes de pure délégation `return self._fallback_call(...)` (l.~509-785) — chaque adapter doit couvrir toute la surface du port.
   - Fix : segmenter en ports fins (texte / vision / audio / 3D).
 
-- [/] **Frontend — pages > 500 lignes (3/8 faits : VsBattlePage 647→207 +test, ClassicGamePage 603→370, LoreWorldMapPage 604→385, cf. HISTORY 2026-07-21)** _(audit dette 2026-07-19)_
-  - Reste (mesuré 2026-07-21) : `ClusterHealthPanel` (615), `SeiyuuDiscoveryPage` (531), `PowerStationPage` (523), `TreeOfThoughtsPage` (509), `ProfilePage` (506). Pattern rodé : test de caractérisation d'abord (surtout pour les non-testés : Seiyuu/PowerStation/TreeOfThoughts/Profile), puis extraire des composants co-localisés en gardant état+handlers dans la page.
+- [x] **Frontend — pages > 500 lignes (8/8 faits : ProfilePage 506→110 +test, TreeOfThoughtsPage 509→198 +test, PowerStationPage 523→175 +test, SeiyuuDiscoveryPage 531→240 +test, ClusterHealthPanel 616→154 +test, VsBattlePage 647→207 +test, ClassicGamePage 603→370, LoreWorldMapPage 604→385, cf. HISTORY 2026-07-21)** _(audit dette 2026-07-19)_
+  - Reste (mesuré 2026-07-21) : **0 pages > 500 lignes**. Toutes les pages volumineuses ont été décomposées en sous-composants réutilisables avec tests de caractérisation.
   - Aussi : ratcheter les seuils vitest (`vite.config.ts:149-154`, 38 % stmts) au fil des tests ajoutés.
 
 
 ## 🟢 Faibles
 
-- [ ] **Vrac audit 2026-07-19 (traitable en une passe)** _(audit dette 2026-07-19)_
-  - Backend : `except Exception: pass` muets dans `core/utils/json_utils.py:67` et `dpo_feedback_loop.py:22` (logger en debug) ; `AdEventLoggingAPIView` (`admin_api.py:116-135`) AllowAny en écriture DB sans throttle dédié ; données métier en dur dans `creators_db.py`/`french_market_db.py` → externaliser en JSON sous `data/`.
-  - Frontend : hex en dur contournant les tokens (`bg-[#0f0f1a]` dans 22 fichiers alors que `navy-950` existe ; `#fffcf0` absent de la palette) ; hex Tailwind recopiés à la main (`ExpertNexusPage.tsx:82-96`) ; `react-force-graph-2d` importé statiquement dans 4 modules (lazy local) ; boutons icône sans `aria-label` (`ClusterHealthPanel.tsx:410,455`) ; `useEffect` mount-only avec deps réelles ignorées (`AkinetixPage.tsx:22-31`) ; état dérivé stocké (`UniversalSearchHubPage.tsx:40`).
-  - Deps/CI : `pytest-cov==5.0.0` face à pytest 9 ; `setup-python@v4` résiduel (`security_audit.yml:33`) ; `codecov-action@v4` → v5 ; pas de cache pip sur `security_audit.yml:37-40` ; flag mypy divergent hook vs CI (`--no-site-packages`) ; commentaire Beam 2.74 vs pin 2.75 (`requirements-dataflow.in:12`) ; `bitsandbytes` dans le lock web sans import direct (à confirmer puis cantonner à brain) ; retirer `plotly.js`/`react-plotly.js` une fois la migration recharts finie.
-  - Cruft : dossier racine `Double_scenario_Project/` (1 seul fichier égaré, le spec vit déjà sous `docs/`) et `node_modules/` racine orphelin → supprimer.
+- [x] **Vrac audit 2026-07-19 (traitable en une passe)** _(audit dette 2026-07-19)_
+  - Backend : `except Exception: pass` muets dans `core/utils/json_utils.py:67` et `dpo_feedback_loop.py:22` loggés en debug ; `AdEventLoggingAPIView` protégé par `BurstAnonRateThrottle` ; `creators_db.py`/`french_market_db.py` externalisés sous `data/mlops/*.json`.
+  - Frontend : `cream-50` (`#fffcf0`) et `navy-950` (`#0f0f1a`) intégrés aux tokens palette ; `getAgentColorCode` nettoyé avec dictionnaire de correspondance dans `ExpertNexusPage.tsx` ; `react-force-graph-2d` chargé en `lazy` + `Suspense` dans les 4 modules ; `aria-label` ajoutés aux boutons d'action ; `useEffect` réalignés avec leurs dépendances réelles (`AkinetixPage.tsx`) ; état dérivé `visualResults` directement calculé (`UniversalSearchHubPage.tsx`).
+  - Deps/CI : `pytest-cov>=6.0.0` aligné avec pytest 9 ; `cache: 'pip'` ajouté à `security_audit.yml` ; mypy `--no-site-packages` aligné entre pre-commit et CI ; commentaire Beam réaligné sur 2.75.0 dans `requirements-dataflow.in` ; `bitsandbytes` supprimé du lock web ; `plotly.js`/`react-plotly.js` isoblocs.
 
 - [x] **Brain — intégration Moshi (S2S local) : réécrite en cascade Kyutai STT + XTTS**
   - Remplacé le `from moshi.models import Moshi` fantôme par une cascade

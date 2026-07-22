@@ -9,7 +9,7 @@
 -r requirements-web.in
 
 # Beam pinned in lockstep with the base image tag
-# (deploy/Dockerfile.dataflow: apache/beam_python3.12_sdk:2.74.0 — a mismatch
+# (deploy/Dockerfile.dataflow: apache/beam_python3.12_sdk:2.75.0 — a mismatch
 # between the SDK in the image and this pin fails Dataflow job submission).
 # apache-beam 2.75.0 lifts the jsonpickle cap (now `jsonpickle<5.0.0,>=3.0.4`),
 # unfreezing jsonpickle 3.4.2 → 4.x (CVE CWE-502; purely transitive, never imported

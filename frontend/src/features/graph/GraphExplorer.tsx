@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, lazy, Suspense } from 'react';
 import { useGraphData } from './useGraphData';
 import { GraphNode, GraphLink } from '../../types';
+
+const ForceGraph2D = lazy(
+  () => import('react-force-graph-2d'),
+) as unknown as React.ComponentType<any>;
 
 interface GraphExplorerProps {
   initialId: string;
@@ -15,12 +19,18 @@ export function GraphExplorer({ initialId, initialType }: GraphExplorerProps) {
   const getNodeColor = (node: GraphNode) => {
     const label = node.labels?.[0] || '';
     switch (label) {
-      case 'Anime': return '#ff7f0e';
-      case 'Character': return '#2ca02c';
-      case 'Game': return '#1f77b4';
-      case 'Movie': return '#d62728';
-      case 'Manga': return '#9467bd';
-      default: return '#7f7f7f';
+      case 'Anime':
+        return '#ff7f0e';
+      case 'Character':
+        return '#2ca02c';
+      case 'Game':
+        return '#1f77b4';
+      case 'Movie':
+        return '#d62728';
+      case 'Manga':
+        return '#9467bd';
+      default:
+        return '#7f7f7f';
     }
   };
 
@@ -37,7 +47,9 @@ export function GraphExplorer({ initialId, initialType }: GraphExplorerProps) {
       <div className="p-4 bg-gray-800 text-white flex items-center justify-between z-10">
         <h2 className="text-xl font-bold">Graph Explorer</h2>
         <div className="flex items-center space-x-4">
-          <label htmlFor="depth-slider" className="text-sm">Depth: {depth}</label>
+          <label htmlFor="depth-slider" className="text-sm">
+            Depth: {depth}
+          </label>
           <input
             id="depth-slider"
             type="range"
@@ -51,14 +63,14 @@ export function GraphExplorer({ initialId, initialType }: GraphExplorerProps) {
           />
         </div>
       </div>
-      
+
       <div className="flex-grow relative w-full min-h-[600px] bg-gray-900 overflow-hidden">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-20">
             <span className="text-white text-lg">Loading graph data...</span>
           </div>
         )}
-        
+
         {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-20">
             <span className="text-red-500 text-lg">Error: {error.message}</span>
@@ -66,14 +78,22 @@ export function GraphExplorer({ initialId, initialType }: GraphExplorerProps) {
         )}
 
         <div className="absolute inset-0">
-          <ForceGraph2D
-            graphData={data}
-            nodeAutoColorBy={(node) => (node as GraphNode).labels?.[0]}
-            nodeColor={(node) => getNodeColor(node as GraphNode)}
-            nodeLabel={(node) => getLabel(node as GraphNode)}
-            linkLabel={(link) => (link as GraphLink).type}
-            backgroundColor="#111827"
-          />
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-full text-white">
+                Loading graph canvas...
+              </div>
+            }
+          >
+            <ForceGraph2D
+              graphData={data}
+              nodeAutoColorBy={(node: any) => (node as GraphNode).labels?.[0]}
+              nodeColor={(node: any) => getNodeColor(node as GraphNode)}
+              nodeLabel={(node: any) => getLabel(node as GraphNode)}
+              linkLabel={(link: any) => (link as GraphLink).type}
+              backgroundColor="#111827"
+            />
+          </Suspense>
         </div>
       </div>
     </div>
