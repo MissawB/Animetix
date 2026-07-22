@@ -2,7 +2,12 @@ import React from 'react';
 import { Globe, MapPin, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const MEDIA_TYPES = ['Anime', 'Manga', 'Game', 'Movie'];
+const MEDIA_TYPES: Array<{ key: string; jp: string }> = [
+  { key: 'Anime', jp: 'アニメ' },
+  { key: 'Manga', jp: 'マンガ' },
+  { key: 'Game', jp: 'ゲーム' },
+  { key: 'Movie', jp: '映画' },
+];
 
 interface ExploreToolbarProps {
   mediaType: string;
@@ -23,44 +28,66 @@ export const ExploreToolbar: React.FC<ExploreToolbarProps> = ({
   selectedGenres,
   onToggleGenre,
 }) => (
-  <div className="sticky top-0 z-30 bg-[#0a0a0a]/90 backdrop-blur border-b border-white/5 py-4 space-y-4">
-    <div className="flex flex-wrap justify-between items-center gap-4">
+  <div className="z-30 space-y-4 border-b border-[#F4F1E8]/10 bg-[#0B0C10]/90 py-4 backdrop-blur lg:sticky lg:top-0">
+    <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex gap-6">
-        {MEDIA_TYPES.map((type) => (
-          <button
-            key={type}
-            onClick={() => onMediaTypeChange(type)}
-            className={`text-sm font-black uppercase tracking-widest transition-all ${
-              mediaType === type ? 'text-blue-500 scale-110' : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            {type}s
-          </button>
-        ))}
+        {MEDIA_TYPES.map(({ key, jp }) => {
+          const active = mediaType === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onMediaTypeChange(key)}
+              className="group relative pb-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FDB913]"
+            >
+              <span
+                className={`font-manga block text-sm font-black uppercase italic tracking-widest transition-colors ${
+                  active ? 'text-[#F4F1E8]' : 'text-[#8F94A5] group-hover:text-[#F4F1E8]'
+                }`}
+              >
+                {key}s
+              </span>
+              <span
+                aria-hidden
+                className={`block text-[9px] tracking-[0.4em] transition-colors ${
+                  active ? 'text-[#E8442B]' : 'text-[#8F94A5]/50'
+                }`}
+              >
+                {jp}
+              </span>
+              <span
+                aria-hidden
+                className={`absolute -bottom-1 left-0 h-[3px] bg-[#E8442B] transition-all ${
+                  active ? 'w-full' : 'w-0'
+                }`}
+              />
+            </button>
+          );
+        })}
       </div>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full">
-          <Search className="w-4 h-4 text-gray-400" />
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2 border-b border-[#F4F1E8]/20 px-1 py-2 transition-colors focus-within:border-[#FDB913]">
+          <Search className="h-4 w-4 text-[#8F94A5]" />
           <input
             type="search"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder="Rechercher…"
             aria-label="Rechercher"
-            className="bg-transparent text-sm text-white placeholder-gray-500 outline-none w-40"
+            className="w-40 bg-transparent text-sm text-[#F4F1E8] outline-none placeholder:text-[#8F94A5]/70"
           />
         </div>
         <Link
           to="/explore/market/"
-          className="flex items-center gap-3 px-6 py-2 bg-blue-400/10 border border-blue-400/20 rounded-full text-blue-500 font-black uppercase text-[10px] tracking-widest hover:bg-blue-400 hover:text-black transition-all group no-underline shadow-lg shadow-blue-400/5"
+          className="flex items-center gap-2 rounded-sm border border-[#F4F1E8]/15 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#8F94A5] no-underline transition-colors hover:border-[#E8442B] hover:text-[#F4F1E8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913]"
         >
-          <Globe className="w-4 h-4 group-hover:rotate-12" /> Wiki Marché
+          <Globe className="h-4 w-4" /> Wiki Marché
         </Link>
         <Link
           to="/explore/seichijunrei/"
-          className="flex items-center gap-3 px-6 py-2 bg-yellow-400/10 border border-yellow-400/20 rounded-full text-yellow-500 font-black uppercase text-[10px] tracking-widest hover:bg-yellow-400 hover:text-black transition-all group no-underline shadow-lg shadow-yellow-400/5"
+          className="flex items-center gap-2 rounded-sm border border-[#F4F1E8]/15 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#8F94A5] no-underline transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913]"
         >
-          <MapPin className="w-4 h-4 group-hover:animate-bounce" /> Carte Seichijunrei
+          <MapPin className="h-4 w-4" /> Carte Seichijunrei
         </Link>
       </div>
     </div>
@@ -71,9 +98,12 @@ export const ExploreToolbar: React.FC<ExploreToolbarProps> = ({
           return (
             <button
               key={genre}
+              type="button"
               onClick={() => onToggleGenre(genre)}
-              className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                active ? 'bg-blue-500 text-white' : 'bg-white/5 text-gray-400 hover:text-white'
+              className={`rounded-sm px-3 py-1 text-[10px] font-black uppercase tracking-widest transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913] ${
+                active
+                  ? 'bg-[#FDB913] text-[#0B0C10]'
+                  : 'border border-[#F4F1E8]/15 text-[#8F94A5] hover:border-[#F4F1E8]/40 hover:text-[#F4F1E8]'
               }`}
             >
               {genre}
