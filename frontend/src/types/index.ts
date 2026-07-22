@@ -541,6 +541,7 @@ export interface MediaDetail extends MediaItem {
   genres?: string[];
   title_english?: string;
   year?: string;
+  rating?: number;
   studios?: string[];
   author?: string;
   micro_tags?: string[];

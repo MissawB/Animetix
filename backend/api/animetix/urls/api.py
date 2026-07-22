@@ -94,6 +94,11 @@ urlpatterns = [
         name="api_media_characters",
     ),
     path(
+        "media/<str:media_type>/<str:item_id>/characters/graph/",
+        api_views.MediaCharactersGraphView.as_view(),
+        name="api_media_characters_graph",
+    ),
+    path(
         "media/<str:media_type>/<str:item_id>/",
         api_views.MediaDetailView.as_view(),
         name="api_media_detail",

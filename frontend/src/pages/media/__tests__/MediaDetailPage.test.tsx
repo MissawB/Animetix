@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
@@ -27,6 +27,10 @@ vi.mock('../../../features/manga-reader/components/ChapterList', () => ({
   ChapterList: () => <div data-testid="chapter-list" />,
 }));
 vi.mock('../../../utils/apiClient', () => ({ apiClient: vi.fn() }));
+// react-force-graph-2d ne tourne pas sous jsdom (canvas) — on mocke le composant
+vi.mock('../components/CharacterGraph', () => ({
+  CharacterGraph: () => <div data-testid="character-graph" />,
+}));
 
 const mockedUseMediaDetail = vi.mocked(useMediaDetail);
 const mockedUseMediaCharacters = vi.mocked(useMediaCharacters);
@@ -167,4 +171,92 @@ it('shows the characters section when characters exist', () => {
 it('hides the characters section when empty', () => {
   renderPage();
   expect(screen.queryByText(/personnages/i)).toBeNull();
+});
+
+it('offers "Voir les N personnages" when more exist and refetches with a limit', () => {
+  mockedUseMediaCharacters.mockReturnValue({
+    data: { characters: [{ id: '126071', name: 'Gon Freecss', image: '' }], total: 331 },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaCharacters>);
+  renderPage();
+  // le mock t() ne fait pas l'interpolation {{count}}, on matche le gabarit
+  const btn = screen.getByRole('button', { name: /voir les .*personnages/i });
+  fireEvent.click(btn);
+  expect(mockedUseMediaCharacters).toHaveBeenLastCalledWith('Anime', '38000', 500);
+});
+
+it('filters characters with the search bar', () => {
+  mockedUseMediaCharacters.mockReturnValue({
+    data: {
+      characters: [
+        { id: '1', name: 'Gon Freecss', image: '' },
+        { id: '2', name: 'Killua Zoldyck', image: '' },
+      ],
+      total: 2,
+    },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaCharacters>);
+  renderPage();
+  fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'killua' } });
+  expect(screen.queryByText('Gon Freecss')).toBeNull();
+  expect(screen.getByText('Killua Zoldyck')).toBeInTheDocument();
+});
+
+it('shows an empty message when no character matches the search', () => {
+  mockedUseMediaCharacters.mockReturnValue({
+    data: { characters: [{ id: '1', name: 'Gon Freecss', image: '' }], total: 1 },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaCharacters>);
+  renderPage();
+  fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'zzz' } });
+  expect(screen.getByText(/aucun personnage ne correspond/i)).toBeInTheDocument();
+});
+
+it('paginates characters 18 per page', () => {
+  const many = Array.from({ length: 20 }, (_, i) => ({
+    id: String(i + 1),
+    name: `Perso ${i + 1}`,
+    image: '',
+  }));
+  mockedUseMediaCharacters.mockReturnValue({
+    data: { characters: many, total: 20 },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaCharacters>);
+  renderPage();
+  expect(screen.getByText('Perso 1')).toBeInTheDocument();
+  expect(screen.queryByText('Perso 19')).toBeNull();
+  expect(screen.getByText('1')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /page suivante/i }));
+  expect(screen.getByText('Perso 19')).toBeInTheDocument();
+  expect(screen.queryByText('Perso 1')).toBeNull();
+  expect(screen.getByRole('button', { name: /page suivante/i })).toBeDisabled();
+});
+
+it('switches between the grid and the character graph', () => {
+  mockedUseMediaCharacters.mockReturnValue({
+    data: { characters: [{ id: '1', name: 'Gon Freecss', image: '' }], total: 1 },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaCharacters>);
+  renderPage();
+  expect(screen.queryByTestId('character-graph')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: /^graphe$/i }));
+  expect(screen.getByTestId('character-graph')).toBeInTheDocument();
+  expect(screen.queryByText('Gon Freecss')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: /^grille$/i }));
+  expect(screen.getByText('Gon Freecss')).toBeInTheDocument();
+});
+
+it('hides the expand button when every character is already shown', () => {
+  mockedUseMediaCharacters.mockReturnValue({
+    data: { characters: [{ id: '126071', name: 'Gon Freecss', image: '' }], total: 1 },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useMediaCharacters>);
+  renderPage();
+  expect(screen.queryByRole('button', { name: /voir les .*personnages/i })).toBeNull();
 });

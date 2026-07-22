@@ -308,6 +308,8 @@ class MediaCharactersView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, media_type, item_id):
+        import re
+
         from django.db.models import F
 
         from ...models import MediaItem
@@ -319,18 +321,113 @@ class MediaCharactersView(APIView):
             if item is None:
                 return Response({"error": "Item not found"}, status=404)
 
-            characters = MediaItem.objects.filter(
-                media_type="Character", metadata__origin=item.title
-            ).order_by(F("popularity").desc(nulls_last=True))[:12]
+            # Le match exact sur le titre ratait le casting principal des
+            # rééditions : les héros de HUNTER×HUNTER portent origin
+            # "HUNTER×HUNTER" alors que la fiche 2011 s'intitule
+            # "HUNTER×HUNTER (2011)". On matche donc aussi le titre sans
+            # suffixe d'année.
+            base_title = re.sub(r"\s*\(\d{4}\)$", "", item.title)
+            qs = MediaItem.objects.filter(
+                media_type="Character",
+                metadata__origin__in=list({item.title, base_title}),
+            )
+
+            # 18 par défaut (le casting principal) ; ?limit= permet au bouton
+            # "Voir les N personnages" de la fiche de tout charger, borné pour
+            # que l'endpoint AllowAny ne serve pas 35k lignes.
+            try:
+                limit = int(request.query_params.get("limit", 18))
+            except (TypeError, ValueError):
+                limit = 18
+            limit = max(1, min(limit, 500))
+
+            total = qs.count()
+            characters = qs.order_by(F("popularity").desc(nulls_last=True))[:limit]
 
             return Response(
                 {
                     "characters": [
                         {"id": c.external_id, "name": c.title, "image": c.image_url}
                         for c in characters
-                    ]
+                    ],
+                    "total": total,
                 }
             )
         except Exception:
             logger.exception("Error in MediaCharactersView")
+            return Response({"error": "Internal server error"}, status=500)
+
+
+class MediaCharactersGraphView(APIView):
+    """Graphe des personnages d'une œuvre.
+
+    Nœuds : les personnages (mêmes règles de rattachement que
+    MediaCharactersView). Arêtes : metadata.entities.related_characters,
+    résolues par mots entiers contre les titres des autres personnages —
+    "Gon" relie Killua à "Gon Freecss", mais "his father" ne matche rien.
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    MAX_NODES = 80
+
+    @staticmethod
+    def _match(rel_words: list[str], title_words: set[str]) -> bool:
+        return bool(rel_words) and all(w in title_words for w in rel_words)
+
+    def get(self, request, media_type, item_id):
+        import re
+
+        from django.db.models import F
+
+        from ...models import MediaItem
+
+        try:
+            item = MediaItem.objects.filter(
+                media_type=media_type, external_id=item_id
+            ).first()
+            if item is None:
+                return Response({"error": "Item not found"}, status=404)
+
+            base_title = re.sub(r"\s*\(\d{4}\)$", "", item.title)
+            characters = list(
+                MediaItem.objects.filter(
+                    media_type="Character",
+                    metadata__origin__in=list({item.title, base_title}),
+                ).order_by(F("popularity").desc(nulls_last=True))[: self.MAX_NODES]
+            )
+
+            title_words = {
+                c.external_id: set(c.title.lower().split()) for c in characters
+            }
+
+            links = set()
+            for c in characters:
+                related = ((c.metadata or {}).get("entities") or {}).get(
+                    "related_characters"
+                ) or []
+                for rel in related:
+                    rel_words = str(rel).lower().split()
+                    for other in characters:
+                        if other.external_id == c.external_id:
+                            continue
+                        if self._match(rel_words, title_words[other.external_id]):
+                            links.add(tuple(sorted((c.external_id, other.external_id))))
+
+            return Response(
+                {
+                    "nodes": [
+                        {
+                            "id": c.external_id,
+                            "name": c.title,
+                            "image": c.image_url,
+                            "popularity": c.popularity or 0,
+                        }
+                        for c in characters
+                    ],
+                    "links": [{"source": a, "target": b} for a, b in sorted(links)],
+                }
+            )
+        except Exception:
+            logger.exception("Error in MediaCharactersGraphView")
             return Response({"error": "Internal server error"}, status=500)

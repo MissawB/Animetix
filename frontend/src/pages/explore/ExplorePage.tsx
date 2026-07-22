@@ -157,23 +157,6 @@ const ExplorePage: React.FC = () => {
         <style>{`
           .no-scrollbar::-webkit-scrollbar { display: none; }
           .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-          .explore-halftone {
-            background-image: radial-gradient(rgba(244, 241, 232, 0.14) 1px, transparent 1.4px);
-            background-size: 14px 14px;
-            -webkit-mask-image: radial-gradient(ellipse at 72% 35%, black 0%, transparent 68%);
-            mask-image: radial-gradient(ellipse at 72% 35%, black 0%, transparent 68%);
-          }
-          .explore-stamp {
-            display: inline-block;
-            border: 2px solid #E8442B;
-            border-radius: 2px;
-            color: #E8442B;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            padding: 2px 6px;
-          }
-          .explore-vertical { writing-mode: vertical-rl; }
         `}</style>
       </div>
     </MotionConfig>

@@ -4,42 +4,43 @@
 @tailwind utilities;
 
 :root {
-    /* Design Tokens - Colors */
-    --color-primary: 37 99 235;    /* #2563eb - Blue 600 */
-    --color-primary-hover: 29 78 216;
-    --color-secondary: 107 114 128;
-    --color-success: 34 197 94;
-    --color-danger: 239 68 68;
-    --color-warning: 234 179 8;
-    --color-accent: 253 185 19;   /* #fdb913 */
-    --color-accent-drift: #fdb913;
-    
-    /* Surface Tokens */
-    --color-bg: 241 243 245;
-    --color-text: 26 26 46;
-    --color-card: 255 255 255;
-    --color-card-border: 0 0 0;
-    --opacity-card-border: 0.05;
-    
-    /* Layout Tokens */
-    --radius-card: 3rem;
-    --radius-button: 1rem;
-    --border-width-card: 1px;
-    
-    /* Shadows */
-    --shadow-card: 0 10px 50px -12px rgba(0, 0, 0, 0.25);
-    
-    /* Animation */
-    --transition-speed: 0.3s;
+  /* Design Tokens - Colors */
+  --color-primary: 37 99 235; /* #2563eb - Blue 600 */
+  --color-primary-hover: 29 78 216;
+  --color-secondary: 107 114 128;
+  --color-success: 34 197 94;
+  --color-danger: 239 68 68;
+  --color-warning: 234 179 8;
+  --color-accent: 253 185 19; /* #fdb913 */
+  --color-accent-drift: #fdb913;
+
+  /* Surface Tokens */
+  --color-bg: 241 243 245;
+  --color-text: 26 26 46;
+  --color-card: 255 255 255;
+  --color-card-border: 0 0 0;
+  --opacity-card-border: 0.05;
+
+  /* Layout Tokens */
+  --radius-card: 3rem;
+  --radius-button: 1rem;
+  --border-width-card: 1px;
+
+  /* Shadows */
+  --shadow-card: 0 10px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* Animation */
+  --transition-speed: 0.3s;
 }
 
-[data-bs-theme="dark"], .dark {
-    --color-bg: 15 15 26;
-    --color-text: 241 242 246;
-    --color-card: 26 26 46;
-    --color-card-border: 255 255 255;
-    --opacity-card-border: 0.05;
-    --shadow-card: 0 10px 50px -12px rgba(0, 0, 0, 0.5);
+[data-bs-theme='dark'],
+.dark {
+  --color-bg: 15 15 26;
+  --color-text: 241 242 246;
+  --color-card: 26 26 46;
+  --color-card-border: 255 255 255;
+  --opacity-card-border: 0.05;
+  --shadow-card: 0 10px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .font-vibe-manga {
@@ -52,120 +53,162 @@
 
 /* Theme Presets */
 .theme-naruto {
-    --color-primary: 249 115 22;   /* Orange */
-    --color-accent: 0 0 0;         /* Black */
-    --radius-card: 1rem;             /* Shaper look */
-    --border-width-card: 3px;
-    --opacity-card-border: 1;
+  --color-primary: 249 115 22; /* Orange */
+  --color-accent: 0 0 0; /* Black */
+  --radius-card: 1rem; /* Shaper look */
+  --border-width-card: 3px;
+  --opacity-card-border: 1;
 }
 
 .theme-manga-classic {
-    --color-primary: 0 0 0;
-    --color-secondary: 0 0 0;
-    --color-bg: 255 255 255;
-    --color-card: 255 255 255;
-    --color-text: 0 0 0;
-    --color-card-border: 0 0 0;
-    --opacity-card-border: 1;
-    --border-width-card: 4px;
-    --radius-card: 0px;
-    --shadow-card: 10px 10px 0px 0px rgba(0,0,0,1);
+  --color-primary: 0 0 0;
+  --color-secondary: 0 0 0;
+  --color-bg: 255 255 255;
+  --color-card: 255 255 255;
+  --color-text: 0 0 0;
+  --color-card-border: 0 0 0;
+  --opacity-card-border: 1;
+  --border-width-card: 4px;
+  --radius-card: 0px;
+  --shadow-card: 10px 10px 0px 0px rgba(0, 0, 0, 1);
 }
 
 @layer base {
   body {
     background-color: rgb(var(--color-bg));
     color: rgb(var(--color-text));
-    transition: background-color var(--transition-speed), color var(--transition-speed);
+    transition:
+      background-color var(--transition-speed),
+      color var(--transition-speed);
   }
 }
 
-
 /* SKELETON LOADERS */
 .skeleton {
-    background: linear-gradient(90deg, var(--card-bg) 25%, var(--page-bg) 50%, var(--card-bg) 75%);
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.5s infinite;
-    border-radius: 0.5rem;
+  background: linear-gradient(90deg, var(--card-bg) 25%, var(--page-bg) 50%, var(--card-bg) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 0.5rem;
 }
 @keyframes skeleton-loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @keyframes float-particle {
-    0% { transform: translateY(0); opacity: 0; }
-    50% { opacity: 0.5; }
-    100% { transform: translateY(-500px); opacity: 0; }
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-500px);
+    opacity: 0;
+  }
 }
 .particle {
-    animation: float-particle linear infinite;
+  animation: float-particle linear infinite;
 }
 
 /* Singularity Labs — drifting latent-space grid (signature motion) */
 @keyframes grid-pan {
-    0% { background-position: 0 0; }
-    100% { background-position: 44px 44px; }
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 44px 44px;
+  }
 }
 .animate-grid-pan {
-    animation: grid-pan 6s linear infinite;
+  animation: grid-pan 6s linear infinite;
 }
 
 /* World Boss — alert beam scanning across the banner (signature motion) */
 @keyframes boss-sweep {
-    0%   { transform: translateX(-120%) skewX(-12deg); opacity: 0; }
-    12%  { opacity: 1; }
-    88%  { opacity: 1; }
-    100% { transform: translateX(360%) skewX(-12deg); opacity: 0; }
+  0% {
+    transform: translateX(-120%) skewX(-12deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(360%) skewX(-12deg);
+    opacity: 0;
+  }
 }
 .animate-boss-sweep {
-    animation: boss-sweep 5s ease-in-out infinite;
+  animation: boss-sweep 5s ease-in-out infinite;
 }
 
 /* World Boss — breathing danger aura behind the boss */
 @keyframes boss-pulse {
-    0%, 100% { opacity: 0.45; transform: translateY(-50%) scale(0.92); }
-    50%      { opacity: 0.85; transform: translateY(-50%) scale(1.06); }
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translateY(-50%) scale(0.92);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translateY(-50%) scale(1.06);
+  }
 }
 .animate-boss-pulse {
-    animation: boss-pulse 3.5s ease-in-out infinite;
+  animation: boss-pulse 3.5s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .animate-grid-pan,
-    .animate-boss-sweep,
-    .animate-boss-pulse { animation: none; }
+  .animate-grid-pan,
+  .animate-boss-sweep,
+  .animate-boss-pulse {
+    animation: none;
+  }
 }
 
 /* CORE STYLES */
-body { 
-    font-family: 'Inter', sans-serif; 
-    background-color: var(--page-bg); 
-    color: var(--page-text);
-    min-height: 100vh;
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--page-bg);
+  color: var(--page-text);
+  min-height: 100vh;
 }
 
-.manga-font { font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; text-transform: uppercase; }
+.manga-font {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+}
 
 @layer base {
   * {
     box-sizing: border-box;
   }
-  
+
   :root {
     --page-bg: #f1f3f5;
     --page-text: #1a1a2e;
     --card-bg: #ffffff;
-    --card-shadow: rgba(0,0,0,0.05);
+    --card-shadow: rgba(0, 0, 0, 0.05);
     --hero-gradient: linear-gradient(105deg, #fff9e6 40%, #fffcf0 40.1%);
   }
 
   /* Dark mode configuration */
-  [data-bs-theme="dark"], .dark {
+  [data-bs-theme='dark'],
+  .dark {
     --page-bg: #0f0f1a;
     --page-text: #f1f2f6;
     --card-bg: #1a1a2e;
-    --card-shadow: rgba(0,0,0,0.3);
+    --card-shadow: rgba(0, 0, 0, 0.3);
     --hero-gradient: linear-gradient(105deg, #0f0f1a 40%, #1a1a2e 40.1%);
   }
 
@@ -174,22 +217,29 @@ body {
     background-color: var(--page-bg);
     color: var(--page-text);
     min-height: 100vh;
-    transition: background-color 0.5s ease, color 0.5s ease;
+    transition:
+      background-color 0.5s ease,
+      color 0.5s ease;
   }
 
   .home-bg {
-    background-image: linear-gradient(rgba(255, 252, 240, 0.7), rgba(255, 252, 240, 0.7)), url("/static/img/background.png");
+    background-image:
+      linear-gradient(rgba(255, 252, 240, 0.7), rgba(255, 252, 240, 0.7)),
+      url('/static/img/background.png');
     background-attachment: fixed;
     background-size: cover;
     background-position: center;
   }
 
-  [data-bs-theme="dark"] .home-bg, .dark .home-bg {
-    background-image: linear-gradient(rgba(15, 15, 26, 0.82), rgba(15, 15, 26, 0.82)), url("/static/img/background.png");
+  [data-bs-theme='dark'] .home-bg,
+  .dark .home-bg {
+    background-image:
+      linear-gradient(rgba(15, 15, 26, 0.82), rgba(15, 15, 26, 0.82)),
+      url('/static/img/background.png');
   }
 
   body::before {
-    content: "";
+    content: '';
     position: fixed;
     top: 0;
     left: 0;
@@ -202,7 +252,8 @@ body {
     pointer-events: none;
   }
 
-  [data-bs-theme="dark"] body::before, .dark body::before {
+  [data-bs-theme='dark'] body::before,
+  .dark body::before {
     opacity: 0.05;
   }
 
@@ -237,11 +288,11 @@ body {
   .btn-primary {
     @apply bg-anime-accent text-black font-black italic manga-font px-6 py-3 rounded-xl transition-all duration-300 hover:bg-anime-accent-dark hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
   }
-  
+
   .btn-secondary {
     @apply bg-black/80 dark:bg-white/10 text-white font-black italic manga-font px-5 py-2.5 rounded-xl transition-all duration-300 hover:bg-black dark:hover:bg-white/20;
   }
-  
+
   .input-field {
     @apply bg-transparent border-2 border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-anime-light-text dark:text-anime-dark-text placeholder-black/30 dark:placeholder-white/30 focus:outline-none focus:border-anime-accent focus:ring-2 focus:ring-anime-accent/20 transition-all duration-200 w-full;
   }
@@ -253,11 +304,11 @@ body {
   .badge-correct {
     @apply badge bg-anime-success/20 text-anime-success border border-anime-success/30;
   }
-  
+
   .badge-wrong {
     @apply badge bg-anime-error/20 text-anime-error border border-anime-error/30;
   }
-  
+
   .badge-partial {
     @apply badge bg-[#fdb913]/20 text-[#d97706] dark:text-[#fdb913] border border-[#fdb913]/30;
   }
@@ -316,10 +367,13 @@ body {
   border-radius: 9999px;
   background: var(--uc-accent, #ef4444);
   border: 3px solid #0d0f17;
-  box-shadow: 0 0 0 1px var(--uc-accent, #ef4444),
+  box-shadow:
+    0 0 0 1px var(--uc-accent, #ef4444),
     0 0 16px -2px var(--uc-accent, #ef4444);
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 }
 .uc-slider::-webkit-slider-thumb:hover {
   transform: scale(1.18);
@@ -328,7 +382,9 @@ body {
   transform: scale(1.06);
 }
 .uc-slider:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 2px #0d0f17, 0 0 0 4px var(--uc-accent, #ef4444);
+  box-shadow:
+    0 0 0 2px #0d0f17,
+    0 0 0 4px var(--uc-accent, #ef4444);
 }
 .uc-slider::-moz-range-thumb {
   width: 22px;
@@ -336,7 +392,8 @@ body {
   border-radius: 9999px;
   background: var(--uc-accent, #ef4444);
   border: 3px solid #0d0f17;
-  box-shadow: 0 0 0 1px var(--uc-accent, #ef4444),
+  box-shadow:
+    0 0 0 1px var(--uc-accent, #ef4444),
     0 0 16px -2px var(--uc-accent, #ef4444);
   cursor: pointer;
 }
@@ -344,3 +401,23 @@ body {
   background: transparent;
 }
 
+/* Édition de nuit — utilitaires partagés (Explorer + fiches d'œuvre) */
+.explore-halftone {
+  background-image: radial-gradient(rgba(244, 241, 232, 0.14) 1px, transparent 1.4px);
+  background-size: 14px 14px;
+  -webkit-mask-image: radial-gradient(ellipse at 72% 35%, black 0%, transparent 68%);
+  mask-image: radial-gradient(ellipse at 72% 35%, black 0%, transparent 68%);
+}
+.explore-stamp {
+  display: inline-block;
+  border: 2px solid #e8442b;
+  border-radius: 2px;
+  color: #e8442b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+}
+.explore-vertical {
+  writing-mode: vertical-rl;
+}

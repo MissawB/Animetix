@@ -3,25 +3,29 @@ import { Link } from 'react-router-dom';
 import type { MediaCharacter } from '../../../features/media/hooks/useMediaCharacters';
 
 export const CharacterGrid: React.FC<{ characters: MediaCharacter[] }> = ({ characters }) => (
-  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+  <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
     {characters.map((c) => (
-      <Link key={c.id} to={`/media/Character/${c.id}/`} className="no-underline group block">
-        <div className="aspect-[3/4] rounded-xl overflow-hidden bg-gray-900 mb-2 border border-white/5 group-hover:border-blue-500/40 transition-all shadow-xl">
+      <Link
+        key={c.id}
+        to={`/media/Character/${c.id}/`}
+        className="group block no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FDB913]"
+      >
+        <div className="mb-2 aspect-[3/4] overflow-hidden rounded-[4px] bg-[#F4F1E8]/5 ring-1 ring-[#F4F1E8]/10 transition-all group-hover:-translate-y-1 group-hover:ring-[#FDB913]/60">
           {c.image ? (
             <img
               src={c.image}
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover"
               alt={c.name}
               loading="lazy"
               decoding="async"
             />
           ) : (
-            <span className="w-full h-full flex items-center justify-center text-2xl font-black text-white/30">
+            <span className="flex h-full w-full items-center justify-center text-2xl font-black text-[#F4F1E8]/30">
               {c.name.charAt(0)}
             </span>
           )}
         </div>
-        <p className="text-[10px] font-black uppercase tracking-tighter line-clamp-1 opacity-60 group-hover:opacity-100 group-hover:text-blue-400 transition-all">
+        <p className="line-clamp-1 text-[10px] font-black uppercase tracking-widest text-[#8F94A5] transition-colors group-hover:text-[#F4F1E8]">
           {c.name}
         </p>
       </Link>

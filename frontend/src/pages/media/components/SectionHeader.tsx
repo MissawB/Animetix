@@ -3,18 +3,15 @@ import type { LucideIcon } from 'lucide-react';
 
 interface SectionHeaderProps {
   title: string;
+  /** Conservé pour compatibilité d'API ; la rubrique est marquée par la barre d'encre. */
   icon?: LucideIcon;
   iconClassName?: string;
 }
 
-export const SectionHeader: React.FC<SectionHeaderProps> = ({
-  title,
-  icon: Icon,
-  iconClassName,
-}) => (
-  <h3 className="text-2xl font-black italic uppercase tracking-widest flex items-center gap-3 mb-6">
-    {Icon && <Icon className={`w-5 h-5 ${iconClassName ?? ''}`} aria-hidden="true" />}
+export const SectionHeader: React.FC<SectionHeaderProps> = ({ title }) => (
+  <h3 className="mb-6 flex items-center gap-4 font-manga text-xl font-black uppercase italic tracking-wide text-[#F4F1E8] md:text-2xl">
+    <span className="h-6 w-1.5 flex-none bg-[#E8442B]" aria-hidden />
     {title}
-    <span className="h-px bg-current opacity-20 flex-1" />
+    <span className="h-px flex-1 bg-[#F4F1E8]/10" aria-hidden />
   </h3>
 );

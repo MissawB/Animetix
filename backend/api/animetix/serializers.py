@@ -217,6 +217,8 @@ class MediaItemSerializer(serializers.Serializer):
     image_url = serializers.SerializerMethodField()
     year = serializers.IntegerField(required=False, allow_null=True)
     popularity = serializers.IntegerField(required=False, allow_null=True)
+    # Note 0-100 (IGDB natif, AniList averageScore, TMDB vote_average x10)
+    rating = serializers.FloatField(required=False, allow_null=True)
     genres = serializers.ListField(child=serializers.CharField(), required=False)
     tags = serializers.ListField(child=serializers.CharField(), required=False)
     micro_tags = serializers.ListField(child=serializers.CharField(), required=False)
@@ -258,6 +260,7 @@ class MediaItemSerializer(serializers.Serializer):
                 "media_type": getattr(instance, "media_type", None),
                 "year": getattr(instance, "release_year", None),
                 "popularity": int(getattr(instance, "popularity", 0) or 0),
+                "rating": getattr(instance, "rating", None),
                 "genres": manga_metadata.get("genres", []),
                 "tags": manga_metadata.get("tags", []),
                 "micro_tags": manga_metadata.get("micro_tags", []),
