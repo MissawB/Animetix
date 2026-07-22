@@ -16,14 +16,21 @@ export type FeedItem = {
   popularity?: number;
   rating?: number;
   genres?: string[];
+  studios?: string[];
 };
 
 export const MediaCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const [saved, setSaved] = React.useState(false);
   const isManga = item.media_type === 'Manga';
-  const originalTitle = [item.title_native, item.title_english].find(
-    (t) => t && t.trim() !== '' && t.toLowerCase() !== item.title.toLowerCase(),
-  );
+  const differsFromTitle = (t?: string): t is string =>
+    !!t && t.trim() !== '' && t.toLowerCase() !== item.title.toLowerCase();
+  const nativeTitle = differsFromTitle(item.title_native) ? item.title_native : undefined;
+  const englishTitle =
+    differsFromTitle(item.title_english) &&
+    item.title_english!.toLowerCase() !== nativeTitle?.toLowerCase()
+      ? item.title_english
+      : undefined;
+  const studio = item.studios?.[0];
 
   const toggleFavorite = async () => {
     try {
@@ -70,8 +77,11 @@ export const MediaCard: React.FC<{ item: FeedItem }> = ({ item }) => {
         <h4 className="font-manga text-sm font-black uppercase italic leading-tight text-[#F4F1E8]">
           {item.title}
         </h4>
-        {originalTitle && (
-          <p className="mt-0.5 text-[11px] leading-snug text-[#8F94A5]">{originalTitle}</p>
+        {nativeTitle && (
+          <p className="mt-0.5 text-[11px] leading-snug text-[#F4F1E8]/70">{nativeTitle}</p>
+        )}
+        {englishTitle && (
+          <p className="mt-0.5 text-[10px] italic leading-snug text-[#8F94A5]">{englishTitle}</p>
         )}
         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-black uppercase tracking-widest">
           {item.rating != null && (
@@ -86,6 +96,16 @@ export const MediaCard: React.FC<{ item: FeedItem }> = ({ item }) => {
             </span>
           ))}
         </div>
+        {studio && (
+          <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-[#8F94A5]">
+            Studio <span className="text-[#F4F1E8]/75">{studio}</span>
+          </p>
+        )}
+        {item.synopsis_fr && (
+          <p className="mt-1.5 line-clamp-2 text-[10px] leading-snug text-[#8F94A5]">
+            {item.synopsis_fr}
+          </p>
+        )}
         <div className="mt-3 flex gap-2">
           <Link
             to={`/media/${item.media_type}/${item.id}/`}

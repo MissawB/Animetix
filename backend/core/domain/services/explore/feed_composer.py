@@ -17,6 +17,7 @@ _ITEM_KEYS = (
     "popularity",
     "rating",
     "genres",
+    "studios",
 )
 
 

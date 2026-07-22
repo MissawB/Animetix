@@ -30,6 +30,20 @@ it('shows the original title in the overlay when it differs from the display tit
   expect(screen.getByText('鬼滅の刃')).toBeInTheDocument();
 });
 
+it('shows BOTH native and english titles when they differ from the display title', () => {
+  renderCard({
+    id: '1',
+    title: 'Sousou no Frieren',
+    title_native: '葬送のフリーレン',
+    title_english: "Frieren: Beyond Journey's End",
+    media_type: 'Anime',
+    studios: ['MADHOUSE'],
+  });
+  expect(screen.getByText('葬送のフリーレン')).toBeInTheDocument();
+  expect(screen.getByText("Frieren: Beyond Journey's End")).toBeInTheDocument();
+  expect(screen.getByText('MADHOUSE')).toBeInTheDocument();
+});
+
 it('falls back to the english title and hides it when identical to the display title', () => {
   renderCard({
     id: '1',
