@@ -92,7 +92,7 @@ setuptools<81
 # jamais importé par notre code, non exploitable chez nous). Bump lockstep avec le tag de
 # base Dockerfile.dataflow (beam_python3.12_sdk:2.75.0), sinon mismatch SDK → échec Dataflow.
 apache-beam==2.75.0
-dbt-core==1.11.11
+dbt-core==1.11.12
 dbt-sqlite==1.10.0
 dbt-bigquery==1.10.3
 beautifulsoup4==4.12.3
