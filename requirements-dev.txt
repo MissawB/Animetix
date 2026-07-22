@@ -4,11 +4,7 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements-dev.txt --strip-extras requirements-dev.in
 #
-colorama==0.4.6
-    # via
-    #   -c requirements.txt
-    #   pytest
-coloredlogs==14.0
+coloredlogs==15.0.1
     # via -r requirements-dev.in
 coverage==7.15.0
     # via pytest-cov
@@ -26,8 +22,6 @@ pygments==2.20.0
     # via
     #   -c requirements.txt
     #   pytest
-pyreadline3==3.5.6
-    # via humanfriendly
 pytest==9.0.3
     # via
     #   -r requirements-dev.in
