@@ -40,7 +40,10 @@ gcp_services:
     scheduler_region: "europe-west1"
     service_account: "836616987676-compute@developer.gserviceaccount.com"
     image_base: "europe-west9-docker.pkg.dev/animetix/animetix-repo/web"
-    vpc_connector: "animetix-vpc-conn"
+    # Direct VPC egress (like the brain): reaches Cloud SQL's private IP without
+    # the always-on animetix-vpc-conn connector (deleted 2026-07 to cut costs).
+    vpc_network: "default"
+    vpc_subnet: "default"
     items:
       - name: "animetix-sync-catalog"
         args: "backend/api/manage.py,sync_catalog"

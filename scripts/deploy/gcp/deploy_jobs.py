@@ -51,7 +51,8 @@ def main():
     scheduler_region = jobs_root["scheduler_region"]
     service_account = jobs_root["service_account"]
     image = f"{jobs_root['image_base']}:latest"
-    vpc_connector = os.getenv("GCP_VPC_CONNECTOR", jobs_root["vpc_connector"])
+    vpc_network = os.getenv("GCP_VPC_NETWORK", jobs_root["vpc_network"])
+    vpc_subnet = os.getenv("GCP_VPC_SUBNET", jobs_root["vpc_subnet"])
     jobs_config = jobs_root["items"]
 
     # 1. Enable Cloud Scheduler API
@@ -166,8 +167,12 @@ def main():
                 f"--args={job['args']}",
                 f"--region={region}",
                 f"--service-account={service_account}",
-                f"--vpc-connector={vpc_connector}",
+                f"--network={vpc_network}",
+                f"--subnet={vpc_subnet}",
                 "--vpc-egress=private-ranges-only",
+                # Direct VPC and a connector are mutually exclusive; updating a
+                # job that still carries the legacy connector needs the clear.
+                *(["--clear-vpc-connector"] if action == "update" else []),
                 f"--memory={job['memory']}",
                 f"--cpu={job['cpu']}",
                 f"--task-timeout={job.get('timeout', '3600s')}",
