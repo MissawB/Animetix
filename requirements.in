@@ -62,7 +62,7 @@ torch==2.5.1
 transformers==4.57.6
 trl==0.12.1
 coqui-tts==0.27.5
-imageio==2.37.3
+imageio==2.37.4
 z3-solver==4.16.0.0
 
 # 5. GCP, Observability & Utilities
