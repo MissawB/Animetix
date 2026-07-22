@@ -8,6 +8,8 @@ ROW_ITEM_LIMIT = 20
 _ITEM_KEYS = (
     "id",
     "title",
+    "title_native",
+    "title_english",
     "media_type",
     "image",
     "synopsis_fr",
@@ -215,7 +217,20 @@ class FeedComposer:
         db = catalog.get("db", [])
         rows = []
 
-        by_rating = sorted(db, key=lambda i: (i.get("rating") or 0), reverse=True)
+        # Notoriété : vote_count (TMDB) sinon popularity (AniList/IGDB). Une
+        # note fondée sur une poignée de votes classait des œuvres obscures
+        # devant Breaking Bad ; les rangées cold-start ne piochent que dans
+        # les œuvres notables ET connues. Repli sur tout le catalogue si
+        # aucune note n'existe (petits catalogues, fixtures).
+        def fame(i):
+            return i.get("vote_count") or i.get("popularity") or 0
+
+        notable = [i for i in db if i.get("rating") is not None] or db
+        pool = sorted(notable, key=fame, reverse=True)
+
+        by_rating = sorted(
+            pool[:500], key=lambda i: (i.get("rating") or 0), reverse=True
+        )
         top_seen = set(seen_ids)
         top_items = self._take(by_rating, top_seen)
         if top_items:
@@ -229,7 +244,9 @@ class FeedComposer:
                 }
             )
 
-        by_year = sorted(db, key=lambda i: (i.get("year") or 0), reverse=True)
+        by_year = sorted(
+            pool[:1000], key=lambda i: (i.get("year") or 0, fame(i)), reverse=True
+        )
         new_seen = set(seen_ids)
         new_items = self._take(by_year, new_seen)
         if new_items:

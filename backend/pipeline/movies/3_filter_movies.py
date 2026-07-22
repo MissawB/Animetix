@@ -9,8 +9,10 @@ logger = logging.getLogger("animetix." + __name__)
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-# Détection robuste de la racine du projet
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Racine du projet (data/ vit au-dessus de backend/)
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 RAW_FILE = os.path.join(BASE_DIR, "data", "raw", "raw_tmdb_db.json")
 CLEAN_DB = os.path.join(BASE_DIR, "data", "processed", "clean_root_movies.json")

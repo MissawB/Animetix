@@ -18,8 +18,8 @@ from dotenv import load_dotenv  # noqa: E402
 # Configuration du logger
 logger = logging.getLogger("animetix.pipeline.movies.ingest")
 
-# Détection robuste de la racine du projet
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Racine du projet (le .env et data/ vivent au-dessus de backend/)
+BASE_DIR = PROJECT_ROOT
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
@@ -65,38 +65,51 @@ def ingest_movies():
 
     all_raw = []
 
-    # On récupère 50 pages de chaque (50 * 20 = 1000 items par catégorie)
-    logger.info("🎬 Collecting 1000+ candidate Movies & Series...")
-    for page in range(1, 51):
-        m = fetch_tmdb_page("movie/popular", page=page)
-        if m:
-            for item in m.get("results", []):
-                item["media_type_custom"] = "Movie"
-                all_raw.append(item)
+    # `movie/popular` mesure la tendance du moment (sorties récentes, churn
+    # streaming) et remontait des œuvres obscures. Le nombre de votes est un
+    # bien meilleur proxy de notoriété : `discover` trié par vote_count.desc
+    # donne les œuvres les plus connues de tous les temps, complété par
+    # `top_rated` pour les classiques les mieux notés.
+    def _tag_movie(item):
+        item["media_type_custom"] = "Movie"
+        return item
 
-        s = fetch_tmdb_page("tv/popular", page=page)
-        if s:
-            for item in s.get("results", []):
-                genres = item.get("genre_ids", [])
-                origin = item.get("origin_country", [])
-                item["media_type_custom"] = (
-                    "Cartoon" if (16 in genres and "JP" not in origin) else "Series"
-                )
-                all_raw.append(item)
+    def _tag_tv(item):
+        genres = item.get("genre_ids", [])
+        origin = item.get("origin_country", [])
+        item["media_type_custom"] = (
+            "Cartoon" if (16 in genres and "JP" not in origin) else "Series"
+        )
+        return item
 
-        if page % 10 == 0:
-            logger.info(f"   - Progress: {page}/50 pages collected...")
-        time.sleep(0.1)
+    sources = [
+        ("discover/movie", {"sort_by": "vote_count.desc"}, _tag_movie),
+        ("movie/top_rated", {}, _tag_movie),
+        ("discover/tv", {"sort_by": "vote_count.desc"}, _tag_tv),
+        ("tv/top_rated", {}, _tag_tv),
+    ]
 
-    # Tri par popularité et on regarde les candidats
-    all_raw.sort(key=lambda x: x.get("popularity", 0), reverse=True)
+    logger.info("🎬 Collecting well-known Movies & Series (by vote count)...")
+    for endpoint, params, tag in sources:
+        for page in range(1, 26):
+            res = fetch_tmdb_page(endpoint, page=page, params=params)
+            if res:
+                for item in res.get("results", []):
+                    all_raw.append(tag(item))
+            time.sleep(0.1)
+        logger.info(f"   - {endpoint}: 25 pages collected")
+
+    # Tri par nombre de votes (notoriété) puis popularité
+    all_raw.sort(
+        key=lambda x: (x.get("vote_count", 0), x.get("popularity", 0)), reverse=True
+    )
 
     # On identifie ceux qu'on n'a pas encore enrichis
     new_candidates = [item for item in all_raw if item["id"] not in existing_ids]
 
     # Si on en a déjà beaucoup, on peut limiter les nouveaux à enrichir par session pour pas exploser le temps
     # Mais ici on va essayer d'enrichir tous les nouveaux trouvés dans le top scan
-    limit_new = 500
+    limit_new = 800
     candidates_to_enrich = new_candidates[:limit_new]
 
     if not candidates_to_enrich:
@@ -120,6 +133,14 @@ def ingest_movies():
                 "format": "MOVIE" if m_type == "movie" else "TV",
                 "media_type": item["media_type_custom"],
                 "popularity": details.get("popularity"),
+                # échelle 0-100, alignée sur IGDB (jeux) et AniList (anime/manga)
+                "score": (
+                    round(float(details["vote_average"]) * 10, 1)
+                    if details.get("vote_average")
+                    and (details.get("vote_count") or 0) >= 50
+                    else None
+                ),
+                "vote_count": details.get("vote_count"),
                 "title": details.get("title") or details.get("name"),
                 "title_english": details.get("original_title")
                 or details.get("original_name"),
