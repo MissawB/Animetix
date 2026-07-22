@@ -30,9 +30,6 @@ _Aucun item ouvert._
   - Reste (mesuré 2026-07-21) : `ClusterHealthPanel` (615), `SeiyuuDiscoveryPage` (531), `PowerStationPage` (523), `TreeOfThoughtsPage` (509), `ProfilePage` (506). Pattern rodé : test de caractérisation d'abord (surtout pour les non-testés : Seiyuu/PowerStation/TreeOfThoughts/Profile), puis extraire des composants co-localisés en gardant état+handlers dans la page.
   - Aussi : ratcheter les seuils vitest (`vite.config.ts:149-154`, 38 % stmts) au fil des tests ajoutés.
 
-- [ ] **CI — reliquat infra : inscrire `test-windows` en required check** _(audit dette 2026-07-19 ; in-file fait 2026-07-21, cf. HISTORY)_
-  - Fait : perf-test gaté (`run_perf`/`deploy_to_prod`), bandit/hadolint sur PR `backend`/`deploy`, hygiène versions (setup-python v5, codecov v5).
-  - **Reste (action GitHub, hors repo)** : `test-windows` est déjà bloquant mais pas un *required check* — l'inscrire via Settings→Branches pour qu'il gate réellement les merges.
 
 ## 🟢 Faibles
 
