@@ -24,9 +24,9 @@ _Aucun item ouvert._
 - [x] **Backend — galerie VN publique non bornée + N+1 + sur-exposition (fait 2026-07-23)** _(audit dette 2026-07-22)_
   - Fixé en TDD (4 tests de caractérisation dans `test_forge_vn_api.py::TestTheaterGallery`) : cap `GALLERY_MAX_ITEMS=50` + `select_related("creator")` + `prefetch_related("likes")` (35 → 2 requêtes applicatives), whitelist de champs (`likes` — IDs bruts des likers — retiré du payload), `context={"request": request}` (→ `is_liked` fonctionne). Régression vérifiée : suites forge_vn/multiverse/social vertes.
 
-- [ ] **Infra — l'image Brain tourne en root (quick win)** _(audit dette 2026-07-22)_
-  - Preuve : `deploy/Dockerfile.brain` — aucun `USER` dans le stage runtime, alors que web (`deploy/Dockerfile:86`) et dataflow (`Dockerfile.dataflow:53`) posent `USER appuser`. Seule image de service qui ne largue pas ses privilèges, et c'est le service GPU exposé.
-  - Fix : `useradd` + `chown` de `/app` et `/opt/ollama` + `USER` avant le `CMD`.
+- [x] **Infra — l'image Brain tourne en root (fait 2026-07-23, effectif au prochain rebuild brain)** _(audit dette 2026-07-22)_
+  - Fixé : `useradd appuser` + `USER appuser` + `HOME=/home/appuser` dans le stage runtime de `Dockerfile.brain`. Volontairement **sans** `chown -R /opt/ollama` : les modèles bakés (~5 Go) ne sont que lus (world-readable suffit) et un chown récursif dupliquerait les blobs dans un layer. Seuls `/app/data/models` (caches HF/torch, écrits au 1er appel STT/XTTS) et le HOME (clé `ollama serve`, cache coqui-tts) passent à `appuser`. Vérifié : `/mnt/models` (FUSE) est en lecture seule dans les 3 consommateurs.
+  - ⚠️ Dormant tant que l'image brain n'est pas rebuildée (la CI ne la redéploie jamais) — le rebuild S2S déjà en attente (cf. item Moshi/Kyutai) l'embarquera ; smoke à vérifier à ce moment-là : `/health` 200 + warm-up Ollama OK en non-root.
 
 - [ ] **CI — aucun garde-fou de dérive des migrations Django (quick win)** _(audit dette 2026-07-22)_
   - Preuve : zéro `makemigrations --check` dans CI/pre-commit/tests ; le seul `migrate` est au démarrage du conteneur (`deploy/supervisord.conf:9`) — un modèle modifié sans migration n'est détecté qu'au cold-start en prod.

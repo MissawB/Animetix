@@ -176,6 +176,17 @@ COPY . .
 
 RUN mkdir -p data/models/torch data/models/huggingface
 
+# Drop root (parity with the web/dataflow images). Only the runtime-writable
+# paths change ownership: the baked Ollama models under /opt/ollama stay
+# root-owned — serving only READS them and world-readable is enough, while a
+# recursive chown would duplicate ~5 GB of blobs into a new layer. HOME must
+# be writable: `ollama serve` writes its keypair to ~/.ollama on startup and
+# coqui-tts caches voices under ~/.local/share.
+RUN useradd --create-home --uid 1000 appuser \
+    && chown -R appuser:appuser /app/data/models
+ENV HOME=/home/appuser
+USER appuser
+
 EXPOSE 7861
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
