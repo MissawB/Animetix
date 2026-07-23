@@ -5,12 +5,20 @@ interface CyberSliderProps {
   max: number;
   value: number;
   onChange: (value: number) => void;
+  /** Encres de la forge : 'magenta' = fer chaud (vermillon), 'cyan' = braise
+   *  (or). Noms historiques conservés pour ne pas toucher les appelants. */
   color?: 'cyan' | 'magenta';
 }
 
-export const CyberSlider: React.FC<CyberSliderProps> = ({ min, max, value, onChange, color = 'cyan' }) => {
-  const accentClass = color === 'cyan' ? 'accent-cyberpunk-neonCyan' : 'accent-cyberpunk-neonMagenta';
-    return (
+export const CyberSlider: React.FC<CyberSliderProps> = ({
+  min,
+  max,
+  value,
+  onChange,
+  color = 'cyan',
+}) => {
+  const ink = color === 'magenta' ? '#E8442B' : '#FDB913';
+  return (
     <div className="w-full">
       <input
         type="range"
@@ -19,7 +27,8 @@ export const CyberSlider: React.FC<CyberSliderProps> = ({ min, max, value, onCha
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         aria-label="Curseur de réglage"
-        className={`w-full h-2 rounded-lg appearance-none cursor-pointer bg-cyberpunk-panelBorder ${accentClass}`}
+        style={{ accentColor: ink }}
+        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-[#F4F1E8]/10"
       />
       <style>{`
         input[type=range]::-webkit-slider-thumb {
@@ -27,8 +36,8 @@ export const CyberSlider: React.FC<CyberSliderProps> = ({ min, max, value, onCha
           height: 16px;
           width: 16px;
           border-radius: 50%;
-          background: #ffffff;
-          box-shadow: 0 0 10px ${color === 'cyan' ? '#00F3FF' : '#FF00FF'};
+          background: #F4F1E8;
+          box-shadow: 0 0 10px ${ink};
         }
       `}</style>
     </div>

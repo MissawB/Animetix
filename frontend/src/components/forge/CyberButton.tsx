@@ -7,27 +7,29 @@ interface CyberButtonProps {
   className?: string;
 }
 
+/** Le marteau de la Forge : bouton braise (or -> fer chaud) au halo qui
+ *  respire. Nom historique conservé pour ne pas toucher les appelants. */
 export const CyberButton: React.FC<CyberButtonProps> = ({ onClick, children, className }) => {
   return (
     <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.96 }}
       animate={{
         boxShadow: [
-          '0 0 10px rgba(0, 243, 255, 0.5)',
-          '0 0 20px rgba(0, 243, 255, 0.8)',
-          '0 0 10px rgba(0, 243, 255, 0.5)',
+          '0 0 18px rgba(253, 185, 19, 0.25)',
+          '0 0 34px rgba(232, 68, 43, 0.4)',
+          '0 0 18px rgba(253, 185, 19, 0.25)',
         ],
       }}
       transition={{
         boxShadow: {
           repeat: Infinity,
-          duration: 1.5,
+          duration: 2,
           ease: 'easeInOut',
         },
       }}
       onClick={onClick}
-      className={`px-6 py-2 bg-cyberpunk-panel border border-cyberpunk-neonCyan text-cyberpunk-neonCyan font-mono rounded uppercase tracking-widest ${className}`}
+      className={`font-manga cursor-pointer border-none bg-gradient-to-br from-[#FDB913] to-[#E8442B] uppercase tracking-wide text-[#0B0C10] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FDB913] ${className ?? ''}`}
     >
       {children}
     </motion.button>
