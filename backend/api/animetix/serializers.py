@@ -354,7 +354,29 @@ class CreativeFusionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CreativeFusion
-        fields = "__all__"
+        # Explicit whitelist: this serializer feeds AllowAny endpoints, and
+        # `likes` (raw list of liker user ids) must stay server-side —
+        # likes_count / is_liked are the public view of it.
+        fields = [
+            "id",
+            "title_a",
+            "title_b",
+            "media_type_a",
+            "media_type_b",
+            "scenario_text",
+            "image_url",
+            "chaos_level",
+            "universe_balance",
+            "art_style",
+            "creator",
+            "creator_name",
+            "parent",
+            "vn_script",
+            "is_public",
+            "created_at",
+            "likes_count",
+            "is_liked",
+        ]
 
     def get_likes_count(self, obj) -> int:
         if (

@@ -21,9 +21,8 @@ _Aucun item ouvert._
   - Facturation GCP **rétablie le 2026-07-22**, mais le run GPU est **différé volontairement** : période de réduction des frais pendant la validation AdSense (sensors en pause, Redis migré Upstash, connecteur VPC retiré — cf. HISTORY 2026-07-22). Les ~3,5 h de vecteurs déjà écrits sont préservés (job reprenable).
   - **Reste (quand le mode économie sera levé)** : 1) vérifier/relever le plafond de budget (50 € conseillé) ; 2) Brain `/health` = 200 ; 3) re-exécuter **par chunks** (`--limit N`) jusqu'aux ~35 000 ; 4) recherche perso ne renvoie plus 503.
 
-- [ ] **Backend — galerie VN publique non bornée + N+1 + sur-exposition (quick win ~10 lignes)** _(audit dette 2026-07-22)_
-  - Preuve : `forge_vn.py:26-31` — endpoint `AllowAny` qui retourne **toutes** les fusions publiques sans pagination ni `prefetch_related("likes")` (1 COUNT SQL par ligne via `get_likes_count`), avec `fields = "__all__"` (`serializers.py:354`) et sans `context` (→ `is_liked` toujours `False`).
-  - Fix : slice/pagination + `.prefetch_related("likes")` + whitelist de champs + `context={"request": request}`.
+- [x] **Backend — galerie VN publique non bornée + N+1 + sur-exposition (fait 2026-07-23)** _(audit dette 2026-07-22)_
+  - Fixé en TDD (4 tests de caractérisation dans `test_forge_vn_api.py::TestTheaterGallery`) : cap `GALLERY_MAX_ITEMS=50` + `select_related("creator")` + `prefetch_related("likes")` (35 → 2 requêtes applicatives), whitelist de champs (`likes` — IDs bruts des likers — retiré du payload), `context={"request": request}` (→ `is_liked` fonctionne). Régression vérifiée : suites forge_vn/multiverse/social vertes.
 
 - [ ] **Infra — l'image Brain tourne en root (quick win)** _(audit dette 2026-07-22)_
   - Preuve : `deploy/Dockerfile.brain` — aucun `USER` dans le stage runtime, alors que web (`deploy/Dockerfile:86`) et dataflow (`Dockerfile.dataflow:53`) posent `USER appuser`. Seule image de service qui ne largue pas ses privilèges, et c'est le service GPU exposé.
