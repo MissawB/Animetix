@@ -34,14 +34,14 @@ export const RelicItem: React.FC<RelicItemProps> = ({
       whileHover={{ y: -20, scale: 1.05 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
-      <div className="relative w-60 h-80 flex items-center justify-center">
+      <div className="relative w-40 h-52 flex items-center justify-center">
         <div
           className={`absolute inset-0 blur-[40px] opacity-20 group-hover:opacity-60 transition-opacity rounded-full ${glowColor}`}
         />
         {glyph && (
           <span
             aria-hidden
-            className={`absolute select-none text-[9rem] font-black leading-none opacity-[0.12] transition-opacity duration-500 group-hover:opacity-25 ${color}`}
+            className={`absolute select-none text-[5.5rem] font-black leading-none opacity-[0.12] transition-opacity duration-500 group-hover:opacity-25 ${color}`}
           >
             {glyph}
           </span>
