@@ -28,9 +28,8 @@ _Aucun item ouvert._
   - Fixé : `useradd appuser` + `USER appuser` + `HOME=/home/appuser` dans le stage runtime de `Dockerfile.brain`. Volontairement **sans** `chown -R /opt/ollama` : les modèles bakés (~5 Go) ne sont que lus (world-readable suffit) et un chown récursif dupliquerait les blobs dans un layer. Seuls `/app/data/models` (caches HF/torch, écrits au 1er appel STT/XTTS) et le HOME (clé `ollama serve`, cache coqui-tts) passent à `appuser`. Vérifié : `/mnt/models` (FUSE) est en lecture seule dans les 3 consommateurs.
   - ⚠️ Dormant tant que l'image brain n'est pas rebuildée (la CI ne la redéploie jamais) — le rebuild S2S déjà en attente (cf. item Moshi/Kyutai) l'embarquera ; smoke à vérifier à ce moment-là : `/health` 200 + warm-up Ollama OK en non-root.
 
-- [ ] **CI — aucun garde-fou de dérive des migrations Django (quick win)** _(audit dette 2026-07-22)_
-  - Preuve : zéro `makemigrations --check` dans CI/pre-commit/tests ; le seul `migrate` est au démarrage du conteneur (`deploy/supervisord.conf:9`) — un modèle modifié sans migration n'est détecté qu'au cold-start en prod.
-  - Fix : étape CI (ou test dédié type `test_coverage_gate.py`) exécutant `makemigrations --check --dry-run`.
+- [x] **CI — aucun garde-fou de dérive des migrations Django (fait 2026-07-23)** _(audit dette 2026-07-22)_
+  - Fixé : `tests/deploy/test_migrations_check.py` exécute `makemigrations --check --dry-run` dans le job pytest (CI + pre-push + local, ~8 s). Marqueur `django_db` requis (`check_consistent_history` lit l'historique appliqué). Discrimination vérifiée en TDD : champ-sonde ajouté sans migration → FAIL, retiré → PASS. `test_settings` héritant d'`INSTALLED_APPS` prod, le graphe inspecté est celui de la prod.
 
 - [ ] **Frontend — régression du plafond « 0 pages > 500 lignes » + garde-fou manquant (quick win pour le lint)** _(audit dette 2026-07-22)_
   - Preuve : `pages/games/CovertestPage.tsx` **694 l.** (plus gros fichier du repo ; FX inline extractibles l.35-70) et `pages/games/ClassicLobbyPage.tsx` **519 l.** — l'acquis des PR 93-96 n'est pas protégé.
