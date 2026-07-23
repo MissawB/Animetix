@@ -6,50 +6,77 @@ import { RelicItem } from '../../features/labs/components/RelicItem';
 import { LabListOverlay } from '../../features/labs/components/LabListOverlay';
 import { Book, Frame, Headphones, FlaskConical as Flask } from 'lucide-react';
 
-const categoryLabs: Record<string, { id: string; title: string; url: string; desc: string }[]> = {
+const categoryLabs: Record<
+  string,
+  { id: string; title: string; url: string; desc: string; glyph: string }[]
+> = {
   narrative: [
     {
       id: 'forge',
       title: 'Forge de Réalité',
       url: '/forge/',
       desc: 'Fusionnez univers et scénarios.',
+      glyph: '鍛',
     },
     {
       id: 'vsbattle',
       title: 'Arena Ultimatum',
       url: '/game/vsbattle/',
       desc: "Duels trans-dimensionnels arbitrés par l'IA.",
+      glyph: '闘',
     },
   ],
   visual: [
-    { id: 'manga', title: 'Manga Lab', url: '/lab/manga/', desc: 'Rendu Manga par IA.' },
-    { id: 'video', title: 'Video Lab', url: '/lab/video/', desc: 'Analyse et indexation vidéo.' },
+    {
+      id: 'manga',
+      title: 'Manga Lab',
+      url: '/lab/manga/',
+      desc: 'Rendu Manga par IA.',
+      glyph: '漫',
+    },
+    {
+      id: 'video',
+      title: 'Video Lab',
+      url: '/lab/video/',
+      desc: 'Analyse et indexation vidéo.',
+      glyph: '映',
+    },
     {
       id: 'nexus',
       title: 'Visual Nexus',
       url: '/lab/visual-nexus/',
       desc: "Exploration d'embeddings visuels.",
+      glyph: '目',
     },
     {
       id: 'reconstruction',
       title: 'Cinematic Reconstruction',
       url: '/lab/cinematic/',
       desc: '3D de scènes animées.',
+      glyph: '幕',
     },
   ],
   audio: [
-    { id: 'audio', title: 'Audio Lab', url: '/lab/audio/', desc: 'Clonage vocal et synthèse.' },
+    {
+      id: 'audio',
+      title: 'Audio Lab',
+      url: '/lab/audio/',
+      desc: 'Clonage vocal et synthèse.',
+      glyph: '音',
+    },
     {
       id: 'soundscape',
       title: 'Soundscape Lab',
       url: '/lab/soundscape/',
       desc: "Génération d'ambiances sonores.",
+      glyph: '響',
     },
     {
       id: 'speech',
       title: 'Speech-to-Speech',
       url: '/lab/speech-to-speech/',
       desc: 'Transformation vocale temps-réel.',
+      glyph: '訳',
     },
   ],
   experimental: [
@@ -58,6 +85,7 @@ const categoryLabs: Record<string, { id: string; title: string; url: string; des
       title: 'Singularity Hub',
       url: '/lab/',
       desc: 'Accès aux modules de recherche Omega.',
+      glyph: '特異',
     },
   ],
 };
@@ -67,10 +95,38 @@ const ForgeHubPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories = [
-    { id: 'narrative', icon: Book, color: 'text-amber-500', glow: 'bg-amber-500' },
-    { id: 'visual', icon: Frame, color: 'text-blue-500', glow: 'bg-blue-500' },
-    { id: 'audio', icon: Headphones, color: 'text-emerald-500', glow: 'bg-emerald-500' },
-    { id: 'experimental', icon: Flask, color: 'text-red-600', glow: 'bg-red-600' },
+    {
+      id: 'narrative',
+      icon: Book,
+      color: 'text-amber-500',
+      glow: 'bg-amber-500',
+      glyph: '物語',
+      hex: '#F59E0B',
+    },
+    {
+      id: 'visual',
+      icon: Frame,
+      color: 'text-blue-500',
+      glow: 'bg-blue-500',
+      glyph: '絵',
+      hex: '#3B82F6',
+    },
+    {
+      id: 'audio',
+      icon: Headphones,
+      color: 'text-emerald-500',
+      glow: 'bg-emerald-500',
+      glyph: '音',
+      hex: '#10B981',
+    },
+    {
+      id: 'experimental',
+      icon: Flask,
+      color: 'text-red-600',
+      glow: 'bg-red-600',
+      glyph: '実験',
+      hex: '#DC2626',
+    },
   ];
 
   const particleConfig = useMemo(
@@ -141,6 +197,7 @@ const ForgeHubPage: React.FC = () => {
                 desc={t(`forge_hub.categories.${cat.id}.desc`)}
                 color={cat.color}
                 glowColor={cat.glow}
+                glyph={cat.glyph}
                 onClick={() => setSelectedCategory(cat.id)}
               >
                 <cat.icon className="w-full h-full stroke-[0.5]" />
@@ -157,8 +214,15 @@ const ForgeHubPage: React.FC = () => {
       </div>
 
       <LabListOverlay
-        category={selectedCategory}
+        categories={categories.map((cat) => ({
+          id: cat.id,
+          title: t(`forge_hub.categories.${cat.id}.title`),
+          glyph: cat.glyph,
+          hex: cat.hex,
+        }))}
+        selected={selectedCategory}
         labs={translatedCategoryLabs}
+        onSelect={setSelectedCategory}
         onClose={() => setSelectedCategory(null)}
       />
     </AnimatedPage>

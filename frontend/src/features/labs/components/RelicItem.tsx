@@ -8,25 +8,47 @@ interface RelicItemProps {
   desc: string;
   color: string;
   glowColor: string;
+  /** Kanji de la catégorie, gravé en filigrane derrière la relique. */
+  glyph?: string;
   children: React.ReactNode;
   onClick: () => void;
 }
 
-export const RelicItem: React.FC<RelicItemProps> = ({ 
-  id, title, sub, desc, color, glowColor, children, onClick 
+export const RelicItem: React.FC<RelicItemProps> = ({
+  id,
+  title,
+  sub,
+  desc,
+  color,
+  glowColor,
+  glyph,
+  children,
+  onClick,
 }) => {
   return (
-    <motion.button 
+    <motion.button
       id={id}
       onClick={onClick}
       aria-label={title}
       className="flex flex-col items-center justify-center cursor-pointer group bg-transparent border-none outline-none p-0 text-inherit font-inherit"
       whileHover={{ y: -20, scale: 1.05 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
       <div className="relative w-60 h-80 flex items-center justify-center">
-        <div className={`absolute inset-0 blur-[40px] opacity-20 group-hover:opacity-60 transition-opacity rounded-full ${glowColor}`} />
-        <div className={`w-full h-full ${color} transition-all duration-500 group-hover:drop-shadow-[0_0_20px_currentColor]`}>
+        <div
+          className={`absolute inset-0 blur-[40px] opacity-20 group-hover:opacity-60 transition-opacity rounded-full ${glowColor}`}
+        />
+        {glyph && (
+          <span
+            aria-hidden
+            className={`absolute select-none text-[9rem] font-black leading-none opacity-[0.12] transition-opacity duration-500 group-hover:opacity-25 ${color}`}
+          >
+            {glyph}
+          </span>
+        )}
+        <div
+          className={`relative w-full h-full ${color} transition-all duration-500 group-hover:drop-shadow-[0_0_20px_currentColor]`}
+        >
           {children}
         </div>
       </div>
