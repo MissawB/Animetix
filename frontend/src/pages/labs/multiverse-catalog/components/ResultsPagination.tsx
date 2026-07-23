@@ -10,15 +10,20 @@ interface ResultsPaginationProps {
 }
 
 // ─── Pagination ──────────────────────────────────────────────────────
-const ResultsPagination: React.FC<ResultsPaginationProps> = ({ pagination, onPrev, onNext, onSelectPage }) => {
+const ResultsPagination: React.FC<ResultsPaginationProps> = ({
+  pagination,
+  onPrev,
+  onNext,
+  onSelectPage,
+}) => {
   return (
-    <div className="flex items-center justify-center gap-4 mt-12">
+    <div className="mt-12 flex items-center justify-center gap-4">
       <button
         onClick={onPrev}
         disabled={!pagination.has_previous}
-        className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest disabled:opacity-20 hover:bg-white/10 transition-all"
+        className="flex cursor-pointer items-center gap-2 rounded-full border border-[#F4F1E8]/15 bg-transparent px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#8F94A5] transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-[#F4F1E8]/15 disabled:hover:text-[#8F94A5]"
       >
-        <ChevronLeft className="w-3.5 h-3.5" /> Précédent
+        <ChevronLeft className="h-3.5 w-3.5" /> Précédent
       </button>
 
       <div className="flex items-center gap-1">
@@ -41,10 +46,10 @@ const ResultsPagination: React.FC<ResultsPaginationProps> = ({ pagination, onPre
             <button
               key={pageNum}
               onClick={() => onSelectPage(pageNum)}
-              className={`w-10 h-10 rounded-xl text-[10px] font-black transition-all ${
+              className={`h-10 w-10 cursor-pointer rounded-xl text-[10px] font-black transition-colors ${
                 pageNum === currentPage
-                  ? 'bg-cyan-500/20 border border-cyan-500/30 text-cyan-400'
-                  : 'bg-white/[0.02] hover:bg-white/5 opacity-40 hover:opacity-100'
+                  ? 'border border-[#FDB913]/60 bg-[#FDB913]/10 text-[#FDB913]'
+                  : 'border border-transparent bg-[#0F1016] text-[#8F94A5] hover:text-[#F4F1E8]'
               }`}
             >
               {pageNum}
@@ -56,9 +61,9 @@ const ResultsPagination: React.FC<ResultsPaginationProps> = ({ pagination, onPre
       <button
         onClick={onNext}
         disabled={!pagination.has_next}
-        className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest disabled:opacity-20 hover:bg-white/10 transition-all"
+        className="flex cursor-pointer items-center gap-2 rounded-full border border-[#F4F1E8]/15 bg-transparent px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#8F94A5] transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-[#F4F1E8]/15 disabled:hover:text-[#8F94A5]"
       >
-        Suivant <ChevronRight className="w-3.5 h-3.5" />
+        Suivant <ChevronRight className="h-3.5 w-3.5" />
       </button>
     </div>
   );

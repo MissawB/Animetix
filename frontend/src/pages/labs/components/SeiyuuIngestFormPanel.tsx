@@ -1,9 +1,12 @@
 import React from 'react';
-import { Video, Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { LabPanel, LAB_INPUT, LAB_LABEL, LAB_BTN_GHOST } from './shared/LabKit';
+
+/** Action principale compacte (même voix que LAB_CTA, sans w-full). */
+const CTA_COMPACT =
+  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-[#E8442B] px-8 py-3 font-manga text-sm font-black uppercase italic text-[#F4F1E8] transition-colors hover:bg-[#c93a24] disabled:cursor-not-allowed disabled:opacity-50';
 
 interface SeiyuuIngestFormPanelProps {
   ingestName: string;
@@ -47,19 +50,15 @@ export const SeiyuuIngestFormPanel: React.FC<SeiyuuIngestFormPanelProps> = ({
       initial={{ height: 0, opacity: 0 }}
       animate={{ height: 'auto', opacity: 1 }}
       exit={{ height: 0, opacity: 0 }}
-      className="overflow-hidden mb-12"
+      className="mb-12 overflow-hidden"
     >
-      <Card
-        padding="lg"
-        className="bg-[#12121e]/80 border border-emerald-500/20 backdrop-blur-xl rounded-[2.5rem] p-8"
+      <LabPanel
+        title={t('labs.seiyuu.ingest_title', 'Ingestion et extraction vocale')}
+        corner="30 Bx"
       >
-        <h3 className="text-2xl font-black italic uppercase manga-font flex items-center gap-3 mb-6 text-emerald-400">
-          <Video className="w-6 h-6 text-red-500" />{' '}
-          {t('labs.seiyuu.ingest_title', 'Ingestion et extraction vocale')}
-        </h3>
-        <p className="text-xs font-bold opacity-50 uppercase tracking-widest mb-6">
+        <p className="mb-6 text-xs leading-relaxed text-[#8F94A5]">
           {t('labs.seiyuu.ingest_cost_label', 'Coût :')}{' '}
-          <span className="text-emerald-400">30 Bx</span>{' '}
+          <span className="font-black text-[#FDB913]">30 Bx</span>{' '}
           {t(
             'labs.seiyuu.ingest_cost_desc',
             "— L'IA télécharge l'audio, isole les fréquences vocales (80Hz - 8000Hz) et découpe un échantillon de 10s sans silence.",
@@ -67,12 +66,9 @@ export const SeiyuuIngestFormPanel: React.FC<SeiyuuIngestFormPanelProps> = ({
         </p>
 
         <form onSubmit={onSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <label
-                htmlFor="ingest-name"
-                className="text-[10px] font-black uppercase tracking-wider opacity-60"
-              >
+              <label htmlFor="ingest-name" className={LAB_LABEL}>
                 {t('labs.seiyuu.ingest_name_label', 'Nom du Doubleur / Seiyuu')}
               </label>
               <input
@@ -82,21 +78,18 @@ export const SeiyuuIngestFormPanel: React.FC<SeiyuuIngestFormPanelProps> = ({
                 value={ingestName}
                 onChange={(e) => setIngestName(e.target.value)}
                 placeholder="Ex: Donald Reignoux, Rie Takahashi"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 font-bold text-sm outline-none focus:border-emerald-500/50"
+                className={LAB_INPUT}
               />
             </div>
             <div className="space-y-2">
-              <label
-                htmlFor="ingest-lang"
-                className="text-[10px] font-black uppercase tracking-wider opacity-60"
-              >
+              <label htmlFor="ingest-lang" className={LAB_LABEL}>
                 {t('labs.seiyuu.ingest_lang_label', 'Langue / Spécialisation')}
               </label>
               <select
                 id="ingest-lang"
                 value={ingestLang}
                 onChange={(e) => setIngestLang(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 font-bold text-sm outline-none focus:border-emerald-500/50 text-white"
+                className={LAB_INPUT}
               >
                 <option value="japanese">
                   {t('labs.seiyuu.lang_option_ja', 'Japonais (Seiyuu)')}
@@ -110,10 +103,7 @@ export const SeiyuuIngestFormPanel: React.FC<SeiyuuIngestFormPanelProps> = ({
           </div>
 
           <div className="space-y-2">
-            <label
-              htmlFor="ingest-source"
-              className="text-[10px] font-black uppercase tracking-wider opacity-60"
-            >
+            <label htmlFor="ingest-source" className={LAB_LABEL}>
               {t('labs.seiyuu.ingest_source_label', 'URL YouTube ou requête de recherche')}
             </label>
             <input
@@ -123,16 +113,13 @@ export const SeiyuuIngestFormPanel: React.FC<SeiyuuIngestFormPanelProps> = ({
               value={ingestSource}
               onChange={(e) => setIngestSource(e.target.value)}
               placeholder="Ex: https://www.youtube.com/watch?v=... ou 'Donald Reignoux Titeuf interview'"
-              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 font-bold text-sm outline-none focus:border-emerald-500/50"
+              className={LAB_INPUT}
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <label
-                htmlFor="ingest-def"
-                className="text-[10px] font-black uppercase tracking-wider opacity-60"
-              >
+              <label htmlFor="ingest-def" className={LAB_LABEL}>
                 {t('labs.seiyuu.ingest_def_label', 'Définition / Description (optionnel)')}
               </label>
               <textarea
@@ -141,15 +128,15 @@ export const SeiyuuIngestFormPanel: React.FC<SeiyuuIngestFormPanelProps> = ({
                 value={ingestDef}
                 onChange={(e) => setIngestDef(e.target.value)}
                 placeholder="Ex: Acteur français à voix claire, connu pour doubler Sora..."
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 font-bold text-sm outline-none focus:border-emerald-500/50 h-24 resize-none"
+                className={`${LAB_INPUT} h-24 resize-none`}
               />
             </div>
             <div className="space-y-2">
-              <label
-                htmlFor="ingest-roles"
-                className="text-[10px] font-black uppercase tracking-wider opacity-60"
-              >
-                {t('labs.seiyuu.ingest_roles_label', 'Iconic Roles (séparés par des virgules)')}
+              <label htmlFor="ingest-roles" className={LAB_LABEL}>
+                {t(
+                  'labs.seiyuu.ingest_roles_label',
+                  'Rôles emblématiques (séparés par des virgules)',
+                )}
               </label>
               <textarea
                 id="ingest-roles"
@@ -157,44 +144,40 @@ export const SeiyuuIngestFormPanel: React.FC<SeiyuuIngestFormPanelProps> = ({
                 value={ingestRoles}
                 onChange={(e) => setIngestRoles(e.target.value)}
                 placeholder="Ex: Sora, Spider-Man, Titeuf, Reese"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 font-bold text-sm outline-none focus:border-emerald-500/50 h-24 resize-none"
+                className={`${LAB_INPUT} h-24 resize-none`}
               />
             </div>
           </div>
 
           {ingestError && (
-            <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 font-bold rounded-xl text-xs">
-              ⚠️ {ingestError}
+            <div className="rounded-xl border border-[#E8442B]/30 bg-[#E8442B]/10 p-4 text-xs font-bold text-[#E8442B]">
+              {ingestError}
             </div>
           )}
 
           {ingestSuccess && (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-black rounded-xl text-xs flex items-center gap-2 animate-pulse">
-              <Sparkles className="w-4 h-4 text-glow" /> {ingestSuccess}
+            <div className="flex items-center gap-2 rounded-xl border border-[#FDB913]/30 bg-[#FDB913]/10 p-4 text-xs font-black text-[#FDB913]">
+              <Sparkles className="h-4 w-4 flex-none" aria-hidden="true" /> {ingestSuccess}
             </div>
           )}
 
           <div className="flex justify-end gap-4 pt-2">
-            <Button type="button" variant="ghost" onClick={onCancel}>
+            <button type="button" className={LAB_BTN_GHOST} onClick={onCancel}>
               {t('common.cancel', 'Annuler')}
-            </Button>
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black italic uppercase px-8 py-3 rounded-xl flex items-center gap-2 border-none"
-            >
+            </button>
+            <button type="submit" disabled={isPending} className={CTA_COMPACT}>
               {isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />{' '}
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />{' '}
                   {t('labs.seiyuu.ingestion_in_progress', 'Ingestion en cours...')}
                 </>
               ) : (
                 t('labs.seiyuu.start_ingestion', "Lancer l'ingestion")
               )}
-            </Button>
+            </button>
           </div>
         </form>
-      </Card>
+      </LabPanel>
     </motion.div>
   );
 };

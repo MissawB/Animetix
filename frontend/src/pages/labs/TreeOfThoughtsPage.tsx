@@ -25,15 +25,15 @@ import { ToTGuideProtocolSection } from './components/ToTGuideProtocolSection';
 const getNodeColor = (type: string) => {
   switch (type) {
     case 'root':
-      return '#ffffff';
+      return '#F4F1E8'; // Papier
     case 'selected':
-      return '#10b981'; // Emerald-500
+      return '#FDB913'; // Or
     case 'pruned':
-      return '#991b1b'; // Red-800
+      return '#8F94A5'; // Graphite
     case 'final':
-      return '#fbbf24'; // Yellow-400
+      return '#E8442B'; // Vermillon
     default:
-      return '#6b7280';
+      return '#8F94A5';
   }
 };
 
@@ -155,7 +155,7 @@ const TreeOfThoughtsPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-[#0a0a12] text-white pt-20">
+    <div className="min-h-screen w-full bg-[#0B0C10] text-[#F4F1E8] pt-20">
       <AnimatedPage>
         <div className="h-[calc(100vh-84px)] w-full flex overflow-hidden relative z-10">
           {/* Input & Controls Sidebar */}
@@ -171,12 +171,12 @@ const TreeOfThoughtsPage: React.FC = () => {
           />
 
           {/* Main Visualization Area */}
-          <div className="flex-1 relative bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-950/10 via-black to-black">
+          <div className="flex-1 relative bg-[#0B0C10]">
             {graphData ? (
               <Suspense
                 fallback={
-                  <div className="flex items-center justify-center h-full text-emerald-500">
-                    Loading graph canvas...
+                  <div className="flex items-center justify-center h-full text-sm text-[#8F94A5]">
+                    Chargement du canevas…
                   </div>
                 }
               >
@@ -214,12 +214,12 @@ const TreeOfThoughtsPage: React.FC = () => {
                         ctx.font = `${4 / globalScale}px font-black`;
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        ctx.fillStyle = '#000';
+                        ctx.fillStyle = '#0B0C10';
                         ctx.fillText(label, node.x || 0, node.y || 0);
                       }
                     }
                   }}
-                  linkColor={() => 'rgba(255, 255, 255, 0.05)'}
+                  linkColor={() => 'rgba(244, 241, 232, 0.08)'}
                   linkDirectionalParticles={2}
                   linkDirectionalParticleSpeed={0.005}
                   linkDirectionalParticleWidth={2}
@@ -228,19 +228,22 @@ const TreeOfThoughtsPage: React.FC = () => {
                       typeof link.target === 'object' ? (link.target as ToTNode).id : link.target;
                     const target = graphData.nodes.find((n) => n.id === targetId);
                     return target?.type === 'selected' || target?.type === 'final'
-                      ? '#10b981'
-                      : 'rgba(255,255,255,0.1)';
+                      ? '#FDB913'
+                      : 'rgba(244,241,232,0.12)';
                   }}
                   onNodeClick={handleNodeClick}
                   cooldownTicks={100}
                 />
               </Suspense>
             ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center opacity-10">
-                <Network className="w-64 h-64 mb-12 animate-pulse" />
-                <h2 className="text-6xl font-black italic uppercase manga-font tracking-tighter">
-                  WAITING FOR REASONING
+              <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
+                <Network className="mb-8 h-40 w-40 text-[#8F94A5]/30" aria-hidden="true" />
+                <h2 className="font-manga text-4xl font-black uppercase italic tracking-tighter text-[#F4F1E8]/50">
+                  En attente d'un raisonnement
                 </h2>
+                <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#8F94A5]">
+                  Saisis une question dans le panneau de gauche pour faire pousser l'arbre.
+                </p>
               </div>
             )}
 

@@ -1,10 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
-import { AnimatedPage } from '../../components/ui/AnimatedPage';
-import { RelicItem } from '../../features/labs/components/RelicItem';
-import { LabListOverlay } from '../../features/labs/components/LabListOverlay';
 import { Book, Frame, Headphones, FlaskConical as Flask } from 'lucide-react';
+import { LabPage, LabHeader } from './components/shared/LabKit';
+import { LabListOverlay } from '../../features/labs/components/LabListOverlay';
 
 const categoryLabs: Record<string, { id: string; title: string; url: string; desc: string }[]> = {
   narrative: [
@@ -67,22 +65,11 @@ const ForgeHubPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories = [
-    { id: 'narrative', icon: Book, color: 'text-amber-500', glow: 'bg-amber-500' },
-    { id: 'visual', icon: Frame, color: 'text-blue-500', glow: 'bg-blue-500' },
-    { id: 'audio', icon: Headphones, color: 'text-emerald-500', glow: 'bg-emerald-500' },
-    { id: 'experimental', icon: Flask, color: 'text-red-600', glow: 'bg-red-600' },
+    { id: 'narrative', icon: Book },
+    { id: 'visual', icon: Frame },
+    { id: 'audio', icon: Headphones },
+    { id: 'experimental', icon: Flask },
   ];
-
-  const particleConfig = useMemo(
-    () =>
-      [...Array(20)].map((_, i) => ({
-        left: (i * 7) % 100,
-        top: (i * 13) % 100,
-        duration: 10 + (i % 10),
-        delay: i * 0.5,
-      })),
-    [],
-  );
 
   const translatedCategoryLabs = useMemo(() => {
     if (!selectedCategory) return [];
@@ -95,65 +82,37 @@ const ForgeHubPage: React.FC = () => {
   }, [selectedCategory, t]);
 
   return (
-    <AnimatedPage>
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 py-20 relative overflow-hidden bg-[#020202]">
-        {/* Particles */}
-        <div className="fixed inset-0 pointer-events-none z-0">
-          {particleConfig.map((p, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full particle"
-              style={{
-                left: `${p.left}%`,
-                top: `${p.top}%`,
-                animationDuration: `${p.duration}s`,
-                animationDelay: `${p.delay}s`,
-              }}
-            />
-          ))}
-        </div>
-        {/* Ambient Glows */}
-        <div className="fixed inset-0 pointer-events-none z-0 opacity-10">
-          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-red-600/20 blur-[150px] rounded-full" />
-          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-600/20 blur-[150px] rounded-full" />
-        </div>
+    <LabPage>
+      <LabHeader
+        code="Annuaire · Forge"
+        title={t('forge_hub.title').split(' ')[0]}
+        accent={t('forge_hub.title').split(' ').slice(1).join(' ')}
+        lede={t('forge_hub.description')}
+      />
 
-        <header className="text-center mb-24 z-10">
-          <h1 className="text-7xl font-black italic manga-font uppercase tracking-tighter text-white">
-            {t('forge_hub.title').split(' ')[0]}{' '}
-            <span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">
-              {t('forge_hub.title').split(' ').slice(1).join(' ')}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {categories.map((cat) => (
+          <button
+            key={cat.id}
+            type="button"
+            onClick={() => setSelectedCategory(cat.id)}
+            aria-label={t(`forge_hub.categories.${cat.id}.title`)}
+            className="group flex h-full cursor-pointer flex-col rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#FDB913]/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913]"
+          >
+            <span className="mb-8 inline-flex w-fit rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-3.5 text-[#F4F1E8] transition-colors group-hover:text-[#FDB913]">
+              <cat.icon className="h-7 w-7" aria-hidden="true" />
             </span>
-          </h1>
-        </header>
-
-        <div className="flex flex-wrap gap-12 justify-center items-center z-10 max-w-7xl">
-          {categories.map((cat) => (
-            <motion.div
-              key={cat.id}
-              animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-            >
-              <RelicItem
-                id={cat.id}
-                title={t(`forge_hub.categories.${cat.id}.title`)}
-                sub={t(`forge_hub.categories.${cat.id}.sub`)}
-                desc={t(`forge_hub.categories.${cat.id}.desc`)}
-                color={cat.color}
-                glowColor={cat.glow}
-                onClick={() => setSelectedCategory(cat.id)}
-              >
-                <cat.icon className="w-full h-full stroke-[0.5]" />
-              </RelicItem>
-            </motion.div>
-          ))}
-        </div>
-
-        <footer className="mt-24 opacity-20 text-center z-10">
-          <p className="text-xs uppercase tracking-[0.4em] text-white">
-            {t('forge_hub.description')}
-          </p>
-        </footer>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#E8442B]">
+              {t(`forge_hub.categories.${cat.id}.sub`)}
+            </span>
+            <h2 className="font-manga mt-2 text-2xl font-black uppercase italic tracking-tight text-[#F4F1E8]">
+              {t(`forge_hub.categories.${cat.id}.title`)}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-[#8F94A5]">
+              {t(`forge_hub.categories.${cat.id}.desc`)}
+            </p>
+          </button>
+        ))}
       </div>
 
       <LabListOverlay
@@ -161,7 +120,7 @@ const ForgeHubPage: React.FC = () => {
         labs={translatedCategoryLabs}
         onClose={() => setSelectedCategory(null)}
       />
-    </AnimatedPage>
+    </LabPage>
   );
 };
 

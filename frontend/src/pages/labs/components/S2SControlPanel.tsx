@@ -1,9 +1,17 @@
 import React from 'react';
-import { Mic, Square, Radio, Loader2, RefreshCw } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { Mic, Square, Loader2, RefreshCw } from 'lucide-react';
+import { LabPanel, LAB_BTN_GHOST } from './shared/LabKit';
 
 export type S2SStatus = 'connecting' | 'ready' | 'recording' | 'thinking' | 'playing' | 'error';
+
+const STATUS_LABELS: Record<S2SStatus, string> = {
+  connecting: 'Connexion…',
+  ready: 'Clique pour parler',
+  recording: 'Enregistrement…',
+  thinking: 'Réponse en cours…',
+  playing: 'Lecture de la réponse…',
+  error: 'Erreur de connexion',
+};
 
 /** Live-link control panel: the record/stop button, status text, and the
  *  retry button shown on error. All behaviour is owned by the page's session
@@ -16,62 +24,58 @@ export const S2SControlPanel: React.FC<{
   stopRecording: () => void;
   connectWebSocket: () => void;
 }> = ({ status, isRecording, errorMessage, startRecording, stopRecording, connectWebSocket }) => (
-  <div className="md:col-span-4 space-y-8">
-    <Card
-      padding="lg"
-      className="bg-navy-900/40 border-white/5 relative overflow-hidden h-full flex flex-col justify-between"
+  <div className="md:col-span-4">
+    <LabPanel
+      title="Liaison live"
+      className="flex h-full flex-col justify-between"
+      corner={
+        status === 'connecting' ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        ) : isRecording ? (
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 animate-ping rounded-full bg-[#E8442B]" aria-hidden /> rec
+          </span>
+        ) : undefined
+      }
     >
-      <div className="absolute top-0 right-0 p-4">
-        {isRecording && <div className="w-3 h-3 bg-red-500 rounded-full animate-ping" />}
-        {status === 'connecting' && <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />}
-      </div>
-
-      <h3 className="text-xs font-black uppercase opacity-40 tracking-widest flex items-center gap-2">
-        <Radio className="w-4 h-4" /> Liaison Live Edge
-      </h3>
-
-      <div className="flex flex-col items-center justify-center py-10 space-y-8">
+      <div className="flex flex-col items-center justify-center gap-8 py-10">
         <button
+          type="button"
           onClick={isRecording ? stopRecording : startRecording}
           disabled={status === 'connecting' || status === 'error'}
-          className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl ${
+          aria-label={isRecording ? "Arrêter l'enregistrement" : 'Parler au micro'}
+          className={`flex h-32 w-32 cursor-pointer items-center justify-center rounded-full border-none transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
             isRecording
-              ? 'bg-red-500 scale-110 shadow-red-500/40'
-              : 'bg-blue-500 hover:scale-105 shadow-blue-500/40 hover:bg-blue-600'
-          } ${status === 'connecting' || status === 'error' ? 'opacity-30 cursor-not-allowed' : ''}`}
+              ? 'bg-[#FDB913] text-[#0B0C10]'
+              : 'bg-[#E8442B] text-[#F4F1E8] hover:bg-[#c93a24]'
+          }`}
         >
           {isRecording ? (
-            <Square className="w-12 h-12 text-white fill-current" />
+            <Square className="h-12 w-12 fill-current" aria-hidden="true" />
           ) : (
-            <Mic className="w-12 h-12 text-white" />
+            <Mic className="h-12 w-12" aria-hidden="true" />
           )}
         </button>
 
         <div className="text-center">
-          <p className="text-sm font-black uppercase tracking-widest mb-2">
-            {status === 'connecting' && 'CONNEXION...'}
-            {status === 'ready' && 'CLIQUEZ POUR PARLER'}
-            {status === 'recording' && 'ENREGISTREMENT...'}
-            {status === 'thinking' && 'RÉPONSE EN COURS...'}
-            {status === 'playing' && 'LECTURE DE LA RÉPONSE...'}
-            {status === 'error' && 'ERREUR DE CONNEXION'}
+          <p className="font-manga text-base font-black uppercase italic tracking-wide text-[#F4F1E8]">
+            {STATUS_LABELS[status]}
           </p>
-          <p className="text-[10px] font-bold opacity-30 uppercase">
-            {status === 'error' ? errorMessage : 'Flux vocal continu sans latence'}
+          <p className="mt-2 text-xs leading-relaxed text-[#8F94A5]">
+            {status === 'error' ? errorMessage : 'Flux vocal continu, faible latence.'}
           </p>
         </div>
       </div>
 
       {status === 'error' && (
-        <Button
+        <button
+          type="button"
           onClick={connectWebSocket}
-          variant="outline"
-          fullWidth
-          className="flex items-center justify-center gap-2"
+          className={`${LAB_BTN_GHOST} w-full justify-center`}
         >
-          <RefreshCw className="w-4 h-4" /> Réessayer
-        </Button>
+          <RefreshCw className="h-4 w-4" aria-hidden="true" /> Réessayer
+        </button>
       )}
-    </Card>
+    </LabPanel>
   </div>
 );

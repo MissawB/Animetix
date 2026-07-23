@@ -1,14 +1,19 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, X } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
+import { X } from 'lucide-react';
 import { ToTNode } from '../../../features/labs/types/totTypes';
 
 interface ToTNodeInspectionModalProps {
   selectedNode: ToTNode | null;
   onClose: () => void;
 }
+
+const TYPE_TONES: Record<string, string> = {
+  root: 'text-[#F4F1E8]',
+  selected: 'text-[#FDB913]',
+  pruned: 'text-[#8F94A5]',
+  final: 'text-[#E8442B]',
+};
 
 export const ToTNodeInspectionModal: React.FC<ToTNodeInspectionModalProps> = ({
   selectedNode,
@@ -21,83 +26,86 @@ export const ToTNodeInspectionModal: React.FC<ToTNodeInspectionModalProps> = ({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 20 }}
-          className="absolute top-8 right-8 w-96 max-h-[calc(100vh-128px)] overflow-y-auto z-30"
+          className="absolute right-8 top-8 z-30 max-h-[calc(100vh-128px)] w-96 overflow-y-auto"
         >
-          <Card
-            padding="none"
-            className="bg-black/80 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
-          >
-            <div className="p-8 border-b border-white/5 flex justify-between items-start">
+          <section className="overflow-hidden rounded-2xl border border-[#F4F1E8]/15 bg-[#0F1016]">
+            <div className="flex items-start justify-between border-b border-[#F4F1E8]/10 p-6">
               <div>
-                <Badge
-                  variant="neutral"
-                  className={`bg-white/5 border-none text-[8px] font-black italic uppercase tracking-widest mb-2 ${
-                    selectedNode.type === 'selected'
-                      ? 'text-emerald-500'
-                      : selectedNode.type === 'pruned'
-                        ? 'text-red-500'
-                        : selectedNode.type === 'final'
-                          ? 'text-yellow-500'
-                          : ''
+                <p
+                  className={`mb-2 text-[10px] font-black uppercase tracking-widest ${
+                    TYPE_TONES[selectedNode.type] ?? 'text-[#8F94A5]'
                   }`}
                 >
-                  {selectedNode.type} NODE
-                </Badge>
-                <h3 className="text-xl font-black italic manga-font uppercase tracking-tighter">
-                  Inspection <span className="text-emerald-500">Nœud</span>
+                  Nœud {selectedNode.type}
+                </p>
+                <h3 className="font-manga text-xl font-black uppercase italic tracking-tighter text-[#F4F1E8]">
+                  Inspection <span className="text-[#E8442B]">du nœud</span>
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={onClose}
-                className="p-2 hover:bg-white/5 rounded-full transition-colors"
+                className="rounded-full border-none bg-transparent p-2 text-[#8F94A5] transition-colors hover:text-[#F4F1E8] cursor-pointer"
                 aria-label="Fermer l'inspection"
               >
-                <X className="w-5 h-5 text-white/40" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="p-8 space-y-8">
-              <div className="space-y-4">
+            <div className="space-y-6 p-6">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">
-                    Score de Confiance
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                    Score de confiance
                   </span>
-                  <span className="text-2xl font-black italic manga-font text-emerald-400">
+                  <span className="font-manga text-2xl font-black italic text-[#FDB913]">
                     {(selectedNode.score * 100).toFixed(1)}%
                   </span>
                 </div>
-                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#F4F1E8]/10">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${selectedNode.score * 100}%` }}
-                    className={`h-full ${selectedNode.type === 'pruned' ? 'bg-red-800' : 'bg-emerald-500'}`}
+                    className={`h-full ${
+                      selectedNode.type === 'pruned' ? 'bg-[#8F94A5]' : 'bg-[#FDB913]'
+                    }`}
                   />
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <span className="text-[10px] font-black opacity-30 uppercase tracking-widest flex items-center gap-2">
-                  <ChevronRight className="w-3 h-3 text-emerald-500" /> Trace de Pensée
+              <div className="space-y-3">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                  Trace de pensée
                 </span>
-                <div className="p-6 bg-white/5 rounded-3xl border border-white/5 text-sm font-bold leading-relaxed text-gray-300 italic">
+                <div className="rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-5 text-sm italic leading-relaxed text-[#F4F1E8]/80">
                   "{selectedNode.full_text}"
                 </div>
               </div>
 
-              <div className="pt-4 flex gap-4">
-                <div className="flex-1 p-4 bg-white/5 rounded-2xl text-center">
-                  <p className="text-[8px] font-black opacity-20 uppercase mb-1">ID</p>
-                  <p className="text-[10px] font-mono opacity-40 truncate">{selectedNode.id}</p>
+              <div className="flex gap-4 pt-2">
+                <div className="flex-1 rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-4 text-center">
+                  <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-[#8F94A5]">
+                    ID
+                  </p>
+                  <p className="truncate font-mono text-[10px] text-[#F4F1E8]/70">
+                    {selectedNode.id}
+                  </p>
                 </div>
-                <div className="flex-1 p-4 bg-white/5 rounded-2xl text-center">
-                  <p className="text-[8px] font-black opacity-20 uppercase mb-1">Status</p>
-                  <p className="text-[10px] font-black italic uppercase text-emerald-500">
-                    {selectedNode.type === 'pruned' ? 'TERMINATED' : 'ACTIVE'}
+                <div className="flex-1 rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-4 text-center">
+                  <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-[#8F94A5]">
+                    Statut
+                  </p>
+                  <p
+                    className={`text-[10px] font-black uppercase tracking-widest ${
+                      selectedNode.type === 'pruned' ? 'text-[#8F94A5]' : 'text-[#FDB913]'
+                    }`}
+                  >
+                    {selectedNode.type === 'pruned' ? 'Élagué' : 'Actif'}
                   </p>
                 </div>
               </div>
             </div>
-          </Card>
+          </section>
         </motion.div>
       )}
     </AnimatePresence>

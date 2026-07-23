@@ -1,9 +1,8 @@
 import React from 'react';
 import { Mic, MicOff, Play, Trash2, Star, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
 import { VoiceProfile } from '../../../types';
+import { LAB_BTN_GHOST } from './shared/LabKit';
 
 export interface Recording {
   id: number;
@@ -43,21 +42,36 @@ export const AudioLabRecordingPanel: React.FC<{
 }) => {
   const { t } = useTranslation();
   return (
-    <Card
-      padding="lg"
-      className={`h-fit transition-all duration-300 ${isDraggingOver ? 'ring-4 ring-blue-500 bg-blue-500/10 scale-105' : ''}`}
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={t('labs.audio.forge_title', 'Source Vocale')}
+      className={`h-fit rounded-2xl border bg-[#0F1016] p-6 transition-colors duration-300 ${
+        isDraggingOver ? 'border-[#FDB913] bg-[#FDB913]/5' : 'border-[#F4F1E8]/10'
+      }`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-[0.2em] flex items-center gap-2">
-        <Mic className="w-4 h-4" /> {t('labs.audio.forge_title', 'Source Vocale')}
-      </h3>
+      <div className="mb-6 flex items-center gap-3">
+        <span className="h-4 w-1 flex-none bg-[#E8442B]" aria-hidden />
+        <h3 className="font-manga flex items-center gap-2 text-sm font-black uppercase italic tracking-wide text-[#F4F1E8]">
+          <Mic className="h-4 w-4" aria-hidden="true" />{' '}
+          {t('labs.audio.forge_title', 'Source Vocale')}
+        </h3>
+        <span className="h-px flex-1 bg-[#F4F1E8]/10" aria-hidden />
+      </div>
 
       <div className="flex flex-col items-center py-6">
         <button
           onClick={isRecording ? stopRecording : startRecording}
-          className={`w-24 h-24 rounded-full flex items-center justify-center transition-all shadow-2xl relative ${isRecording ? 'bg-red-500 animate-pulse scale-110' : selectedSeiyuu ? 'bg-blue-600 text-white' : 'bg-black text-white hover:scale-105'}`}
+          className={`relative flex h-24 w-24 cursor-pointer items-center justify-center rounded-full border-none transition-all ${
+            isRecording
+              ? 'animate-pulse bg-[#E8442B] text-[#F4F1E8] scale-110'
+              : selectedSeiyuu
+                ? 'bg-[#FDB913] text-[#0B0C10]'
+                : 'bg-[#F4F1E8] text-[#0B0C10] hover:scale-105'
+          }`}
           aria-label={
             isRecording
               ? t('labs.audio.recording_stop_aria', "Arrêter l'enregistrement")
@@ -69,13 +83,15 @@ export const AudioLabRecordingPanel: React.FC<{
           ) : isRecording ? (
             <MicOff className="w-8 h-8" />
           ) : selectedSeiyuu ? (
-            <Star className="w-8 h-8 fill-current text-yellow-400" />
+            <Star className="w-8 h-8 fill-current" />
           ) : (
             <Mic className="w-8 h-8" />
           )}
         </button>
         <span
-          className={`mt-6 font-black italic uppercase tracking-widest text-[9px] ${isRecording ? 'text-red-500' : selectedSeiyuu ? 'text-blue-500' : 'opacity-40'}`}
+          className={`mt-6 text-[9px] font-black uppercase italic tracking-widest ${
+            isRecording ? 'text-[#E8442B]' : selectedSeiyuu ? 'text-[#FDB913]' : 'text-[#8F94A5]'
+          }`}
         >
           {audioLoading
             ? t('labs.audio.recording_loading_voice', 'Chargement voix...')
@@ -89,7 +105,7 @@ export const AudioLabRecordingPanel: React.FC<{
                 : t('labs.audio.recording_ready_status', 'Prêt à enregistrer')}
         </span>
         {selectedSeiyuu && (
-          <p className="text-[7px] font-bold uppercase opacity-30 mt-1">
+          <p className="mt-1 text-[7px] font-bold uppercase text-[#8F94A5]">
             {t('labs.audio.recording_drag_note', 'Glissez un autre seiyuu pour changer')}
           </p>
         )}
@@ -97,21 +113,20 @@ export const AudioLabRecordingPanel: React.FC<{
 
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-black/5 dark:border-white/5"></div>
+          <div className="w-full border-t border-[#F4F1E8]/10"></div>
         </div>
         <div className="relative flex justify-center text-[9px] uppercase font-black">
-          <span className="px-2 bg-white dark:bg-navy-800 text-gray-400">ou</span>
+          <span className="bg-[#0F1016] px-2 text-[#8F94A5]">ou</span>
         </div>
       </div>
 
-      <Button
-        variant="outline"
-        fullWidth
+      <button
+        type="button"
         onClick={() => document.getElementById('audio-upload')?.click()}
-        className="text-[10px] py-3"
+        className={`${LAB_BTN_GHOST} w-full justify-center rounded-xl py-3 text-[10px]`}
       >
         {t('labs.audio.recording_import_wav', 'Importer .wav')}
-      </Button>
+      </button>
       <input
         type="file"
         id="audio-upload"
@@ -125,27 +140,31 @@ export const AudioLabRecordingPanel: React.FC<{
         {recordings.map((rec) => (
           <div
             key={rec.id}
-            className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-between group"
+            className="group flex items-center justify-between rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-3"
           >
             <div className="flex items-center gap-2">
               <div
-                className={`w-6 h-6 rounded-lg flex items-center justify-center text-white ${selectedSeiyuu ? 'bg-blue-600' : 'bg-blue-500'}`}
+                className={`flex h-6 w-6 items-center justify-center rounded-lg text-[#0B0C10] ${
+                  selectedSeiyuu ? 'bg-[#FDB913]' : 'bg-[#F4F1E8]'
+                }`}
               >
                 <Play className="w-3 h-3 fill-current" />
               </div>
-              <span className="font-bold text-[9px] truncate max-w-[80px]">{rec.name}</span>
+              <span className="max-w-[80px] truncate text-[9px] font-bold text-[#F4F1E8]">
+                {rec.name}
+              </span>
             </div>
             <button
               type="button"
               aria-label={t('labs.audio.recording_delete_aria', "Supprimer l'enregistrement")}
-              className="p-1 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100 border-none bg-transparent cursor-pointer"
+              className="cursor-pointer rounded border-none bg-transparent p-1 opacity-0 transition-all hover:bg-[#E8442B]/10 group-hover:opacity-100"
               onClick={onClearRecordings}
             >
-              <Trash2 className="w-3 h-3 text-red-500" />
+              <Trash2 className="w-3 h-3 text-[#E8442B]" />
             </button>
           </div>
         ))}
       </div>
-    </Card>
+    </div>
   );
 };

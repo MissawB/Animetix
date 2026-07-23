@@ -2,8 +2,8 @@ import React from 'react';
 import { Video, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '../../../components/ui/Button';
 import { useQuickIngestForm } from '../../../features/labs/hooks/useQuickIngestForm';
+import { LAB_INPUT, LAB_BTN_GHOST } from './shared/LabKit';
 
 type QuickIngestForm = ReturnType<typeof useQuickIngestForm>;
 
@@ -22,10 +22,10 @@ export const AudioLabQuickIngestPanel: React.FC<{
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           onSubmit={quickIngest.submit}
-          className="bg-navy-950/80 border border-blue-500/20 p-5 rounded-2xl space-y-4 overflow-hidden"
+          className="space-y-4 overflow-hidden rounded-2xl border border-[#F4F1E8]/15 bg-[#0F1016] p-5"
         >
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-1">
-            <Video className="w-3.5 h-3.5 text-red-500" />{' '}
+          <h4 className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#FDB913]">
+            <Video className="h-3.5 w-3.5 text-[#E8442B]" aria-hidden="true" />{' '}
             {t('labs.audio.ingest_title', 'Ajouter via YouTube (30 Bx)')}
           </h4>
           <div className="space-y-1">
@@ -35,14 +35,14 @@ export const AudioLabQuickIngestPanel: React.FC<{
               aria-label={t('labs.audio.ingest_actor_name', "Nom de l'acteur")}
               value={quickIngest.name}
               onChange={(e) => quickIngest.setName(e.target.value)}
-              className="w-full bg-black/45 border border-white/5 rounded-lg px-3 py-2 text-xs font-bold text-white"
+              className={LAB_INPUT}
             />
           </div>
           <div className="space-y-1">
             <select
               value={quickIngest.language}
               onChange={(e) => quickIngest.setLanguage(e.target.value)}
-              className="w-full bg-black/45 border border-white/5 rounded-lg px-3 py-2 text-xs font-bold text-white"
+              className={LAB_INPUT}
             >
               <option value="japanese">
                 {t('labs.audio.ingest_lang_japanese', 'Japonais (Seiyuu)')}
@@ -59,28 +59,31 @@ export const AudioLabQuickIngestPanel: React.FC<{
               aria-label={t('labs.audio.ingest_source_placeholder', 'Lien YouTube ou recherche')}
               value={quickIngest.source}
               onChange={(e) => quickIngest.setSource(e.target.value)}
-              className="w-full bg-black/45 border border-white/5 rounded-lg px-3 py-2 text-xs font-bold text-white"
+              className={LAB_INPUT}
             />
           </div>
           {quickIngest.error && (
-            <p className="text-[9px] font-bold text-red-400">⚠️ {quickIngest.error}</p>
+            <p className="text-[10px] font-bold text-[#E8442B]">{quickIngest.error}</p>
           )}
-          <div className="flex gap-2 justify-end">
-            <Button type="button" size="sm" variant="ghost" onClick={quickIngest.close}>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={quickIngest.close}
+              className={`${LAB_BTN_GHOST} text-[10px]`}
+            >
               {t('labs.audio.ingest_cancel', 'Annuler')}
-            </Button>
-            <Button
+            </button>
+            <button
               type="submit"
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-500 border-none"
               disabled={isIngestingVoice}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border-none bg-[#E8442B] px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#F4F1E8] transition-colors hover:bg-[#c93a24] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isIngestingVoice ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
                 t('labs.audio.ingest_submit', 'Ingérer')
               )}
-            </Button>
+            </button>
           </div>
         </motion.form>
       )}

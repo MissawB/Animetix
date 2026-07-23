@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { LabPage, LabHeader } from './components/shared/LabKit';
 import { apiClient } from '../../utils/apiClient';
 import { auth } from '../../utils/firebase';
 import { useAuthStore } from '../../store/authStore';
@@ -262,60 +262,56 @@ const SpeechToSpeechLabPage: React.FC = () => {
   };
 
   return (
-    <AnimatedPage>
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <header className="mb-16 text-center md:text-left">
-          <h1 className="text-6xl font-black italic manga-font mb-4 tracking-tighter uppercase">
-            SPEECH-TO-SPEECH <span className="text-blue-400 text-glow">LIVE</span>
-          </h1>
-          <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-            API Gemini Live bidirectionnelle en temps réel clonée via RVC v2.
-          </p>
-        </header>
+    <LabPage>
+      <LabHeader
+        code="Protocole · Live"
+        title="Speech-to-Speech"
+        accent="live"
+        lede="Une conversation vocale en temps réel avec l'API Gemini Live : tu parles au micro, l'IA répond en audio et en texte — avec le timbre d'un seiyuu si tu en choisis un."
+      />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* Casting Panel (Left Sidebar) */}
-          <S2SCastingSidebar
-            profilesData={profilesData}
-            isLoadingProfiles={isLoadingProfiles}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            langFilter={langFilter}
-            setLangFilter={setLangFilter}
-            selectedProfile={selectedProfile}
-            setSelectedProfile={setSelectedProfile}
-          />
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        {/* Casting Panel (Left Sidebar) */}
+        <S2SCastingSidebar
+          profilesData={profilesData}
+          isLoadingProfiles={isLoadingProfiles}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          langFilter={langFilter}
+          setLangFilter={setLangFilter}
+          selectedProfile={selectedProfile}
+          setSelectedProfile={setSelectedProfile}
+        />
 
-          {/* S2S Main Console (Right) */}
-          <div className="lg:col-span-8 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-              <S2SControlPanel
-                status={status}
-                isRecording={isRecording}
-                errorMessage={errorMessage}
-                startRecording={startRecording}
-                stopRecording={stopRecording}
-                connectWebSocket={connectWebSocket}
-              />
+        {/* S2S Main Console (Right) */}
+        <div className="lg:col-span-8">
+          <div className="grid h-full grid-cols-1 gap-8 md:grid-cols-12">
+            <S2SControlPanel
+              status={status}
+              isRecording={isRecording}
+              errorMessage={errorMessage}
+              startRecording={startRecording}
+              stopRecording={stopRecording}
+              connectWebSocket={connectWebSocket}
+            />
 
-              <S2STranscriptConsole
-                status={status}
-                isRecording={isRecording}
-                transcripts={transcripts}
-                onReset={() => {
-                  stopAudioPlayback();
-                  setTranscripts([]);
-                  setStatus('ready');
-                }}
-              />
-            </div>
+            <S2STranscriptConsole
+              status={status}
+              isRecording={isRecording}
+              transcripts={transcripts}
+              onReset={() => {
+                stopAudioPlayback();
+                setTranscripts([]);
+                setStatus('ready');
+              }}
+            />
           </div>
         </div>
-
-        {/* Guide & Protocole */}
-        <S2SGuideSection />
       </div>
-    </AnimatedPage>
+
+      {/* Guide & Protocole */}
+      <S2SGuideSection />
+    </LabPage>
   );
 };
 

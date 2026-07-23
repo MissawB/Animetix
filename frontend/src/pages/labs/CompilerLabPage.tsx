@@ -1,213 +1,211 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Cpu,
-  Loader2,
-  ShieldCheck,
-  Zap,
-  Target,
-  Terminal,
-  Code,
-  Sparkles
-} from 'lucide-react';
+import { Cpu, Loader2, ShieldCheck, Zap } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { apiClient } from "../../utils/apiClient";
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { Badge } from "../../components/ui/Badge";
-import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { apiClient } from '../../utils/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { CompilerResult } from '../../types';
 
+import {
+  LabPage,
+  LabHeader,
+  LabPanel,
+  LabGuide,
+  LAB_INPUT,
+  LAB_LABEL,
+  LAB_CTA,
+} from './components/shared/LabKit';
+
 const CompilerLabPage: React.FC = () => {
   const { t } = useTranslation();
   const [fnName, setFnName] = useState('semantic_cosine_opt');
-  const [cCode, setCCode] = useState('// Version optimisée générée à la volée\ndouble semantic_cosine_opt(double* a, double* b, int n) {\n    double dot = 0.0;\n    // ... calcul matriciel vectorisé C ...\n    return dot;\n}');
+  const [cCode, setCCode] = useState(
+    '// Version optimisée générée à la volée\ndouble semantic_cosine_opt(double* a, double* b, int n) {\n    double dot = 0.0;\n    // ... calcul matriciel vectorisé C ...\n    return dot;\n}',
+  );
   const [compilerResult, setCompilerResult] = useState<CompilerResult | null>(null);
 
-  const compileMutation = useMutation<CompilerResult, Error, { action: string; function_name: string }>({
-    mutationFn: (body: { action: string; function_name: string }) => 
-        apiClient('/api/v1/singularity-lab/', { 
-            method: 'POST', 
-            body: JSON.stringify(body) 
-        }),
-    onSuccess: (data) => setCompilerResult(data)
+  const compileMutation = useMutation<
+    CompilerResult,
+    Error,
+    { action: string; function_name: string }
+  >({
+    mutationFn: (body: { action: string; function_name: string }) =>
+      apiClient('/api/v1/singularity-lab/', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+    onSuccess: (data) => setCompilerResult(data),
   });
 
   return (
-    <div className="min-h-screen w-full bg-[#0a0a12] text-white pt-20">
-      <AnimatedPage>
-        <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
-          {/* Header */}
-          <header className="mb-16 relative">
-              <div className="absolute -top-24 -left-24 w-96 h-96 bg-red-500/10 blur-[120px] rounded-full -z-10" />
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-red-400 mb-4">
-                  <Terminal className="w-3 h-3" /> Self-Evolving Compiler
-              </div>
-              <h1 className="text-7xl font-black italic manga-font tracking-tighter uppercase mb-4">
-                  JIT <span className="text-red-600 text-glow">OPTIMIZER</span>
-              </h1>
-              <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                  {t('labs.compiler.subtitle', 'Optimisation temps réel du microcode sémantique via compilation JIT SOTA 2035.')}
-              </p>
-          </header>
+    <LabPage>
+      <LabHeader
+        code="Protocole · JIT"
+        title="Optimiseur"
+        accent="JIT"
+        lede={t(
+          'labs.compiler.subtitle',
+          'Optimisation temps réel du microcode sémantique via compilation JIT SOTA 2035.',
+        )}
+      />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-              
-              {/* Configuration */}
-              <div className="lg:col-span-4 space-y-8">
-                  <Card padding="lg" className="bg-navy-950/50 border-white/10 rounded-[3rem] shadow-2xl overflow-hidden relative">
-                      <div className="absolute top-0 right-0 p-6 opacity-10">
-                          <Cpu className="w-24 h-24 rotate-12" />
-                      </div>
-                      
-                      <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                          <Target className="w-4 h-4 text-red-500" /> Optimization Parameters
-                      </h3>
-
-                      <div className="space-y-8">
-                          <div className="space-y-4">
-                              <label htmlFor="fn-name" className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] px-2">{t('labs.compiler.target_function', 'Fonction Cible')}</label>
-                              <input 
-                                  id="fn-name"
-                                  type="text"
-                                  aria-label={t('labs.compiler.target_function', 'Fonction Cible')}
-                                  value={fnName}
-                                  onChange={(e) => setFnName(e.target.value)} 
-                                  className="w-full bg-black border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold focus:border-red-500 outline-none transition-all text-white" 
-                              />
-                          </div>
-
-                          <Button 
-                              onClick={() => compileMutation.mutate({ action: 'compile', function_name: fnName })} 
-                              disabled={compileMutation.isPending} 
-                              className="w-full bg-red-600 hover:bg-red-500 text-white py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
-                          >
-                              {compileMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : t('labs.compiler.submit_btn', "LANCER L'OPTIMISATION")}
-                          </Button>
-                      </div>
-                  </Card>
-
-                  <Card padding="lg" className="bg-white/5 border-white/5 opacity-50">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 text-red-400">Pipeline JIT</h4>
-                      <p className="text-[10px] font-bold uppercase leading-relaxed mb-4">
-                          {t('labs.compiler.analysis_desc', "L'IA analyse le graphe d'exécution et génère du code C vectorisé pour les calculs de similarité critique.")}
-                      </p>
-                      <ul className="space-y-3">
-                          <li className="flex gap-2 text-[8px] font-black opacity-40 uppercase">
-                              <div className="w-1 h-1 rounded-full bg-red-500 mt-1" /> Vectorisation AVX-512.
-                          </li>
-                          <li className="flex gap-2 text-[8px] font-black opacity-40 uppercase">
-                              <div className="w-1 h-1 rounded-full bg-red-500 mt-1" /> Low-latency microcode injection.
-                          </li>
-                      </ul>
-                  </Card>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        {/* Configuration */}
+        <div className="space-y-8 lg:col-span-4">
+          <LabPanel title="Paramètres d'optimisation">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label htmlFor="fn-name" className={LAB_LABEL}>
+                  {t('labs.compiler.target_function', 'Fonction Cible')}
+                </label>
+                <input
+                  id="fn-name"
+                  type="text"
+                  aria-label={t('labs.compiler.target_function', 'Fonction Cible')}
+                  value={fnName}
+                  onChange={(e) => setFnName(e.target.value)}
+                  className={`${LAB_INPUT} font-mono`}
+                />
               </div>
 
-              {/* Microcode & Status */}
-              <div className="lg:col-span-8 space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
-                      <div className="flex flex-col space-y-4">
-                          <div className="flex justify-between items-center px-4">
-                              <span className="text-[10px] font-black uppercase opacity-30 tracking-widest">Microcode Source (C)</span>
-                              <Badge variant="neutral" className="bg-white/5 border-none text-[8px] uppercase">Read Only</Badge>
-                          </div>
-                          <div className="relative flex-1 group min-h-[450px]">
-                              <textarea
-                                  readOnly
-                                  aria-label="Microcode source en C"
-                                  value={cCode}
-                                  onChange={(e) => setCCode(e.target.value)} 
-                                  className="w-full h-full bg-navy-950 border border-white/10 rounded-[2.5rem] p-10 font-mono text-sm text-green-400 focus:outline-none focus:border-red-500 transition-all custom-scrollbar resize-none" 
-                              />
-                              <div className="absolute top-6 right-6 opacity-20">
-                                  <Code className="w-8 h-8" />
-                              </div>
-                          </div>
-                      </div>
+              <button
+                type="button"
+                onClick={() => compileMutation.mutate({ action: 'compile', function_name: fnName })}
+                disabled={compileMutation.isPending}
+                className={LAB_CTA}
+              >
+                {compileMutation.isPending ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  t('labs.compiler.submit_btn', "LANCER L'OPTIMISATION")
+                )}
+              </button>
+            </div>
+          </LabPanel>
 
-                      <div className="bg-white/5 rounded-[2.5rem] border border-white/5 p-10 flex flex-col justify-between shadow-2xl relative overflow-hidden min-h-[450px]">
-                          <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/5 blur-[80px] -mr-32 -mt-32" />
-                          
-                          <div>
-                              <span className="text-[10px] font-black uppercase opacity-30 block mb-10 tracking-widest">Compilation Status</span>
-                              
-                              <AnimatePresence mode="wait">
-                                  {compilerResult ? (
-                                      <motion.div 
-                                          initial={{ opacity: 0, y: 10 }} 
-                                          animate={{ opacity: 1, y: 0 }} 
-                                          className="space-y-8 relative z-10"
-                                      >
-                                          <div className="flex items-center gap-4 text-emerald-400 font-black italic text-lg uppercase tracking-tight">
-                                              <ShieldCheck className="w-8 h-8" /> {compilerResult.message}
-                                          </div>
-                                          
-                                          <div className="p-8 bg-black/60 rounded-3xl border border-white/10 space-y-4">
-                                              <p className="text-[10px] font-black uppercase opacity-30 tracking-widest">Performance Bench</p>
-                                              <p className="text-sm font-bold text-gray-300 leading-relaxed font-mono italic">
-                                                  {compilerResult.test_output}
-                                              </p>
-                                          </div>
+          <LabPanel title="Pipeline JIT">
+            <p className="text-sm leading-relaxed text-[#8F94A5]">
+              {t(
+                'labs.compiler.analysis_desc',
+                "L'IA analyse le graphe d'exécution et génère du code C vectorisé pour les calculs de similarité critique.",
+              )}
+            </p>
+            <ul className="mt-5 space-y-3">
+              <li className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                <span className="h-1.5 w-1.5 flex-none rounded-full bg-[#E8442B]" aria-hidden />
+                Vectorisation AVX-512
+              </li>
+              <li className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                <span className="h-1.5 w-1.5 flex-none rounded-full bg-[#E8442B]" aria-hidden />
+                Injection de microcode basse latence
+              </li>
+            </ul>
+          </LabPanel>
+        </div>
 
-                                          <div className="bg-navy-950/80 p-8 rounded-3xl border border-white/5">
-                                              <span className="text-[10px] font-black uppercase text-gray-500 block mb-4 tracking-widest">Runtime Signature</span>
-                                              <code className="text-xs font-mono text-yellow-400 block break-all">
-                                                  {compilerResult.c_code_generated || "NO_SIGNATURE_GENERATED"}
-                                              </code>
-                                          </div>
-                                      </motion.div>
-                                  ) : (
-                                      <div className="flex-1 flex flex-col items-center justify-center py-20 opacity-10">
-                                          <Cpu className="w-24 h-24 mx-auto mb-8 animate-pulse" />
-                                          <span className="text-sm font-black uppercase tracking-[0.3em] block text-center">{t('labs.compiler.waiting_deploy', 'En attente de déploiement')}</span>
-                                      </div>
-                                  )}
-                              </AnimatePresence>
-                          </div>
-
-                          <div className="mt-12 pt-8 border-t border-white/5 flex justify-between items-center opacity-30">
-                              <span className="text-[8px] font-black uppercase tracking-widest">LLVM Backend 18.1</span>
-                              <Zap className="w-4 h-4 text-yellow-500" />
-                          </div>
-                      </div>
-                  </div>
+        {/* Microcode & Statut */}
+        <div className="lg:col-span-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <LabPanel title="Microcode source (C)" corner="lecture seule" className="flex flex-col">
+              <div className="relative min-h-[450px] flex-1">
+                <textarea
+                  readOnly
+                  aria-label="Microcode source en C"
+                  value={cCode}
+                  onChange={(e) => setCCode(e.target.value)}
+                  className="h-full w-full resize-none rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-6 font-mono text-sm text-[#FDB913] outline-none transition-colors focus:border-[#FDB913] custom-scrollbar"
+                />
               </div>
-          </div>
+            </LabPanel>
 
-          {/* Guide & Protocole */}
-          <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card padding="lg" className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
-                  <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <Terminal className="w-64 h-64 text-red-500" />
-                  </div>
-                  <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                      <Sparkles className="w-5 h-5 text-red-400" /> {t('labs.compiler.guide_title', 'Guide du Compilateur')}
-                  </h4>
-                  <div className="space-y-4 relative z-10">
-                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-400">{t('labs.compiler.guide_concept_title', 'Le Concept :')}</span> {t('labs.compiler.guide_concept_desc', 'Les calculs de similarité entre œuvres (cosinus, distance euclidienne) sont lents en Python pur. Cette page montre comment le serveur les accélère en les compilant à la volée.')}
-                      </p>
-                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-400">{t('labs.compiler.guide_compile_title', 'La Compilation :')}</span> {t('labs.compiler.guide_compile_desc', 'Entrez une fonction supportée (cosine_similarity, euclidean_distance, vector_norm) et lancez l\'optimisation : le noyau est compilé en code machine puis testé immédiatement.')}
-                      </p>
-                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-400">{t('labs.compiler.guide_result_title', 'Le Résultat :')}</span> {t('labs.compiler.guide_result_desc', 'Le panneau de droite affiche le statut de compilation, la sortie du test de validation et la signature du code généré. Cette action consomme des Berrix.')}
-                      </p>
-                  </div>
-              </Card>
+            <LabPanel
+              title="Statut de compilation"
+              corner={
+                <span className="flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5" aria-hidden="true" /> LLVM Backend 18.1
+                </span>
+              }
+              className="flex min-h-[450px] flex-col"
+            >
+              <AnimatePresence mode="wait">
+                {compilerResult ? (
+                  <motion.div
+                    key="result"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="space-y-6"
+                  >
+                    <div className="flex items-center gap-3 font-manga text-lg font-black uppercase italic tracking-tight text-[#FDB913]">
+                      <ShieldCheck className="h-7 w-7 flex-none" aria-hidden="true" />{' '}
+                      {compilerResult.message}
+                    </div>
 
-              <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
-                  <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-200/60">
-                      {t('labs.compiler.guide_footer_1', 'Compilation JIT réelle via Numba (@njit, fastmath) : le kernel numérique Python est traduit en code machine côté serveur, puis validé sur un vecteur de test.')} <br />
-                      {t('labs.compiler.guide_footer_2', 'Le code C affiché à gauche est illustratif — le mécanisme effectif est la génération dynamique de kernels Numpy/Numba par l\'API singularity-lab.')}
-                  </p>
-              </div>
+                    <div className="space-y-3 rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-6">
+                      <p className={LAB_LABEL}>Banc de performance</p>
+                      <p className="font-mono text-sm leading-relaxed text-[#F4F1E8]/80">
+                        {compilerResult.test_output}
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-6">
+                      <span className={`${LAB_LABEL} mb-3 block`}>Signature runtime</span>
+                      <code className="block break-all font-mono text-xs text-[#FDB913]">
+                        {compilerResult.c_code_generated || 'NO_SIGNATURE_GENERATED'}
+                      </code>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-1 flex-col items-center justify-center py-16 text-center"
+                  >
+                    <Cpu className="mb-6 h-20 w-20 text-[#8F94A5]/25" aria-hidden="true" />
+                    <span className="font-manga text-xl font-black uppercase italic text-[#F4F1E8]/60">
+                      {t('labs.compiler.waiting_deploy', 'En attente de déploiement')}
+                    </span>
+                    <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#8F94A5]">
+                      Renseigne une fonction cible puis lance l'optimisation : le verdict de
+                      compilation s'affichera ici.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </LabPanel>
           </div>
         </div>
-      </AnimatedPage>
-    </div>
+      </div>
+
+      <LabGuide
+        steps={[
+          {
+            title: 'Le concept',
+            body: t(
+              'labs.compiler.guide_concept_desc',
+              'Les calculs de similarité entre œuvres (cosinus, distance euclidienne) sont lents en Python pur. Cette page montre comment le serveur les accélère en les compilant à la volée.',
+            ),
+          },
+          {
+            title: 'La compilation',
+            body: t(
+              'labs.compiler.guide_compile_desc',
+              "Entrez une fonction supportée (cosine_similarity, euclidean_distance, vector_norm) et lancez l'optimisation : le noyau est compilé en code machine puis testé immédiatement.",
+            ),
+          },
+          {
+            title: 'Le résultat',
+            body: t(
+              'labs.compiler.guide_result_desc',
+              'Le panneau de droite affiche le statut de compilation, la sortie du test de validation et la signature du code généré. Cette action consomme des Berrix.',
+            ),
+          },
+        ]}
+        note={`${t('labs.compiler.guide_footer_1', 'Compilation JIT réelle via Numba (@njit, fastmath) : le kernel numérique Python est traduit en code machine côté serveur, puis validé sur un vecteur de test.')} ${t('labs.compiler.guide_footer_2', "Le code C affiché à gauche est illustratif — le mécanisme effectif est la génération dynamique de kernels Numpy/Numba par l'API singularity-lab.")}`}
+      />
+    </LabPage>
   );
 };
 

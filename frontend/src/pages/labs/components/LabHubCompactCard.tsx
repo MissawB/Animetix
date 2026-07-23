@@ -1,44 +1,25 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
 import type { LabEntry } from '../labHubData';
 
-/** Compact secondary-grid card shared by the Creative and Cognition sections;
- *  they differ only in the hover border accent (`hoverBorderClass`). */
-export const LabHubCompactCard: React.FC<{ lab: LabEntry; hoverBorderClass: string }> = ({
-  lab,
-  hoverBorderClass,
-}) => (
-  <Link to={lab.url} className="no-underline group">
-    <Card
-      padding="none"
-      className={`h-full bg-black/40 border-white/5 ${hoverBorderClass} transition-all duration-500 overflow-hidden relative group`}
-    >
-      <div
-        className={`absolute inset-0 bg-gradient-to-br ${lab.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}
-      />
-      <div className="p-8 relative z-10">
-        <div className="flex justify-between items-start mb-6">
-          <div
-            className={`p-3 rounded-xl bg-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ${lab.color}`}
-          >
-            <lab.icon className="w-6 h-6" />
-          </div>
-          <Badge
-            variant="neutral"
-            className="bg-white/5 border-none text-[7px] font-black italic uppercase tracking-widest"
-          >
-            {lab.badge}
-          </Badge>
-        </div>
-        <h3 className="text-xl font-black italic manga-font uppercase mb-3 tracking-tighter group-hover:text-white transition-colors">
-          {lab.title}
-        </h3>
-        <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed tracking-wider group-hover:opacity-60 transition-opacity">
-          {lab.desc}
-        </p>
+/** Carte papier compacte partagée par les sections Forge créative et
+ *  Cognition core. Même système à deux encres que la grande carte : le
+ *  survol s'exprime uniquement en or. */
+export const LabHubCompactCard: React.FC<{ lab: LabEntry }> = ({ lab }) => (
+  <Link to={lab.url} className="group block h-full no-underline">
+    <article className="h-full rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 transition-all duration-300 group-hover:-translate-y-1 group-hover:border-[#FDB913]/60">
+      <div className="mb-6 flex items-start justify-between gap-3">
+        <span className="inline-flex rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-3 text-[#F4F1E8] transition-colors group-hover:text-[#FDB913]">
+          <lab.icon className="h-6 w-6" aria-hidden="true" />
+        </span>
+        <span className="text-[8px] font-black uppercase tracking-widest text-[#8F94A5]">
+          {lab.badge}
+        </span>
       </div>
-    </Card>
+      <h3 className="font-manga text-lg font-black uppercase italic tracking-tight text-[#F4F1E8]">
+        {lab.title}
+      </h3>
+      <p className="mt-2 text-xs leading-relaxed text-[#8F94A5]">{lab.desc}</p>
+    </article>
   </Link>
 );

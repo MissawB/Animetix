@@ -3,16 +3,17 @@ import { useTranslation } from 'react-i18next';
 import Plot from '../../components/LazyPlot';
 import type * as Plotly from 'plotly.js';
 import { Link } from 'react-router-dom';
-import { Box, Info, Globe, ArrowRight, Sparkles } from 'lucide-react';
+import { Box, Info, Globe, ArrowRight, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';
-import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LabGuide, LAB_LABEL, LAB_CTA } from './components/shared/LabKit';
 
 import { PlotlyEvent } from '../../types';
+
+const LATENT_SELECT =
+  'w-full cursor-pointer rounded-lg border border-[#F4F1E8]/15 bg-[#0F1016] px-3 py-2 text-[10px] font-black uppercase text-[#F4F1E8] outline-none transition-colors focus:border-[#FDB913]';
 
 interface LatentPoint {
   x: number;
@@ -87,40 +88,29 @@ const LatentSpacePage: React.FC = () => {
 
   return (
     <AnimatedPage>
-      <div className="relative w-full h-[calc(100vh-64px)] bg-black overflow-hidden flex flex-col lg:flex-row">
+      <div className="relative flex h-[calc(100vh-64px)] w-full flex-col overflow-hidden bg-[#0B0C10] text-[#F4F1E8] lg:flex-row">
         {/* LEFT PANEL: 3D PLOT (Takes full remaining space) */}
-        <div className="relative flex-grow h-full overflow-hidden bg-black">
-          {/* Spatial Background Texture */}
-          <div
-            className="absolute inset-0 opacity-40 mix-blend-screen pointer-events-none"
-            style={{
-              backgroundImage: "url('https://www.transparenttextures.com/patterns/stardust.png')",
-              backgroundRepeat: 'repeat',
-            }}
-          ></div>
-
-          {/* Subtle Radial Gradient for Deep Space feel */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-black/80 to-black pointer-events-none"></div>
-
+        <div className="relative h-full flex-grow overflow-hidden bg-[#0B0C10]">
           {/* OVERLAY CONTROLS (Top Left) */}
-          <div className="absolute top-6 left-6 z-20 pointer-events-none">
-            <div className="bg-black/60 backdrop-blur-md p-5 rounded-[1.5rem] border border-white/10 pointer-events-auto shadow-2xl max-w-[200px]">
-              <h1 className="text-2xl font-black italic manga-font tracking-tighter uppercase text-white leading-none">
-                LATENT <span className="text-blue-500">SPACE</span>
+          <div className="pointer-events-none absolute left-6 top-6 z-20">
+            <div className="pointer-events-auto max-w-[220px] rounded-2xl border border-[#F4F1E8]/10 bg-[#0B0C10]/85 p-5 backdrop-blur-md">
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+                Protocole · Latent
+              </p>
+              <h1 className="font-manga mt-2 text-2xl font-black uppercase italic leading-none tracking-tighter text-[#F4F1E8]">
+                Espace <span className="text-[#E8442B]">latent</span>
               </h1>
 
-              <div className="flex flex-col gap-3 mt-6">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[7px] font-black uppercase text-blue-400/70 ml-1">
-                    {t('labs.latent.domain', 'Domaine')}
-                  </span>
+              <div className="mt-6 flex flex-col gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <span className={LAB_LABEL}>{t('labs.latent.domain', 'Domaine')}</span>
                   <select
                     value={media}
                     onChange={(e) => {
                       setMedia(e.target.value);
                       setSelectedItem(null);
                     }}
-                    className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 font-black text-[9px] uppercase outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer text-white w-full"
+                    className={LATENT_SELECT}
                   >
                     <option value="anime">Anime</option>
                     <option value="manga">Manga</option>
@@ -128,8 +118,8 @@ const LatentSpacePage: React.FC = () => {
                   </select>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <span className="text-[7px] font-black uppercase text-blue-400/70 ml-1">
+                <div className="flex flex-col gap-1.5">
+                  <span className={LAB_LABEL}>
                     {t('labs.latent.analysis_axis', "Axe d'analyse")}
                   </span>
                   <select
@@ -138,7 +128,7 @@ const LatentSpacePage: React.FC = () => {
                       setType(e.target.value);
                       setSelectedItem(null);
                     }}
-                    className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 font-black text-[9px] uppercase outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer text-white w-full"
+                    className={LATENT_SELECT}
                   >
                     <option value="thematic">{t('labs.latent.thematic', 'Thématique')}</option>
                     <option value="visual">{t('labs.latent.visual', 'Visuel')}</option>
@@ -151,16 +141,16 @@ const LatentSpacePage: React.FC = () => {
 
           {/* LOADING STATE */}
           {isLoading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-30">
-              <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-6 shadow-[0_0_40px_rgba(59,130,246,0.3)]"></div>
-              <span className="text-white font-black italic uppercase tracking-[0.4em] text-xs animate-pulse">
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#0B0C10]/85 backdrop-blur-sm">
+              <Loader2 className="mb-6 h-12 w-12 animate-spin text-[#FDB913]" aria-hidden="true" />
+              <span className="text-xs font-black uppercase tracking-[0.3em] text-[#8F94A5]">
                 {t('labs.latent.loading_projection', 'Projection Dimensionnelle...')}
               </span>
             </div>
           )}
 
           {/* PLOT CONTAINER */}
-          <div className="w-full h-full cursor-crosshair">
+          <div className="h-full w-full cursor-crosshair">
             <Plot
               data={plotData as Plotly.Data[]}
               onClick={handlePointClick}
@@ -191,7 +181,7 @@ const LatentSpacePage: React.FC = () => {
         </div>
 
         {/* RIGHT PANEL: ANALYSIS CARD (Docked to the right) */}
-        <div className="lg:w-[400px] h-full bg-[#1a1a2e] shadow-[-10px_0_30px_rgba(0,0,0,0.5)] border-l border-white/5 flex flex-col relative z-20">
+        <div className="relative z-20 flex h-full flex-col border-l border-[#F4F1E8]/10 bg-[#0F1016] lg:w-[400px]">
           <AnimatePresence mode="wait">
             {selectedItem ? (
               <motion.div
@@ -199,54 +189,51 @@ const LatentSpacePage: React.FC = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col h-full"
+                className="flex h-full flex-col"
               >
                 {/* Item Image Header */}
-                <div className="relative w-full h-64 overflow-hidden bg-gray-900 shrink-0">
+                <div className="relative h-64 w-full shrink-0 overflow-hidden bg-[#0B0C10]">
                   {selectedItem.image ? (
                     <img
                       src={selectedItem.image}
                       alt={selectedItem.title || selectedItem.name}
-                      className="w-full h-full object-cover opacity-60"
+                      className="h-full w-full object-cover opacity-60"
                       loading="lazy"
                       decoding="async"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Box className="w-12 h-12 text-white/20" />
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Box className="h-12 w-12 text-[#8F94A5]" aria-hidden="true" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e] via-[#1a1a2e]/40 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0F1016] via-[#0F1016]/40 to-transparent"></div>
 
                   <div className="absolute bottom-6 left-6 right-6">
-                    <Badge
-                      variant="primary"
-                      className="mb-3 bg-blue-500 text-white border-none px-3 py-1"
-                    >
+                    <span className="mb-3 inline-block rounded-full bg-[#E8442B] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#F4F1E8]">
                       {selectedItem.category || t('labs.latent.ia_vector', 'Vecteur IA')}
-                    </Badge>
-                    <h2 className="text-2xl font-black italic manga-font text-white uppercase tracking-tighter leading-tight drop-shadow-lg">
+                    </span>
+                    <h2 className="font-manga text-2xl font-black uppercase italic leading-tight tracking-tighter text-[#F4F1E8]">
                       {selectedItem.title || selectedItem.name}
                     </h2>
                   </div>
                 </div>
 
                 {/* Analysis Content */}
-                <div className="p-6 flex-grow overflow-y-auto custom-scrollbar text-white">
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
-                      <span className="block text-[8px] font-black uppercase text-gray-400 mb-1 tracking-widest">
+                <div className="custom-scrollbar flex-grow overflow-y-auto p-6 text-[#F4F1E8]">
+                  <div className="mb-6 grid grid-cols-2 gap-4">
+                    <div className="rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-4 text-center">
+                      <span className="mb-1 block text-[9px] font-black uppercase tracking-widest text-[#8F94A5]">
                         {t('labs.latent.year', 'Année')}
                       </span>
-                      <span className="text-sm font-black italic manga-font">
+                      <span className="font-manga text-sm font-black italic text-[#FDB913]">
                         {selectedItem.year || 'N/A'}
                       </span>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
-                      <span className="block text-[8px] font-black uppercase text-gray-400 mb-1 tracking-widest">
+                    <div className="rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-4 text-center">
+                      <span className="mb-1 block text-[9px] font-black uppercase tracking-widest text-[#8F94A5]">
                         {t('labs.latent.cluster_id', 'Cluster ID')}
                       </span>
-                      <span className="text-sm font-black italic manga-font">
+                      <span className="font-manga text-sm font-black italic text-[#FDB913]">
                         #{selectedItem.cluster || getCategoryIndex(selectedItem.category)}
                       </span>
                     </div>
@@ -254,11 +241,11 @@ const LatentSpacePage: React.FC = () => {
 
                   <div className="space-y-6">
                     <div>
-                      <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-500 mb-4">
-                        <Info className="w-3 h-3" />{' '}
+                      <h4 className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#FDB913]">
+                        <Info className="h-3 w-3" aria-hidden="true" />{' '}
                         {t('labs.latent.proximity_analysis', 'Analyse de Proximité')}
                       </h4>
-                      <p className="text-sm leading-relaxed text-gray-400 font-medium italic">
+                      <p className="text-sm leading-relaxed text-[#8F94A5]">
                         {t(
                           'labs.latent.proximity_desc',
                           "Cette œuvre est positionnée dans l'espace selon ses caractéristiques {{type}}. Sa position vectorielle indique une forte affinité sémantique avec les clusters environnants.",
@@ -267,28 +254,27 @@ const LatentSpacePage: React.FC = () => {
                       </p>
                     </div>
 
-                    <div className="pt-6 border-t border-white/5">
-                      <Button
-                        as={Link}
+                    <div className="border-t border-[#F4F1E8]/10 pt-6">
+                      <Link
                         to={`/search/?q=${encodeURIComponent(selectedItem.title || selectedItem.name || '')}`}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-2xl py-4 font-black italic manga-font text-xs tracking-widest uppercase shadow-xl no-underline"
+                        className={`${LAB_CTA} no-underline`}
                       >
                         {t('labs.latent.explore_relations', 'Explorer les Relations')}{' '}
-                        <ArrowRight className="ml-2 w-4 h-4" />
-                      </Button>
+                        <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                      </Link>
                     </div>
                   </div>
                 </div>
               </motion.div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full p-10 text-center">
-                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-8 animate-bounce-slow">
-                  <Globe className="w-10 h-10 text-blue-500 opacity-40" />
+              <div className="flex h-full flex-col items-center justify-center p-10 text-center">
+                <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full border border-[#F4F1E8]/10 bg-[#0B0C10]">
+                  <Globe className="h-10 w-10 text-[#FDB913]" aria-hidden="true" />
                 </div>
-                <h3 className="text-xl font-black italic manga-font text-white uppercase mb-4 tracking-tighter">
+                <h3 className="font-manga mb-4 text-xl font-black uppercase italic tracking-tighter text-[#F4F1E8]">
                   {t('labs.latent.ready_explore', "Prêt pour l'exploration ?")}
                 </h3>
-                <p className="text-sm text-gray-500 font-bold italic uppercase tracking-widest animate-pulse">
+                <p className="max-w-xs text-sm leading-relaxed text-[#8F94A5]">
                   {t(
                     'labs.latent.click_prompt',
                     "Cliquez sur un point lumineux dans l'espace pour l'analyser",
@@ -299,12 +285,12 @@ const LatentSpacePage: React.FC = () => {
           </AnimatePresence>
 
           {/* Bottom Footer Info */}
-          <div className="p-6 bg-black/20 border-t border-white/5 mt-auto">
+          <div className="mt-auto border-t border-[#F4F1E8]/10 bg-[#0B0C10] p-6">
             <Link
               to="/graph/map/"
-              className="flex items-center justify-center gap-3 no-underline text-[9px] font-black text-gray-400 hover:text-blue-500 transition-colors uppercase tracking-[0.2em]"
+              className="flex items-center justify-center gap-3 text-[9px] font-black uppercase tracking-[0.2em] text-[#8F94A5] no-underline transition-colors hover:text-[#FDB913]"
             >
-              <Globe className="w-3 h-3" />{' '}
+              <Globe className="h-3 w-3" aria-hidden="true" />{' '}
               {t('labs.latent.toggle_atlas', 'Basculer vers la Vue Atlas')}
             </Link>
           </div>
@@ -312,63 +298,40 @@ const LatentSpacePage: React.FC = () => {
       </div>
 
       {/* Guide & Protocole */}
-      <div className="bg-black text-white px-6 pt-24 pb-16">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card
-            padding="lg"
-            className="bg-black/40 border-blue-500/20 shadow-[0_0_50px_rgba(59,130,246,0.1)] relative overflow-hidden group"
-          >
-            <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Globe className="w-64 h-64 text-blue-500" />
-            </div>
-            <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-blue-400" />{' '}
-              {t('labs.latent.guide_title', "Guide de l'Espace Latent")}
-            </h4>
-            <div className="space-y-4 relative z-10">
-              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                <span className="text-blue-400">
-                  {t('labs.latent.guide_concept_title', 'Le Concept :')}
-                </span>{' '}
-                {t(
+      <div className="bg-[#0B0C10] px-4 pb-16 text-[#F4F1E8] sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <LabGuide
+            steps={[
+              {
+                title: 'Repère les points',
+                body: t(
                   'labs.latent.guide_concept_desc',
                   "Chaque point lumineux est un anime, un manga ou un personnage. Sa position reflète la façon dont l'IA comprend l'œuvre : deux points proches se ressemblent.",
-                )}
-              </p>
-              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                <span className="text-blue-400">
-                  {t('labs.latent.guide_nav_title', 'La Navigation :')}
-                </span>{' '}
-                {t(
+                ),
+              },
+              {
+                title: "Navigue dans l'espace",
+                body: t(
                   'labs.latent.guide_nav_desc',
                   "Faites pivoter la carte à la souris, zoomez à la molette, puis cliquez sur un point pour ouvrir sa fiche d'analyse dans le panneau de droite.",
-                )}
-              </p>
-              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                <span className="text-blue-400">
-                  {t('labs.latent.guide_filters_title', 'Les Filtres :')}
-                </span>{' '}
-                {t(
+                ),
+              },
+              {
+                title: "Change d'angle",
+                body: t(
                   'labs.latent.guide_filters_desc',
                   "Changez le domaine (anime, manga, personnages) et l'axe d'analyse (thématique, visuel, scénario) pour recharger la carte sous un autre angle.",
-                )}
-              </p>
-            </div>
-          </Card>
-
-          <div className="p-12 rounded-[4rem] bg-gradient-to-br from-blue-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
-            <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-blue-200/60">
-              {t(
-                'labs.latent.guide_footer_1',
-                'Visualisation exploratoire du catalogue : des embeddings haute dimension sont projetés en 3 dimensions puis rendus en nuage de points interactif (Plotly scatter3d).',
-              )}{' '}
-              <br />
-              {t(
-                'labs.latent.guide_footer_2',
-                'La proximité spatiale traduit la similarité sémantique des vecteurs ; les couleurs regroupent les clusters ou catégories détectés.',
-              )}
-            </p>
-          </div>
+                ),
+              },
+            ]}
+            note={`${t(
+              'labs.latent.guide_footer_1',
+              'Visualisation exploratoire du catalogue : des embeddings haute dimension sont projetés en 3 dimensions puis rendus en nuage de points interactif (Plotly scatter3d).',
+            )} ${t(
+              'labs.latent.guide_footer_2',
+              'La proximité spatiale traduit la similarité sémantique des vecteurs ; les couleurs regroupent les clusters ou catégories détectés.',
+            )}`}
+          />
         </div>
       </div>
     </AnimatedPage>

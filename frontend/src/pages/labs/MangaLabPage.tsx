@@ -1,24 +1,32 @@
 import React, { useState } from 'react';
-import { Upload, Wand2, Languages, Image as ImageIcon, Sparkles } from 'lucide-react';
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { Select } from "../../components/ui/Select";
+import { Upload, Wand2, Languages, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { apiClient } from "../../utils/apiClient";
-
-
+import { apiClient } from '../../utils/apiClient';
+import {
+  LabPage,
+  LabHeader,
+  LabPanel,
+  LabEmpty,
+  LabGuide,
+  LAB_INPUT,
+  LAB_LABEL,
+  LAB_CTA,
+} from './components/shared/LabKit';
 
 const MangaLabPage: React.FC = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(false);
 
-  const translatedLanguageOptions = React.useMemo(() => [
-    { value: 'French', label: t('labs.manga.lang_fr', 'Français') },
-    { value: 'English', label: t('labs.manga.lang_en', 'English') },
-    { value: 'Spanish', label: t('labs.manga.lang_es', 'Español') },
-    { value: 'German', label: t('labs.manga.lang_de', 'Deutsch') },
-    { value: 'Japanese', label: t('labs.manga.lang_ja', '日本語') },
-  ], [t]);
+  const translatedLanguageOptions = React.useMemo(
+    () => [
+      { value: 'French', label: t('labs.manga.lang_fr', 'Français') },
+      { value: 'English', label: t('labs.manga.lang_en', 'English') },
+      { value: 'Spanish', label: t('labs.manga.lang_es', 'Español') },
+      { value: 'German', label: t('labs.manga.lang_de', 'Deutsch') },
+      { value: 'Japanese', label: t('labs.manga.lang_ja', '日本語') },
+    ],
+    [t],
+  );
   const [view, setView] = useState<'original' | 'clean' | 'translated'>('original');
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -48,9 +56,9 @@ const MangaLabPage: React.FC = () => {
       const response = await apiClient('/api/v1/labs/manga-lab/clean/', {
         method: 'POST',
         body: formData,
-        headers: {} 
+        headers: {},
       });
-      
+
       if (response && response.status === 'success' && response.image) {
         setCleanedUrl(`data:image/png;base64,${response.image}`);
         setView('clean');
@@ -73,9 +81,9 @@ const MangaLabPage: React.FC = () => {
       const response = await apiClient('/api/v1/labs/manga-lab/translate/', {
         method: 'POST',
         body: formData,
-        headers: {} 
+        headers: {},
       });
-      
+
       if (response && response.status === 'success' && response.image) {
         setTranslatedUrl(`data:image/png;base64,${response.image}`);
         setView('translated');
@@ -93,145 +101,183 @@ const MangaLabPage: React.FC = () => {
     return previewUrl;
   };
 
+  const VIEWS: Array<{ id: 'original' | 'clean' | 'translated'; label: string; enabled: boolean }> =
+    [
+      { id: 'original', label: t('labs.manga.original', 'ORIGINAL'), enabled: true },
+      { id: 'clean', label: t('labs.manga.clean', 'PROPRE'), enabled: !!cleanedUrl },
+      { id: 'translated', label: t('labs.manga.translated', 'TRADUIT'), enabled: !!translatedUrl },
+    ];
+
   return (
-    <div className="container mx-auto py-12 px-6">
-      <h1 className="text-6xl font-black italic manga-font mb-12 tracking-tighter uppercase text-center md:text-left">
-          MANGA <span className="text-yellow-400">LAB</span>
-      </h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-        <Card padding="lg" className="lg:col-span-1 h-fit space-y-6">
-          <Button 
-            variant="primary" 
-            fullWidth 
-            className="bg-yellow-400 text-black hover:bg-yellow-500 border-none" 
-            onClick={() => document.getElementById('upload')?.click()}
-          >
-            <Upload className="w-5 h-5" /> {t('labs.manga.btn_import', 'IMPORTER PAGE')}
-          </Button>
-          <input type="file" id="upload" className="hidden" onChange={handleFileChange} aria-label={t('labs.manga.import_aria', 'Importer une page de manga')} />
-          
-          <div className="space-y-4">
-              <h4 className="text-[10px] font-black uppercase opacity-30 tracking-widest">{t('labs.manga.ai_tools', 'Outils IA')}</h4>
-              
-              <button 
+    <LabPage>
+      <LabHeader
+        code="Protocole · Manga"
+        title="Atelier"
+        accent="des planches"
+        lede="Importe une page de manga et le laboratoire nettoie les bulles ou traduit le texte directement dans les cases, sans toucher au dessin."
+      />
+
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        {/* Outils */}
+        <div className="lg:col-span-4">
+          <LabPanel title={t('labs.manga.ai_tools', 'Outils IA')}>
+            <div className="space-y-6">
+              <button
+                type="button"
+                onClick={() => document.getElementById('upload')?.click()}
+                className={LAB_CTA}
+              >
+                <Upload className="h-5 w-5" aria-hidden="true" />{' '}
+                {t('labs.manga.btn_import', 'IMPORTER PAGE')}
+              </button>
+              <input
+                type="file"
+                id="upload"
+                className="hidden"
+                onChange={handleFileChange}
+                aria-label={t('labs.manga.import_aria', 'Importer une page de manga')}
+              />
+
+              <button
+                type="button"
                 disabled={!previewUrl || loading}
                 onClick={handleClean}
-                className="w-full p-4 bg-gray-50 dark:bg-navy-900 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-yellow-400/10 transition-colors disabled:opacity-30 border border-transparent hover:border-yellow-400/20"
+                className="flex w-full cursor-pointer items-center gap-4 rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-4 text-left transition-colors hover:border-[#FDB913] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                  <Wand2 className="w-5 h-5 text-yellow-500" />
-                  <div className="text-left">
-                    <span className="font-bold text-sm block">{t('labs.manga.cleaner_title', 'Bubble Cleaner')}</span>
-                    <span className="text-[10px] text-white/40 block mt-0.5">{t('labs.manga.cleaner_desc', 'Effacer les bulles de texte')}</span>
-                  </div>
+                <Wand2 className="h-5 w-5 flex-none text-[#FDB913]" aria-hidden="true" />
+                <span>
+                  <span className="block text-sm font-bold text-[#F4F1E8]">
+                    {t('labs.manga.cleaner_title', 'Bubble Cleaner')}
+                  </span>
+                  <span className="mt-0.5 block text-[10px] text-[#8F94A5]">
+                    {t('labs.manga.cleaner_desc', 'Effacer les bulles de texte')}
+                  </span>
+                </span>
               </button>
 
-              <div className="border-t border-white/5 pt-4 space-y-3">
-                <Select
-                  id="target-lang"
-                  label={t('labs.manga.target_language', 'Langue de Traduction')}
-                  value={targetLanguage}
-                  onChange={(val) => setTargetLanguage(val)}
-                  options={translatedLanguageOptions}
-                />
-                
-                <button 
+              <div className="space-y-4 border-t border-[#F4F1E8]/10 pt-6">
+                <div className="space-y-2">
+                  <label htmlFor="target-lang" className={LAB_LABEL}>
+                    {t('labs.manga.target_language', 'Langue de Traduction')}
+                  </label>
+                  <select
+                    id="target-lang"
+                    value={targetLanguage}
+                    onChange={(e) => setTargetLanguage(e.target.value)}
+                    className={`${LAB_INPUT} cursor-pointer`}
+                  >
+                    {translatedLanguageOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
                   disabled={!previewUrl || loading}
                   onClick={handleTranslate}
-                  className="w-full p-4 bg-gray-50 dark:bg-navy-900 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-blue-400/10 transition-colors disabled:opacity-30 border border-transparent hover:border-blue-400/20"
+                  className="flex w-full cursor-pointer items-center gap-4 rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-4 text-left transition-colors hover:border-[#FDB913] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    <Languages className="w-5 h-5 text-blue-500" />
-                    <div className="text-left">
-                      <span className="font-bold text-sm block">{t('labs.manga.translator_title', 'Auto-Translator')}</span>
-                      <span className="text-[10px] text-white/40 block mt-0.5">{t('labs.manga.translator_desc', 'Traduire la planche')}</span>
-                    </div>
+                  <Languages className="h-5 w-5 flex-none text-[#FDB913]" aria-hidden="true" />
+                  <span>
+                    <span className="block text-sm font-bold text-[#F4F1E8]">
+                      {t('labs.manga.translator_title', 'Auto-Translator')}
+                    </span>
+                    <span className="mt-0.5 block text-[10px] text-[#8F94A5]">
+                      {t('labs.manga.translator_desc', 'Traduire la planche')}
+                    </span>
+                  </span>
                 </button>
               </div>
-          </div>
-        </Card>
+            </div>
+          </LabPanel>
+        </div>
 
-        <div className="lg:col-span-3 bg-black rounded-[3rem] shadow-2xl min-h-[600px] relative overflow-hidden border-4 border-white/5 flex flex-col justify-center">
-          {loading ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-50">
-                <div className="w-20 h-20 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mb-6"></div>
-                <span className="text-white font-black italic uppercase tracking-[0.3em]">{t('common.loading')}</span>
-            </div>
-          ) : previewUrl ? (
-            <div className="flex flex-col h-full p-8 justify-between min-h-[600px]">
-              <div className="flex gap-4 mb-8 justify-center">
-                <Button 
-                    onClick={() => setView('original')} 
-                    variant={view === 'original' ? 'primary' : 'outline'}
-                    className={view === 'original' ? 'bg-yellow-400 text-black border-none' : ''}
-                >
-                    {t('labs.manga.original', 'ORIGINAL')}
-                </Button>
-                <Button 
-                    onClick={() => setView('clean')} 
-                    disabled={!cleanedUrl}
-                    variant={view === 'clean' ? 'primary' : 'outline'}
-                    className={view === 'clean' ? 'bg-emerald-500 text-white border-none' : ''}
-                >
-                    {t('labs.manga.clean', 'PROPRE')}
-                </Button>
-                <Button 
-                    onClick={() => setView('translated')} 
-                    disabled={!translatedUrl}
-                    variant={view === 'translated' ? 'primary' : 'outline'}
-                    className={view === 'translated' ? 'bg-blue-500 text-white border-none' : ''}
-                >
-                    {t('labs.manga.translated', 'TRADUIT')}
-                </Button>
-              </div>
-              <div className="relative group cursor-zoom-in flex-grow flex items-center justify-center">
-                  <img 
-                    src={getActiveImageUrl() || ''} 
-                    className="rounded-2xl mx-auto max-h-[700px] shadow-2xl transition-transform duration-500 group-hover:scale-[1.01] object-contain" 
-                    alt="Manga Page View" 
-                    loading="lazy"
-                    decoding="async"
-                  />
-              </div>
-            </div>
+        {/* Visionneuse */}
+        <div className="lg:col-span-8">
+          {!previewUrl && !loading ? (
+            <LabEmpty
+              icon={<ImageIcon className="h-20 w-20" aria-hidden="true" />}
+              title={t('labs.manga.no_page', 'Aucune page importée')}
+              hint="Importe une planche depuis le panneau d'outils : les versions propre et traduite s'afficheront ici."
+            />
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20">
-                <ImageIcon className="w-32 h-32 text-white mb-6" />
-                <span className="text-white font-black italic text-xl uppercase tracking-widest">{t('labs.manga.no_page', 'Aucune page importée')}</span>
-            </div>
+            <section className="relative flex min-h-[600px] flex-col justify-center overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 sm:p-8">
+              {loading && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0B0C10]/90">
+                  <Loader2
+                    className="mb-6 h-12 w-12 animate-spin text-[#FDB913]"
+                    aria-hidden="true"
+                  />
+                  <span className="text-xs font-black uppercase tracking-[0.3em] text-[#8F94A5]">
+                    {t('common.loading')}
+                  </span>
+                </div>
+              )}
+              {previewUrl && (
+                <div className="flex min-h-[540px] flex-col justify-between">
+                  <div className="mb-8 flex flex-wrap justify-center gap-3">
+                    {VIEWS.map((v) => (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => setView(v.id)}
+                        disabled={!v.enabled}
+                        className={`cursor-pointer rounded-full border px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                          view === v.id
+                            ? 'border-[#FDB913] bg-[#FDB913]/10 text-[#F4F1E8]'
+                            : 'border-[#F4F1E8]/15 bg-transparent text-[#8F94A5] hover:border-[#F4F1E8]/30 hover:text-[#F4F1E8]'
+                        }`}
+                      >
+                        {v.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex flex-grow items-center justify-center">
+                    <img
+                      src={getActiveImageUrl() || ''}
+                      className="mx-auto max-h-[700px] rounded-xl object-contain"
+                      alt="Manga Page View"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                </div>
+              )}
+            </section>
           )}
         </div>
       </div>
 
-      {/* Guide & Protocole */}
-      <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card padding="lg" className="bg-white dark:bg-black/40 border-amber-500/20 shadow-[0_0_50px_rgba(245,158,11,0.1)] relative overflow-hidden group">
-              <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <ImageIcon className="w-64 h-64 text-amber-500" />
-              </div>
-              <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                  <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" /> {t('labs.manga.guide_title', 'Guide du Manga Lab')}
-              </h4>
-              <div className="space-y-4 relative z-10">
-                  <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                      <span className="text-amber-600 dark:text-amber-400">{t('labs.manga.guide_concept_title', 'Le Concept :')}</span> {t('labs.manga.guide_concept_desc', "Importez une page de manga et laissez l'IA la nettoyer ou la traduire, sans toucher au dessin.")}
-                  </p>
-                  <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                      <span className="text-amber-600 dark:text-amber-400">{t('labs.manga.guide_cleaner_title', 'Bubble Cleaner :')}</span> {t('labs.manga.guide_cleaner_desc', "Efface le texte des bulles pour obtenir une planche vierge, prête à recevoir votre propre texte ou une nouvelle traduction.")}
-                  </p>
-                  <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                      <span className="text-amber-600 dark:text-amber-400">{t('labs.manga.guide_translator_title', 'Auto-Translator :')}</span> {t('labs.manga.guide_translator_desc', "Choisissez une langue cible et la planche est traduite directement dans les bulles. Comparez les versions avec les onglets Original, Propre et Traduit.")}
-                  </p>
-              </div>
-          </Card>
-
-          <div className="p-12 rounded-[4rem] bg-gradient-to-br from-amber-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
-              <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-amber-800/70 dark:text-amber-200/60">
-                  {t('labs.manga.guide_footer_1', 'La page est envoyée au backend qui détecte les bulles de texte, en extrait le contenu par OCR, puis efface le lettrage par inpainting pour produire la version "propre".')} <br />
-                  {t('labs.manga.guide_footer_2', "Pour la traduction, le texte reconnu est traduit dans la langue cible puis réinséré dans les bulles, et l'image finale est renvoyée encodée en base64.")}
-              </p>
-          </div>
-      </div>
-    </div>
+      <LabGuide
+        steps={[
+          {
+            title: 'Importe une planche',
+            body: t(
+              'labs.manga.guide_concept_desc',
+              "Importez une page de manga et laissez l'IA la nettoyer ou la traduire, sans toucher au dessin.",
+            ),
+          },
+          {
+            title: 'Nettoie les bulles',
+            body: t(
+              'labs.manga.guide_cleaner_desc',
+              'Efface le texte des bulles pour obtenir une planche vierge, prête à recevoir votre propre texte ou une nouvelle traduction.',
+            ),
+          },
+          {
+            title: 'Traduis la page',
+            body: t(
+              'labs.manga.guide_translator_desc',
+              'Choisissez une langue cible et la planche est traduite directement dans les bulles. Comparez les versions avec les onglets Original, Propre et Traduit.',
+            ),
+          },
+        ]}
+        note={`${t('labs.manga.guide_footer_1', 'La page est envoyée au backend qui détecte les bulles de texte, en extrait le contenu par OCR, puis efface le lettrage par inpainting pour produire la version "propre".')} ${t('labs.manga.guide_footer_2', "Pour la traduction, le texte reconnu est traduit dans la langue cible puis réinséré dans les bulles, et l'image finale est renvoyée encodée en base64.")}`}
+      />
+    </LabPage>
   );
 };
 

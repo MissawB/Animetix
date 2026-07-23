@@ -1,7 +1,11 @@
 import React from 'react';
 import { Search, Loader2, Globe, Database } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../../components/ui/Button';
+import { LAB_INPUT } from './shared/LabKit';
+
+/** Bouton de recherche compact, même voix que LAB_CTA. */
+const SEARCH_BTN =
+  'inline-flex cursor-pointer items-center gap-2 rounded-lg border-none bg-[#E8442B] px-6 py-2.5 font-manga text-sm font-black uppercase italic text-[#F4F1E8] transition-colors hover:bg-[#c93a24] disabled:cursor-not-allowed disabled:opacity-50';
 
 interface SeiyuuSearchFiltersPanelProps {
   searchQuery: string;
@@ -30,8 +34,7 @@ export const SeiyuuSearchFiltersPanel: React.FC<SeiyuuSearchFiltersPanelProps> =
 
   return (
     <div className="mb-12 space-y-6">
-      <form onSubmit={onSearch} className="relative group">
-        <div className="absolute inset-0 bg-emerald-500/20 blur-3xl opacity-0 group-focus-within:opacity-100 transition-opacity -z-10" />
+      <form onSubmit={onSearch} className="relative">
         <input
           type="text"
           aria-label={t(
@@ -44,30 +47,28 @@ export const SeiyuuSearchFiltersPanel: React.FC<SeiyuuSearchFiltersPanelProps> =
             'labs.seiyuu.search_placeholder',
             'Chercher par nom de doubleur ou nom de personnage...',
           )}
-          className="w-full bg-black/40 backdrop-blur-xl border-2 border-white/5 focus:border-emerald-500/50 rounded-[2.5rem] px-10 py-8 text-xl font-bold outline-none transition-all text-white placeholder:text-white/10"
+          className={`${LAB_INPUT} py-5 pr-44 text-base`}
         />
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-4">
-          <Button
-            type="submit"
-            disabled={isLoading || isRefetching}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-5 rounded-2xl font-black italic uppercase shadow-xl transition-all border-none flex items-center gap-3"
-          >
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <button type="submit" disabled={isLoading || isRefetching} className={SEARCH_BTN}>
             {isLoading || isRefetching ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
             ) : (
               <>
-                <Search className="w-5 h-5" /> {t('labs.seiyuu.btn_search', 'RECHERCHER')}
+                <Search className="h-4 w-4" aria-hidden="true" />{' '}
+                {t('labs.seiyuu.btn_search', 'RECHERCHER')}
               </>
             )}
-          </Button>
+          </button>
         </div>
       </form>
 
       {/* Quick Filters */}
-      <div className="flex flex-wrap items-center justify-between gap-6 px-4">
-        <div className="flex flex-wrap gap-4 items-center">
-          <span className="text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1">
-            <Globe className="w-3 h-3" /> {t('labs.seiyuu.filter_lang', 'Langue:')}
+      <div className="flex flex-wrap items-center justify-between gap-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-[#8F94A5]">
+            <Globe className="h-3 w-3" aria-hidden="true" />{' '}
+            {t('labs.seiyuu.filter_lang', 'Langue:')}
           </span>
           <div className="flex gap-2">
             {[
@@ -77,11 +78,12 @@ export const SeiyuuSearchFiltersPanel: React.FC<SeiyuuSearchFiltersPanelProps> =
             ].map((opt) => (
               <button
                 key={opt.value}
+                type="button"
                 onClick={() => setLangFilter(opt.value)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                className={`cursor-pointer rounded-xl border px-4 py-2 text-[10px] font-black uppercase tracking-wider transition-colors ${
                   langFilter === opt.value
-                    ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
-                    : 'bg-white/5 border-white/5 text-white/60 hover:border-white/10 hover:text-white'
+                    ? 'border-[#FDB913] bg-[#FDB913]/10 text-[#FDB913]'
+                    : 'border-[#F4F1E8]/10 bg-transparent text-[#8F94A5] hover:border-[#F4F1E8]/25 hover:text-[#F4F1E8]'
                 }`}
               >
                 {opt.label}
@@ -90,9 +92,10 @@ export const SeiyuuSearchFiltersPanel: React.FC<SeiyuuSearchFiltersPanelProps> =
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-4 items-center">
-          <span className="text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1">
-            <Database className="w-3 h-3" /> {t('labs.seiyuu.filter_origin', 'Origine:')}
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-[#8F94A5]">
+            <Database className="h-3 w-3" aria-hidden="true" />{' '}
+            {t('labs.seiyuu.filter_origin', 'Origine:')}
           </span>
           <div className="flex gap-2">
             {[
@@ -102,11 +105,12 @@ export const SeiyuuSearchFiltersPanel: React.FC<SeiyuuSearchFiltersPanelProps> =
             ].map((opt) => (
               <button
                 key={opt.value}
+                type="button"
                 onClick={() => setOriginFilter(opt.value)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                className={`cursor-pointer rounded-xl border px-4 py-2 text-[10px] font-black uppercase tracking-wider transition-colors ${
                   originFilter === opt.value
-                    ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
-                    : 'bg-white/5 border-white/5 text-white/60 hover:border-white/10 hover:text-white'
+                    ? 'border-[#FDB913] bg-[#FDB913]/10 text-[#FDB913]'
+                    : 'border-[#F4F1E8]/10 bg-transparent text-[#8F94A5] hover:border-[#F4F1E8]/25 hover:text-[#F4F1E8]'
                 }`}
               >
                 {opt.label}

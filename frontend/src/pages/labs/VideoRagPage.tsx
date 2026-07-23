@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { Search, Wand2, Sparkles, Film } from 'lucide-react';
-import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { Search, Wand2, Loader2 } from 'lucide-react';
 import { Timeline } from '../../components/video/Timeline';
 import { Inspector } from '../../components/video/Inspector';
 import { useVideoRagStore } from '../../features/labs/stores/videoRagStore';
 import { labService } from '../../features/labs/services/labService';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../store/authStore';
 import { VideoIndexing } from '../../components/video/VideoIndexing';
+import {
+  LabPage,
+  LabHeader,
+  LabPanel,
+  LabGuide,
+  LAB_INPUT,
+  LAB_LABEL,
+  LAB_CTA,
+} from './components/shared/LabKit';
 
 const SUGGESTIONS = [
   { label: '⚔️ Combat Épique', query: 'combat épique' },
@@ -96,163 +102,128 @@ const VideoRagPage: React.FC = () => {
   };
 
   return (
-    <AnimatedPage>
-      <div className="min-h-screen bg-[#0a0a12] text-white p-6 max-w-7xl mx-auto py-16 animate-fade-in">
-        <header className="mb-12">
-          <h1 className="text-5xl font-black italic manga-font tracking-tighter uppercase mb-4 text-center md:text-left">
-            VIDEO-<span className="text-red-500">RAG</span> EXPLORER
-          </h1>
-          <p className="text-white/60 text-lg">
-            Recherche sémantique et localisation temporelle de moments précis dans vos vidéos
-            indexées via Similarité Vectorielle.
-          </p>
-        </header>
+    <LabPage>
+      <LabHeader
+        code="Protocole · Video-RAG"
+        title="Explorateur"
+        accent="temporel"
+        lede="Décris un moment avec tes mots et le laboratoire retrouve l'instant exact dans les vidéos indexées, par similarité vectorielle."
+      />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
-          {/* Sidebar / Controls */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card
-              padding="lg"
-              className="bg-white/5 border border-white/10 shadow-xl backdrop-blur-md"
-            >
-              <h3 className="text-xs font-black uppercase opacity-60 mb-4 tracking-widest flex items-center gap-2 text-red-500">
-                <Sparkles className="w-4 h-4 animate-pulse" /> Recherche Sémantique
-              </h3>
-
-              <div className="space-y-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    aria-label="Recherche sémantique d'un moment"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch(query)}
-                    placeholder="Chercher un moment..."
-                    className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 pl-10 text-sm focus:border-red-500 outline-none transition-all placeholder-white/30 text-white"
-                  />
-                  <Search className="absolute left-3 top-3.5 w-4 h-4 text-white/30" />
-                </div>
-
-                <Button
-                  onClick={() => handleSearch(query)}
-                  disabled={isLoading || !query.trim()}
-                  variant="primary"
-                  fullWidth
-                  className="bg-red-600 hover:bg-red-700 text-white font-bold tracking-wider py-4 text-sm uppercase flex items-center justify-center gap-2 border-none rounded-xl"
-                >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Wand2 className="w-4 h-4" /> Explorer
-                    </>
-                  )}
-                </Button>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        {/* Sidebar / Controls */}
+        <div className="space-y-8 lg:col-span-4">
+          <LabPanel title="Recherche sémantique">
+            <div className="space-y-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  aria-label="Recherche sémantique d'un moment"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch(query)}
+                  placeholder="Chercher un moment…"
+                  className={`${LAB_INPUT} pl-11`}
+                />
+                <Search
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8F94A5]"
+                  aria-hidden="true"
+                />
               </div>
 
-              {/* Suggestions */}
-              <div className="mt-8">
-                <span className="text-[10px] font-black uppercase opacity-40 tracking-widest block mb-3">
-                  Suggestions de test
-                </span>
-                <div className="flex flex-col gap-2">
-                  {SUGGESTIONS.map((s, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setQuery(s.query);
-                        handleSearch(s.query);
-                      }}
-                      className="px-3 py-2 rounded-lg text-left text-xs font-medium border border-white/5 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </Card>
-
-            {isAdmin && <VideoIndexing />}
-          </div>
-
-          {/* Main Content (Timeline + Inspector) */}
-          <div className="lg:col-span-3 space-y-6">
-            <Card
-              padding="lg"
-              className="bg-black/40 border border-white/10 relative overflow-hidden min-h-[400px] flex flex-col justify-between"
-            >
-              <div>
-                <h2 className="text-lg font-black italic tracking-wide uppercase mb-6 flex items-center gap-2">
-                  <Film className="w-5 h-5 text-red-500" /> Timeline Interactive
-                </h2>
-
-                {error && (
-                  <div className="p-4 mb-6 bg-red-950/40 border border-red-500/20 text-red-400 rounded-xl text-sm font-semibold">
-                    ⚠️ {error}
-                  </div>
-                )}
-
+              <button
+                type="button"
+                onClick={() => handleSearch(query)}
+                disabled={isLoading || !query.trim()}
+                className={LAB_CTA}
+              >
                 {isLoading ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(239,68,68,0.3)]" />
-                    <p className="text-red-400 font-bold uppercase tracking-widest text-xs animate-pulse">
-                      Recherche des vecteurs temporels...
-                    </p>
-                  </div>
+                  <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
-                  <Timeline />
+                  <>
+                    <Wand2 className="h-5 w-5" aria-hidden="true" /> Explorer
+                  </>
                 )}
-              </div>
+              </button>
+            </div>
 
-              <div className="mt-6 border-t border-white/5 pt-6">
-                <Inspector />
+            {/* Suggestions */}
+            <div className="mt-8 space-y-3">
+              <span className={`${LAB_LABEL} block`}>Suggestions de test</span>
+              <div className="flex flex-col gap-2">
+                {SUGGESTIONS.map((s, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setQuery(s.query);
+                      handleSearch(s.query);
+                    }}
+                    className="cursor-pointer rounded-xl border border-[#F4F1E8]/10 bg-transparent px-3 py-2 text-left text-xs font-medium text-[#8F94A5] transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8]"
+                  >
+                    {s.label}
+                  </button>
+                ))}
               </div>
-            </Card>
-          </div>
+            </div>
+          </LabPanel>
+
+          {isAdmin && <VideoIndexing />}
         </div>
 
-        {/* Guide & Protocole */}
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card
-            padding="lg"
-            className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group"
+        {/* Main Content (Timeline + Inspector) */}
+        <div className="lg:col-span-8">
+          <LabPanel
+            title="Timeline interactive"
+            className="flex min-h-[400px] flex-col justify-between"
           >
-            <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Film className="w-64 h-64 text-red-500" />
-            </div>
-            <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-red-400" /> Guide du Video-RAG
-            </h4>
-            <div className="space-y-4 relative z-10">
-              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                <span className="text-red-400">Le Concept :</span> Décrivez un moment avec vos mots
-                ("combat épique", "personnage triste") et le système retrouve les passages
-                correspondants dans les vidéos indexées.
-              </p>
-              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                <span className="text-red-400">La Timeline :</span> Chaque résultat apparaît comme
-                un segment coloré sur la timeline (action, dialogue ou émotion). Cliquez dessus pour
-                voir ses détails dans l'inspecteur.
-              </p>
-              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                <span className="text-red-400">Les Suggestions :</span> Pas d'idée ? Utilisez les
-                suggestions de test dans la barre latérale pour lancer une recherche en un clic.
-              </p>
-            </div>
-          </Card>
+            <div>
+              {error && (
+                <div className="mb-6 rounded-xl border border-[#E8442B]/25 bg-[#E8442B]/[0.05] p-4 text-sm font-semibold text-[#E8442B]">
+                  {error}
+                </div>
+              )}
 
-          <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
-            <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-200/60">
-              Les vidéos sont découpées en segments temporels décrits par un modèle de vision (VLM
-              Qwen2-VL), puis ces descriptions sont projetées dans un espace vectoriel via
-              Jina-Embeddings. <br />
-              Votre requête est vectorisée à son tour et comparée par similarité à ces vecteurs pour
-              situer l'instant exact où l'événement recherché se produit.
-            </p>
-          </div>
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <Loader2
+                    className="mb-4 h-12 w-12 animate-spin text-[#E8442B]"
+                    aria-hidden="true"
+                  />
+                  <p className="text-xs font-black uppercase tracking-widest text-[#8F94A5]">
+                    Recherche des vecteurs temporels…
+                  </p>
+                </div>
+              ) : (
+                <Timeline />
+              )}
+            </div>
+
+            <div className="mt-6 border-t border-[#F4F1E8]/10 pt-6">
+              <Inspector />
+            </div>
+          </LabPanel>
         </div>
       </div>
-    </AnimatedPage>
+
+      <LabGuide
+        steps={[
+          {
+            title: 'Décris le moment',
+            body: "Formule la scène recherchée en français courant (« combat épique », « personnage triste ») ou pars d'une suggestion de test.",
+          },
+          {
+            title: "Lance l'exploration",
+            body: 'Ta requête est vectorisée puis comparée aux segments indexés ; les correspondances apparaissent sur la timeline.',
+          },
+          {
+            title: 'Inspecte les segments',
+            body: "Chaque résultat est un segment coloré (action, dialogue ou émotion) : clique dessus pour ouvrir ses détails dans l'inspecteur.",
+          },
+        ]}
+        note="Les vidéos sont découpées en segments temporels décrits par un modèle de vision (VLM Qwen2-VL), puis ces descriptions sont projetées dans un espace vectoriel via Jina-Embeddings. Ta requête est vectorisée à son tour et comparée par similarité pour situer l'instant exact où l'événement se produit."
+      />
+    </LabPage>
   );
 };
 

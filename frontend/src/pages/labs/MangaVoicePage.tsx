@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
-import {
-  Mic,
-  Play,
-  Save,
-  User,
-  MessageSquare,
-  Wand2,
-  Search,
-  Loader2,
-  Sparkles,
-} from 'lucide-react';
+import { Mic, Play, Save, Wand2, Search, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { Badge } from "../../components/ui/Badge";
-import { apiClient } from "../../utils/apiClient";
-import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { apiClient } from '../../utils/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VoiceProfile } from '../../types';
 import { useToastStore } from '../../store/toastStore';
+import {
+  LabPage,
+  LabHeader,
+  LabPanel,
+  LabEmpty,
+  LabGuide,
+  LAB_INPUT,
+  LAB_LABEL,
+  LAB_BTN_GHOST,
+} from './components/shared/LabKit';
+
+/** Action principale compacte (même voix que LAB_CTA, sans w-full). */
+const CTA_COMPACT =
+  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-[#E8442B] px-8 py-4 font-manga text-base font-black uppercase italic text-[#F4F1E8] transition-colors hover:bg-[#c93a24] disabled:cursor-not-allowed disabled:opacity-50';
 
 const MangaVoicePage: React.FC = () => {
   const { t } = useTranslation();
@@ -36,7 +36,9 @@ const MangaVoicePage: React.FC = () => {
   const [langFilter, setLangFilter] = useState('');
 
   // Fetch Voice Profiles
-  const { data: profilesData, isLoading: isLoadingProfiles } = useQuery<{ results: VoiceProfile[] }>({
+  const { data: profilesData, isLoading: isLoadingProfiles } = useQuery<{
+    results: VoiceProfile[];
+  }>({
     queryKey: ['voice-profiles-manga', searchQuery, langFilter],
     queryFn: () => {
       let url = `/api/v1/labs/audio/seiyuu/?q=${encodeURIComponent(searchQuery)}`;
@@ -50,7 +52,7 @@ const MangaVoicePage: React.FC = () => {
     if (file) {
       setRefAudio(file);
       setSelectedProfile(null);
-      setCharacter(file.name.replace(/\.[^/.]+$/, ""));
+      setCharacter(file.name.replace(/\.[^/.]+$/, ''));
     }
   };
 
@@ -69,7 +71,7 @@ const MangaVoicePage: React.FC = () => {
         useToastStore.getState().addToast("Échec du chargement de l'échantillon vocal.", 'error');
       }
     } catch (err) {
-      console.error("Failed to load reference audio from profile:", err);
+      console.error('Failed to load reference audio from profile:', err);
       useToastStore.getState().addToast("Échec du chargement de l'échantillon vocal.", 'error');
     } finally {
       setLoadingAudio(false);
@@ -88,7 +90,7 @@ const MangaVoicePage: React.FC = () => {
       const data = await apiClient('/api/v1/labs/manga-voice/', {
         method: 'POST',
         body: formData,
-        headers: {}
+        headers: {},
       });
 
       setAudioUrl(data.audio_data);
@@ -101,43 +103,46 @@ const MangaVoicePage: React.FC = () => {
   };
 
   return (
-    <AnimatedPage>
-      <div className="container mx-auto py-12 px-6">
-        <header className="mb-16 text-center md:text-left">
-          <h1 className="text-6xl font-black italic manga-font tracking-tighter uppercase mb-4">
-            MANGA <span className="text-orange-500 text-glow">VOICE</span> LAB
-          </h1>
-          <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-            {t('labs.manga_voice.subtitle', 'Donnez vie à vos planches avec le doublage IA zero-shot et le clonage vocal instantané.')}
-          </p>
-        </header>
+    <LabPage>
+      <LabHeader
+        code="Protocole · Dubbing"
+        title="Manga voice"
+        accent="lab"
+        lede={t(
+          'labs.manga_voice.subtitle',
+          'Donnez vie à vos planches avec le doublage IA zero-shot et le clonage vocal instantané.',
+        )}
+      />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* Casting Panel (Left) */}
-          <Card padding="lg" className="lg:col-span-4 h-fit bg-gray-900/40 border-white/5 shadow-2xl space-y-6">
-            <div>
-              <h3 className="text-xs font-black uppercase opacity-40 mb-4 tracking-widest flex items-center gap-2">
-                <User className="w-4 h-4" /> {t('labs.manga_voice.casting_title', 'Casting Vocal')}
-              </h3>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                {t('labs.manga_voice.casting_desc', 'Choisissez une voix de la BDD ou chargez votre propre extrait.')}
-              </p>
-            </div>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        {/* Casting Panel (Left) */}
+        <LabPanel
+          title={t('labs.manga_voice.casting_title', 'Casting Vocal')}
+          className="h-fit lg:col-span-4"
+        >
+          <div className="space-y-6">
+            <p className="text-sm leading-relaxed text-[#8F94A5]">
+              {t(
+                'labs.manga_voice.casting_desc',
+                'Choisissez une voix de la BDD ou chargez votre propre extrait.',
+              )}
+            </p>
 
             {/* Language filter tab */}
-            <div className="flex gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+            <div className="flex gap-1 rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-1">
               {[
                 { label: t('labs.manga_voice.filter_all', 'Tous'), value: '' },
                 { label: t('labs.manga_voice.filter_japanese', 'Seiyuu (JP)'), value: 'japanese' },
-                { label: t('labs.manga_voice.filter_french', 'VF (FR)'), value: 'french' }
-              ].map(opt => (
+                { label: t('labs.manga_voice.filter_french', 'VF (FR)'), value: 'french' },
+              ].map((opt) => (
                 <button
                   key={opt.value}
+                  type="button"
                   onClick={() => setLangFilter(opt.value)}
-                  className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
+                  className={`flex-1 cursor-pointer rounded-lg border-none py-2 text-[9px] font-black uppercase tracking-wider transition-colors ${
                     langFilter === opt.value
-                      ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
-                      : 'text-white/40 hover:text-white border border-transparent'
+                      ? 'bg-[#FDB913]/10 text-[#FDB913]'
+                      : 'bg-transparent text-[#8F94A5] hover:text-[#F4F1E8]'
                   }`}
                 >
                   {opt.label}
@@ -147,181 +152,233 @@ const MangaVoicePage: React.FC = () => {
 
             {/* Quick Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Search
+                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8F94A5]"
+                aria-hidden="true"
+              />
               <input
                 type="text"
                 placeholder={t('labs.manga_voice.search_placeholder', 'Rechercher une voix...')}
                 aria-label={t('labs.manga_voice.search_placeholder', 'Rechercher une voix...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-black/40 border border-white/5 rounded-xl pl-10 pr-4 py-3 font-bold text-xs outline-none focus:border-orange-500/50"
+                className={`${LAB_INPUT} pl-10 text-xs`}
               />
             </div>
 
             {/* Profiles List */}
-            <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
+            <div className="custom-scrollbar max-h-[350px] space-y-2 overflow-y-auto pr-1">
               {isLoadingProfiles ? (
                 <div className="py-10 text-center">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-500" />
+                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-[#FDB913]" />
                 </div>
               ) : profilesData?.results && profilesData.results.length > 0 ? (
                 profilesData.results.map((p) => (
                   <button
                     key={p.id}
+                    type="button"
                     onClick={() => handleSelectProfile(p)}
-                    className={`w-full px-4 py-3.5 rounded-xl text-left text-xs font-black transition-all border flex items-center justify-between group ${
+                    className={`flex w-full cursor-pointer items-center justify-between rounded-xl border px-4 py-3.5 text-left text-xs font-black transition-colors ${
                       selectedProfile?.id === p.id
-                        ? 'border-orange-500 bg-orange-500/10 text-white shadow-lg'
-                        : 'border-white/5 bg-black/25 text-white/50 hover:border-white/10 hover:text-white'
+                        ? 'border-[#FDB913] bg-[#FDB913]/10 text-[#F4F1E8]'
+                        : 'border-[#F4F1E8]/10 bg-[#0B0C10] text-[#8F94A5] hover:border-[#F4F1E8]/25 hover:text-[#F4F1E8]'
                     }`}
                   >
                     <div className="flex flex-col gap-0.5 truncate pr-2">
                       <span className="truncate">{p.name}</span>
-                      <span className="text-[8px] opacity-40 truncate font-medium uppercase tracking-wide">
+                      <span className="truncate text-[8px] font-medium uppercase tracking-wide text-[#8F94A5]">
                         {p.roles || 'Doubleur'}
                       </span>
                     </div>
-                    <Badge variant="neutral" className="text-[7px] font-black uppercase shrink-0 bg-black/40">
-                      {p.language === 'japanese' ? '🇯🇵 JP' : p.language === 'french' ? '🇫🇷 FR' : '🌐'}
-                    </Badge>
+                    <span className="flex-none text-[8px] font-black uppercase tracking-widest text-[#8F94A5]">
+                      {p.language === 'japanese'
+                        ? '🇯🇵 JP'
+                        : p.language === 'french'
+                          ? '🇫🇷 FR'
+                          : '🌐'}
+                    </span>
                   </button>
                 ))
               ) : (
-                <div className="py-10 text-center text-white/20">
-                  <span className="text-[10px] font-black uppercase">{t('labs.manga_voice.no_voice_found', 'Aucune voix trouvée')}</span>
+                <div className="py-10 text-center">
+                  <span className="text-[10px] font-black uppercase text-[#8F94A5]">
+                    {t('labs.manga_voice.no_voice_found', 'Aucune voix trouvée')}
+                  </span>
                 </div>
               )}
             </div>
 
-            <div className="pt-6 border-t border-white/5 space-y-4">
-              <div>
-                <h4 className="text-[10px] font-black uppercase opacity-30 tracking-widest">{t('labs.manga_voice.manual_load_title', 'Ou charger manuellement')}</h4>
-              </div>
-              <Button
-                variant="outline"
-                fullWidth
-                className="bg-black text-white hover:bg-gray-800 border-none rounded-xl py-4 flex items-center justify-center gap-2"
+            <div className="space-y-4 border-t border-[#F4F1E8]/10 pt-6">
+              <h4 className={LAB_LABEL}>
+                {t('labs.manga_voice.manual_load_title', 'Ou charger manuellement')}
+              </h4>
+              <button
+                type="button"
+                className={`${LAB_BTN_GHOST} w-full justify-center`}
                 onClick={() => document.getElementById('audio-upload')?.click()}
               >
-                <Mic className="w-4 h-4" /> {refAudio && !selectedProfile ? t('labs.manga_voice.manual_voice_loaded', 'VOIX MANUELLE CHARGÉE') : t('labs.manga_voice.load_file_btn', 'CHARGER UN WAV/MP3')}
-              </Button>
-              <input type="file" id="audio-upload" className="hidden" accept="audio/*" onChange={handleFileChange} aria-label={t('labs.manga_voice.load_file_aria', 'Charger un fichier audio de référence')} />
+                <Mic className="h-4 w-4" aria-hidden="true" />{' '}
+                {refAudio && !selectedProfile
+                  ? t('labs.manga_voice.manual_voice_loaded', 'VOIX MANUELLE CHARGÉE')
+                  : t('labs.manga_voice.load_file_btn', 'CHARGER UN WAV/MP3')}
+              </button>
+              <input
+                type="file"
+                id="audio-upload"
+                className="hidden"
+                accept="audio/*"
+                onChange={handleFileChange}
+                aria-label={t(
+                  'labs.manga_voice.load_file_aria',
+                  'Charger un fichier audio de référence',
+                )}
+              />
               {refAudio && (
-                <div className="p-3 bg-white/5 rounded-xl flex items-center justify-between text-xs font-bold">
-                  <span className="truncate max-w-[200px] opacity-60">{refAudio.name}</span>
+                <div className="flex items-center justify-between rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-3 text-xs font-bold">
+                  <span className="max-w-[200px] truncate text-[#8F94A5]">{refAudio.name}</span>
                   {loadingAudio ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-500" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#FDB913]" />
                   ) : (
-                    <Badge variant="success" className="text-[8px] bg-orange-500">{t('labs.manga_voice.ready', 'PRÊT')}</Badge>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[#FDB913]">
+                      {t('labs.manga_voice.ready', 'PRÊT')}
+                    </span>
                   )}
                 </div>
               )}
             </div>
-          </Card>
+          </div>
+        </LabPanel>
 
-          {/* Dialog and Result Area (Right) */}
-          <div className="lg:col-span-8 space-y-8">
-            <Card padding="lg" className="bg-black border-2 border-white/5 rounded-[3rem] shadow-2xl">
-              <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-widest flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-orange-500" /> {t('labs.manga_voice.script_title', 'Script du Dialogue')}
-              </h3>
-              <textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                aria-label={t('labs.manga_voice.script_title', 'Script du dialogue')}
-                placeholder={refAudio ? t('labs.manga_voice.script_placeholder', 'Entrez le texte que {{character}} doit dire...', { character }) : t('labs.manga_voice.script_placeholder_select', "Sélectionnez d'abord un doubleur dans le menu de gauche...")}
-                disabled={!refAudio}
-                className="w-full h-40 bg-gray-900/50 border border-white/5 rounded-2xl p-6 text-lg font-bold text-white outline-none focus:border-orange-500/50 transition-all resize-none placeholder:opacity-20"
-              />
-              <div className="flex justify-end mt-6">
-                <Button
-                  onClick={handleGenerate}
-                  disabled={!text || !refAudio || loading || loadingAudio}
-                  className="bg-orange-500 hover:bg-orange-400 text-white px-12 py-8 rounded-2xl font-black italic text-xl uppercase shadow-xl shadow-orange-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+        {/* Dialog and Result Area (Right) */}
+        <div className="space-y-8 lg:col-span-8">
+          <LabPanel title={t('labs.manga_voice.script_title', 'Script du Dialogue')}>
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              aria-label={t('labs.manga_voice.script_title', 'Script du dialogue')}
+              placeholder={
+                refAudio
+                  ? t(
+                      'labs.manga_voice.script_placeholder',
+                      'Entrez le texte que {{character}} doit dire...',
+                      { character },
+                    )
+                  : t(
+                      'labs.manga_voice.script_placeholder_select',
+                      "Sélectionnez d'abord un doubleur dans le menu de gauche...",
+                    )
+              }
+              disabled={!refAudio}
+              className={`${LAB_INPUT} h-40 resize-none`}
+            />
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={!text || !refAudio || loading || loadingAudio}
+                className={CTA_COMPACT}
+              >
+                {loading ? (
+                  <Wand2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                ) : (
+                  t('labs.manga_voice.generate_dubbing', 'GÉNÉRER LE DUBBING')
+                )}
+              </button>
+            </div>
+          </LabPanel>
+
+          <AnimatePresence>
+            {audioUrl && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+              >
+                <LabPanel
+                  title={t('labs.manga_voice.dubbing_complete', 'Dubbing Terminé')}
+                  corner="Conversion RVC v2"
                 >
-                  {loading ? <Wand2 className="w-6 h-6 animate-spin" /> : t('labs.manga_voice.generate_dubbing', 'GÉNÉRER LE DUBBING')}
-                </Button>
-              </div>
-            </Card>
-
-            <AnimatePresence>
-              {audioUrl && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                >
-                  <Card padding="lg" className="bg-gradient-to-br from-orange-500/20 to-transparent border-orange-500/30 rounded-[3rem] p-10 flex flex-col items-center gap-8 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-6">
-                      <Badge variant="success" className="bg-orange-500 text-white font-black italic border-none px-4 py-2">RVC v2 OPTIMIZED</Badge>
+                  <div className="flex flex-col items-center gap-6 text-center">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#FDB913] text-[#0B0C10]">
+                      <Play className="ml-1 h-8 w-8" aria-hidden="true" />
                     </div>
 
-                    <div className="w-24 h-24 bg-orange-500 rounded-full flex items-center justify-center shadow-2xl shadow-orange-500/50 animate-pulse cursor-pointer">
-                      <Play className="w-10 h-10 text-white ml-1" />
-                    </div>
+                    <p className="text-xs font-black uppercase tracking-widest text-[#8F94A5]">
+                      {t(
+                        'labs.manga_voice.character_ready',
+                        'Le personnage de {{character}} est prêt à parler.',
+                        { character },
+                      )}
+                    </p>
 
-                    <div className="text-center">
-                      <h3 className="text-2xl font-black italic manga-font uppercase mb-2 tracking-tighter">{t('labs.manga_voice.dubbing_complete', 'Dubbing Terminé')}</h3>
-                      <p className="text-xs font-bold opacity-50 uppercase tracking-widest">{t('labs.manga_voice.character_ready', 'Le personnage de {{character}} est prêt à parler.', { character })}</p>
-                    </div>
-
-                    <audio controls src={audioUrl} className="w-full max-w-xl accent-orange-500" aria-label="Lecteur audio du doublage généré">
+                    <audio
+                      controls
+                      src={audioUrl}
+                      className="w-full max-w-xl"
+                      aria-label="Lecteur audio du doublage généré"
+                    >
                       <track kind="captions" />
                     </audio>
 
-                    <div className="flex gap-4">
-                      <Button variant="outline" className="border-white/10 hover:bg-white/5 rounded-xl px-8">
-                        <Save className="w-4 h-4 mr-2" /> {t('labs.manga_voice.save', 'SAUVEGARDER')}
-                      </Button>
-                      <Button variant="primary" className="bg-white text-black hover:bg-gray-200 border-none rounded-xl px-8 font-black uppercase italic">
+                    <div className="flex flex-wrap justify-center gap-4">
+                      <button type="button" className={LAB_BTN_GHOST}>
+                        <Save className="h-4 w-4" aria-hidden="true" />{' '}
+                        {t('labs.manga_voice.save', 'SAUVEGARDER')}
+                      </button>
+                      <button type="button" className={CTA_COMPACT}>
                         {t('labs.manga_voice.inject_btn', 'INJECTER DANS LA PLANCHE')}
-                      </Button>
+                      </button>
                     </div>
-                  </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {!audioUrl && !loading && (
-              <div className="h-64 border-4 border-dashed border-white/5 rounded-[3rem] flex flex-col items-center justify-center opacity-20">
-                <Mic className="w-16 h-16 mb-4" />
-                <span className="font-black italic uppercase tracking-widest">{t('labs.manga_voice.waiting_generation', 'En attente de génération')}</span>
-              </div>
+                  </div>
+                </LabPanel>
+              </motion.div>
             )}
-          </div>
-        </div>
+          </AnimatePresence>
 
-        {/* Guide & Protocole */}
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card padding="lg" className="bg-white dark:bg-black/40 border-orange-500/20 shadow-[0_0_50px_rgba(249,115,22,0.1)] relative overflow-hidden group">
-                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <Mic className="w-64 h-64 text-orange-500" />
-                </div>
-                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                    <Sparkles className="w-5 h-5 text-orange-600 dark:text-orange-400" /> {t('labs.manga_voice.guide_title', 'Guide du Dubbing')}
-                </h4>
-                <div className="space-y-4 relative z-10">
-                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-orange-600 dark:text-orange-400">{t('labs.manga_voice.guide_casting_title', 'Le Casting :')}</span> {t('labs.manga_voice.guide_casting_desc', 'Choisissez un doubleur dans le catalogue (filtrable par langue JP/FR) ou chargez votre propre extrait WAV/MP3 comme voix de référence.')}
-                    </p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-orange-600 dark:text-orange-400">{t('labs.manga_voice.guide_script_title', 'Le Script :')}</span> {t('labs.manga_voice.guide_script_desc', 'Écrivez la réplique que le personnage doit dire, puis lancez la génération : la voix choisie prononce votre texte.')}
-                    </p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-orange-600 dark:text-orange-400">{t('labs.manga_voice.guide_result_title', 'Le Résultat :')}</span> {t('labs.manga_voice.guide_result_desc', 'Écoutez le doublage dans le lecteur intégré : idéal pour donner de la voix à une planche de manga ou tester un casting.')}
-                    </p>
-                </div>
-            </Card>
-
-            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-orange-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
-                <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-orange-800/70 dark:text-orange-200/60">
-                    {t('labs.manga_voice.guide_footer_1', "Clonage vocal zero-shot : le texte et un échantillon audio de référence sont envoyés à l'endpoint manga-voice, qui conditionne la synthèse vocale sur ce timbre sans entraînement préalable.")} <br />
-                    {t('labs.manga_voice.guide_footer_2', 'Les profils du catalogue fournissent l\'échantillon automatiquement ; la sortie est affinée via conversion RVC v2.')}
-                </p>
-            </div>
+          {!audioUrl && !loading && (
+            <LabEmpty
+              icon={<Mic className="h-16 w-16" aria-hidden="true" />}
+              title={t('labs.manga_voice.waiting_generation', 'En attente de génération')}
+              hint="Choisis une voix dans le casting, écris la réplique, puis lance la génération : le doublage apparaîtra ici."
+            />
+          )}
         </div>
       </div>
-    </AnimatedPage>
+
+      {/* Guide & Protocole */}
+      <LabGuide
+        steps={[
+          {
+            title: 'Le casting',
+            body: t(
+              'labs.manga_voice.guide_casting_desc',
+              'Choisissez un doubleur dans le catalogue (filtrable par langue JP/FR) ou chargez votre propre extrait WAV/MP3 comme voix de référence.',
+            ),
+          },
+          {
+            title: 'Le script',
+            body: t(
+              'labs.manga_voice.guide_script_desc',
+              'Écrivez la réplique que le personnage doit dire, puis lancez la génération : la voix choisie prononce votre texte.',
+            ),
+          },
+          {
+            title: 'Le résultat',
+            body: t(
+              'labs.manga_voice.guide_result_desc',
+              'Écoutez le doublage dans le lecteur intégré : idéal pour donner de la voix à une planche de manga ou tester un casting.',
+            ),
+          },
+        ]}
+        note={`${t(
+          'labs.manga_voice.guide_footer_1',
+          "Clonage vocal zero-shot : le texte et un échantillon audio de référence sont envoyés à l'endpoint manga-voice, qui conditionne la synthèse vocale sur ce timbre sans entraînement préalable.",
+        )} ${t(
+          'labs.manga_voice.guide_footer_2',
+          "Les profils du catalogue fournissent l'échantillon automatiquement ; la sortie est affinée via conversion RVC v2.",
+        )}`}
+      />
+    </LabPage>
   );
 };
 

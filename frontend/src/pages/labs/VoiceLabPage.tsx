@@ -1,19 +1,18 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Mic, 
-  Upload, 
-  Settings, 
-  Volume2,
-  Zap,
-  CheckCircle,
-  AlertCircle,
-  ChevronRight,
-  Sparkles
-} from 'lucide-react';
+import { Mic, Upload, Zap, CheckCircle, AlertCircle, ChevronRight } from 'lucide-react';
 import { WaveformVisualizer } from '../../features/labs/components/WaveformVisualizer';
 import { useVoiceCloning } from '../../features/labs/hooks/useVoiceCloning';
-import { Card } from "../../components/ui/Card";
+import {
+  LabPage,
+  LabHeader,
+  LabPanel,
+  LabGuide,
+  LAB_INPUT,
+  LAB_LABEL,
+  LAB_CTA,
+  LAB_BTN_GHOST,
+} from './components/shared/LabKit';
 
 const VoiceLabPage: React.FC = () => {
   const [text, setText] = useState('');
@@ -23,7 +22,7 @@ const VoiceLabPage: React.FC = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  
+
   const { clone, loading, result, error } = useVoiceCloning();
 
   const startRecording = async () => {
@@ -43,15 +42,15 @@ const VoiceLabPage: React.FC = () => {
 
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/wav' });
-        const file = new File([blob], "recording.wav", { type: 'audio/wav' });
+        const file = new File([blob], 'recording.wav', { type: 'audio/wav' });
         setAudioFile(file);
-        s.getTracks().forEach(track => track.stop());
+        s.getTracks().forEach((track) => track.stop());
         setStream(null);
       };
 
       mediaRecorder.start();
     } catch (err) {
-      console.error("Error accessing microphone:", err);
+      console.error('Error accessing microphone:', err);
     }
   };
 
@@ -74,237 +73,235 @@ const VoiceLabPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-7xl mx-auto"
-      >
-        <header className="mb-12 flex items-center justify-between">
-          <div>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-              Voice Lab
-            </h1>
-            <p className="text-zinc-400 mt-2 text-lg">Next-generation RVC voice cloning and synthesis.</p>
-          </div>
-          <div className="p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
-            <Settings className="w-6 h-6 text-zinc-500 hover:text-white transition-colors cursor-pointer" />
-          </div>
-        </header>
+    <LabPage>
+      <LabHeader
+        code="Protocole · Voice"
+        title="Clonage"
+        accent="vocal"
+        lede="Enregistre ou importe une voix de référence, écris un texte, et le moteur RVC le prononce avec ce timbre. Le pitch et le taux d'index se règlent avant la synthèse."
+      />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Side: Source */}
-          <section className="space-y-6">
-            <div className="p-8 bg-zinc-900/30 rounded-3xl border border-zinc-800/50 backdrop-blur-xl">
-              <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
-                <Volume2 className="text-red-500" />
-                Source Audio
-              </h2>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        {/* Left Side: Source */}
+        <section className="space-y-6">
+          <LabPanel title="Source audio">
+            <div className="relative flex aspect-video flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-[#F4F1E8]/15 bg-[#0B0C10]">
+              <WaveformVisualizer stream={stream} isActive={isRecording} />
 
-              <div className="aspect-video bg-zinc-950 rounded-2xl border border-dashed border-zinc-800 flex flex-col items-center justify-center relative overflow-hidden">
-                <WaveformVisualizer stream={stream} isActive={isRecording} />
-                
-                {!isRecording && !audioFile && (
-                  <div className="text-center p-6">
-                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
-                      <Mic className="text-red-500 w-8 h-8" />
-                    </div>
-                    <p className="text-zinc-400">Record or upload a reference voice</p>
+              {!isRecording && !audioFile && (
+                <div className="p-6 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[#E8442B]/25 bg-[#E8442B]/10">
+                    <Mic className="h-8 w-8 text-[#E8442B]" aria-hidden="true" />
                   </div>
-                )}
-
-                {audioFile && !isRecording && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="text-center">
-                      <p className="text-red-500 font-medium mb-2">{audioFile.name}</p>
-                      <button 
-                        onClick={() => setAudioFile(null)}
-                        className="text-xs text-zinc-500 hover:text-white underline"
-                      >
-                        Remove file
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mt-6">
-                <button
-                  onClick={isRecording ? stopRecording : startRecording}
-                  className={`flex items-center justify-center gap-3 p-4 rounded-2xl font-bold transition-all ${
-                    isRecording 
-                      ? 'bg-red-500 text-white animate-pulse' 
-                      : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                  }`}
-                >
-                  <Mic className="w-5 h-5" />
-                  {isRecording ? 'Stop Recording' : 'Start Recording'}
-                </button>
-                
-                <label 
-                  htmlFor="audio-upload"
-                  className="flex items-center justify-center gap-3 p-4 bg-zinc-800 text-zinc-300 rounded-2xl font-bold cursor-pointer hover:bg-zinc-700 transition-all border border-zinc-700"
-                >
-                  <Upload className="w-5 h-5" />
-                  Upload File
-                  <input id="audio-upload" aria-label="Importer un fichier audio" type="file" accept="audio/*" onChange={handleFileUpload} className="hidden" />
-                </label>
-              </div>
-            </div>
-          </section>
-
-          {/* Right Side: Synthesis */}
-          <section className="space-y-6">
-            <div className="p-8 bg-zinc-900/30 rounded-3xl border border-zinc-800/50 backdrop-blur-xl">
-              <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
-                <Zap className="text-orange-500" />
-                Synthesis Settings
-              </h2>
-
-              <div className="space-y-6">
-                <div>
-                  <label htmlFor="target-text" className="text-sm font-medium text-zinc-500 mb-2 block uppercase tracking-wider">Target Text</label>
-                  <textarea
-                    id="target-text"
-                    aria-label="Texte cible à synthétiser"
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="Enter text to synthesize..."
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 h-32 focus:border-red-500 transition-all resize-none outline-none text-zinc-200"
-                  />
+                  <p className="text-sm text-[#8F94A5]">
+                    Enregistre ou importe une voix de référence
+                  </p>
                 </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="model-select" className="text-sm font-medium text-zinc-500 mb-2 block uppercase tracking-wider">Model Selection</label>
-                    <select id="model-select" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 outline-none text-zinc-300 focus:border-red-500">
-                      <option>RVC-v2 Default</option>
-                      <option>HuggingFace Model X</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="index-rate" className="text-sm font-medium text-zinc-500 mb-2 block uppercase tracking-wider">Index Rate</label>
-                    <select id="index-rate" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 outline-none text-zinc-300 focus:border-red-500">
-                      <option>0.75 (Recommended)</option>
-                      <option>0.50 (Natural)</option>
-                      <option>1.00 (Precise)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <label htmlFor="pitch-shift" className="text-sm font-medium text-zinc-500 uppercase tracking-wider">Pitch Shift</label>
-                    <span className="text-orange-500 font-bold">{pitch > 0 ? `+${pitch}` : pitch} semitones</span>
-                  </div>
-                  <input
-                    id="pitch-shift"
-                    aria-label="Décalage de hauteur (pitch)"
-                    type="range"
-                    min="-12"
-                    max="12"
-                    value={pitch}
-                    onChange={(e) => setPitch(parseInt(e.target.value))}
-                    className="w-full accent-orange-500 bg-zinc-800 rounded-lg h-2"
-                  />
-                  <div className="flex justify-between mt-1 text-[10px] text-zinc-600 font-bold">
-                    <span>-12</span>
-                    <span>0</span>
-                    <span>+12</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleClone}
-                  disabled={loading || !audioFile || !text}
-                  className={`w-full p-5 rounded-2xl font-black text-xl flex items-center justify-center gap-3 transition-all ${
-                    loading 
-                      ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-red-600 to-orange-600 hover:scale-[1.02] active:scale-95 shadow-lg shadow-red-900/20'
-                  }`}
-                >
-                  {loading ? (
-                    <div className="w-6 h-6 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      Synthesize
-                      <ChevronRight className="w-6 h-6" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Result Area */}
-            <AnimatePresence>
-              {(result || error) && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className={`p-6 rounded-3xl border ${
-                    error ? 'bg-red-500/5 border-red-500/20' : 'bg-green-500/5 border-green-500/20'
-                  }`}
-                >
-                  {error ? (
-                    <div className="flex items-center gap-4 text-red-500">
-                      <AlertCircle className="w-8 h-8" />
-                      <div>
-                        <h3 className="font-bold">Synthesis Failed</h3>
-                        <p className="text-sm opacity-80">Check server logs for details.</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 text-green-500">
-                        <CheckCircle className="w-8 h-8" />
-                        <div>
-                          <h3 className="font-bold">Synthesis Ready</h3>
-                          <p className="text-sm opacity-80">Download or preview below</p>
-                        </div>
-                      </div>
-                      <audio controls aria-label="Audio synthétisé" className="h-10 accent-green-500" src={result?.audio_data}>
-                        <track kind="captions" />
-                      </audio>
-                    </div>
-                  )}
-                </motion.div>
               )}
-            </AnimatePresence>
-          </section>
-        </div>
 
-        {/* Guide & Protocole */}
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card padding="lg" className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
-                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <Mic className="w-64 h-64 text-red-500" />
+              {audioFile && !isRecording && (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#0B0C10]/80 backdrop-blur-sm">
+                  <div className="text-center">
+                    <p className="mb-2 font-medium text-[#FDB913]">{audioFile.name}</p>
+                    <button
+                      onClick={() => setAudioFile(null)}
+                      className="cursor-pointer border-none bg-transparent text-xs text-[#8F94A5] underline hover:text-[#F4F1E8]"
+                    >
+                      Retirer le fichier
+                    </button>
+                  </div>
                 </div>
-                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                    <Sparkles className="w-5 h-5 text-red-400" /> Guide du Voice Lab
-                </h4>
-                <div className="space-y-4 relative z-10">
-                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                        <span className="text-red-400">La Référence :</span> Enregistrez votre voix au micro ou importez un fichier audio. Cet extrait sert de modèle de timbre pour la synthèse.
-                    </p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                        <span className="text-red-400">Le Texte :</span> Écrivez ce que la voix doit dire, puis cliquez sur Synthesize : l'IA prononce votre texte avec la voix de référence.
-                    </p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                        <span className="text-red-400">Les Réglages :</span> Le Pitch Shift monte ou descend la voix (par demi-tons) et l'Index Rate dose la fidélité au timbre d'origine.
-                    </p>
-                </div>
-            </Card>
-
-            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
-                <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-200/60">
-                    Conversion vocale basée RVC v2 (Retrieval-based Voice Conversion) : le texte est d'abord synthétisé (TTS), puis le timbre est converti vers la voix de référence. <br />
-                    Le pitch shift est appliqué en demi-tons et l'index rate contrôle le poids de la récupération des caractéristiques du locuteur cible.
-                </p>
+              )}
             </div>
-        </div>
-      </motion.div>
-    </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <button
+                onClick={isRecording ? stopRecording : startRecording}
+                className={
+                  isRecording
+                    ? 'inline-flex cursor-pointer animate-pulse items-center justify-center gap-2 rounded-xl border-none bg-[#E8442B] p-4 text-xs font-black uppercase tracking-widest text-[#F4F1E8] transition-colors'
+                    : `${LAB_BTN_GHOST} justify-center rounded-xl p-4`
+                }
+              >
+                <Mic className="h-4 w-4" aria-hidden="true" />
+                {isRecording ? "Arrêter l'enregistrement" : "Démarrer l'enregistrement"}
+              </button>
+
+              <label
+                htmlFor="audio-upload"
+                className={`${LAB_BTN_GHOST} justify-center rounded-xl p-4`}
+              >
+                <Upload className="h-4 w-4" aria-hidden="true" />
+                Importer un fichier
+                <input
+                  id="audio-upload"
+                  aria-label="Importer un fichier audio"
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </LabPanel>
+        </section>
+
+        {/* Right Side: Synthesis */}
+        <section className="space-y-6">
+          <LabPanel
+            title="Réglages de synthèse"
+            corner={
+              <span className="flex items-center gap-1.5">
+                <Zap className="h-3.5 w-3.5" aria-hidden="true" /> RVC v2
+              </span>
+            }
+          >
+            <div className="space-y-6">
+              <div>
+                <label htmlFor="target-text" className={`${LAB_LABEL} mb-2 block`}>
+                  Texte cible
+                </label>
+                <textarea
+                  id="target-text"
+                  aria-label="Texte cible à synthétiser"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Écris le texte à synthétiser…"
+                  className={`${LAB_INPUT} h-32 resize-none`}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="model-select" className={`${LAB_LABEL} mb-2 block`}>
+                    Modèle
+                  </label>
+                  <select id="model-select" className={LAB_INPUT}>
+                    <option>RVC-v2 Default</option>
+                    <option>HuggingFace Model X</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="index-rate" className={`${LAB_LABEL} mb-2 block`}>
+                    Taux d'index
+                  </label>
+                  <select id="index-rate" className={LAB_INPUT}>
+                    <option>0.75 (recommandé)</option>
+                    <option>0.50 (naturel)</option>
+                    <option>1.00 (précis)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-2 flex justify-between">
+                  <label htmlFor="pitch-shift" className={LAB_LABEL}>
+                    Décalage de hauteur
+                  </label>
+                  <span className="text-xs font-black text-[#FDB913]">
+                    {pitch > 0 ? `+${pitch}` : pitch} demi-tons
+                  </span>
+                </div>
+                <input
+                  id="pitch-shift"
+                  aria-label="Décalage de hauteur (pitch)"
+                  type="range"
+                  min="-12"
+                  max="12"
+                  value={pitch}
+                  onChange={(e) => setPitch(parseInt(e.target.value))}
+                  className="h-2 w-full rounded-lg bg-[#F4F1E8]/10 accent-[#FDB913]"
+                />
+                <div className="mt-1 flex justify-between text-[10px] font-bold text-[#8F94A5]">
+                  <span>-12</span>
+                  <span>0</span>
+                  <span>+12</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleClone}
+                disabled={loading || !audioFile || !text}
+                className={LAB_CTA}
+              >
+                {loading ? (
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#F4F1E8]/50 border-t-transparent" />
+                ) : (
+                  <>
+                    Synthétiser
+                    <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                  </>
+                )}
+              </button>
+            </div>
+          </LabPanel>
+
+          {/* Result Area */}
+          <AnimatePresence>
+            {(result || error) && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className={`rounded-2xl border p-6 ${
+                  error
+                    ? 'border-[#E8442B]/30 bg-[#E8442B]/[0.06]'
+                    : 'border-[#FDB913]/30 bg-[#FDB913]/[0.06]'
+                }`}
+              >
+                {error ? (
+                  <div className="flex items-center gap-4 text-[#E8442B]">
+                    <AlertCircle className="h-8 w-8" aria-hidden="true" />
+                    <div>
+                      <h3 className="font-bold">Échec de la synthèse</h3>
+                      <p className="text-sm text-[#8F94A5]">
+                        Consulte les journaux du serveur pour le détail.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-[#FDB913]">
+                      <CheckCircle className="h-8 w-8" aria-hidden="true" />
+                      <div>
+                        <h3 className="font-bold">Synthèse prête</h3>
+                        <p className="text-sm text-[#8F94A5]">Écoute le résultat ci-contre</p>
+                      </div>
+                    </div>
+                    <audio
+                      controls
+                      aria-label="Audio synthétisé"
+                      className="h-10"
+                      src={result?.audio_data}
+                    >
+                      <track kind="captions" />
+                    </audio>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </section>
+      </div>
+
+      <LabGuide
+        steps={[
+          {
+            title: 'La référence',
+            body: 'Enregistre ta voix au micro ou importe un fichier audio. Cet extrait sert de modèle de timbre pour la synthèse.',
+          },
+          {
+            title: 'Le texte',
+            body: "Écris ce que la voix doit dire, puis clique sur Synthétiser : l'IA prononce ton texte avec la voix de référence.",
+          },
+          {
+            title: 'Les réglages',
+            body: "Le décalage de hauteur monte ou descend la voix (par demi-tons) et le taux d'index dose la fidélité au timbre d'origine.",
+          },
+        ]}
+        note="Conversion vocale basée RVC v2 (Retrieval-based Voice Conversion) : le texte est d'abord synthétisé (TTS), puis le timbre est converti vers la voix de référence. Le pitch est appliqué en demi-tons et le taux d'index contrôle le poids de la récupération des caractéristiques du locuteur cible."
+      />
+    </LabPage>
   );
 };
 

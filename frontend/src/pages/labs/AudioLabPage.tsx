@@ -7,8 +7,8 @@ import * as z from 'zod';
 import { useTranslation } from 'react-i18next';
 import { useAudioLab } from '../../features/labs/hooks/useAudioLab';
 import { useQuickIngestForm } from '../../features/labs/hooks/useQuickIngestForm';
-import { Button } from '../../components/ui/Button';
 import { CardSkeleton } from '../../components/ui/Skeleton';
+import { LabPage, LabHeader, LAB_INPUT, LAB_BTN_GHOST } from './components/shared/LabKit';
 import { VoiceProfile } from '../../types';
 import type { AudioProcessPayload } from '../../features/labs/services/audioLabService';
 import { useToastStore } from '../../store/toastStore';
@@ -212,21 +212,21 @@ const AudioLabPage: React.FC = () => {
 
   if (loading)
     return (
-      <div className="max-w-6xl mx-auto px-6 py-16">
-        <CardSkeleton />
+      <div className="min-h-screen w-full bg-[#0B0C10] pt-20">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <CardSkeleton />
+        </div>
       </div>
     );
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 py-16">
-      <header className="mb-12">
-        <h1 className="text-6xl font-black italic manga-font mb-4 tracking-tighter uppercase">
-          {t('labs.audio.title')}
-        </h1>
-        <p className="text-gray-500 font-bold uppercase tracking-widest">
-          {t('labs.audio.cloning')}
-        </p>
-      </header>
+    <LabPage wide>
+      <LabHeader
+        code="Protocole · Audio"
+        title="Forge"
+        accent="vocale"
+        lede="Clone une voix à partir d'un court échantillon : choisis un profil du catalogue seiyuu/VF, importe un extrait ou enregistre-toi, puis fais-lui dire ton texte."
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Main Recording & Cloning Area (Left & Center) */}
@@ -275,33 +275,32 @@ const AudioLabPage: React.FC = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-end gap-4">
               <div className="space-y-1">
-                <h2 className="text-2xl font-black italic manga-font uppercase flex items-center gap-2">
-                  Voice <span className="text-blue-500">Database</span>
+                <h2 className="font-manga text-2xl font-black italic uppercase tracking-tight text-[#F4F1E8] flex items-center gap-2">
+                  Voice <span className="text-[#E8442B]">Database</span>
                 </h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
                   {t('labs.audio.sidebar_subtitle', 'Catalogue Seiyuu & VF.')}
                 </p>
               </div>
-              <Button
-                variant="ghost"
-                className="p-0 text-[9px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 transition-colors group mb-1"
+              <button
+                type="button"
+                className="group mb-1 inline-flex items-center gap-1 border-none bg-transparent p-0 text-[9px] font-black uppercase tracking-widest text-[#FDB913] transition-colors hover:text-[#F4F1E8] cursor-pointer"
                 onClick={() => navigate('/lab/audio/seiyuu/')}
               >
-                {t('labs.audio.sidebar_fullscreen', 'Plein Écran')}{' '}
+                {t('labs.audio.sidebar_fullscreen', 'Plein écran')}{' '}
                 <ArrowRight className="w-3 h-3 inline group-hover:translate-x-1 transition-transform" />
-              </Button>
+              </button>
             </div>
 
             {/* Quick Ingest Toggle */}
-            <Button
-              variant="outline"
-              fullWidth
+            <button
+              type="button"
               onClick={quickIngest.toggle}
-              className="text-[9px] uppercase font-black tracking-wider flex items-center justify-center gap-1.5 py-3.5 border-dashed border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+              className={`${LAB_BTN_GHOST} w-full justify-center rounded-xl border-dashed py-3.5 text-[9px]`}
             >
               <Plus className="w-3 h-3" />{' '}
-              {t('labs.audio.sidebar_quick_ingest', 'Ingestion YouTube Rapide')}
-            </Button>
+              {t('labs.audio.sidebar_quick_ingest', 'Ingestion YouTube rapide')}
+            </button>
 
             {/* Ingestion Panel inside Sidebar */}
             <AudioLabQuickIngestPanel
@@ -310,7 +309,7 @@ const AudioLabPage: React.FC = () => {
             />
 
             {/* Language filter tab */}
-            <div className="flex gap-1.5 p-1 bg-black/30 rounded-xl border border-white/5">
+            <div className="flex gap-1.5 rounded-xl border border-[#F4F1E8]/10 bg-[#0F1016] p-1">
               {[
                 { label: t('labs.audio.filter_all', 'Tous'), value: '' },
                 { label: t('labs.audio.filter_japanese', 'Seiyuu (JP)'), value: 'japanese' },
@@ -319,10 +318,10 @@ const AudioLabPage: React.FC = () => {
                 <button
                   key={opt.value}
                   onClick={() => setLangFilter(opt.value)}
-                  className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
+                  className={`flex-1 cursor-pointer py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors ${
                     langFilter === opt.value
-                      ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                      : 'text-white/40 hover:text-white border border-transparent'
+                      ? 'bg-[#FDB913]/10 text-[#FDB913] border border-[#FDB913]/25'
+                      : 'bg-transparent text-[#8F94A5] hover:text-[#F4F1E8] border border-transparent'
                   }`}
                 >
                   {opt.label}
@@ -331,7 +330,7 @@ const AudioLabPage: React.FC = () => {
             </div>
 
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8F94A5]" />
               <input
                 type="text"
                 placeholder={t('labs.audio.search_placeholder', 'Seiyuu ou personnage...')}
@@ -341,10 +340,10 @@ const AudioLabPage: React.FC = () => {
                   setSeiyuuQuery(e.target.value);
                   searchSeiyuu(e.target.value, langFilter);
                 }}
-                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border-none outline-none focus:ring-2 focus:ring-blue-500 font-bold text-sm transition-all"
+                className={`${LAB_INPUT} pl-12`}
               />
               {isSearchingSeiyuu && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-3 h-3 border-2 border-[#FDB913] border-t-transparent rounded-full animate-spin" />
               )}
             </div>
           </div>
@@ -362,7 +361,7 @@ const AudioLabPage: React.FC = () => {
             ))}
 
             {seiyuuResults.length === 0 && !isSearchingSeiyuu && (
-              <div className="py-20 text-center opacity-20">
+              <div className="py-20 text-center text-[#8F94A5]">
                 <Search className="w-8 h-8 mx-auto mb-4" />
                 <p className="text-[10px] font-black uppercase tracking-widest">
                   {t('labs.audio.search_no_results', 'Aucun résultat')}
@@ -375,7 +374,7 @@ const AudioLabPage: React.FC = () => {
 
       {/* Guide & Protocole */}
       <AudioLabGuideSection />
-    </div>
+    </LabPage>
   );
 };
 

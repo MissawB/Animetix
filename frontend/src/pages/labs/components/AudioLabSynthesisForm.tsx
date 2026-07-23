@@ -1,10 +1,9 @@
 import React from 'react';
-import { Save, Play, Wand2 } from 'lucide-react';
+import { Save, Play } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { UseFormRegister, UseFormHandleSubmit, FieldErrors } from 'react-hook-form';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
 import { VoiceProfile } from '../../../types';
+import { LabPanel, LAB_INPUT, LAB_CTA } from './shared/LabKit';
 
 export type AudioFormValues = { text: string };
 
@@ -32,23 +31,23 @@ export const AudioLabSynthesisForm: React.FC<{
   const { t } = useTranslation();
   return (
     <>
-      <Card padding="lg" className="relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-5">
-          <Wand2 className="w-40 h-42 text-purple-500" />
+      <LabPanel>
+        <div className="mb-6 flex items-center gap-3">
+          <span className="h-4 w-1 flex-none bg-[#E8442B]" aria-hidden />
+          <h3 className="font-manga text-xl font-black uppercase italic tracking-wide text-[#F4F1E8]">
+            {t('labs.audio.forge_title', 'Forge')}{' '}
+            <span className="text-[#E8442B]">{t('labs.audio.forge_title_accent', 'vocale')}</span>
+          </h3>
+          <span className="h-px flex-1 bg-[#F4F1E8]/10" aria-hidden />
         </div>
-
-        <h3 className="text-3xl font-black italic manga-font mb-8">
-          {t('labs.audio.forge_title', 'FORGE')}{' '}
-          <span className="text-purple-500">{t('labs.audio.forge_title_accent', 'VOCALE')}</span>
-        </h3>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
           <div className="flex flex-col gap-2">
             <textarea
               {...register('text')}
-              className={`w-full p-8 rounded-[2rem] bg-gray-50 dark:bg-gray-800 outline-none font-medium text-lg min-h-[200px] transition-all
-                                        ${errors.text ? 'ring-2 ring-red-500' : 'focus:ring-2 focus:ring-purple-500'}
-                                    `}
+              className={`${LAB_INPUT} min-h-[200px] resize-none text-base ${
+                errors.text ? 'border-[#E8442B]' : ''
+              }`}
               placeholder={
                 selectedSeiyuu
                   ? t('labs.audio.forge_synthesize_with_name', {
@@ -62,42 +61,40 @@ export const AudioLabSynthesisForm: React.FC<{
               }
             ></textarea>
             {errors.text && (
-              <span className="text-red-500 text-xs font-black pl-4">{errors.text.message}</span>
+              <span className="pl-4 text-xs font-black text-[#E8442B]">{errors.text.message}</span>
             )}
           </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            disabled={disabled}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 border-none py-6 animate-pulse"
-          >
-            <Save className="w-6 h-6 mr-2" />{' '}
+          <button type="submit" disabled={disabled} className={LAB_CTA}>
+            <Save className="h-5 w-5" aria-hidden="true" />{' '}
             {selectedSeiyuu
               ? t('labs.audio.forge_synthesize_with_name', {
                   name: selectedSeiyuu.name,
                   defaultValue: 'Synthétiser {{name}}',
                 })
               : t('labs.audio.generate')}
-          </Button>
+          </button>
         </form>
-      </Card>
+      </LabPanel>
 
       {audioUrl && (
-        <div className="bg-green-500/10 border-2 border-green-500 p-8 rounded-[2.5rem] flex items-center justify-between animate-slide-up">
+        <div className="flex items-center justify-between rounded-2xl border border-[#FDB913]/30 bg-[#FDB913]/[0.06] p-8 animate-slide-up">
           <div>
-            <h4 className="font-black text-green-500 italic text-xl uppercase leading-none mb-1">
-              {t('labs.audio.result_ready', 'RÉSULTAT PRÊT !')}
+            <h4 className="mb-1 font-manga text-xl font-black uppercase italic leading-none text-[#FDB913]">
+              {t('labs.audio.result_ready', 'Résultat prêt')}
             </h4>
-            <p className="font-bold opacity-60 text-sm">
+            <p className="text-sm font-bold text-[#8F94A5]">
               {t('labs.audio.result_success', 'Votre voix a été synthétisée avec succès.')}
             </p>
           </div>
-          <Button variant="success" className="p-4 rounded-2xl" onClick={playResult}>
+          <button
+            type="button"
+            onClick={playResult}
+            aria-label={t('labs.audio.result_play_aria', 'Écouter le résultat')}
+            className="cursor-pointer rounded-xl border-none bg-[#FDB913] p-4 text-[#0B0C10] transition-colors hover:bg-[#e0a70f]"
+          >
             <Play className="w-6 h-6 fill-current" />
-          </Button>
+          </button>
         </div>
       )}
     </>

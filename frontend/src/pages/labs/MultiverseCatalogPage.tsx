@@ -44,7 +44,7 @@ const MultiverseCatalogPage: React.FC = () => {
 
   return (
     <AnimatedPage>
-      <div className="min-h-screen bg-[#05050a] text-white">
+      <div className="min-h-screen w-full bg-[#0B0C10] pt-20 text-[#F4F1E8]">
         {/* ── Hero Header ─────────────────────────────────────── */}
         <CatalogHeader total={data?.pagination.total} />
 
@@ -65,7 +65,7 @@ const MultiverseCatalogPage: React.FC = () => {
         />
 
         {/* ── Main Content ────────────────────────────────────── */}
-        <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
           <div className="flex gap-8">
             {/* Sidebar: Genre filters */}
             <GenreSidebar
@@ -79,36 +79,63 @@ const MultiverseCatalogPage: React.FC = () => {
             {/* Results */}
             <main className="flex-1 min-w-0">
               {/* Results header */}
-              <div className="flex items-center justify-between mb-6">
-                <p className="text-[10px] font-black uppercase opacity-30 tracking-widest">
-                  {data ? (data.pagination.total > 1 ? t('labs.multiverse.total_found_plural', '{{count}} universes found', { count: data.pagination.total }) : t('labs.multiverse.total_found_singular', '{{count}} universe found', { count: data.pagination.total })) : ''}
+              <div className="mb-6 flex items-center justify-between">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                  {data
+                    ? data.pagination.total > 1
+                      ? t('labs.multiverse.total_found_plural', '{{count}} universes found', {
+                          count: data.pagination.total,
+                        })
+                      : t('labs.multiverse.total_found_singular', '{{count}} universe found', {
+                          count: data.pagination.total,
+                        })
+                    : ''}
                   {debouncedSearch && ` pour "${debouncedSearch}"`}
                   {genre && ` • ${genre}`}
                 </p>
                 {isFetching && !isLoading && (
-                  <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[#FDB913]" />
                 )}
               </div>
- 
+
               {/* Loading state */}
               {isLoading && (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-3'}>
+                <div
+                  className={
+                    viewMode === 'grid'
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                      : 'space-y-3'
+                  }
+                >
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className={`bg-white/[0.02] rounded-2xl animate-pulse ${viewMode === 'grid' ? 'h-72' : 'h-20'}`} />
+                    <div
+                      key={i}
+                      className={`animate-pulse rounded-2xl border border-[#F4F1E8]/5 bg-[#0F1016] ${viewMode === 'grid' ? 'h-72' : 'h-20'}`}
+                    />
                   ))}
                 </div>
               )}
- 
+
               {/* Empty state */}
               {!isLoading && data && data.results.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-24 text-center">
-                  <Globe className="w-16 h-16 text-white/10 mb-6" />
-                  <h3 className="text-xl font-black italic manga-font uppercase text-white/40 mb-2">{t('labs.multiverse.no_universe_found', 'Aucun univers trouvé')}</h3>
-                  <p className="text-[10px] font-bold uppercase opacity-20 tracking-wider mb-6">
-                    {debouncedSearch ? t('labs.multiverse.try_another_term', 'Essayez un autre terme de recherche') : t('labs.multiverse.no_universe_filters', 'Aucun univers synthétique ne correspond aux filtres sélectionnés')}
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#F4F1E8]/15 px-8 py-24 text-center">
+                  <Globe className="mb-6 h-16 w-16 text-[#8F94A5]/40" />
+                  <h3 className="font-manga text-2xl font-black uppercase italic text-[#F4F1E8]/60">
+                    {t('labs.multiverse.no_universe_found', 'Aucun univers trouvé')}
+                  </h3>
+                  <p className="mt-3 mb-6 max-w-md text-sm leading-relaxed text-[#8F94A5]">
+                    {debouncedSearch
+                      ? t('labs.multiverse.try_another_term', 'Essayez un autre terme de recherche')
+                      : t(
+                          'labs.multiverse.no_universe_filters',
+                          'Aucun univers synthétique ne correspond aux filtres sélectionnés',
+                        )}
                   </p>
                   {hasActiveFilters && (
-                    <button onClick={handleClearFilters} className="px-6 py-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-black uppercase tracking-widest text-cyan-400 hover:bg-cyan-500/20 transition-colors">
+                    <button
+                      onClick={handleClearFilters}
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#F4F1E8]/15 bg-transparent px-5 py-2.5 text-xs font-black uppercase tracking-widest text-[#8F94A5] transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8]"
+                    >
                       {t('labs.multiverse.reset_filters', 'Réinitialiser les filtres')}
                     </button>
                   )}
@@ -119,7 +146,12 @@ const MultiverseCatalogPage: React.FC = () => {
               {!isLoading && data && data.results.length > 0 && viewMode === 'grid' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {data.results.map((u, i) => (
-                    <UniverseGridCard key={u.id} universe={u} index={i} onSelect={handleSelectUniverse} />
+                    <UniverseGridCard
+                      key={u.id}
+                      universe={u}
+                      index={i}
+                      onSelect={handleSelectUniverse}
+                    />
                   ))}
                 </div>
               )}
@@ -128,7 +160,12 @@ const MultiverseCatalogPage: React.FC = () => {
               {!isLoading && data && data.results.length > 0 && viewMode === 'list' && (
                 <div className="space-y-3">
                   {data.results.map((u, i) => (
-                    <UniverseListRow key={u.id} universe={u} index={i} onSelect={handleSelectUniverse} />
+                    <UniverseListRow
+                      key={u.id}
+                      universe={u}
+                      index={i}
+                      onSelect={handleSelectUniverse}
+                    />
                   ))}
                 </div>
               )}
@@ -149,10 +186,7 @@ const MultiverseCatalogPage: React.FC = () => {
         {/* ── Detail Modal ────────────────────────────────────── */}
         <AnimatePresence>
           {selectedUniverse && (
-            <UniverseDetailPanel
-              universe={selectedUniverse}
-              onClose={handleCloseDetail}
-            />
+            <UniverseDetailPanel universe={selectedUniverse} onClose={handleCloseDetail} />
           )}
         </AnimatePresence>
       </div>
