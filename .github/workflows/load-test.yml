@@ -17,14 +17,22 @@ on:
         default: ''
         type: string
 
+permissions:
+  contents: read
+
+concurrency:
+  group: load-test-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   k6:
     name: k6 load test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: Setup k6
-      uses: grafana/setup-k6-action@v1
+      uses: grafana/setup-k6-action@e21b764d84c6c97a22830f2c41c9f4d71510e42d # v1.0.1
     - name: Run load test
       # k6 sort en code non-zéro si un seuil (thresholds par endpoint) est franchi,
       # ce qui fait échouer le run → la baseline est réellement appliquée.
@@ -34,7 +42,7 @@ jobs:
         WS_URL: ${{ inputs.ws_url }}
     - name: Upload k6 summary
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b4f1c5c30355bd8572d024d235088c71593c6e28 # v4.4.3
       with:
         name: k6-summary
         path: k6-summary.json

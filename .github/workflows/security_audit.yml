@@ -15,18 +15,26 @@ on:
       - 'frontend/package-lock.json'
       - '.github/workflows/security_audit.yml'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: security-audit-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   python-security:
     name: Backend Security Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     # No "Free Disk Space" step: it only existed to make room for the torch +
     # requirements install, which bandit (static) doesn't need — see below.
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@f6ec4389a5e1507a06a23e416f69963ed1361f32 # v5.3.0
       with:
         python-version: '3.12'
         cache: 'pip'
@@ -44,11 +52,12 @@ jobs:
   frontend-security:
     name: Frontend Security Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Set up Node.js
-      uses: actions/setup-node@v7
+      uses: actions/setup-node@39370e3970a6d050c080011e81310111e3070b4f # v4.1.0
       with:
         node-version: '22'
         cache: 'npm'
@@ -64,10 +73,11 @@ jobs:
   container-security:
     name: Container Image Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Scan Dockerfile
-      uses: hadolint/hadolint-action@v3.1.0
+      uses: hadolint/hadolint-action@54c5989f53856230f8b1c1c1f4c75953046f8d38 # v3.1.0
       with:
         dockerfile: deploy/Dockerfile

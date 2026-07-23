@@ -55,7 +55,6 @@ const mockStoreState = {
   addTotalMined: vi.fn(),
   incrementTotalMined: vi.fn(),
   setLastMinedAt: vi.fn(),
-  adSlotsVisible: 1,
   timeLeft: 120,
   totalMined: 300,
   status: 'ONLINE',

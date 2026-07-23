@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Check, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,6 @@ import { socialService } from '../../features/social/services/socialService';
 import { apiClient } from '../../utils/apiClient';
 import { useToastStore } from '../../store/toastStore';
 import { Button } from '../../components/ui/Button';
-import { SponsorStreamModal } from '../../features/billing/components/SponsorStreamModal';
 import { AdSlot } from '../../features/billing/components/AdSlot';
 
 const PRICING_AD_SLOT = import.meta.env.VITE_ADSENSE_SLOT_SIDEBAR as string | undefined;
@@ -19,7 +18,6 @@ export const PricingPage: React.FC = () => {
   const { user, checkAuth, refetchUser } = useAuthStore();
   const navigate = useNavigate();
   const { addToast } = useToastStore();
-  const [activeModal, setActiveModal] = useState<'boost' | 'refill' | null>(null);
 
   const refillMutation = useMutation({
     mutationFn: () => apiClient('/api/v1/profiles/refill_quota/', { method: 'POST' }),
@@ -59,36 +57,33 @@ export const PricingPage: React.FC = () => {
 
   const isClaiming = claimDonationMutation.isPending;
 
-  // Flux pub récompensée dormant tant qu'aucun vrai ad tag n'est configuré
-  // (VITE_SPONSOR_AD_TAG) : aucun contenu de démo ne doit tourner en prod.
-  const sponsorConfigured = Boolean(import.meta.env.VITE_SPONSOR_AD_TAG);
-
-  const handleConfirmBoost = async () => {
-    try {
-      await socialService.updateAccountSettings({ tier: 'premium' });
+  const boostMutation = useMutation({
+    mutationFn: () => socialService.updateAccountSettings({ tier: 'premium' }),
+    onSuccess: async () => {
       await checkAuth();
       addToast(
         t('billing.pricing.boost_success', 'Statut Boosté activé avec succès pour 24H !'),
         'success',
       );
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error('Failed to update tier:', error);
       addToast(t('billing.pricing.boost_error', "Erreur lors de l'activation du boost."), 'error');
-      throw error;
-    }
-  };
+    },
+  });
 
-  const handleConfirmRefill = async () => {
-    await refillMutation.mutateAsync();
-  };
-
+  // Actions directes, sans visionnage de publicité : le règlement AdSense
+  // interdit toute récompense conditionnée à une annonce.
   const handleAction = (type: 'boost' | 'refill') => {
-    if (!sponsorConfigured) return;
     if (!user) {
       navigate('/login?redirect=/pricing/');
       return;
     }
-    setActiveModal(type);
+    if (type === 'boost') {
+      boostMutation.mutate();
+    } else {
+      refillMutation.mutate();
+    }
   };
 
   const handleClaimDonation = () => {
@@ -110,10 +105,7 @@ export const PricingPage: React.FC = () => {
             </span>
           </h1>
           <p className="text-gray-500 font-bold uppercase tracking-[0.2em] text-xs">
-            {t(
-              'billing.pricing.subtitle',
-              'Financez le moteur IA par la publicité et accédez au niveau supérieur',
-            )}
+            {t('billing.pricing.subtitle', 'Soutenez le moteur IA et accédez au niveau supérieur')}
           </p>
         </header>
 
@@ -143,7 +135,7 @@ export const PricingPage: React.FC = () => {
                   )
                 : t(
                     'billing.pricing.standard_desc',
-                    'Quota standard actif. Regardez un sponsor ci-dessous pour booster votre compte.',
+                    'Quota standard actif. Activez le boost ci-dessous pour passer au niveau supérieur.',
                   )}
             </p>
           </div>
@@ -180,7 +172,7 @@ export const PricingPage: React.FC = () => {
                 </li>
                 <li className="flex items-center gap-2.5 text-xs text-gray-300">
                   <Check className="w-4 h-4 text-green-500" />{' '}
-                  {t('billing.pricing.refill_feature_2', 'Sponsor ultra-rapide (4 secondes)')}
+                  {t('billing.pricing.refill_feature_2', 'Recharge en un clic')}
                 </li>
               </ul>
             </div>
@@ -189,11 +181,9 @@ export const PricingPage: React.FC = () => {
               fullWidth
               className="py-5 font-black uppercase italic tracking-wider mt-6"
               onClick={() => handleAction('refill')}
-              disabled={!sponsorConfigured}
+              disabled={refillMutation.isPending}
             >
-              {sponsorConfigured
-                ? t('billing.pricing.refill_cta', 'RECHARGER MON QUOTA')
-                : t('billing.pricing.sponsor_soon', 'SPONSORS BIENTÔT DISPONIBLES')}
+              {t('billing.pricing.refill_cta', 'RECHARGER MON QUOTA')}
             </Button>
           </motion.div>
 
@@ -244,13 +234,11 @@ export const PricingPage: React.FC = () => {
               fullWidth
               className="py-5 font-black uppercase italic tracking-wider mt-6"
               onClick={() => handleAction('boost')}
-              disabled={!sponsorConfigured || user?.tier === 'premium'}
+              disabled={boostMutation.isPending || user?.tier === 'premium'}
             >
               {user?.tier === 'premium'
                 ? t('billing.pricing.boost_active', 'BOOST ACTIF')
-                : sponsorConfigured
-                  ? t('billing.pricing.boost_cta', 'ACTIVER LE BOOST')
-                  : t('billing.pricing.sponsor_soon', 'SPONSORS BIENTÔT DISPONIBLES')}
+                : t('billing.pricing.boost_cta', 'ACTIVER LE BOOST')}
             </Button>
           </motion.div>
         </div>
@@ -359,19 +347,9 @@ export const PricingPage: React.FC = () => {
 
         {/* Real ad banner (AdSense) */}
         <div className="max-w-md mx-auto">
-          <AdSlot slot={PRICING_AD_SLOT} format="rectangle" fundsMining={false} />
+          <AdSlot slot={PRICING_AD_SLOT} format="rectangle" />
         </div>
       </div>
-
-      <AnimatePresence>
-        {activeModal && (
-          <SponsorStreamModal
-            actionType={activeModal}
-            onClose={() => setActiveModal(null)}
-            onConfirm={activeModal === 'boost' ? handleConfirmBoost : handleConfirmRefill}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };

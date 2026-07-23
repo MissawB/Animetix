@@ -138,7 +138,7 @@ const PowerStationPage: React.FC = () => {
               <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-xs">
                 {t(
                   'billing.power_station.subtitle',
-                  'Gérez vos jetons Berrix (Bx) et optimisez votre attention mining.',
+                  'Gérez vos jetons Berrix (Bx) et suivez vos gains.',
                 )}
               </p>
             </div>
@@ -148,14 +148,14 @@ const PowerStationPage: React.FC = () => {
             {/* Left Column: Berrix Wallet Card */}
             <HolographicWalletCard user={user} />
 
-            {/* Right Column: Attention Mining Node & Active Mining */}
+            {/* Right Column: Mining Node & Active Recharge */}
             <div className="lg:col-span-2 space-y-8">
               <h3 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400 border-l-4 border-cyan-400 pl-4">
-                Attention Mining & Reward Center
+                Énergie & Récompenses
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Active Mining (Rewarded Ads) */}
+                {/* Active Recharge */}
                 <ActiveMiningCard
                   isWatching={isWatching}
                   watchProgress={watchProgress}

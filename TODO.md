@@ -63,9 +63,12 @@ _Aucun item ouvert._
     - `deploy/Dockerfile` : Ajout de la consigne `HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 CMD curl -fs http://127.0.0.1:7860/health || exit 1`.
     - `deploy/Dockerfile.dataflow` : Remplacement du tag flottant `:latest` sur `dataflow-templates-base/python3-template-launcher-base` par son digest SHA256 immuable `@sha256:d84f2b1d3d666d3a8a30689b2fb1e36780c108c49e1eefbfd6796c9c6ec543ab`.
 
-- [ ] **CI — durcissement (timeouts, permissions, SHA pinning, concurrency)** _(audit dette 2026-07-22)_
-  - Preuve : 11 jobs sans `timeout-minutes` (défaut GitHub 6 h) ; aucun bloc `permissions:` au niveau workflow (`GITHUB_TOKEN` hérite d'un scope potentiellement read-write) ; actions en tag mutable (`codecov@v5` ci.yml:152/381, `google-github-actions/auth@v2` ci.yml:454/566…) alors que le job deploy a `id-token: write` + accès GCP WIF ; `deploy_to_hf.yml` sans `concurrency` (deux pushes rapprochés = deux déploiements HF concurrents).
-  - Fix : `timeout-minutes` partout, `permissions: {contents: read}` en tête de workflow, pin par SHA (dependabot github-actions suit), bloc `concurrency` sur deploy_to_hf/security_audit.
+- [x] **CI — durcissement (timeouts, permissions, SHA pinning, concurrency) — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** :
+    - `timeout-minutes` configuré sur les 11 jobs de CI (`ci.yml`, `deploy_to_hf.yml`, `load-test.yml`, `security_audit.yml`).
+    - `permissions: { contents: read }` configuré au niveau racine de chaque workflow GitHub Actions.
+    - Blocs `concurrency` ajoutés sur `deploy_to_hf.yml`, `load-test.yml` et `security_audit.yml`.
+    - Épinglage par SHA immuables de toutes les GitHub Actions (checkout, setup-python, setup-node, cache, upload-artifact, codecov, gcloud, auth, hadolint, setup-k6).
 
 - [ ] **Frontend — 10 modales sans sémantique `dialog` ni focus-trap** _(audit dette 2026-07-22)_
   - Preuve : 10 overlays `fixed inset-0`, 0 avec `role="dialog"`/`aria-modal`, aucun piège/restauration de focus ni Escape (ex. `SponsorStreamModal.tsx`, `ToTNodeInspectionModal.tsx`, `LabListOverlay.tsx`) — seuls les boutons de fermeture ont des `aria-label`.

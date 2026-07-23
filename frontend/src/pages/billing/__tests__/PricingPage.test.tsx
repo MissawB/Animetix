@@ -1,10 +1,11 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import PricingPage from '../PricingPage';
 import { useAuthStore } from '../../../store/authStore';
+import { socialService } from '../../../features/social/services/socialService';
 
 vi.mock('../../../store/authStore');
 vi.mock('../../../features/social/services/socialService', () => ({
@@ -36,16 +37,23 @@ describe('PricingPage (Espace Sponsors)', () => {
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
   const mockGuest = () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
       checkAuth: vi.fn(),
     } as unknown as ReturnType<typeof useAuthStore>);
+  };
+
+  const mockUser = () => {
+    const checkAuth = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useAuthStore).mockReturnValue({
+      user: { tier: 'standard', unlocked_badges: [] },
+      isAuthenticated: true,
+      checkAuth,
+      refetchUser: vi.fn().mockResolvedValue(undefined),
+    } as unknown as ReturnType<typeof useAuthStore>);
+    return { checkAuth };
   };
 
   it('renders correctly for guests', () => {
@@ -58,8 +66,7 @@ describe('PricingPage (Espace Sponsors)', () => {
     expect(screen.getByText(/Boost Cyber-Nexus/i)).toBeInTheDocument();
   });
 
-  it('redirects to login when standard user tries to boost without login', () => {
-    vi.stubEnv('VITE_SPONSOR_AD_TAG', 'https://ads.example.com/vast.xml');
+  it('redirects to login when a guest tries to boost', () => {
     mockGuest();
 
     renderWithQueryClient(<PricingPage />);
@@ -70,44 +77,19 @@ describe('PricingPage (Espace Sponsors)', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/login?redirect=/pricing/');
   });
 
-  // Audit dette 2026-07-19 : tant qu'aucun vrai sponsor (VITE_SPONSOR_AD_TAG)
-  // n'est configuré, le flux pub récompensée reste dormant — aucun contenu de
-  // démo Google ne doit tourner en prod.
-  it('disables both sponsor CTAs when no ad tag is configured', () => {
-    mockGuest();
+  // Conformité AdSense : le boost est une action directe — aucune publicité
+  // à visionner, aucune récompense conditionnée à une annonce.
+  it('activates the boost directly for a logged-in user, without any ad gate', async () => {
+    mockUser();
 
     renderWithQueryClient(<PricingPage />);
 
-    const soonButtons = screen.getAllByText(/SPONSORS BIENTÔT DISPONIBLES/i);
-    expect(soonButtons).toHaveLength(2);
-    soonButtons.forEach((label) => {
-      expect(label.closest('button')).toBeDisabled();
+    fireEvent.click(screen.getByText('ACTIVER LE BOOST'));
+
+    await waitFor(() => {
+      expect(socialService.updateAccountSettings).toHaveBeenCalledWith({ tier: 'premium' });
     });
-  });
-
-  it('never opens the sponsor modal when no ad tag is configured', () => {
-    mockGuest();
-
-    renderWithQueryClient(<PricingPage />);
-
-    const soonButtons = screen.getAllByText(/SPONSORS BIENTÔT DISPONIBLES/i);
-    soonButtons.forEach((label) => {
-      const btn = label.closest('button');
-      if (btn) fireEvent.click(btn);
-    });
-
-    expect(mockNavigate).not.toHaveBeenCalled();
     expect(screen.queryByText(/Pub récompensée/i)).not.toBeInTheDocument();
-  });
-
-  it('keeps the sponsor CTAs active when an ad tag is configured', () => {
-    vi.stubEnv('VITE_SPONSOR_AD_TAG', 'https://ads.example.com/vast.xml');
-    mockGuest();
-
-    renderWithQueryClient(<PricingPage />);
-
-    expect(screen.getByText('RECHARGER MON QUOTA').closest('button')).toBeEnabled();
-    expect(screen.getByText('ACTIVER LE BOOST').closest('button')).toBeEnabled();
-    expect(screen.queryByText(/SPONSORS BIENTÔT DISPONIBLES/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/VISIONNEZ LA PUB/i)).not.toBeInTheDocument();
   });
 });
