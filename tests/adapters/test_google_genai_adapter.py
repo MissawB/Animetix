@@ -305,17 +305,19 @@ def test_get_text_embedding_parses_values_and_logs():
     assert usage_port.log_usage.call_args.args[0].startswith("google_genai:")
 
 
-def test_get_text_embedding_returns_empty_when_client_none():
+def test_get_text_embedding_raises_when_client_none():
     a = _adapter(_mock_client())
     a.client = None
-    assert a.get_text_embedding("hi") == []
+    with pytest.raises(InferenceError, match="client is not initialized"):
+        a.get_text_embedding("hi")
 
 
-def test_get_text_embedding_returns_empty_on_error():
+def test_get_text_embedding_raises_on_error():
     client = _mock_client()
     client.models.embed_content.side_effect = RuntimeError("boom")
     a = _adapter(client)
-    assert a.get_text_embedding("hi") == []
+    with pytest.raises(InferenceError, match="Embedding failed"):
+        a.get_text_embedding("hi")
 
 
 def test_get_image_embedding_parses_values():
@@ -332,10 +334,11 @@ def test_get_image_embedding_parses_values():
     assert client.models.embed_content.call_args.kwargs["model"] == a.embedding_model
 
 
-def test_get_image_embedding_returns_empty_when_client_none():
+def test_get_image_embedding_raises_when_client_none():
     a = _adapter(_mock_client())
     a.client = None
-    assert a.get_image_embedding(b"data") == []
+    with pytest.raises(InferenceError, match="client is not initialized"):
+        a.get_image_embedding(b"data")
 
 
 def test_get_image_embedding_falls_back_to_text_description_on_error():
@@ -393,16 +396,18 @@ def test_calculate_visual_similarity_cosine():
     assert sim == pytest.approx(1.0)
 
 
-def test_calculate_visual_similarity_empty_embeddings_returns_half():
+def test_calculate_visual_similarity_empty_embeddings_raises():
     a = _adapter(_mock_client())
     with patch.object(a, "get_text_embedding", return_value=[]):
-        assert a.calculate_visual_similarity("q", "i", "anime") == 0.5
+        with pytest.raises(InferenceError):
+            a.calculate_visual_similarity("q", "i", "anime")
 
 
-def test_calculate_visual_similarity_error_returns_zero():
+def test_calculate_visual_similarity_error_raises():
     a = _adapter(_mock_client())
     with patch.object(a, "get_text_embedding", side_effect=RuntimeError("x")):
-        assert a.calculate_visual_similarity("q", "i", "anime") == 0.0
+        with pytest.raises(InferenceError, match="Visual similarity failed"):
+            a.calculate_visual_similarity("q", "i", "anime")
 
 
 # --- generate_structured -----------------------------------------------------
@@ -517,11 +522,12 @@ def test_get_video_temporal_embeddings_parses_json_array():
     assert out == [{"start": 0.0, "end": 1.0, "summary": "intro"}]
 
 
-def test_get_video_temporal_embeddings_returns_empty_on_error():
+def test_get_video_temporal_embeddings_raises_on_error():
     client = _mock_client()
     client.models.generate_content.side_effect = RuntimeError("x")
     a = _adapter(client)
-    assert a.get_video_temporal_embeddings(b"vid") == []
+    with pytest.raises(InferenceError, match="Video Temporal Analysis failed"):
+        a.get_video_temporal_embeddings(b"vid")
 
 
 def test_get_video_temporal_embeddings_raises_when_client_none():
@@ -566,10 +572,11 @@ def test_detect_objects_renames_box_2d():
     assert out == [{"label": "ninja", "box": [10, 20, 30, 40], "score": 0.8}]
 
 
-def test_detect_objects_returns_empty_on_error():
+def test_detect_objects_raises_on_error():
     a = _adapter(_mock_client())
     with patch.object(a, "generate_image_description", side_effect=RuntimeError("x")):
-        assert a.detect_objects(b"img", ["ninja"]) == []
+        with pytest.raises(InferenceError, match="Object Detection failed"):
+            a.detect_objects(b"img", ["ninja"])
 
 
 def test_classify_image_parses_json_object():
@@ -581,11 +588,11 @@ def test_classify_image_parses_json_object():
     assert out == {"cat": 0.9, "dog": 0.1}
 
 
-def test_classify_image_returns_zero_labels_on_error():
+def test_classify_image_raises_on_error():
     a = _adapter(_mock_client())
     with patch.object(a, "generate_image_description", side_effect=RuntimeError("x")):
-        out = a.classify_image(b"img", ["cat", "dog"])
-    assert out == {"cat": 0.0, "dog": 0.0}
+        with pytest.raises(InferenceError, match="Classification failed"):
+            a.classify_image(b"img", ["cat", "dog"])
 
 
 # --- visual_rerank -----------------------------------------------------------

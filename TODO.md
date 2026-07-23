@@ -45,9 +45,8 @@ _Aucun item ouvert._
 - [x] **Backend — `brain_service.py` : 28 handlers d'erreur identiques qui fuitent `str(e)` — fait (2026-07-23)** _(audit dette 2026-07-22)_
   - **Fait (2026-07-23)** : Remplacement des 28 requêtes dupliquées `except Exception as e` par un décorateur centralisé `@handle_brain_errors`. Les exceptions internes sont désormais capturées, loguées côté serveur avec stack trace (`logger.exception`), et retournent un statut 500 avec message générique non fuyard `{"detail": "Internal server error"}`.
 
-- [ ] **Backend — adaptateur Google GenAI : sentinelles neutres qui masquent les pannes** _(audit dette 2026-07-22)_
-  - Preuve : `google_genai_adapter.py:156-158` (`return 0.0`), `:172-174` (`return []` — un embedding vide peut être persisté), `:501-503`, `:569-571`, `:586-588` — l'erreur est loggée mais l'aval est corrompu silencieusement (distance 0.0 fausse un ranking).
-  - Fix : `raise InferenceError` comme le fait déjà `generate`, au lieu de retourner un défaut neutre.
+- [x] **Backend — adaptateur Google GenAI : sentinelles neutres qui masquent les pannes — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Suppression des retours silencieux neutres (`0.0`, `[]`, `{label: 0.0}`) dans `google_genai_adapter.py` (`calculate_visual_similarity`, `get_text_embedding`, `get_image_embedding`, `get_video_temporal_embeddings`, `detect_objects`, `classify_image`) au profit de `raise InferenceError` explicites comme pour `generate`. Tests unitaires mis à jour (63/63 passés).
 
 - [x] **Backend — N+1 résiduel `likes.count` + `fields="__all__"` sur serializers publics — fait (2026-07-23)** _(audit dette 2026-07-22)_
   - **Fait (2026-07-23)** : Suppression de `source="likes.count"` dans `VsBattleSerializer` au profit d'un `SerializerMethodField` compatible avec les annotations `likes_count` et la mémoire cache prefetched. Whitelists explicites de `fields` configurées sur `CreativeFusionSerializer`, `VsBattleSerializer` et `AISafetyEventSerializer` (suppression de `fields = "__all__"`). Annotations `Count("likes")` ajoutées dans les endpoints `list_vs_battles` et `TheaterListView`.
