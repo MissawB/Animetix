@@ -34,6 +34,8 @@ export interface LabEntry {
   id: string;
   title: string;
   desc: string;
+  /** Sceau du lab : un ou deux kanji évocateurs, rendus en hanko + filigrane. */
+  glyph: string;
   icon: LucideIcon;
   url: string;
   bg: string;
@@ -45,6 +47,7 @@ export interface LabEntry {
 export const labs: LabEntry[] = [
   {
     id: 'quantum',
+    glyph: '量子',
     title: 'Quantum Cognition',
     desc: "Modélisation des préférences par superposition d'états et effondrement SAT.",
     icon: Atom,
@@ -55,6 +58,7 @@ export const labs: LabEntry[] = [
   },
   {
     id: 'swarm',
+    glyph: '群',
     title: 'Swarm Intelligence',
     desc: 'Validation décentralisée des faits de lore par consensus multi-agents IA.',
     icon: Users,
@@ -65,6 +69,7 @@ export const labs: LabEntry[] = [
   },
   {
     id: 'plasticity',
+    glyph: '塑',
     title: 'Synaptic Plasticity',
     desc: 'Évolution dynamique des liens sémantiques via simulation bio-inspirée.',
     icon: Activity,
@@ -74,17 +79,8 @@ export const labs: LabEntry[] = [
     status: 'Operational',
   },
   {
-    id: 'compiler',
-    title: 'JIT Optimizer',
-    desc: "Génération et injection temps-réel de microcode C optimisé par l'IA.",
-    icon: Cpu,
-    url: '/lab/compiler/',
-    bg: 'from-blue-500/20 to-transparent',
-    badge: 'Performance',
-    status: 'JIT SOTA',
-  },
-  {
     id: 'multiverse',
+    glyph: '多元',
     title: 'Multiverse Genesis',
     desc: 'Génération autonome de segments de lore auto-cohérents (ADMS).',
     icon: Globe,
@@ -95,27 +91,19 @@ export const labs: LabEntry[] = [
     catalogUrl: '/multiverse/catalog/',
   },
   {
-    id: 'tot',
-    title: 'Tree of Thoughts',
-    desc: "Visualisez le raisonnement multi-branches (MCTS) de l'IA en temps réel.",
-    icon: GitBranch,
-    url: '/lab/tot/',
-    bg: 'from-emerald-500/20 to-transparent',
-    badge: 'Recursive AI',
-    status: 'Operational',
-  },
-  {
-    id: 'diagnostics',
-    title: 'Neural Diagnostics',
-    desc: "Analyse d'entropie et cartographie de confiance cognitive des réseaux.",
-    icon: Brain,
-    url: '/lab/diagnostics/',
+    id: 'compiler',
+    glyph: '速',
+    title: 'JIT Optimizer',
+    desc: "Génération et injection temps-réel de microcode C optimisé par l'IA.",
+    icon: Cpu,
+    url: '/lab/compiler/',
     bg: 'from-blue-500/20 to-transparent',
-    badge: 'Diagnostics',
-    status: 'Operational',
+    badge: 'Performance',
+    status: 'JIT SOTA',
   },
   {
     id: 'liquid',
+    glyph: '液',
     title: 'Liquid Neural Networks',
     desc: 'Traitement adaptatif de flux continus via équations différentielles neuronales.',
     icon: Waves,
@@ -125,7 +113,30 @@ export const labs: LabEntry[] = [
     status: 'Operational',
   },
   {
+    id: 'diagnostics',
+    glyph: '診',
+    title: 'Neural Diagnostics',
+    desc: "Analyse d'entropie et cartographie de confiance cognitive des réseaux.",
+    icon: Brain,
+    url: '/lab/diagnostics/',
+    bg: 'from-blue-500/20 to-transparent',
+    badge: 'Diagnostics',
+    status: 'Operational',
+  },
+  {
+    id: 'tot',
+    glyph: '樹',
+    title: 'Tree of Thoughts',
+    desc: "Visualisez le raisonnement multi-branches (MCTS) de l'IA en temps réel.",
+    icon: GitBranch,
+    url: '/lab/tot/',
+    bg: 'from-emerald-500/20 to-transparent',
+    badge: 'Recursive AI',
+    status: 'Operational',
+  },
+  {
     id: 'cove',
+    glyph: '検',
     title: 'CoVe Oracle',
     desc: 'Réduction des hallucinations via protocole Chain-of-Verification.',
     icon: ShieldCheck,
@@ -139,6 +150,7 @@ export const labs: LabEntry[] = [
 export const creativeLabs: LabEntry[] = [
   {
     id: 'manga',
+    glyph: '漫',
     title: 'Manga Lab',
     desc: 'Rendu Manga par IA et génération de planches dynamiques.',
     icon: Palette,
@@ -148,6 +160,7 @@ export const creativeLabs: LabEntry[] = [
   },
   {
     id: 'manga-voice',
+    glyph: '吹',
     title: 'Manga Voice',
     desc: 'Doublage IA zero-shot et clonage vocal pour vos personnages.',
     icon: Mic,
@@ -157,6 +170,7 @@ export const creativeLabs: LabEntry[] = [
   },
   {
     id: 'audio',
+    glyph: '音',
     title: 'Audio Lab',
     desc: "Clonage vocal haute fidélité et synthèse d'ambiances sonores.",
     icon: Headphones,
@@ -166,6 +180,7 @@ export const creativeLabs: LabEntry[] = [
   },
   {
     id: 'seiyuu',
+    glyph: '声優',
     title: 'Seiyuu Discovery',
     desc: 'Identifiez les voix iconiques et accédez au catalogue des doubleurs japonais.',
     icon: Mic,
@@ -175,6 +190,7 @@ export const creativeLabs: LabEntry[] = [
   },
   {
     id: 'video',
+    glyph: '映',
     title: 'Video Lab',
     desc: 'Analyse et indexation vidéo intelligente par vision artificielle.',
     icon: Video,
@@ -184,6 +200,7 @@ export const creativeLabs: LabEntry[] = [
   },
   {
     id: 'video-rag',
+    glyph: '索',
     title: 'Video RAG',
     desc: 'Recherche augmentée par récupération directement sur des flux vidéo.',
     icon: Search,
@@ -193,6 +210,7 @@ export const creativeLabs: LabEntry[] = [
   },
   {
     id: 'spatial',
+    glyph: '空',
     title: 'Spatial Lab',
     desc: 'Reconstruction 3D et Gaussian Splatting à partir de sources 2D.',
     icon: Cuboid,
@@ -202,6 +220,7 @@ export const creativeLabs: LabEntry[] = [
   },
   {
     id: 'soundscape',
+    glyph: '響',
     title: 'Soundscape Lab',
     desc: "Génération procédurale d'environnements sonores immersifs et spatialisés.",
     icon: Music,
@@ -211,6 +230,7 @@ export const creativeLabs: LabEntry[] = [
   },
   {
     id: 'speech-to-speech',
+    glyph: '訳',
     title: 'Speech-to-Speech',
     desc: "Traduction vocale temps-réel préservant l'émotion et le timbre original.",
     icon: MessageSquare,
@@ -220,6 +240,7 @@ export const creativeLabs: LabEntry[] = [
   },
   {
     id: 'voice-lab',
+    glyph: '話',
     title: 'Voice Lab',
     desc: 'Synthèse vocale avancée et modulation de paramètres prosodiques fins.',
     icon: Mic,
@@ -229,6 +250,7 @@ export const creativeLabs: LabEntry[] = [
   },
   {
     id: 'visual-nexus',
+    glyph: '目',
     title: 'Visual Nexus',
     desc: 'Interconnexion de modèles de vision pour une compréhension holistique.',
     icon: Eye,
@@ -238,6 +260,7 @@ export const creativeLabs: LabEntry[] = [
   },
   {
     id: 'cinematic',
+    glyph: '幕',
     title: 'Cinematic Reconstruction',
     desc: 'Génération de séquences cinématographiques à partir de narrations.',
     icon: Film,
@@ -250,6 +273,7 @@ export const creativeLabs: LabEntry[] = [
 export const cognitionLabs: LabEntry[] = [
   {
     id: 'archetype',
+    glyph: '型',
     title: 'Archetype Nexus',
     desc: 'Visualisez la convergence de vos traits et votre espace latent.',
     icon: Brain,
@@ -259,6 +283,7 @@ export const cognitionLabs: LabEntry[] = [
   },
   {
     id: 'memory',
+    glyph: '憶',
     title: 'Neuro-Memory',
     desc: "Gérez l'empreinte sémantique et vos vecteurs de préférence.",
     icon: Fingerprint,
@@ -268,6 +293,7 @@ export const cognitionLabs: LabEntry[] = [
   },
   {
     id: 'simulator',
+    glyph: '時',
     title: 'Timeline Sim',
     desc: 'Explorez les futurs alternatifs et le regret conversationnel.',
     icon: GitBranch,
@@ -277,6 +303,7 @@ export const cognitionLabs: LabEntry[] = [
   },
   {
     id: 'latent',
+    glyph: '潜',
     title: 'Latent Space',
     desc: 'Exploration géométrique des représentations vectorielles de haute dimension.',
     icon: Binary,
@@ -286,6 +313,7 @@ export const cognitionLabs: LabEntry[] = [
   },
   {
     id: 'debate',
+    glyph: '論',
     title: 'AI Debate Arena',
     desc: 'Confrontations sémantiques entre agents basées sur le Knowledge Graph.',
     icon: Swords,
@@ -295,6 +323,7 @@ export const cognitionLabs: LabEntry[] = [
   },
   {
     id: 'graph-map',
+    glyph: '図',
     title: 'Lore World Map',
     desc: "Visualisation des clusters de connaissances détectés par l'algorithme de Leiden.",
     icon: Map,
@@ -304,6 +333,7 @@ export const cognitionLabs: LabEntry[] = [
   },
   {
     id: 'strategy',
+    glyph: '策',
     title: 'Strategy Lab',
     desc: "Interface de simulation CFR pour l'optimisation des arbres de décision.",
     icon: Target,

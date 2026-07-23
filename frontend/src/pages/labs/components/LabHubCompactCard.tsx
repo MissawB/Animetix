@@ -3,14 +3,23 @@ import { Link } from 'react-router-dom';
 import type { LabEntry } from '../labHubData';
 
 /** Carte papier compacte partagée par les sections Forge créative et
- *  Cognition core. Même système à deux encres que la grande carte : le
- *  survol s'exprime uniquement en or. */
+ *  Cognition core. Même langage de sceau que la grande carte : le kanji du
+ *  lab en vermillon tient lieu d'identité, le survol s'exprime en or. */
 export const LabHubCompactCard: React.FC<{ lab: LabEntry }> = ({ lab }) => (
   <Link to={lab.url} className="group block h-full no-underline">
-    <article className="h-full rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 transition-all duration-300 group-hover:-translate-y-1 group-hover:border-[#FDB913]/60">
+    <article className="relative h-full overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 transition-all duration-300 group-hover:-translate-y-1 group-hover:border-[#FDB913]/60">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -bottom-5 -right-2 select-none text-[5.5rem] font-black leading-none text-[#F4F1E8]/[0.045] transition-colors duration-500 group-hover:text-[#FDB913]/[0.08]"
+      >
+        {lab.glyph}
+      </span>
       <div className="mb-6 flex items-start justify-between gap-3">
-        <span className="inline-flex rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-3 text-[#F4F1E8] transition-colors group-hover:text-[#FDB913]">
-          <lab.icon className="h-6 w-6" aria-hidden="true" />
+        <span
+          className="select-none text-2xl font-bold leading-none text-[#E8442B] transition-colors group-hover:text-[#FDB913]"
+          aria-hidden
+        >
+          {lab.glyph}
         </span>
         <span className="text-[8px] font-black uppercase tracking-widest text-[#8F94A5]">
           {lab.badge}

@@ -54,10 +54,18 @@ interface LabHeaderProps {
   accent?: string;
   /** Une ou deux phrases en français courant — pas de majuscules criées. */
   lede: string;
+  /** Sceau du lab (kanji, cf. labHubData.glyph) ; 実験 par défaut. */
+  glyph?: string;
 }
 
 /** Plaque de protocole : l'en-tête signature des pages lab. */
-export const LabHeader: React.FC<LabHeaderProps> = ({ code, title, accent, lede }) => (
+export const LabHeader: React.FC<LabHeaderProps> = ({
+  code,
+  title,
+  accent,
+  lede,
+  glyph = '実験',
+}) => (
   <header className="relative mb-14">
     <div
       className="explore-halftone pointer-events-none absolute -inset-x-6 -top-12 h-48"
@@ -65,7 +73,7 @@ export const LabHeader: React.FC<LabHeaderProps> = ({ code, title, accent, lede 
     />
     <div className="relative flex items-center gap-3">
       <span className="explore-stamp -rotate-2" aria-hidden>
-        実験
+        {glyph}
       </span>
       <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
         {code}

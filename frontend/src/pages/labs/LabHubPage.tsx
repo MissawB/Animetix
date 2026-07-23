@@ -21,11 +21,28 @@ const useTranslatedLabs = (entries: LabEntry[]): LabEntry[] => {
   );
 };
 
+/** Les clés i18n de section portent le nom complet ("FORGE CRÉATIVE") ;
+ *  on encre le premier mot en papier et le reste en vermillon. */
+const splitSectionTitle = (full: string): [string, string] => {
+  const [first, ...rest] = full.split(' ');
+  return [first, rest.join(' ')];
+};
+
+/** Indices des « unes » (col-span-2) choisis pour que la grille 3 colonnes
+ *  tuile sans trou : (2+1) / (1+2) / (1+1+1) / (2+1). */
+const FEATURED_INDICES = new Set([0, 3, 7]);
+
 const LabHubPage: React.FC = () => {
   const { t } = useTranslation();
   const translatedLabs = useTranslatedLabs(labs);
   const translatedCreativeLabs = useTranslatedLabs(creativeLabs);
   const translatedCognitionLabs = useTranslatedLabs(cognitionLabs);
+  const [creativeTitle, creativeAccent] = splitSectionTitle(
+    t('lab_hub.section_creative', 'FORGE CRÉATIVE'),
+  );
+  const [cognitionTitle, cognitionAccent] = splitSectionTitle(
+    t('lab_hub.section_cognition', 'COGNITION CORE'),
+  );
 
   return (
     <LabPage>
@@ -40,15 +57,15 @@ const LabHubPage: React.FC = () => {
       />
 
       <div className="mb-24 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {translatedLabs.map((lab) => (
-          <LabHubCard key={lab.id} lab={lab} />
+        {translatedLabs.map((lab, idx) => (
+          <LabHubCard key={lab.id} lab={lab} featured={FEATURED_INDICES.has(idx)} />
         ))}
       </div>
 
       {/* Section Forge créative */}
       <LabHubSectionHeader
-        title="FORGE"
-        accent={t('lab_hub.section_creative', 'CRÉATIVE')}
+        title={creativeTitle}
+        accent={creativeAccent}
         hubUrl="/forge-hub/"
         hubLabel={t('lab_hub.btn_creative_hub', 'ACCÉDER AU HUB COMPLET')}
       />
@@ -61,8 +78,8 @@ const LabHubPage: React.FC = () => {
 
       {/* Section Cognition core */}
       <LabHubSectionHeader
-        title="COGNITION"
-        accent={t('lab_hub.section_cognition', 'CORE')}
+        title={cognitionTitle}
+        accent={cognitionAccent}
         hubUrl="/cognition-hub/"
         hubLabel={t('lab_hub.btn_cognition_hub', 'ACCÉDER AU HUB COMPLET')}
       />

@@ -4,31 +4,60 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import type { LabEntry } from '../labHubData';
 
-/** Grande carte papier de la grille principale (tuile d'icône, badge, CTA au
- *  survol, lien catalogue optionnel, statut). Système à deux encres : l'or ne
- *  s'exprime qu'au survol, le vermillon reste éditorial. Le lien principal est
- *  « étiré » sur toute la carte via un pseudo-élément — le lien catalogue reste
- *  un frère (jamais un descendant) pour éviter les ancres imbriquées. */
-export const LabHubCard: React.FC<{ lab: LabEntry }> = ({ lab }) => {
+/** Grande carte papier de la grille principale. Chaque lab porte son sceau :
+ *  un hanko kanji vermillon en tête et le même glyphe en filigrane géant —
+ *  c'est lui qui différencie les cartes, pas une couleur d'accent. Le survol
+ *  s'exprime en or. Le lien principal est « étiré » sur toute la carte via un
+ *  pseudo-élément — le lien catalogue reste un frère (jamais un descendant)
+ *  pour éviter les ancres imbriquées. `featured` : la « une » de la grille,
+ *  sur deux colonnes. */
+export const LabHubCard: React.FC<{ lab: LabEntry; featured?: boolean }> = ({
+  lab,
+  featured = false,
+}) => {
   const { t } = useTranslation();
   return (
-    <article className="group relative flex h-full flex-col justify-between rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-[#FDB913]/60">
+    <article
+      className={`group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-[#FDB913]/60 ${
+        featured ? 'lg:col-span-2' : ''
+      }`}
+    >
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute -bottom-8 -right-4 select-none font-black leading-none text-[#F4F1E8]/[0.045] transition-colors duration-500 group-hover:text-[#FDB913]/[0.08] ${
+          featured ? 'text-[13rem]' : 'text-[8.5rem]'
+        }`}
+      >
+        {lab.glyph}
+      </span>
+
       <Link
         to={lab.url}
         className="block no-underline after:absolute after:inset-0 after:content-['']"
       >
         <div className="mb-8 flex items-start justify-between gap-4">
-          <span className="inline-flex rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-3.5 text-[#F4F1E8] transition-colors group-hover:text-[#FDB913]">
-            <lab.icon className="h-7 w-7" aria-hidden="true" />
+          <span
+            className={`explore-stamp -rotate-2 select-none font-bold not-italic ${
+              featured ? 'text-2xl' : 'text-lg'
+            }`}
+            aria-hidden
+          >
+            {lab.glyph}
           </span>
           <span className="text-[9px] font-black uppercase tracking-widest text-[#8F94A5]">
             {lab.badge}
           </span>
         </div>
-        <h3 className="font-manga text-2xl font-black uppercase italic tracking-tight text-[#F4F1E8]">
+        <h3
+          className={`font-manga font-black uppercase italic tracking-tight text-[#F4F1E8] ${
+            featured ? 'text-3xl md:text-4xl' : 'text-2xl'
+          }`}
+        >
           {lab.title}
         </h3>
-        <p className="mt-3 text-sm leading-relaxed text-[#8F94A5]">{lab.desc}</p>
+        <p className={`mt-3 text-sm leading-relaxed text-[#8F94A5] ${featured ? 'max-w-xl' : ''}`}>
+          {lab.desc}
+        </p>
       </Link>
 
       <div className="mt-8 flex items-center justify-between gap-3 border-t border-[#F4F1E8]/10 pt-5">
