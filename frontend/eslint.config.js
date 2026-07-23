@@ -71,8 +71,6 @@ export default defineConfig([
     // décomposer le fichier à la place.
     files: [
       'src/types/index.ts',
-      'src/pages/games/CovertestPage.tsx',
-      'src/pages/games/ClassicLobbyPage.tsx',
     ],
     rules: { 'max-lines': 'off' },
   },
