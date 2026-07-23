@@ -86,6 +86,29 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Animetix Brain API", version="2.0.0", lifespan=lifespan)
 
+
+from functools import wraps  # noqa: E402
+
+
+def handle_brain_errors(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.exception(
+                "Error in brain service endpoint %s: %s", func.__name__, exc
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            )
+
+    return wrapper
+
+
 # --- SCHÉMAS DE REQUÊTES PYDANTIC ---
 
 
@@ -126,29 +149,29 @@ class DetectRequest(BaseModel):
 
 class DescribeImageRequest(BaseModel):
     image: str
-    prompt: str = ""
+    prompt: str = "Décris cette image manga/anime en détail."
+
+
+class VideoRequest(BaseModel):
+    video: str
+    prompt: str = "Décris les événements clés et l'ambiance de cette séquence vidéo."
+
+
+class DocumentRerankRequest(BaseModel):
+    query: str
+    documents: List[str]
 
 
 class RerankRequest(BaseModel):
     query: str
     image_urls: List[str]
-    system_prompt: str = ""
+    system_prompt: Optional[str] = None
 
 
 class ClassifyRequest(BaseModel):
     image: str
     candidate_labels: List[str]
     model_id: Optional[str] = None
-
-
-class VideoRequest(BaseModel):
-    video: str
-    prompt: str = ""
-
-
-class DocumentRerankRequest(BaseModel):
-    query: str
-    documents: List[str]
 
 
 class VideoLocalizeRequest(BaseModel):
@@ -159,13 +182,13 @@ class VideoLocalizeRequest(BaseModel):
 class TransformRequest(BaseModel):
     image: str
     studio_style: str
-    prompt: str = ""
+    prompt: Optional[str] = None
 
 
 class VideoTransformRequest(BaseModel):
     video: str
     studio_style: str
-    prompt: str = ""
+    prompt: Optional[str] = None
 
 
 class SoundscapeRequest(BaseModel):
@@ -175,18 +198,18 @@ class SoundscapeRequest(BaseModel):
 
 class CloneVoiceRequest(BaseModel):
     text: str
-    reference_audio: str  # base64
+    reference_audio: str
     language: str = "fr"
 
 
 class SpeechToSpeechRequest(BaseModel):
-    audio: str  # base64
-    system_prompt: str = ""
+    audio: str
+    system_prompt: Optional[str] = None
 
 
 class MangaTranslateRequest(BaseModel):
     image: str
-    target_lang: str = "Français"
+    target_lang: str = "fr"
 
 
 class MangaInpaintRequest(BaseModel):
@@ -211,113 +234,86 @@ class Generate3DRequest(BaseModel):
 
 class ModerateRequest(BaseModel):
     text: str
-    categories: List[str]
+    categories: Optional[List[str]] = None
 
 
 class ImageGenerateRequest(BaseModel):
     prompt: str
-    style: str = ""
+    style: Optional[str] = None
 
 
-# --- ENDPOINTS ---
+# --- MIDDLEWARE & HOOKS ---
 
 
 @app.middleware("http")
-async def add_process_trace_context(request: Request, call_next):
-    # Extract trace context from request headers
-    headers = {k.lower(): v for k, v in request.headers.items()}
-
+async def add_telemetry_headers(request: Request, call_next):
     try:
-        from animetix.telemetry import extract_trace_context  # noqa: E402
         from opentelemetry import trace  # noqa: E402
-        from opentelemetry.trace import Status, StatusCode  # noqa: E402
 
-        context = extract_trace_context(headers)
-        tracer = trace.get_tracer("animetix.brain.request")
-        span_name = f"HTTP {request.method} {request.url.path}"
-
-        with tracer.start_as_current_span(span_name, context=context) as span:
-            span.set_attribute("http.method", request.method)
-            span.set_attribute("http.url", str(request.url))
-
-            try:
-                response = await call_next(request)
-                span.set_attribute("http.status_code", response.status_code)
-                if response.status_code >= 400:
-                    span.set_status(
-                        Status(
-                            StatusCode.ERROR, description=f"HTTP {response.status_code}"
-                        )
-                    )
-                else:
-                    span.set_status(Status(StatusCode.OK))
-                return response
-            except Exception as e:
-                span.record_exception(e)
-                span.set_status(Status(StatusCode.ERROR, description=str(e)))
-                raise e
+        span = trace.get_current_span()
+        response = await call_next(request)
+        if span.get_span_context().is_valid:
+            trace_id = format(span.get_span_context().trace_id, "032x")
+            response.headers["X-Trace-ID"] = trace_id
+        return response
     except ImportError:
         # Fallback if telemetry libraries are not available
         return await call_next(request)
 
 
 @app.get("/health")
+@handle_brain_errors
 def health():
     return brain_engine.health_check()
 
 
 @app.post("/generate", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def generate(req: GenerateRequest):
-    try:
-        res = brain_engine.generate(
-            req.prompt,
-            req.system_prompt,
-            thinking_budget=req.thinking_budget,
-            thinking_mode=req.thinking_mode,
-            include_logprobs=req.include_logprobs,
-        )
-        return {
-            "text": res.text,
-            "usage": res.metadata.usage if res.metadata else {},
-            "logprobs": (
-                [
-                    {
-                        "token": lp.token,
-                        "logprob": lp.logprob,
-                        "top_logprobs": lp.top_logprobs,
-                    }
-                    for lp in res.metadata.logprobs
-                ]
-                if res.metadata and res.metadata.logprobs
-                else None
-            ),
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    res = brain_engine.generate(
+        req.prompt,
+        req.system_prompt,
+        thinking_budget=req.thinking_budget,
+        thinking_mode=req.thinking_mode,
+        include_logprobs=req.include_logprobs,
+    )
+    return {
+        "text": res.text,
+        "usage": res.metadata.usage if res.metadata else {},
+        "logprobs": (
+            [
+                {
+                    "token": lp.token,
+                    "logprob": lp.logprob,
+                    "top_logprobs": lp.top_logprobs,
+                }
+                for lp in res.metadata.logprobs
+            ]
+            if res.metadata and res.metadata.logprobs
+            else None
+        ),
+    }
 
 
 @app.post("/similarity/visual", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def visual_similarity(req: SimilarityRequest):
-    try:
-        score = brain_engine.calculate_visual_similarity(
-            req.query, req.item_id, req.media_type
-        )
-        return {"score": score}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    score = brain_engine.calculate_visual_similarity(
+        req.query, req.item_id, req.media_type
+    )
+    return {"score": score}
 
 
 @app.post("/vision/embedding", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def vision_embedding(req: Base64ImageRequest):
-    try:
-        img_bytes = base64.b64decode(req.image)
-        emb = brain_engine.get_image_embedding(img_bytes, req.model_id)
-        return {"embedding": emb}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    emb = brain_engine.get_image_embedding(img_bytes, req.model_id)
+    return {"embedding": emb}
 
 
 @app.post("/vision/embedding/text", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def vision_embedding_text(req: ClipTextEmbeddingRequest):
     """Tour TEXTE d'un CLIP -- pour la recherche visuelle par description.
 
@@ -325,259 +321,200 @@ def vision_embedding_text(req: ClipTextEmbeddingRequest):
     routage que le mixin (`ClipVisionMixin.get_text_embedding_clip`), jamais
     l'encodeur de phrases générique de `/v1/embeddings`.
     """
-    try:
-        emb = brain_engine.get_text_embedding_clip(req.text, req.model_id)
-        return {"embedding": emb}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    emb = brain_engine.get_text_embedding_clip(req.text, req.model_id)
+    return {"embedding": emb}
 
 
 @app.post("/vision/character/embedding", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def vision_character_embedding(req: Base64ImageRequest):
     """Embedding CCIP -- « est-ce le MÊME personnage ? ». Pas de `model_id` :
     CCIP est un modèle unique, contrairement à la tour CLIP multi-modèle.
     """
-    try:
-        img_bytes = base64.b64decode(req.image)
-        emb = brain_engine.get_character_embedding(img_bytes)
-        return {"embedding": emb}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    emb = brain_engine.get_character_embedding(img_bytes)
+    return {"embedding": emb}
 
 
 @app.post("/vision/detect", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def vision_detect(req: DetectRequest):
-    try:
-        img_bytes = base64.b64decode(req.image)
-        objects = brain_engine.detect_objects(
-            img_bytes, req.candidate_labels, req.model_id
-        )
-        return {"objects": objects}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    objects = brain_engine.detect_objects(img_bytes, req.candidate_labels, req.model_id)
+    return {"objects": objects}
 
 
 @app.post("/vision/describe", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def vision_describe(req: DescribeImageRequest):
-    try:
-        img_bytes = base64.b64decode(req.image)
-        desc = brain_engine.generate_image_description(img_bytes, req.prompt)
-        return {"description": desc}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    desc = brain_engine.generate_image_description(img_bytes, req.prompt)
+    return {"description": desc}
 
 
 @app.post("/video/describe", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def video_describe(req: VideoRequest):
-    try:
-        vid_bytes = base64.b64decode(req.video)
-        desc = brain_engine.generate_video_description(vid_bytes, req.prompt)
-        return {"description": desc}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    vid_bytes = base64.b64decode(req.video)
+    desc = brain_engine.generate_video_description(vid_bytes, req.prompt)
+    return {"description": desc}
 
 
 @app.post("/v1/rerank", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def rerank_documents(req: DocumentRerankRequest):
-    try:
-        scores = brain_engine.rerank_documents(req.query, req.documents)
-        return {"scores": scores}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    scores = brain_engine.rerank_documents(req.query, req.documents)
+    return {"scores": scores}
 
 
 @app.post("/vision/depth", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def vision_depth(req: Base64ImageRequest):
-    try:
-        img_bytes = base64.b64decode(req.image)
-        depth_bytes = brain_engine.estimate_depth(img_bytes)
-        depth_b64 = base64.b64encode(depth_bytes).decode("utf-8")
-        return {"depth_b64": depth_b64}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    depth_bytes = brain_engine.estimate_depth(img_bytes)
+    depth_b64 = base64.b64encode(depth_bytes).decode("utf-8")
+    return {"depth_b64": depth_b64}
 
 
 @app.post("/vision/rerank", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def vision_rerank(req: RerankRequest):
-    try:
-        items = brain_engine.visual_rerank(req.query, req.image_urls, req.system_prompt)
-        return {"reranked_items": items}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    items = brain_engine.visual_rerank(req.query, req.image_urls, req.system_prompt)
+    return {"reranked_items": items}
 
 
 @app.post("/vision/classify", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def vision_classify(req: ClassifyRequest):
-    try:
-        img_bytes = base64.b64decode(req.image)
-        labels = brain_engine.classify_image(
-            img_bytes, req.candidate_labels, req.model_id
-        )
-        return {"labels": labels}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    labels = brain_engine.classify_image(img_bytes, req.candidate_labels, req.model_id)
+    return {"labels": labels}
 
 
 @app.post("/video/embeddings", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def video_embeddings(req: VideoRequest):
-    try:
-        vid_bytes = base64.b64decode(req.video)
-        embs = brain_engine.get_video_temporal_embeddings(vid_bytes)
-        return {"embeddings": embs}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    vid_bytes = base64.b64decode(req.video)
+    embs = brain_engine.get_video_temporal_embeddings(vid_bytes)
+    return {"embeddings": embs}
 
 
 @app.post("/video/localize", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def video_localize(req: VideoLocalizeRequest):
-    try:
-        vid_bytes = base64.b64decode(req.video)
-        actions = brain_engine.localize_video_actions(vid_bytes, req.queries)
-        return {"actions": actions}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    vid_bytes = base64.b64decode(req.video)
+    actions = brain_engine.localize_video_actions(vid_bytes, req.queries)
+    return {"actions": actions}
 
 
 @app.post("/vision/transform/anime", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def transform_image_anime(req: TransformRequest):
-    try:
-        img_bytes = base64.b64decode(req.image)
-        res = brain_engine.transform_image_to_anime(
-            img_bytes, req.studio_style, req.prompt
-        )
-        return {"image_url_or_b64": res}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    res = brain_engine.transform_image_to_anime(img_bytes, req.studio_style, req.prompt)
+    return {"image_url_or_b64": res}
 
 
 @app.post("/video/transform/anime", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def transform_video_anime(req: VideoTransformRequest):
-    try:
-        vid_bytes = base64.b64decode(req.video)
-        res = brain_engine.transform_video_to_anime(
-            vid_bytes, req.studio_style, req.prompt
-        )
-        return {"video_url_or_b64": res}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    vid_bytes = base64.b64decode(req.video)
+    res = brain_engine.transform_video_to_anime(vid_bytes, req.studio_style, req.prompt)
+    return {"video_url_or_b64": res}
 
 
 @app.post("/audio/generate/soundscape", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def generate_soundscape(req: SoundscapeRequest):
-    try:
-        res = brain_engine.generate_soundscape(req.video_metadata, req.prompt)
-        return {"audio_url_or_b64": res}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    res = brain_engine.generate_soundscape(req.video_metadata, req.prompt)
+    return {"audio_url_or_b64": res}
 
 
 @app.post("/audio/clone-voice", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def clone_voice(req: CloneVoiceRequest):
-    try:
-        ref_bytes = base64.b64decode(req.reference_audio)
-        audio_bytes = brain_engine.clone_voice(req.text, ref_bytes, req.language)
-        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
-        return {"audio_b64": audio_b64}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    ref_bytes = base64.b64decode(req.reference_audio)
+    audio_bytes = brain_engine.clone_voice(req.text, ref_bytes, req.language)
+    audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+    return {"audio_b64": audio_b64}
 
 
 @app.post("/audio/speech-to-speech", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def speech_to_speech(req: SpeechToSpeechRequest):
-    try:
-        aud_bytes = base64.b64decode(req.audio)
-        audio_bytes = brain_engine.speech_to_speech(aud_bytes, req.system_prompt)
-        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
-        return {"audio_b64": audio_b64}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    aud_bytes = base64.b64decode(req.audio)
+    audio_bytes = brain_engine.speech_to_speech(aud_bytes, req.system_prompt)
+    audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+    return {"audio_b64": audio_b64}
 
 
 @app.post("/vision/manga/process", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def process_manga_page(req: Base64ImageRequest):
-    try:
-        img_bytes = base64.b64decode(req.image)
-        res = brain_engine.process_manga_page(img_bytes)
-        return res
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    res = brain_engine.process_manga_page(img_bytes)
+    return res
 
 
 @app.post("/vision/manga/translate", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def translate_manga_page(req: MangaTranslateRequest):
-    try:
-        img_bytes = base64.b64decode(req.image)
-        res = brain_engine.translate_manga_page(img_bytes, req.target_lang)
-        return res
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    res = brain_engine.translate_manga_page(img_bytes, req.target_lang)
+    return res
 
 
 @app.post("/vision/manga/inpaint", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def inpaint_manga_page(req: MangaInpaintRequest):
-    try:
-        img_bytes = base64.b64decode(req.image)
-        res = brain_engine.inpaint_text_bubbles(img_bytes, req.text_placements)
-        return {"image_url_or_b64": res}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    res = brain_engine.inpaint_text_bubbles(img_bytes, req.text_placements)
+    return {"image_url_or_b64": res}
 
 
 @app.post("/diagnostics", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def diagnostics(req: DiagnosticsRequest):
-    try:
-        res = brain_engine.get_diagnostics(req.prompt, req.completion)
-        return {"diagnostics": res}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    res = brain_engine.get_diagnostics(req.prompt, req.completion)
+    return {"diagnostics": res}
 
 
 @app.post("/uncertainty", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def uncertainty(req: UncertaintyRequest):
-    try:
-        res = brain_engine.calculate_uncertainty(req.prompt, req.completion)
-        return {"uncertainty_metrics": res}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    res = brain_engine.calculate_uncertainty(req.prompt, req.completion)
+    return {"uncertainty_metrics": res}
 
 
 @app.post("/vision/generate-3d", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def generate_3d(req: Generate3DRequest):
-    try:
-        img_bytes = base64.b64decode(req.image)
-        depth_bytes = base64.b64decode(req.depth_map)
-        res = brain_engine.generate_3d_scene(img_bytes, depth_bytes)
-        return {"scene_data": res}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    depth_bytes = base64.b64decode(req.depth_map)
+    res = brain_engine.generate_3d_scene(img_bytes, depth_bytes)
+    return {"scene_data": res}
 
 
 @app.post("/moderate", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def moderate(req: ModerateRequest):
-    try:
-        res = brain_engine.moderate_content(req.text, req.categories)
-        return {"moderation": res}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    res = brain_engine.moderate_content(req.text, req.categories)
+    return {"moderation": res}
 
 
 @app.post("/vision/late-interaction", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def vision_late_interaction(req: Base64ImageRequest):
-    try:
-        img_bytes = base64.b64decode(req.image)
-        res = brain_engine.get_multimodal_late_interaction(img_bytes)
-        return {"embeddings": res}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    img_bytes = base64.b64decode(req.image)
+    res = brain_engine.get_multimodal_late_interaction(img_bytes)
+    return {"embeddings": res}
 
 
 @app.post("/vision/generate", dependencies=[Depends(verify_api_key)])
+@handle_brain_errors
 def vision_generate(req: ImageGenerateRequest):
-    try:
-        res = brain_engine.generate_image(req.prompt, req.style)
-        return {"image_url_or_b64": res}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    res = brain_engine.generate_image(req.prompt, req.style)
+    return {"image_url_or_b64": res}
 
 
 if __name__ == "__main__":

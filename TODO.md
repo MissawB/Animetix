@@ -42,9 +42,8 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **Backend — `brain_service.py` : 28 handlers d'erreur identiques qui fuitent `str(e)`** _(audit dette 2026-07-22)_
-  - Preuve : 28 occurrences de `except Exception as e: raise HTTPException(status_code=500, detail=str(e))` (l.295-579) — duplication copier-coller + message d'exception interne renvoyé au client (atténué : service interne derrière `verify_api_key`).
-  - Fix : un `@app.exception_handler(Exception)` unique (message générique + log serveur).
+- [x] **Backend — `brain_service.py` : 28 handlers d'erreur identiques qui fuitent `str(e)` — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Remplacement des 28 requêtes dupliquées `except Exception as e` par un décorateur centralisé `@handle_brain_errors`. Les exceptions internes sont désormais capturées, loguées côté serveur avec stack trace (`logger.exception`), et retournent un statut 500 avec message générique non fuyard `{"detail": "Internal server error"}`.
 
 - [ ] **Backend — adaptateur Google GenAI : sentinelles neutres qui masquent les pannes** _(audit dette 2026-07-22)_
   - Preuve : `google_genai_adapter.py:156-158` (`return 0.0`), `:172-174` (`return []` — un embedding vide peut être persisté), `:501-503`, `:569-571`, `:586-588` — l'erreur est loggée mais l'aval est corrompu silencieusement (distance 0.0 fausse un ranking).
