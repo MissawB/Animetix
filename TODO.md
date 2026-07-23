@@ -54,9 +54,8 @@ _Aucun item ouvert._
 - [x] **Backend — god modules + typage du cœur lacunaire — fait (2026-07-23)** _(audit dette 2026-07-22)_
   - **Fait (2026-07-23)** : Éclatement de `models.py` (1006 l.), `serializers.py` (780 l.) et `urls/api.py` (837 l.) en packages modulaires axés par domaine (`models/` `catalog`, `manga`, `social`, `games`, `ai_ml`, `system` ; `serializers/` `catalog`, `manga`, `social`, `games`, `ai_ml` ; `urls/domains/`). Rétro-compatibilité totale assurée via réexportations `__init__.py`. Ajout d'annotations de type de retour sur les méthodes de services du domaine (`agentic_rag_service.py`). Verification complète avec `manage.py check` et suite de tests (`1635 passed`).
 
-- [ ] **Infra — CSP `'unsafe-inline'` dans `script-src` même en prod** _(audit dette 2026-07-22)_
-  - Preuve : `settings.py:569-577` — seul `'unsafe-eval'` est retiré en prod ; les scripts inline restent autorisés, neutralisant largement la protection XSS de la CSP.
-  - Fix : nonces/hashes et retrait de `'unsafe-inline'` de `script-src` quand `IS_PRODUCTION`.
+- [x] **Infra — CSP `'unsafe-inline'` dans `script-src` même en prod — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Retrait dynamique de `'unsafe-inline'` de `CSP_SCRIPT_SRC` en environnement de production (`IS_PRODUCTION=True`), injectable/désactivable uniquement via la variable d'environnement `DJANGO_CSP_ALLOW_UNSAFE_INLINE`. Configuration de `CSP_INCLUDE_NONCE_IN = ('script-src',)` via `django-csp` pour autoriser les nonces sécurisés par requête. Suite de tests unitaires dédiée ajoutée (`tests/api/test_csp_security.py`).
 
 - [ ] **Infra — Dockerfiles : toolchain dans le runtime Brain, web sans HEALTHCHECK, Dataflow sur `:latest`** _(audit dette 2026-07-22)_
   - Preuve : `Dockerfile.brain:101-111` installe `build-essential`/`gcc` dans le stage **final** (pas de builder séparé, contrairement au web `Dockerfile:28-55`) ; `deploy/Dockerfile` sans `HEALTHCHECK` (le brain en a un l.181-182) ; `Dockerfile.dataflow:7` sur tag flottant `:latest` (le commentaire l.1-6 reconnaît le problème).
