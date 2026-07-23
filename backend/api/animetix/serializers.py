@@ -379,6 +379,8 @@ class CreativeFusionSerializer(serializers.ModelSerializer):
         ]
 
     def get_likes_count(self, obj) -> int:
+        if hasattr(obj, "likes_count"):
+            return obj.likes_count
         if (
             hasattr(obj, "_prefetched_objects_cache")
             and "likes" in obj._prefetched_objects_cache
@@ -406,12 +408,39 @@ from .models import VsBattle  # noqa: E402
 
 class VsBattleSerializer(serializers.ModelSerializer):
     creator_name = serializers.ReadOnlyField(source="creator.username")
-    likes_count = serializers.IntegerField(source="likes.count", read_only=True)
+    likes_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = VsBattle
-        fields = "__all__"
+        fields = [
+            "id",
+            "char_a_name",
+            "char_b_name",
+            "char_a_franchise",
+            "char_b_franchise",
+            "char_a_data",
+            "char_b_data",
+            "winner",
+            "verdict_summary",
+            "debate_history",
+            "creator",
+            "creator_name",
+            "is_public",
+            "created_at",
+            "likes_count",
+            "is_liked",
+        ]
+
+    def get_likes_count(self, obj) -> int:
+        if hasattr(obj, "likes_count"):
+            return obj.likes_count
+        if (
+            hasattr(obj, "_prefetched_objects_cache")
+            and "likes" in obj._prefetched_objects_cache
+        ):
+            return len(obj.likes.all())
+        return obj.likes.count()
 
     def get_is_liked(self, obj):
         user = self.context["request"].user if "request" in self.context else None
@@ -439,7 +468,18 @@ class AISafetyEventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AISafetyEvent
-        fields = "__all__"
+        fields = [
+            "id",
+            "event_type",
+            "action",
+            "detected_categories",
+            "input_text",
+            "output_text",
+            "reasoning",
+            "user",
+            "username",
+            "created_at",
+        ]
 
 
 class AIREvalResultSerializer(serializers.ModelSerializer):

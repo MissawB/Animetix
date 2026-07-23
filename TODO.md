@@ -49,9 +49,8 @@ _Aucun item ouvert._
   - Preuve : `google_genai_adapter.py:156-158` (`return 0.0`), `:172-174` (`return []` — un embedding vide peut être persisté), `:501-503`, `:569-571`, `:586-588` — l'erreur est loggée mais l'aval est corrompu silencieusement (distance 0.0 fausse un ranking).
   - Fix : `raise InferenceError` comme le fait déjà `generate`, au lieu de retourner un défaut neutre.
 
-- [ ] **Backend — N+1 résiduel `likes.count` + `fields="__all__"` sur serializers publics** _(audit dette 2026-07-22)_
-  - Preuve : `serializers.py:384` `source="likes.count"` émet 1 COUNT/ligne et **ignore** le `prefetch_related("likes")` de `vs_battle.py:25-31` (seul `len(obj.likes.all())` utilise le cache) ; `fields = "__all__"` sur CreativeFusion/VsBattle/AISafetyEvent (`serializers.py:354/389/416`) → tout futur champ auto-exposé.
-  - Fix : annoter `Count("likes")` dans les querysets + whitelist explicite des champs.
+- [x] **Backend — N+1 résiduel `likes.count` + `fields="__all__"` sur serializers publics — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Suppression de `source="likes.count"` dans `VsBattleSerializer` au profit d'un `SerializerMethodField` compatible avec les annotations `likes_count` et la mémoire cache prefetched. Whitelists explicites de `fields` configurées sur `CreativeFusionSerializer`, `VsBattleSerializer` et `AISafetyEventSerializer` (suppression de `fields = "__all__"`). Annotations `Count("likes")` ajoutées dans les endpoints `list_vs_battles` et `TheaterListView`.
 
 - [ ] **Backend — god modules + typage du cœur lacunaire** _(audit dette 2026-07-22)_
   - Preuve : `models.py` 1005 l., `urls/api.py` 831 l., `serializers.py` 714 l. (imports répétés en milieu de fichier l.321/379/403) ; ~30 % des fonctions de `core/domain/services/**` sans annotation de retour, 183 usages de `Any`.

@@ -28,8 +28,11 @@ class TheaterListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        from django.db.models import Count
+
         fusions = (
             CreativeFusion.objects.filter(vn_script__isnull=False, is_public=True)
+            .annotate(likes_count=Count("likes"))
             .select_related("creator")
             .prefetch_related("likes")
             .order_by("-created_at")[:GALLERY_MAX_ITEMS]
