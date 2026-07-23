@@ -57,9 +57,11 @@ _Aucun item ouvert._
 - [x] **Infra — CSP `'unsafe-inline'` dans `script-src` même en prod — fait (2026-07-23)** _(audit dette 2026-07-22)_
   - **Fait (2026-07-23)** : Retrait dynamique de `'unsafe-inline'` de `CSP_SCRIPT_SRC` en environnement de production (`IS_PRODUCTION=True`), injectable/désactivable uniquement via la variable d'environnement `DJANGO_CSP_ALLOW_UNSAFE_INLINE`. Configuration de `CSP_INCLUDE_NONCE_IN = ('script-src',)` via `django-csp` pour autoriser les nonces sécurisés par requête. Suite de tests unitaires dédiée ajoutée (`tests/api/test_csp_security.py`).
 
-- [ ] **Infra — Dockerfiles : toolchain dans le runtime Brain, web sans HEALTHCHECK, Dataflow sur `:latest`** _(audit dette 2026-07-22)_
-  - Preuve : `Dockerfile.brain:101-111` installe `build-essential`/`gcc` dans le stage **final** (pas de builder séparé, contrairement au web `Dockerfile:28-55`) ; `deploy/Dockerfile` sans `HEALTHCHECK` (le brain en a un l.181-182) ; `Dockerfile.dataflow:7` sur tag flottant `:latest` (le commentaire l.1-6 reconnaît le problème).
-  - Fix : stage builder pour le brain ; `HEALTHCHECK CMD curl -fs http://127.0.0.1:7860/health` sur le web ; pin `@sha256:` pour dataflow.
+- [x] **Infra — Dockerfiles : toolchain dans le runtime Brain, web sans HEALTHCHECK, Dataflow sur `:latest` — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** :
+    - `deploy/Dockerfile.brain` : Ajout d'un stage builder dédié `brain-builder` (compilation Wheels & venv) pour exclure `build-essential` et `gcc` du stage final de runtime.
+    - `deploy/Dockerfile` : Ajout de la consigne `HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 CMD curl -fs http://127.0.0.1:7860/health || exit 1`.
+    - `deploy/Dockerfile.dataflow` : Remplacement du tag flottant `:latest` sur `dataflow-templates-base/python3-template-launcher-base` par son digest SHA256 immuable `@sha256:d84f2b1d3d666d3a8a30689b2fb1e36780c108c49e1eefbfd6796c9c6ec543ab`.
 
 - [ ] **CI — durcissement (timeouts, permissions, SHA pinning, concurrency)** _(audit dette 2026-07-22)_
   - Preuve : 11 jobs sans `timeout-minutes` (défaut GitHub 6 h) ; aucun bloc `permissions:` au niveau workflow (`GITHUB_TOKEN` hérite d'un scope potentiellement read-write) ; actions en tag mutable (`codecov@v5` ci.yml:152/381, `google-github-actions/auth@v2` ci.yml:454/566…) alors que le job deploy a `id-token: write` + accès GCP WIF ; `deploy_to_hf.yml` sans `concurrency` (deux pushes rapprochés = deux déploiements HF concurrents).

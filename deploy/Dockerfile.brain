@@ -72,7 +72,31 @@ RUN git clone --depth 1 --branch "${LLAMA_CPP_REF}" https://github.com/ggml-org/
     && ls -la /otaku-q4_k_m.gguf
 
 # ---------------------------------------------------------------------------
-# Stage 2 — the brain runtime.
+# ---------------------------------------------------------------------------
+# Stage 2a — Brain Builder (compiles dependencies in isolated stage)
+# ---------------------------------------------------------------------------
+FROM python:3.12-slim AS brain-builder
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    libpq-dev \
+    libsndfile1 \
+    ffmpeg \
+    zstd \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY requirements-brain.txt .
+RUN pip install --no-cache-dir -r requirements-brain.txt
+
+# ---------------------------------------------------------------------------
+# Stage 2b — the brain runtime (clean runtime image).
 # ---------------------------------------------------------------------------
 # 3.12-slim to match the web/dataflow images (audit dette 2026-07-11). Only the
 # runtime is bumped: the GGUF-bake stages above stay on 3.11 (throwaway tooling,
@@ -89,6 +113,7 @@ FROM python:3.12-slim
 # {"status":"offline"} and the web router wrote the whole brain off.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
     PYTHONPATH="/app/backend:${PYTHONPATH}" \
     TORCH_HOME="/app/data/models/torch" \
     HF_HOME="/app/data/models/huggingface" \
@@ -98,10 +123,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Copy pre-built virtual environment from builder stage
+COPY --from=brain-builder /opt/venv /opt/venv
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    gcc \
-    libpq-dev \
     libpq5 \
     libsndfile1 \
     ffmpeg \
@@ -166,11 +191,6 @@ RUN { \
     && ollama list \
     && kill "$OLLAMA_PID" \
     && rm -rf /opt/gguf
-
-# Brain-only lockfile: GPU serving stack (CUDA torch backs the vision / rerank /
-# OCR components), no Django.
-COPY requirements-brain.txt .
-RUN pip install --no-cache-dir -r requirements-brain.txt
 
 COPY . .
 
