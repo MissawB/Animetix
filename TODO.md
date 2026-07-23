@@ -51,9 +51,8 @@ _Aucun item ouvert._
 - [x] **Backend — N+1 résiduel `likes.count` + `fields="__all__"` sur serializers publics — fait (2026-07-23)** _(audit dette 2026-07-22)_
   - **Fait (2026-07-23)** : Suppression de `source="likes.count"` dans `VsBattleSerializer` au profit d'un `SerializerMethodField` compatible avec les annotations `likes_count` et la mémoire cache prefetched. Whitelists explicites de `fields` configurées sur `CreativeFusionSerializer`, `VsBattleSerializer` et `AISafetyEventSerializer` (suppression de `fields = "__all__"`). Annotations `Count("likes")` ajoutées dans les endpoints `list_vs_battles` et `TheaterListView`.
 
-- [ ] **Backend — god modules + typage du cœur lacunaire** _(audit dette 2026-07-22)_
-  - Preuve : `models.py` 1005 l., `urls/api.py` 831 l., `serializers.py` 714 l. (imports répétés en milieu de fichier l.321/379/403) ; ~30 % des fonctions de `core/domain/services/**` sans annotation de retour, 183 usages de `Any`.
-  - Fix : éclater par domaine (`models/social.py`, `serializers/manga.py`…) ; compléter les annotations en priorité sur ports/services.
+- [x] **Backend — god modules + typage du cœur lacunaire — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Éclatement de `models.py` (1006 l.), `serializers.py` (780 l.) et `urls/api.py` (837 l.) en packages modulaires axés par domaine (`models/` `catalog`, `manga`, `social`, `games`, `ai_ml`, `system` ; `serializers/` `catalog`, `manga`, `social`, `games`, `ai_ml` ; `urls/domains/`). Rétro-compatibilité totale assurée via réexportations `__init__.py`. Ajout d'annotations de type de retour sur les méthodes de services du domaine (`agentic_rag_service.py`). Verification complète avec `manage.py check` et suite de tests (`1635 passed`).
 
 - [ ] **Infra — CSP `'unsafe-inline'` dans `script-src` même en prod** _(audit dette 2026-07-22)_
   - Preuve : `settings.py:569-577` — seul `'unsafe-eval'` est retiré en prod ; les scripts inline restent autorisés, neutralisant largement la protection XSS de la CSP.

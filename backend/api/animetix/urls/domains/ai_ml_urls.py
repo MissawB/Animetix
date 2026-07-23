@@ -1,0 +1,314 @@
+from django.urls import path
+
+from ... import api_views
+from ...api import monitoring, observability
+
+urlpatterns = [
+    path(
+        "latent-space/",
+        api_views.LatentSpaceDataView.as_view(),
+        name="api_latent_space",
+    ),
+    path(
+        "transparency/",
+        api_views.TransparencyDataView.as_view(),
+        name="api_transparency",
+    ),
+    path(
+        "labs/spatial/", api_views.SpatialLabDataView.as_view(), name="api_spatial_lab"
+    ),
+    path(
+        "labs/spatial/generate-3d/",
+        api_views.Generate3DDataView.as_view(),
+        name="api_generate_3d",
+    ),
+    path(
+        "labs/spatial/cinematic/",
+        api_views.CinematicReconstructionView.as_view(),
+        name="api_cinematic_reconstruction",
+    ),
+    path("labs/manga-lab/", api_views.MangaLabDataView.as_view(), name="api_manga_lab"),
+    path(
+        "labs/manga-lab/clean/",
+        api_views.MangaCleanLabView.as_view(),
+        name="api_manga_clean_lab",
+    ),
+    path(
+        "labs/manga-lab/translate/",
+        api_views.MangaTranslateLabView.as_view(),
+        name="api_manga_translate_lab",
+    ),
+    path(
+        "labs/manga-voice/", api_views.MangaVoiceLabView.as_view(), name="manga-voice"
+    ),
+    path("labs/audio/", api_views.AudioLabDataView.as_view(), name="api_audio_lab"),
+    path(
+        "labs/audio/soundscape/",
+        api_views.SoundscapeGenerationView.as_view(),
+        name="api_audio_soundscape",
+    ),
+    path(
+        "labs/audio/s2s/",
+        api_views.SpeechToSpeechLabView.as_view(),
+        name="api_audio_s2s",
+    ),
+    path(
+        "labs/audio/seiyuu/",
+        api_views.SeiyuuDiscoveryView.as_view(),
+        name="api_audio_seiyuu",
+    ),
+    path(
+        "labs/audio/seiyuu/ingest/",
+        api_views.VoiceProfileIngestView.as_view(),
+        name="api_audio_seiyuu_ingest",
+    ),
+    path(
+        "singularity-lab/",
+        api_views.SingularityLabDataView.as_view(),
+        name="api_singularity_lab",
+    ),
+    path(
+        "singularity-lab/command-center/",
+        api_views.SingularityCommandCenterView.as_view(),
+        name="api_singularity_command_center",
+    ),
+    path("labs/video/", api_views.VideoLabDataView.as_view(), name="api_video_lab"),
+    path(
+        "labs/video/fatezero/",
+        api_views.VideoFateZeroLabView.as_view(),
+        name="api_video_fatezero_lab",
+    ),
+    path(
+        "labs/video/index/",
+        api_views.VideoRAGIndexView.as_view(),
+        name="api_video_rag_index",
+    ),
+    path(
+        "labs/video/search/",
+        api_views.VideoRAGSearchView.as_view(),
+        name="api_video_rag_search",
+    ),
+    path(
+        "labs/soundscape/",
+        api_views.SoundscapeGenerationView.as_view(),
+        name="api_soundscape_lab",
+    ),
+    path("labs/s2s/", api_views.SpeechToSpeechLabView.as_view(), name="api_s2s_lab"),
+    path(
+        "labs/liquid-nn/",
+        api_views.LiquidNeuralNetworkLabView.as_view(),
+        name="api_liquid_nn_lab",
+    ),
+    path("labs/tot/", api_views.TreeOfThoughtsLabView.as_view(), name="api_tot_lab"),
+    path(
+        "labs/voice-cloning/",
+        api_views.VoiceCloningLabView.as_view(),
+        name="api_voice_cloning",
+    ),
+    path(
+        "labs/diagnostics/",
+        api_views.NeuralDiagnosticsLabView.as_view(),
+        name="api_neural_diagnostics",
+    ),
+    path(
+        "mlops/dpo/curation/",
+        api_views.DPOCurationViewSet.as_view({"get": "list", "post": "create"}),
+        name="api_dpo_curation",
+    ),
+    path(
+        "mlops/dpo/feedback-loop/",
+        api_views.DPOFeedbackLoopView.as_view(),
+        name="api_dpo_feedback_loop",
+    ),
+    path(
+        "mlops/sota/benchmarks/",
+        api_views.SOTABenchmarkListView.as_view(),
+        name="api_sota_benchmarks",
+    ),
+    path(
+        "mlops/dspy/optimizer/",
+        api_views.DSPyOptimizerView.as_view(),
+        name="api_dspy_optimizer",
+    ),
+    path(
+        "mlops/safety/events/",
+        api_views.AISafetyEventViewSet.as_view({"get": "list"}),
+        name="api_safety_events",
+    ),
+    path(
+        "mlops/adapters/", api_views.AdaptersView.as_view(), name="api_mlops_adapters"
+    ),
+    path(
+        "mlops/feedback/submit/",
+        api_views.AIFeedbackAPIView.as_view(),
+        name="submit_ai_feedback",
+    ),
+    path(
+        "mlops/eval/failures/",
+        api_views.AIREvaluationViewSet.as_view({"get": "failures"}),
+        name="mlops_eval_failures",
+    ),
+    path(
+        "mlops/open-data/",
+        api_views.OpenDatasetListView.as_view(),
+        name="open_dataset_list",
+    ),
+    path(
+        "mlops/open-data/download/<str:dataset_id>/",
+        api_views.OpenDatasetDownloadView.as_view(),
+        name="open_dataset_download",
+    ),
+    path(
+        "mlops/gold-dataset/",
+        api_views.GoldDatasetViewSet.as_view({"get": "list", "post": "create"}),
+        name="mlops_gold_dataset_list",
+    ),
+    path(
+        "mlops/gold-dataset/<int:pk>/validate/",
+        api_views.GoldDatasetViewSet.as_view({"post": "validate"}),
+        name="mlops_gold_dataset_validate",
+    ),
+    path(
+        "mlops/gold-dataset/sync_positive_feedback/",
+        api_views.GoldDatasetViewSet.as_view({"post": "sync_positive_feedback"}),
+        name="mlops_gold_dataset_sync",
+    ),
+    path(
+        "mlops/gold-dataset/<int:pk>/",
+        api_views.GoldDatasetViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
+        name="mlops_gold_dataset_detail",
+    ),
+    path(
+        "admin/ai_eval/data/",
+        api_views.AIREvaluationViewSet.as_view({"get": "stats"}),
+        name="admin_ai_eval_data",
+    ),
+    path(
+        "graph/neighbors/",
+        api_views.GraphNeighborsView.as_view(),
+        name="api_graph_neighbors",
+    ),
+    path(
+        "graph/debugger/",
+        api_views.GraphDebuggerView.as_view(),
+        name="api_graph_debugger",
+    ),
+    path(
+        "graph/world-map/",
+        api_views.GraphWorldMapView.as_view(),
+        name="api_graph_world_map",
+    ),
+    path(
+        "companion/interact/",
+        api_views.CompanionInteractView.as_view(),
+        name="api_companion_interact",
+    ),
+    path("stream/emoji/", api_views.EmojiStreamView.as_view(), name="api_emoji_stream"),
+    path(
+        "stream/paradox/",
+        api_views.ParadoxStreamView.as_view(),
+        name="api_paradox_stream",
+    ),
+    path(
+        "stream/agentic-rag/",
+        api_views.AgenticRAGStreamView.as_view(),
+        name="api_agentic_rag",
+    ),
+    path(
+        "stream/animinator/",
+        api_views.AniminatorStreamView.as_view(),
+        name="api_animinator_stream",
+    ),
+    path(
+        "stream/tot/",
+        api_views.ToTStreamView.as_view(),
+        name="api_tot_stream",
+    ),
+    path(
+        "archetypist/start/",
+        api_views.ArchetypistStartFusionView.as_view(),
+        name="api_archetypist_start",
+    ),
+    path(
+        "archetypist/status/",
+        api_views.ArchetypistTaskStatusView.as_view(),
+        name="api_archetypist_status",
+    ),
+    path(
+        "archetypist/theater/",
+        api_views.TheaterListView.as_view(),
+        name="api_theater_list",
+    ),
+    path(
+        "archetypist/vn/<int:fusion_id>/",
+        api_views.ForgeVNView.as_view(),
+        name="api_forge_vn",
+    ),
+    path(
+        "cognition/archetype-nexus/",
+        api_views.ArchetypeNexusView.as_view(),
+        name="api_archetype_nexus",
+    ),
+    path(
+        "cognition/neuro-memory/",
+        api_views.NeuroMemoryManagementView.as_view(),
+        name="api_neuro_memory",
+    ),
+    path(
+        "cognition/debate-arena/",
+        api_views.AIDebateArenaView.as_view(),
+        name="api_debate_arena",
+    ),
+    path(
+        "cognition/cove-oracle/",
+        api_views.CoveOracleView.as_view(),
+        name="api_cove_oracle",
+    ),
+    path(
+        "cognition/cfr-strategy-lab/",
+        api_views.CFRStrategyLabView.as_view(),
+        name="api_cfr_strategy_lab",
+    ),
+    path(
+        "cognition/counterfactual/",
+        api_views.CounterfactualSimulatorView.as_view(),
+        name="api_counterfactual",
+    ),
+    path(
+        "curation/",
+        api_views.DataCurationTicketViewSet.as_view({"get": "list"}),
+        name="api_curation_tickets",
+    ),
+    path(
+        "curation/<int:pk>/resolve/",
+        api_views.DataCurationTicketViewSet.as_view({"post": "resolve"}),
+        name="api_resolve_ticket",
+    ),
+    path(
+        "curation/stats/",
+        api_views.DataCurationTicketViewSet.as_view({"get": "stats"}),
+        name="api_curation_stats",
+    ),
+    path(
+        "admin/ttc-monitoring/",
+        api_views.TTCMonitoringAPIView.as_view(),
+        name="api_ttc_monitoring",
+    ),
+    path(
+        "admin/pipelines/control/<str:action>/",
+        monitoring.PipelineControlView.as_view(),
+        name="api_pipeline_control",
+    ),
+    path(
+        "admin/observability/",
+        observability.ObservabilityView.as_view(),
+        name="api_observability",
+    ),
+]

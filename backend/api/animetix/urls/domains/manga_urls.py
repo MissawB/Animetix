@@ -1,0 +1,89 @@
+from django.urls import path
+
+from ... import api_views
+
+urlpatterns = [
+    path("search/", api_views.MediaSearchView.as_view(), name="api_search"),
+    path(
+        "media/search/",
+        api_views.MediaSearchView.as_view(),
+        name="api_media_search",
+    ),
+    path(
+        "media/Manga/suwayomi-image/",
+        api_views.suwayomi_image_proxy,
+        name="api_suwayomi_image_proxy",
+    ),
+    path(
+        "media/<str:media_type>/<str:item_id>/characters/",
+        api_views.MediaCharactersView.as_view(),
+        name="api_media_characters",
+    ),
+    path(
+        "media/<str:media_type>/<str:item_id>/characters/graph/",
+        api_views.MediaCharactersGraphView.as_view(),
+        name="api_media_characters_graph",
+    ),
+    path(
+        "media/<str:media_type>/<str:item_id>/",
+        api_views.MediaDetailView.as_view(),
+        name="api_media_detail",
+    ),
+    path(
+        "media/favorites/",
+        api_views.FavoriteMangaListView.as_view(),
+        name="api_favorite_manga_list",
+    ),
+    path(
+        "media/Manga/<str:media_id>/favorite/",
+        api_views.FavoriteMangaToggleView.as_view(),
+        name="api_manga_favorite_toggle",
+    ),
+    path(
+        "media/Manga/<str:media_id>/chapters/",
+        api_views.MangaChapterListView.as_view(),
+        name="api_manga_chapters",
+    ),
+    path(
+        "media/Manga/<str:media_id>/chapters/<str:chapter_number>/",
+        api_views.MangaChapterDetailView.as_view(),
+        name="api_manga_chapter_detail",
+    ),
+    path(
+        "media/Manga/<str:media_id>/chapters/<str:chapter_number>/sync/",
+        api_views.MangaChapterSyncView.as_view(),
+        name="api_manga_chapter_sync",
+    ),
+    path(
+        "explore/suwayomi/sources/",
+        api_views.SuwayomiSourcesView.as_view(),
+        name="api_suwayomi_sources",
+    ),
+    path(
+        "explore/suwayomi/search/",
+        api_views.SuwayomiSearchView.as_view(),
+        name="api_suwayomi_search",
+    ),
+    path(
+        "explore/suwayomi/import/",
+        api_views.SuwayomiImportView.as_view(),
+        name="api_suwayomi_import",
+    ),
+    path(
+        "explore/suwayomi/extensions/",
+        api_views.SuwayomiExtensionsListView.as_view(),
+        name="api_suwayomi_extensions",
+    ),
+    path(
+        "explore/suwayomi/extensions/action/",
+        api_views.SuwayomiExtensionsActionView.as_view(),
+        name="api_suwayomi_extensions_action",
+    ),
+    path("explore/", api_views.MediaExploreView.as_view(), name="api_explore"),
+    path(
+        "explore/seichijunrei/",
+        api_views.SeichijunreiMapView.as_view(),
+        name="api_seichijunrei",
+    ),
+    path("market/wiki/", api_views.MarketWikiView.as_view(), name="api_market_wiki"),
+]
