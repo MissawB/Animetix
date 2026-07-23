@@ -56,9 +56,16 @@ describe('VsBattlePage', () => {
     expect(screen.getByText(/Challenger B/i)).toBeInTheDocument();
   });
 
-  it('renders the "how it works" explainer', () => {
+  it('hides the explainer by default and opens it from the header help button', async () => {
+    const user = userEvent.setup();
     renderPage();
+    // masqué au chargement (le titre du dialogue n'existe pas encore)
+    expect(screen.queryByText(/Comment fonctionne l.Arène/i)).toBeNull();
+    await user.click(screen.getByRole('button', { name: /comment ça marche/i }));
     expect(screen.getByText(/Comment fonctionne l.Arène/i)).toBeInTheDocument();
+    // fermeture via le bouton dédié
+    await user.click(screen.getByRole('button', { name: /fermer l.aide/i }));
+    expect(screen.queryByText(/Comment fonctionne l.Arène/i)).toBeNull();
   });
 
   it('loads the roster and fills slot A when a character is picked', async () => {

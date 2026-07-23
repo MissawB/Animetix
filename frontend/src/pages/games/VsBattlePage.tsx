@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { normalizeText as norm } from '../../utils/normalizeText';
-import { Swords, Loader2, AlertCircle } from 'lucide-react';
+import { Swords, Loader2, AlertCircle, CircleHelp, X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -24,6 +24,16 @@ const VsBattlePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<VsBattleResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
+
+  useEffect(() => {
+    if (!showHelp) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowHelp(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showHelp]);
 
   const { data: characters = [], isLoading: isCharsLoading } = useQuery<ArenaCharacter[]>({
     queryKey: ['vs-characters'],
@@ -106,6 +116,14 @@ const VsBattlePage: React.FC = () => {
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
                 {t('games.vs_battle.tagline', "Défis Trans-Dimensionnels arbitrés par l'IA")}
               </span>
+              <button
+                type="button"
+                onClick={() => setShowHelp(true)}
+                className="ml-auto inline-flex items-center gap-2 rounded-full border border-[#F4F1E8]/15 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#8F94A5] transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913] bg-transparent cursor-pointer"
+              >
+                <CircleHelp className="h-4 w-4" aria-hidden="true" />
+                {t('games.vs_battle.help_button', 'Comment ça marche')}
+              </button>
             </div>
             <h1 className="font-manga relative mt-4 text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-none">
               ARENA{' '}
@@ -181,12 +199,12 @@ const VsBattlePage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="text-center">
+                  <div className="flex justify-center">
                     <Button
                       type="submit"
                       size="lg"
                       disabled={isLoading || !selectedA || !selectedB}
-                      className="mx-auto !bg-gradient-to-br !from-[#FDB913] !to-[#E8442B] text-[#0B0C10] font-black text-2xl md:text-3xl italic uppercase px-12 md:px-16 py-8 md:py-10 rounded-2xl shadow-2xl shadow-[#E8442B]/20 hover:scale-105 transition-all border-none disabled:opacity-40 disabled:hover:scale-100"
+                      className="!bg-gradient-to-br !from-[#FDB913] !to-[#E8442B] text-[#0B0C10] font-black text-2xl md:text-3xl italic uppercase px-12 md:px-16 py-8 md:py-10 rounded-2xl shadow-2xl shadow-[#E8442B]/20 hover:scale-105 transition-all border-none disabled:opacity-40 disabled:hover:scale-100"
                     >
                       {isLoading ? (
                         <span className="flex items-center gap-4">
@@ -212,10 +230,30 @@ const VsBattlePage: React.FC = () => {
               isLoading={isFeedLoading}
               onLike={(id) => likeMutation.mutate(id)}
             />
-
-            <VsHowItWorks />
           </div>
         </div>
+
+        {/* Guide de l'arène : ouvert via le bouton "Comment ça marche" */}
+        {showHelp && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('games.vs_battle.how_title', "Comment fonctionne l'Arène")}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-6 backdrop-blur-xl"
+          >
+            <div className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => setShowHelp(false)}
+                aria-label={t('games.vs_battle.close_help', "Fermer l'aide")}
+                className="absolute right-4 top-4 z-10 rounded-full p-2 text-white transition-colors hover:bg-white/10 bg-transparent border-none cursor-pointer"
+              >
+                <X className="h-6 w-6" />
+              </button>
+              <VsHowItWorks />
+            </div>
+          </div>
+        )}
       </div>
     </AnimatedPage>
   );
