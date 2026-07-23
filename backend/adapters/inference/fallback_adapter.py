@@ -505,7 +505,40 @@ class FallbackInferenceAdapter(InferencePort):
                 continue
         return None
 
-    # --- Implementations déléguées ---
+    # --- Text Modality ---
+    def get_text_embedding(self, text: str) -> List[float]:
+        return self._fallback_call("get_text_embedding", text) or []
+
+    def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
+        return self._fallback_call("moderate_content", text, categories) or {
+            "is_safe": True
+        }
+
+    def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
+        return self._fallback_call("get_diagnostics", prompt, completion) or {}
+
+    def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
+        if self._last_completion == completion and self._last_logprobs:
+            logprobs = [
+                lp.logprob for lp in self._last_logprobs if lp.logprob is not None
+            ]
+            if logprobs:
+                import numpy as np  # noqa: E402
+
+                avg_entropy = -sum(logprobs) / len(logprobs)
+                confidence = max(0.0, min(1.0, 1.0 - (avg_entropy / 10.8)))
+                perplexity = float(np.exp(avg_entropy))
+                logger.info(
+                    "📊 FallbackInferenceAdapter: Using real logprobs from cache."
+                )
+                return {
+                    "entropy": round(avg_entropy, 4),
+                    "perplexity": round(perplexity, 4),
+                    "confidence": round(confidence, 4),
+                }
+        return self._fallback_call("calculate_uncertainty", prompt, completion) or {}
+
+    # --- Vision Modality ---
     def calculate_visual_similarity(
         self, query: str, item_id: str, media_type: str
     ) -> float:
@@ -519,14 +552,6 @@ class FallbackInferenceAdapter(InferencePort):
     ) -> List[float]:
         """Embedding image. Même règle que ses deux jumelles ci-dessous : une
         panne se lève, elle ne se déguise pas en `[]`.
-
-        `_fallback_call` avale l'exception de CHAQUE adaptateur et rend `None`
-        quand aucun n'a servi la méthode. Le `or []` historique transformait ça
-        en « l'image s'est encodée en rien » : `VisualIndexService.encode_image`
-        s'en protégeait (`_checked`), mais `AdvancedVisionService`
-        (`get_unified_embedding`, `get_style_embedding_with_lora`,
-        `get_character_face_embedding`) appelle cette méthode SANS garde-fou et
-        continuait comme si l'encodage avait réussi.
         """
         vector = self._fallback_call("get_image_embedding", image_data, model_id)
         if not vector:
@@ -536,18 +561,8 @@ class FallbackInferenceAdapter(InferencePort):
             )
         return vector
 
-    def get_text_embedding(self, text: str) -> List[float]:
-        return self._fallback_call("get_text_embedding", text) or []
-
     def get_text_embedding_clip(self, text: str, model_id: str) -> List[float]:
-        """Tour TEXTE du modèle CLIP demandé. Échoue fort, jamais `[]`.
-
-        `_fallback_call` avale les exceptions et rend `None` quand aucun backend
-        n'a servi la méthode (dans le conteneur web, la chaîne est
-        `[BrainAPI, Gemini]` — aucun des deux ne porte CLIP). Rendre `[]` ici,
-        c'est écrire un vecteur vide dans l'index ou chercher avec : les deux
-        remontent des résultats qui ont l'air d'en être.
-        """
+        """Tour TEXTE du modèle CLIP demandé. Échoue fort, jamais `[]`."""
         vector = self._fallback_call("get_text_embedding_clip", text, model_id)
         if not vector:
             raise InferenceError(
@@ -623,11 +638,6 @@ class FallbackInferenceAdapter(InferencePort):
             or ""
         )
 
-    def generate_soundscape(
-        self, video_metadata: Dict[str, Any], prompt: Optional[str] = None
-    ) -> str:
-        return self._fallback_call("generate_soundscape", video_metadata, prompt) or ""
-
     def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
         return self._fallback_call("process_manga_page", image_data) or {}
 
@@ -646,11 +656,6 @@ class FallbackInferenceAdapter(InferencePort):
             or ""
         )
 
-    def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
-        return self._fallback_call("moderate_content", text, categories) or {
-            "is_safe": True
-        }
-
     def generate_image_description(self, image_data: bytes, prompt: str = "") -> str:
         return (
             self._fallback_call("generate_image_description", image_data, prompt) or ""
@@ -661,29 +666,21 @@ class FallbackInferenceAdapter(InferencePort):
             self._fallback_call("generate_video_description", video_data, prompt) or ""
         )
 
-    def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
-        return self._fallback_call("get_diagnostics", prompt, completion) or {}
+    def visual_rerank(
+        self, query: str, image_urls: List[str], system_prompt: str = ""
+    ) -> List[Dict[str, Any]]:
+        return (
+            self._fallback_call("visual_rerank", query, image_urls, system_prompt) or []
+        )
 
-    def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
-        if self._last_completion == completion and self._last_logprobs:
-            logprobs = [
-                lp.logprob for lp in self._last_logprobs if lp.logprob is not None
-            ]
-            if logprobs:
-                import numpy as np  # noqa: E402
+    def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
+        return self._fallback_call("get_multimodal_late_interaction", image_data) or []
 
-                avg_entropy = -sum(logprobs) / len(logprobs)
-                confidence = max(0.0, min(1.0, 1.0 - (avg_entropy / 10.8)))
-                perplexity = float(np.exp(avg_entropy))
-                logger.info(
-                    "📊 FallbackInferenceAdapter: Using real logprobs from cache."
-                )
-                return {
-                    "entropy": round(avg_entropy, 4),
-                    "perplexity": round(perplexity, 4),
-                    "confidence": round(confidence, 4),
-                }
-        return self._fallback_call("calculate_uncertainty", prompt, completion) or {}
+    # --- Audio Modality ---
+    def generate_soundscape(
+        self, video_metadata: Dict[str, Any], prompt: Optional[str] = None
+    ) -> str:
+        return self._fallback_call("generate_soundscape", video_metadata, prompt) or ""
 
     def clone_voice(
         self, text: str, reference_audio: bytes, language: str = "fr"
@@ -697,6 +694,7 @@ class FallbackInferenceAdapter(InferencePort):
             self._fallback_call("speech_to_speech", audio_input, system_prompt) or b""
         )
 
+    # --- Spatial 3D Modality ---
     def estimate_depth(self, image_data: bytes) -> bytes:
         return self._fallback_call("estimate_depth", image_data) or b""
 
@@ -706,16 +704,6 @@ class FallbackInferenceAdapter(InferencePort):
         return (
             self._fallback_call("generate_3d_scene", image_data, depth_map, mode) or {}
         )
-
-    def visual_rerank(
-        self, query: str, image_urls: List[str], system_prompt: str = ""
-    ) -> List[Dict[str, Any]]:
-        return (
-            self._fallback_call("visual_rerank", query, image_urls, system_prompt) or []
-        )
-
-    def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
-        return self._fallback_call("get_multimodal_late_interaction", image_data) or []
 
     def health_check(self) -> dict:
         self._refresh_health_if_stale()

@@ -81,9 +81,8 @@ _Aucun item ouvert._
 - [ ] **Deps — Tailwind un major de retard (v3 → v4)** _(audit dette 2026-07-22)_
   - Preuve : `frontend/package.json:92` `tailwindcss ^3.4.19` — migration de config/moteur non triviale à planifier.
 
-- [ ] **Backend — `InferencePort` obèse (violation ISP)** _(audit dette 2026-07-19)_
-  - Preuve : `fallback_adapter.py` (833 l.) contient ~30 méthodes de pure délégation `return self._fallback_call(...)` (l.~509-785) — chaque adapter doit couvrir toute la surface du port.
-  - Fix : segmenter en ports fins (texte / vision / audio / 3D).
+- [x] **Backend — `InferencePort` obèse (violation ISP) — fait (2026-07-23)** _(audit dette 2026-07-19)_
+  - **Fait (2026-07-23)** : Segmentation de l'interface monolithic `InferencePort` en 4 ports spécialisés par modalité (`TextInferencePort`, `VisionInferencePort`, `AudioInferencePort`, `Spatial3DInferencePort`). Héritage multiple composite maintenu sur `InferencePort` garantissant une rétro-compatibilité à 100 % pour les adaptateurs et conteneurs d'injection existants. Organisation des délégations par domaine dans `fallback_adapter.py`. Suite complète de tests validée (`1635 passed`).
 
 - [x] **Frontend — pages > 500 lignes (8/8 faits : ProfilePage 506→110 +test, TreeOfThoughtsPage 509→198 +test, PowerStationPage 523→175 +test, SeiyuuDiscoveryPage 531→240 +test, ClusterHealthPanel 616→154 +test, VsBattlePage 647→207 +test, ClassicGamePage 603→370, LoreWorldMapPage 604→385, cf. HISTORY 2026-07-21)** _(audit dette 2026-07-19)_
   - Reste (mesuré 2026-07-21) : **0 pages > 500 lignes**. Toutes les pages volumineuses ont été décomposées en sous-composants réutilisables avec tests de caractérisation.

@@ -12,7 +12,9 @@ class InferenceNotImplementedError(NotImplementedError):
     pass
 
 
-class InferencePort(ABC):
+class BaseInferencePort(ABC):
+    """Port de base pour la gestion de l'usage et des métriques d'inférence."""
+
     def __init__(self, usage_port: Optional[UsagePort] = None):
         self.usage_port = usage_port
 
@@ -33,6 +35,10 @@ class InferencePort(ABC):
                 allocated_budget=allocated_budget,
             )
 
+
+class TextInferencePort(BaseInferencePort):
+    """Port spécialisé pour l'inférence textuelle, les embeddings de texte, le reranking et le guardrail."""
+
     @abstractmethod
     def generate(
         self,
@@ -43,7 +49,7 @@ class InferencePort(ABC):
         include_logprobs: bool = False,
         **kwargs,
     ) -> InferenceResponse:
-        """Génère du texte à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
+        """Génère du texte à partir d'un prompt."""
         pass
 
     async def agenerate(
@@ -55,14 +61,7 @@ class InferencePort(ABC):
         include_logprobs: bool = False,
         **kwargs,
     ) -> InferenceResponse:
-        """Variante asynchrone de :meth:`generate`.
-
-        Seam async par défaut : délègue à l'implémentation bloquante
-        ``generate`` dans un thread worker (``asyncio.to_thread``) afin de ne
-        pas geler la boucle d'événements. Les adaptateurs nativement async
-        (ex. client Gemini async) peuvent surcharger cette méthode pour une
-        vraie I/O non bloquante.
-        """
+        """Variante asynchrone de :meth:`generate`."""
         return await asyncio.to_thread(
             self.generate,
             prompt,
@@ -83,7 +82,7 @@ class InferencePort(ABC):
         include_logprobs: bool = False,
         **kwargs,
     ):
-        """Génère du texte en flux (streaming) à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
+        """Génère du texte en flux (streaming) à partir d'un prompt."""
         pass
 
     async def astream_generate(
@@ -95,9 +94,7 @@ class InferencePort(ABC):
         include_logprobs: bool = False,
         **kwargs,
     ) -> AsyncGenerator[InferenceResponse, None]:
-        """Génère du texte en flux de manière asynchrone via run_in_executor."""
-        import asyncio
-
+        """Génère du texte en flux de manière asynchrone."""
         queue: asyncio.Queue = asyncio.Queue()
         loop = asyncio.get_running_loop()
         DONE = object()
@@ -135,16 +132,14 @@ class InferencePort(ABC):
         system_prompt: str = "Tu es un expert en extraction de données structurées.",
         max_retries: int = 3,
     ) -> Any:
-        """Génère une réponse structurée validée par un modèle Pydantic. Implémentation par défaut via texte pur + JSON parsing."""
+        """Génère une réponse structurée validée par un modèle Pydantic."""
         import json  # noqa: E402
         import re  # noqa: E402
 
         for i in range(max_retries):
             try:
-                # Ajoute une instruction de formatage au système si ce n'est pas déjà fait
                 format_instruction = "\nRéponds UNIQUEMENT avec un objet JSON valide."
                 response = self.generate(prompt, system_prompt + format_instruction)
-                # response can be a string or an InferenceResponse object
                 response_text = response.text if hasattr(response, "text") else response
                 if not isinstance(response_text, str):
                     response_text = str(response_text)
@@ -161,166 +156,15 @@ class InferencePort(ABC):
             "generate_structured failed to produce valid JSON"
         )
 
-    def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
-        """Évalue la pertinence de plusieurs documents par rapport à une requête (Cross-Encoder)."""
-        raise InferenceNotImplementedError(
-            "rerank_documents not implemented for this adapter"
-        )
-
-    def generate_image(self, prompt: str, style: str = "") -> str:
-        """Génère une image à partir d'un prompt et retourne une URL ou Base64."""
-        raise InferenceNotImplementedError(
-            "generate_image not implemented for this adapter"
-        )
-
-    def generate_sprite(self, prompt: str, style: str = "") -> str:
-        """Génère un sprite de personnage (généralement sur fond transparent ou blanc)."""
-        raise InferenceNotImplementedError(
-            "generate_sprite not implemented for this adapter"
-        )
-
-    def calculate_visual_similarity(
-        self, query: str, item_id: str, media_type: str
-    ) -> float:
-        """
-        Calcule la similarité entre un texte et une image d'un item.
-        Fallback par défaut utilisant les embeddings si disponibles.
-        """
-        try:
-            # On tente de récupérer l'embedding du texte
-            q_emb = self.get_text_embedding(query)
-            if not q_emb:
-                return 0.5
-
-            # On tente de récupérer l'image via le repository si item_id est fourni
-            return 0.5
-        except Exception:
-            return 0.5
-
     @abstractmethod
     def get_text_embedding(self, text: str) -> List[float]:
         """Génère un embedding vectoriel pour un texte donné."""
         pass
 
-    def get_image_embedding(
-        self, image_data: bytes, model_id: Optional[str] = None
-    ) -> List[float]:
-        """Génère un embedding vectoriel à partir d'une image."""
-        raise InferenceNotImplementedError("get_image_embedding not implemented")
-
-    def get_text_embedding_clip(self, text: str, model_id: str) -> List[float]:
-        """Tour TEXTE d'un modèle CLIP — le même modèle que la tour image.
-
-        Distinct de `get_text_embedding` (encodeur de phrases générique) : les
-        deux vivent dans des espaces différents, et une comparaison entre les
-        deux rend un nombre qui a l'air juste sans l'être.
-        """
-        raise InferenceNotImplementedError("get_text_embedding_clip not implemented")
-
-    def get_character_embedding(self, image_data: bytes) -> List[float]:
-        """Embedding CCIP — « est-ce le MÊME personnage ? ». Pas de tour texte."""
-        raise InferenceNotImplementedError("get_character_embedding not implemented")
-
-    def classify_image(
-        self,
-        image_data: bytes,
-        candidate_labels: List[str],
-        model_id: Optional[str] = None,
-    ) -> Dict[str, float]:
-        """Réalise une classification zero-shot d'une image."""
-        raise InferenceNotImplementedError("classify_image not implemented")
-
-    def detect_objects(
-        self,
-        image_data: bytes,
-        candidate_queries: List[str],
-        model_id: Optional[str] = None,
-    ) -> List[Dict]:
-        """Détecte des objets ou attributs dans une image (Open-World Detection)."""
-        raise InferenceNotImplementedError("detect_objects not implemented")
-
-    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]:
-        """Génère des embeddings pour chaque segment d'une vidéo (Video-RAG)."""
+    def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
+        """Évalue la pertinence de plusieurs documents par rapport à une requête (Cross-Encoder)."""
         raise InferenceNotImplementedError(
-            "get_video_temporal_embeddings not implemented for this adapter"
-        )
-
-    def localize_video_actions(
-        self, video_data: bytes, action_queries: List[str]
-    ) -> List[Dict[str, Any]]:
-        """Détecte dynamiquement le début et la fin d'actions spécifiques (TAL - Temporal Action Localization)."""
-        raise InferenceNotImplementedError("localize_video_actions not implemented")
-
-    def transform_image_to_anime(
-        self, image_data: bytes, studio_style: str, prompt: str = ""
-    ) -> str:
-        """Transforme une image réelle en anime via Diffusion + IP-Adapter."""
-        raise InferenceNotImplementedError("transform_image_to_anime not implemented")
-
-    def transform_video_to_anime(
-        self, video_data: bytes, studio_style: str, prompt: str = ""
-    ) -> str:
-        """Applique un Neural Style Transfer SOTA (type FateZero) sur une vidéo avec consistance par attention."""
-        raise InferenceNotImplementedError(
-            "transform_video_to_anime not implemented for this adapter"
-        )
-
-    def generate_soundscape(
-        self, video_metadata: Dict[str, Any], prompt: Optional[str] = None
-    ) -> str:
-        """Génère une ambiance sonore ou une musique (type AudioLDM) basée sur le contenu d'une vidéo."""
-        raise InferenceNotImplementedError(
-            "generate_soundscape not implemented for this adapter"
-        )
-
-    def clone_voice(
-        self, text: str, reference_audio: bytes, language: str = "fr"
-    ) -> bytes:
-        """Utilise le Zero-Shot Voice Cloning (RVC) pour synthétiser du texte avec la voix de référence."""
-        raise InferenceNotImplementedError(
-            "clone_voice not implemented for this adapter"
-        )
-
-    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
-        """Passe par un LLM natif multimodal (ex: Qwen2-Audio) pour une interaction End-to-End Voice sans latence TTS."""
-        raise InferenceNotImplementedError(
-            "speech_to_speech not implemented for this adapter"
-        )
-
-    def estimate_depth(self, image_data: bytes) -> bytes:
-        """Estime la carte de profondeur (Depth Map) d'une image 2D (type DepthAnything)."""
-        raise InferenceNotImplementedError(
-            "estimate_depth not implemented for this adapter"
-        )
-
-    def generate_3d_scene(
-        self, image_data: bytes, depth_map: bytes, mode: str = "gaussian_splatting"
-    ) -> Dict[str, Any]:
-        """Génère un espace 3D navigable (Gaussian Splatting / NeRF) à partir d'une image et de sa profondeur, avec in-painting 3D."""
-        raise InferenceNotImplementedError(
-            "generate_3d_scene not implemented for this adapter"
-        )
-
-    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
-        """Segmente les cases et extrait le texte d'une planche de manga (OCR)."""
-        raise InferenceNotImplementedError(
-            "process_manga_page not implemented for this adapter"
-        )
-
-    def translate_manga_page(
-        self, image_data: bytes, target_lang: str = "Français"
-    ) -> Dict[str, Any]:
-        """Détecte, OCR, traduit et redessine le texte dans les bulles d'une page de manga."""
-        raise InferenceNotImplementedError(
-            "translate_manga_page not implemented for this adapter"
-        )
-
-    def inpaint_text_bubbles(
-        self, image_data: bytes, text_placements: List[Dict]
-    ) -> str:
-        """Réincruste du texte traduit dans les bulles d'une image (In-painting)."""
-        raise InferenceNotImplementedError(
-            "inpaint_text_bubbles not implemented for this adapter"
+            "rerank_documents not implemented for this adapter"
         )
 
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
@@ -351,7 +195,6 @@ class InferencePort(ABC):
                 "reason": res.get("reason", "Vérification sémantique effectuée."),
             }
         except Exception as e:
-            # Fallback par mots-clés de base si le LLM n'est pas configuré, hors ligne ou échoue
             bad_words = ["hentai", "nsfw", "porn", "sex", "gore", "violence extreme"]
             found = [w for w in bad_words if w in text.lower()]
             is_safe = len(found) == 0
@@ -361,26 +204,6 @@ class InferencePort(ABC):
                 "action": "block" if not is_safe else "allow",
                 "reason": f"Vérification par mots-clés effectuée (Échec LLM: {str(e)}).",
             }
-
-    def generate_image_description(
-        self,
-        image_data: bytes,
-        prompt: str = "Décris cette image d'anime de manière très détaillée.",
-    ) -> str:
-        """Utilise un VLM (Visual Language Model) pour générer une description narrative d'une image."""
-        raise InferenceNotImplementedError(
-            "generate_image_description not implemented for this adapter"
-        )
-
-    def generate_video_description(
-        self,
-        video_data: bytes,
-        prompt: str = "Décris cette vidéo d'anime de manière très détaillée.",
-    ) -> str:
-        """Utilise un VLM Vidéo (ex: Video-LLaVA) pour générer une description narrative d'une vidéo."""
-        raise InferenceNotImplementedError(
-            "generate_video_description not implemented for this adapter"
-        )
 
     def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
         """Récupère les données d'activation internes (Logit Lens, Attention) pour l'interprétabilité."""
@@ -394,10 +217,127 @@ class InferencePort(ABC):
             "calculate_uncertainty not implemented for this adapter"
         )
 
-    @abstractmethod
-    def health_check(self) -> dict:
-        """Vérifie l'état de l'unité de calcul."""
-        pass
+
+class VisionInferencePort(BaseInferencePort):
+    """Port spécialisé pour l'analyse visuelle, la génération d'images, le Video-RAG et l'OCR manga."""
+
+    def generate_image(self, prompt: str, style: str = "") -> str:
+        """Génère une image à partir d'un prompt et retourne une URL ou Base64."""
+        raise InferenceNotImplementedError(
+            "generate_image not implemented for this adapter"
+        )
+
+    def generate_sprite(self, prompt: str, style: str = "") -> str:
+        """Génère un sprite de personnage."""
+        raise InferenceNotImplementedError(
+            "generate_sprite not implemented for this adapter"
+        )
+
+    def calculate_visual_similarity(
+        self, query: str, item_id: str, media_type: str
+    ) -> float:
+        """Calcule la similarité entre un texte et une image d'un item."""
+        return 0.5
+
+    def get_image_embedding(
+        self, image_data: bytes, model_id: Optional[str] = None
+    ) -> List[float]:
+        """Génère un embedding vectoriel à partir d'une image."""
+        raise InferenceNotImplementedError("get_image_embedding not implemented")
+
+    def get_text_embedding_clip(self, text: str, model_id: str) -> List[float]:
+        """Tour TEXTE d'un modèle CLIP."""
+        raise InferenceNotImplementedError("get_text_embedding_clip not implemented")
+
+    def get_character_embedding(self, image_data: bytes) -> List[float]:
+        """Embedding CCIP pour reconnaissance de personnages."""
+        raise InferenceNotImplementedError("get_character_embedding not implemented")
+
+    def classify_image(
+        self,
+        image_data: bytes,
+        candidate_labels: List[str],
+        model_id: Optional[str] = None,
+    ) -> Dict[str, float]:
+        """Réalise une classification zero-shot d'une image."""
+        raise InferenceNotImplementedError("classify_image not implemented")
+
+    def detect_objects(
+        self,
+        image_data: bytes,
+        candidate_queries: List[str],
+        model_id: Optional[str] = None,
+    ) -> List[Dict]:
+        """Détecte des objets ou attributs dans une image."""
+        raise InferenceNotImplementedError("detect_objects not implemented")
+
+    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]:
+        """Génère des embeddings pour chaque segment d'une vidéo (Video-RAG)."""
+        raise InferenceNotImplementedError(
+            "get_video_temporal_embeddings not implemented for this adapter"
+        )
+
+    def localize_video_actions(
+        self, video_data: bytes, action_queries: List[str]
+    ) -> List[Dict[str, Any]]:
+        """Détecte dynamiquement le début et la fin d'actions spécifiques dans une vidéo."""
+        raise InferenceNotImplementedError("localize_video_actions not implemented")
+
+    def transform_image_to_anime(
+        self, image_data: bytes, studio_style: str, prompt: str = ""
+    ) -> str:
+        """Transforme une image réelle en anime via Diffusion + IP-Adapter."""
+        raise InferenceNotImplementedError("transform_image_to_anime not implemented")
+
+    def transform_video_to_anime(
+        self, video_data: bytes, studio_style: str, prompt: str = ""
+    ) -> str:
+        """Applique un Neural Style Transfer sur une vidéo."""
+        raise InferenceNotImplementedError(
+            "transform_video_to_anime not implemented for this adapter"
+        )
+
+    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
+        """Segmente les cases et extrait le texte d'une planche de manga (OCR)."""
+        raise InferenceNotImplementedError(
+            "process_manga_page not implemented for this adapter"
+        )
+
+    def translate_manga_page(
+        self, image_data: bytes, target_lang: str = "Français"
+    ) -> Dict[str, Any]:
+        """Détecte, OCR, traduit et redessine le texte dans les bulles d'une page de manga."""
+        raise InferenceNotImplementedError(
+            "translate_manga_page not implemented for this adapter"
+        )
+
+    def inpaint_text_bubbles(
+        self, image_data: bytes, text_placements: List[Dict]
+    ) -> str:
+        """Réincruste du texte traduit dans les bulles d'une image (In-painting)."""
+        raise InferenceNotImplementedError(
+            "inpaint_text_bubbles not implemented for this adapter"
+        )
+
+    def generate_image_description(
+        self,
+        image_data: bytes,
+        prompt: str = "Décris cette image d'anime de manière très détaillée.",
+    ) -> str:
+        """Utilise un VLM pour générer une description narrative d'une image."""
+        raise InferenceNotImplementedError(
+            "generate_image_description not implemented for this adapter"
+        )
+
+    def generate_video_description(
+        self,
+        video_data: bytes,
+        prompt: str = "Décris cette vidéo d'anime de manière très détaillée.",
+    ) -> str:
+        """Utilise un VLM Vidéo pour générer une description narrative d'une vidéo."""
+        raise InferenceNotImplementedError(
+            "generate_video_description not implemented for this adapter"
+        )
 
     def visual_rerank(
         self,
@@ -415,3 +355,65 @@ class InferencePort(ABC):
         raise InferenceNotImplementedError(
             "get_multimodal_late_interaction not implemented for this adapter"
         )
+
+
+class AudioInferencePort(BaseInferencePort):
+    """Port spécialisé pour la génération audio, la synthèse vocale (TTS) et le Voice Cloning."""
+
+    def generate_soundscape(
+        self, video_metadata: Dict[str, Any], prompt: Optional[str] = None
+    ) -> str:
+        """Génère une ambiance sonore ou une musique basée sur le contenu d'une vidéo."""
+        raise InferenceNotImplementedError(
+            "generate_soundscape not implemented for this adapter"
+        )
+
+    def clone_voice(
+        self, text: str, reference_audio: bytes, language: str = "fr"
+    ) -> bytes:
+        """Utilise le Zero-Shot Voice Cloning (RVC) pour synthétiser du texte avec la voix de référence."""
+        raise InferenceNotImplementedError(
+            "clone_voice not implemented for this adapter"
+        )
+
+    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
+        """Passe par un LLM natif multimodal pour une interaction End-to-End Voice."""
+        raise InferenceNotImplementedError(
+            "speech_to_speech not implemented for this adapter"
+        )
+
+
+class Spatial3DInferencePort(BaseInferencePort):
+    """Port spécialisé pour la reconstruction 3D, l'estimation de profondeur et le Gaussian Splatting."""
+
+    def estimate_depth(self, image_data: bytes) -> bytes:
+        """Estime la carte de profondeur (Depth Map) d'une image 2D."""
+        raise InferenceNotImplementedError(
+            "estimate_depth not implemented for this adapter"
+        )
+
+    def generate_3d_scene(
+        self, image_data: bytes, depth_map: bytes, mode: str = "gaussian_splatting"
+    ) -> Dict[str, Any]:
+        """Génère un espace 3D navigable (Gaussian Splatting / NeRF) à partir d'une image."""
+        raise InferenceNotImplementedError(
+            "generate_3d_scene not implemented for this adapter"
+        )
+
+
+class InferencePort(
+    TextInferencePort,
+    VisionInferencePort,
+    AudioInferencePort,
+    Spatial3DInferencePort,
+):
+    """
+    Port d'inférence combiné (Façade multi-modalités).
+    Hérite des 4 ports spécialisés (Text, Vision, Audio, Spatial3D) pour garantir
+    une rétro-compatibilité à 100 % avec les adaptateurs et conteneurs existants.
+    """
+
+    @abstractmethod
+    def health_check(self) -> dict:
+        """Vérifie l'état de l'unité de calcul."""
+        pass
