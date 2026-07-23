@@ -5,19 +5,18 @@ import { ArenaCharacter } from '../../../types';
 
 export type Slot = 'A' | 'B';
 
+/** Les deux camps du kōhaku : A = rouge (shu), B = blanc (papier). */
 const slotTheme = (slot: Slot) =>
   slot === 'A'
     ? {
-        ring: 'border-red-500',
-        soft: 'border-red-500/20 bg-red-500/5',
-        text: 'text-red-500',
-        dot: 'bg-red-500',
+        ring: 'border-[#E8442B]',
+        soft: 'border-[#E8442B]/25 bg-[#E8442B]/5',
+        text: 'text-[#E8442B]',
       }
     : {
-        ring: 'border-blue-500',
-        soft: 'border-blue-500/20 bg-blue-500/5',
-        text: 'text-blue-500',
-        dot: 'bg-blue-500',
+        ring: 'border-[#F4F1E8]',
+        soft: 'border-[#F4F1E8]/25 bg-[#F4F1E8]/5',
+        text: 'text-[#F4F1E8]',
       };
 
 export const FighterSlot: React.FC<{
@@ -40,7 +39,7 @@ export const FighterSlot: React.FC<{
           onActivate();
         }
       }}
-      className={`relative w-full text-left rounded-[2rem] border-2 overflow-hidden transition-all aspect-[3/4] cursor-pointer ${
+      className={`relative w-full text-left rounded-2xl border-2 overflow-hidden transition-all aspect-[3/4] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913] ${
         active ? `${theme.ring} shadow-2xl scale-[1.02]` : theme.soft
       }`}
     >
@@ -59,7 +58,7 @@ export const FighterSlot: React.FC<{
               e.stopPropagation();
               onClear();
             }}
-            className="absolute top-3 right-3 z-10 w-8 h-8 grid place-items-center rounded-full bg-black/60 text-white hover:bg-red-600 transition-colors"
+            className="absolute top-3 right-3 z-10 w-8 h-8 grid place-items-center rounded-full bg-black/60 text-white hover:bg-[#E8442B] transition-colors"
             aria-label={t('games.vs_battle.remove_fighter', 'Retirer le combattant')}
           >
             <X className="w-4 h-4" />
@@ -76,14 +75,14 @@ export const FighterSlot: React.FC<{
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-4 text-center">
           <div
-            className={`w-14 h-14 rounded-2xl grid place-items-center ${theme.soft} border-2 ${active ? theme.ring : ''}`}
+            className={`w-14 h-14 rounded-xl grid place-items-center ${theme.soft} border-2 ${active ? theme.ring : ''}`}
           >
             <Swords className={`w-7 h-7 ${theme.text}`} />
           </div>
           <p className={`font-black italic uppercase ${theme.text}`}>
             {t('games.vs_battle.challenger', { defaultValue: 'Challenger {{slot}}', slot })}
           </p>
-          <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#8F94A5]">
             {active
               ? t('games.vs_battle.choose_below', 'Choisis ci-dessous')
               : t('games.vs_battle.tap_to_select', 'Touche pour sélectionner')}

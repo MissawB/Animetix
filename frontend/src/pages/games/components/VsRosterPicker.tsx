@@ -24,9 +24,9 @@ export const VsRosterPicker: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <div className="rounded-[2rem] border-2 border-white/5 bg-navy-900/40 p-5 md:p-6">
+    <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-5 md:p-6">
       <div className="relative mb-4">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-30 pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8F94A5] pointer-events-none" />
         <input
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
@@ -35,21 +35,21 @@ export const VsRosterPicker: React.FC<Props> = ({
             'Rechercher un personnage ou une franchise…',
           )}
           aria-label={t('games.vs_battle.search_aria', 'Rechercher un personnage ou une franchise')}
-          className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-black border-2 border-white/5 focus:border-red-500 outline-none font-bold transition-all placeholder:opacity-30"
+          className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-[#0B0C10] border border-[#F4F1E8]/15 focus:border-[#FDB913] outline-none font-bold transition-all text-[#F4F1E8] placeholder:text-[#8F94A5]/60"
         />
       </div>
 
       {isLoading ? (
-        <div className="flex items-center gap-3 justify-center py-10 opacity-50 font-black uppercase tracking-widest text-sm">
+        <div className="flex items-center gap-3 justify-center py-10 text-[#8F94A5] font-black uppercase tracking-widest text-sm">
           <Loader2 className="w-5 h-5 animate-spin" />{' '}
           {t('games.vs_battle.loading_roster', 'Chargement du roster…')}
         </div>
       ) : filtered.length === 0 ? (
-        <p className="text-center py-10 opacity-30 font-black italic uppercase">
+        <p className="text-center py-10 text-[#8F94A5] font-black italic uppercase">
           {t('games.vs_battle.no_character', 'Aucun personnage trouvé')}
         </p>
       ) : (
-        <div className="flex items-start gap-3 overflow-x-auto pb-3 -mx-1 px-1 snap-x [&::-webkit-scrollbar]:h-2.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-red-600/70 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-red-500 [scrollbar-width:thin] [scrollbar-color:rgb(220_38_38_/_0.7)_rgba(255,255,255,0.05)]">
+        <div className="flex items-start gap-3 overflow-x-auto pb-3 -mx-1 px-1 snap-x [&::-webkit-scrollbar]:h-2.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#E8442B]/70 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#E8442B] [scrollbar-width:thin] [scrollbar-color:rgb(232_68_43_/_0.7)_rgba(255,255,255,0.05)]">
           {filtered.map((c) => {
             const isA = selectedA?.name === c.name && selectedA?.franchise === c.franchise;
             const isB = selectedB?.name === c.name && selectedB?.franchise === c.franchise;
@@ -60,17 +60,17 @@ export const VsRosterPicker: React.FC<Props> = ({
                 key={`${c.name}|${c.franchise}`}
                 onClick={() => onPick(c)}
                 title={`${c.name} — ${c.franchise}`}
-                className={`group shrink-0 w-32 snap-start rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.03] bg-black/30 ${
+                className={`group shrink-0 w-32 snap-start rounded-xl overflow-hidden border-2 transition-all hover:scale-[1.03] bg-[#0B0C10] ${
                   both
-                    ? 'border-fuchsia-500 shadow-lg shadow-fuchsia-500/20'
+                    ? 'border-[#FDB913] shadow-lg shadow-[#FDB913]/20'
                     : isA
-                      ? 'border-red-500 shadow-lg shadow-red-500/20'
+                      ? 'border-[#E8442B] shadow-lg shadow-[#E8442B]/20'
                       : isB
-                        ? 'border-blue-500 shadow-lg shadow-blue-500/20'
-                        : 'border-white/5 hover:border-white/20'
+                        ? 'border-[#F4F1E8] shadow-lg shadow-[#F4F1E8]/10'
+                        : 'border-[#F4F1E8]/10 hover:border-[#F4F1E8]/30'
                 }`}
               >
-                <div className="relative aspect-[3/4] bg-navy-900">
+                <div className="relative aspect-[3/4] bg-[#0F1016]">
                   <img
                     src={c.image}
                     alt={c.name}
@@ -80,7 +80,7 @@ export const VsRosterPicker: React.FC<Props> = ({
                   />
                   {c.source === 'synthetic' && (
                     <span
-                      className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/70 text-white/70"
+                      className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/70 text-[#FDB913]"
                       title={t(
                         'games.vs_battle.synthetic_title',
                         "Fiche générée par l'IA (pas de page VS Battles Wiki)",
@@ -92,12 +92,12 @@ export const VsRosterPicker: React.FC<Props> = ({
                   {(isA || isB) && (
                     <div className="absolute top-1.5 right-1.5 flex gap-1">
                       {isA && (
-                        <span className="w-6 h-6 grid place-items-center rounded-full text-white text-[10px] font-black bg-red-600">
+                        <span className="w-6 h-6 grid place-items-center rounded-full text-white text-[10px] font-black bg-[#E8442B]">
                           A
                         </span>
                       )}
                       {isB && (
-                        <span className="w-6 h-6 grid place-items-center rounded-full text-white text-[10px] font-black bg-blue-600">
+                        <span className="w-6 h-6 grid place-items-center rounded-full text-[#0B0C10] text-[10px] font-black bg-[#F4F1E8]">
                           B
                         </span>
                       )}
@@ -108,7 +108,7 @@ export const VsRosterPicker: React.FC<Props> = ({
                   <p className="text-[11px] font-black italic uppercase leading-tight break-words text-white">
                     {c.name}
                   </p>
-                  <p className="text-[8px] font-bold uppercase tracking-wider opacity-40 leading-snug break-words mt-1">
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-[#8F94A5] leading-snug break-words mt-1">
                     {c.franchise}
                   </p>
                 </div>
@@ -117,7 +117,7 @@ export const VsRosterPicker: React.FC<Props> = ({
           })}
         </div>
       )}
-      <p className="text-[10px] font-black uppercase tracking-widest opacity-30 mt-2 text-center">
+      <p className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5] mt-2 text-center">
         {query
           ? t('games.vs_battle.results_count', {
               defaultValue: '{{count}} résultat{{plural}}',

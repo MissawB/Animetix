@@ -1,17 +1,14 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Swords, Trophy } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
-import { Button } from '../../../components/ui/Button';
 import { VsBattleResult as VsBattleResultData } from '../../../types';
 
+/** Échelle de puissance en encres de la forge : plus c'est haut, plus c'est chaud. */
 const getTierColor = (value: number) => {
-  if (value >= 90) return 'text-red-500';
-  if (value >= 70) return 'text-orange-500';
-  if (value >= 50) return 'text-yellow-500';
-  if (value >= 30) return 'text-green-500';
-  return 'text-blue-500';
+  if (value >= 90) return 'text-[#E8442B]';
+  if (value >= 70) return 'text-[#FDB913]';
+  if (value >= 50) return 'text-[#F4F1E8]';
+  return 'text-[#8F94A5]';
 };
 
 interface Props {
@@ -24,34 +21,41 @@ export const VsBattleResult: React.FC<Props> = ({ result, onReset }) => {
   return (
     <div className="space-y-12 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-          <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center border-4 border-black shadow-[0_0_40px_rgba(220,38,38,0.5)]">
-            <Swords className="w-10 h-10 text-white" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 hidden md:block">
+          <div className="w-16 h-16 -rotate-3 rounded-[4px] border-2 border-[#E8442B] bg-[#0B0C10] flex items-center justify-center text-3xl font-bold leading-none text-[#E8442B] shadow-[0_0_30px_rgba(232,68,43,0.35)]">
+            闘
           </div>
         </div>
 
         {[result.character_a, result.character_b].map((char, idx) => (
-          <Card
+          <div
             key={idx}
-            className={`relative overflow-hidden rounded-[3rem] border-white/10 ${idx === 0 ? 'bg-red-950/20' : 'bg-blue-950/20'}`}
+            className={`relative overflow-hidden rounded-2xl border ${
+              idx === 0
+                ? 'border-[#E8442B]/40 bg-[#E8442B]/5'
+                : 'border-[#F4F1E8]/25 bg-[#F4F1E8]/5'
+            }`}
           >
             {char.image_url && (
               <div
-                className="absolute inset-0 opacity-20 bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-700"
+                className="absolute inset-0 opacity-15 bg-cover bg-center grayscale"
                 style={{ backgroundImage: `url(${char.image_url})` }}
               />
             )}
-            <div className="relative z-10 p-10">
-              <Badge
-                variant="neutral"
-                className="mb-4 bg-white/5 border-white/10 text-[8px] font-black tracking-widest"
+            <div className="relative z-10 p-8 md:p-10">
+              <span
+                className={`mb-4 inline-block text-[9px] font-black uppercase tracking-[0.25em] ${
+                  idx === 0 ? 'text-[#E8442B]' : 'text-[#F4F1E8]/70'
+                }`}
               >
                 {char.franchise}
-              </Badge>
-              <h3 className="text-3xl font-black uppercase italic mb-6 manga-font">{char.name}</h3>
-              <div className="space-y-6">
-                <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
-                  <span className="text-[10px] uppercase font-black opacity-30 block mb-1">
+              </span>
+              <h3 className="text-3xl font-black uppercase italic mb-6 manga-font text-[#F4F1E8]">
+                {char.name}
+              </h3>
+              <div className="space-y-4">
+                <div className="p-4 bg-[#0B0C10]/70 rounded-xl border border-[#F4F1E8]/10">
+                  <span className="text-[10px] uppercase font-black text-[#8F94A5] block mb-1">
                     Power Tier
                   </span>
                   <span
@@ -61,56 +65,55 @@ export const VsBattleResult: React.FC<Props> = ({ result, onReset }) => {
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
-                    <span className="text-[10px] uppercase font-black opacity-30 block mb-1">
+                  <div className="p-4 bg-[#0B0C10]/70 rounded-xl border border-[#F4F1E8]/10">
+                    <span className="text-[10px] uppercase font-black text-[#8F94A5] block mb-1">
                       {t('games.vs_battle.speed', 'Vitesse')}
                     </span>
-                    <span className="text-xs font-bold truncate block">{char.stats.speed}</span>
+                    <span className="text-xs font-bold truncate block text-[#F4F1E8]">
+                      {char.stats.speed}
+                    </span>
                   </div>
-                  <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
-                    <span className="text-[10px] uppercase font-black opacity-30 block mb-1">
+                  <div className="p-4 bg-[#0B0C10]/70 rounded-xl border border-[#F4F1E8]/10">
+                    <span className="text-[10px] uppercase font-black text-[#8F94A5] block mb-1">
                       {t('games.vs_battle.durability', 'Endurance')}
                     </span>
-                    <span className="text-xs font-bold truncate block">
+                    <span className="text-xs font-bold truncate block text-[#F4F1E8]">
                       {char.stats.durability}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
 
-      <Card
-        padding="lg"
-        className="border-4 border-red-600/50 bg-navy-900 rounded-[4rem] relative overflow-hidden"
-      >
+      <div className="relative overflow-hidden rounded-2xl border border-[#E8442B]/40 bg-[#0F1016] p-10 md:p-14">
         <div className="absolute top-0 right-0 p-8 opacity-5">
           <Trophy className="w-40 h-40" />
         </div>
         <div className="text-center relative z-10">
-          <h2 className="text-xs font-black uppercase tracking-[0.5em] opacity-40 mb-4">
+          <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#8F94A5] mb-4">
             {t('games.vs_battle.referee_verdict', "Verdict de l'Arbitre IA")}
           </h2>
-          <div className="text-6xl font-black italic uppercase text-red-500 manga-font mb-8 text-glow">
+          <div className="text-4xl md:text-6xl font-black italic uppercase manga-font mb-8 bg-gradient-to-br from-[#FDB913] to-[#E8442B] bg-clip-text text-transparent">
             {t('games.vs_battle.x_wins', { defaultValue: '{{name}} GAGNE', name: result.winner })}
           </div>
-          <p className="text-lg leading-relaxed text-white/80 font-medium italic max-w-3xl mx-auto">
+          <p className="text-lg leading-relaxed text-[#F4F1E8]/80 font-medium italic max-w-3xl mx-auto">
             "{result.verdict_summary}"
           </p>
         </div>
-      </Card>
+      </div>
 
-      <div className="text-center pt-8">
-        <Button
-          size="lg"
-          variant="outline"
+      <div className="text-center pt-4">
+        <button
+          type="button"
           onClick={onReset}
-          className="px-12 py-4 border-white/10 rounded-2xl uppercase font-black italic tracking-widest"
+          className="inline-flex items-center gap-3 px-12 py-4 rounded-full border border-[#F4F1E8]/20 bg-transparent text-[#F4F1E8] uppercase font-black italic tracking-widest transition-colors hover:border-[#FDB913] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913]"
         >
+          <Swords className="w-5 h-5" aria-hidden="true" />
           {t('games.vs_battle.new_challenge', 'NOUVEAU CHALLENGE')}
-        </Button>
+        </button>
       </div>
     </div>
   );

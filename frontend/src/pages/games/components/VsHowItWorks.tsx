@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Flame, Swords } from 'lucide-react';
+import { Swords } from 'lucide-react';
 
 export const VsHowItWorks: React.FC = () => {
   const { t } = useTranslation();
@@ -36,37 +36,45 @@ export const VsHowItWorks: React.FC = () => {
   ];
 
   return (
-    <section className="rounded-[2.5rem] border-2 border-red-600/30 bg-gradient-to-br from-red-950/40 via-navy-900 to-navy-900 p-8 md:p-12">
-      <div className="text-center mb-10">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-600/20 text-red-500 mb-4">
-          <Flame className="w-7 h-7" />
-        </div>
-        <h2 className="text-2xl md:text-3xl font-black italic manga-font uppercase text-white">
+    <section className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 md:p-12">
+      <div className="mb-10 flex items-center gap-4">
+        <span className="h-6 w-1.5 flex-none bg-[#E8442B]" aria-hidden />
+        <h2 className="font-manga text-xl md:text-2xl font-black italic uppercase tracking-wide text-[#F4F1E8]">
           {t('games.vs_battle.how_title', "Comment fonctionne l'Arène")}
         </h2>
-        <p className="text-sm font-bold opacity-50 uppercase tracking-[0.25em] mt-2">
-          {t('games.vs_battle.how_subtitle', "Un arbitre IA tranche n'importe quel duel")}
-        </p>
+        <span
+          className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]/60"
+          aria-hidden
+        >
+          手順
+        </span>
+        <span className="h-px flex-1 bg-[#F4F1E8]/10" aria-hidden />
       </div>
+      <p className="mb-8 -mt-6 text-sm text-[#8F94A5]">
+        {t('games.vs_battle.how_subtitle', "Un arbitre IA tranche n'importe quel duel")}
+      </p>
 
-      <ol className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+      <ol className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 max-w-3xl">
         {steps.map((step, i) => (
-          <li key={step.t} className="flex gap-4 p-4 rounded-2xl bg-black/30 border border-white/5">
-            <span className="shrink-0 w-9 h-9 rounded-xl bg-red-600 text-white grid place-items-center font-black italic">
-              {i + 1}
+          <li key={step.t} className="flex gap-5">
+            <span
+              className="font-manga flex-none text-2xl font-black italic leading-none text-[#E8442B]"
+              aria-hidden
+            >
+              {String(i + 1).padStart(2, '0')}
             </span>
             <div>
-              <p className="font-black uppercase italic text-sm text-white leading-tight">
+              <p className="text-xs font-black uppercase tracking-widest text-[#F4F1E8]">
                 {step.t}
               </p>
-              <p className="text-xs font-medium opacity-55 leading-snug mt-1">{step.d}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-[#8F94A5]">{step.d}</p>
             </div>
           </li>
         ))}
       </ol>
 
-      <p className="text-center text-[11px] font-black uppercase tracking-widest text-fuchsia-400/80 mt-8 flex items-center justify-center gap-2">
-        <Swords className="w-3.5 h-3.5" />{' '}
+      <p className="mt-10 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-[#FDB913]">
+        <Swords className="w-3.5 h-3.5" aria-hidden="true" />{' '}
         {t(
           'games.vs_battle.tip',
           "Astuce : tu peux opposer un personnage à lui-même — c'est un match miroir.",
