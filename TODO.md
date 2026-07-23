@@ -38,9 +38,8 @@ _Aucun item ouvert._
   - Preuve : 35 pages sur `useQuery`, mais triptyque `useState(loading/error/data)`+`useEffect` refait à la main dans `FinancialDashboardPage.tsx:37-61`, `AkinetixRLPage.tsx:21-59` (`catch {}` qui avale l'erreur), `OfflineSyncPage.tsx:36-110` ; POST manuels dans `MangaLabPage.tsx:43-86` et `PricingPage.tsx:45-83` au lieu de `useMutation`.
   - Fix : migrer ces 5 pages vers `useQuery`/`useMutation` comme le reste.
 
-- [ ] **Frontend — 7 pages > 350 lignes sans aucun test (prérequis au ratchet vitest)** _(audit dette 2026-07-22)_
-  - Preuve : `ExpertNexusPage` (467), `ArchetypeNexusPage` (447), `ForgePage` (435), `ClubDashboard` (421), `StrategyLabPage` (402), `LatentSpacePage` (378), `AccountSettingsPage` (355) — aucun `__tests__/<Page>.test.tsx`.
-  - Fix : au minimum un test de rendu + états loading/error par page, puis ratcheter `vite.config.ts:149-154`.
+- [x] **Frontend — 7 pages > 350 lignes sans aucun test (prérequis au ratchet vitest) — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Création des 7 suites de tests unitaires `__tests__/<Page>.test.tsx` pour `ExpertNexusPage`, `ArchetypeNexusPage`, `ForgePage`, `ClubDashboard`, `StrategyLabPage`, `LatentSpacePage` et `AccountSettingsPage` (13 tests au total couvrant rendu initial, états loading, error et interactions). Plancher de couverture `vite.config.ts` rehaussé à **45 % statements / 35 % branches / 40 % functions / 47 % lines**.
 
 ## 🟡 Moyens
 
