@@ -34,9 +34,8 @@ _Aucun item ouvert._
 - [x] **Frontend — régression du plafond « 0 pages > 500 lignes » — verrou eslint posé & décomposition achevée (fait 2026-07-23)** _(audit dette 2026-07-22)_
   - **Fait (2026-07-23)** : règle `max-lines: 500` (lignes brutes, comme le `wc -l` des audits) dans `eslint.config.js`. Décomposition de `CovertestPage.tsx` (695 ➔ 377 l., FX extraits dans `covertestFx.ts` avec test unit) et `ClassicLobbyPage.tsx` (520 ➔ 250 l., sous-composants `ClassicUniverseSelector` & `ClassicHintConfigSection`). Exemptions ESLint retirées. Verrou 100 % actif sans exemption de page.
 
-- [ ] **Frontend — data-fetching manuel contournant react-query** _(audit dette 2026-07-22)_
-  - Preuve : 35 pages sur `useQuery`, mais triptyque `useState(loading/error/data)`+`useEffect` refait à la main dans `FinancialDashboardPage.tsx:37-61`, `AkinetixRLPage.tsx:21-59` (`catch {}` qui avale l'erreur), `OfflineSyncPage.tsx:36-110` ; POST manuels dans `MangaLabPage.tsx:43-86` et `PricingPage.tsx:45-83` au lieu de `useMutation`.
-  - Fix : migrer ces 5 pages vers `useQuery`/`useMutation` comme le reste.
+- [x] **Frontend — data-fetching manuel contournant react-query — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Migration des 5 pages concernées (`FinancialDashboardPage`, `AkinetixRLPage`, `OfflineSyncPage`, `MangaLabPage`, `PricingPage`) vers `useQuery` et `useMutation`. Élimination complète du data-fetching ad hoc (`useState` + `useEffect` + `catch` muets).
 
 - [x] **Frontend — 7 pages > 350 lignes sans aucun test (prérequis au ratchet vitest) — fait (2026-07-23)** _(audit dette 2026-07-22)_
   - **Fait (2026-07-23)** : Création des 7 suites de tests unitaires `__tests__/<Page>.test.tsx` pour `ExpertNexusPage`, `ArchetypeNexusPage`, `ForgePage`, `ClubDashboard`, `StrategyLabPage`, `LatentSpacePage` et `AccountSettingsPage` (13 tests au total couvrant rendu initial, états loading, error et interactions). Plancher de couverture `vite.config.ts` rehaussé à **45 % statements / 35 % branches / 40 % functions / 47 % lines**.

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Shield,
   Sparkles,
@@ -34,9 +35,11 @@ interface FinancialData {
 
 const FinancialDashboardPage: React.FC = () => {
   const { t } = useTranslation();
-  const [data, setData] = useState<FinancialData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const { data, isLoading, error, refetch } = useQuery<FinancialData, Error>({
+    queryKey: ['financial-summary'],
+    queryFn: () => apiClient('/api/v1/billing/admin/financial-summary/', { skipToast: true }),
+  });
 
   // Sliders simulation values
   const [videoCpm, setVideoCpm] = useState<number>(3.0);
@@ -44,35 +47,7 @@ const FinancialDashboardPage: React.FC = () => {
   const [cpc, setCpc] = useState<number>(0.15);
   const [donationVal, setDonationVal] = useState<number>(5.0);
 
-  const fetchData = useCallback(async () => {
-    try {
-      // skipToast: this page renders its own inline error panel.
-      const json = await apiClient('/api/v1/billing/admin/financial-summary/', { skipToast: true });
-      setData(json);
-      setError(null);
-    } catch (err) {
-      const error = err as Error;
-      setError(error.message || t('common.unknown_error', 'Erreur inconnue'));
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
-
-  useEffect(() => {
-    let ignore = false;
-    if (loading) {
-      setTimeout(() => {
-        fetchData().then(() => {
-          if (ignore) return;
-        });
-      }, 0);
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [fetchData, loading]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[500px] bg-[#fffcf0] dark:bg-[#1a1a2e]">
         <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
@@ -90,9 +65,9 @@ const FinancialDashboardPage: React.FC = () => {
             'Erreur lors de la récupération des données financières',
           )}
         </h3>
-        <p className="text-gray-400 mt-2">{error}</p>
+        <p className="text-gray-400 mt-2">{error?.message}</p>
         <button
-          onClick={fetchData}
+          onClick={() => refetch()}
           className="mt-6 px-4 py-2 bg-red-500 text-white rounded-xl font-bold text-xs uppercase"
         >
           {t('common.retry', 'Réessayer')}

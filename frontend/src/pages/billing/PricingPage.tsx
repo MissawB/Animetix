@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +20,44 @@ export const PricingPage: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToastStore();
   const [activeModal, setActiveModal] = useState<'boost' | 'refill' | null>(null);
-  const [isClaiming, setIsClaiming] = useState(false);
+
+  const refillMutation = useMutation({
+    mutationFn: () => apiClient('/api/v1/profiles/refill_quota/', { method: 'POST' }),
+    onSuccess: async () => {
+      await checkAuth();
+      addToast(
+        t('billing.pricing.refill_success', 'Votre quota quotidien a été rechargé !'),
+        'success',
+      );
+    },
+    onError: (error) => {
+      console.error('Failed to refill quota:', error);
+      addToast(t('billing.pricing.refill_error', 'Erreur lors de la recharge de quota.'), 'error');
+    },
+  });
+
+  const claimDonationMutation = useMutation({
+    mutationFn: () => apiClient('/api/v1/profiles/claim_donation/', { method: 'POST' }),
+    onSuccess: async () => {
+      await refetchUser();
+      addToast(
+        t(
+          'billing.pricing.donation_success',
+          'Merci pour votre soutien ! Badge Sponsor Or et couleur de pseudo débloqués.',
+        ),
+        'success',
+      );
+    },
+    onError: (error) => {
+      console.error('Failed to claim donation:', error);
+      addToast(
+        t('billing.pricing.donation_error', 'Erreur lors de la validation du don.'),
+        'error',
+      );
+    },
+  });
+
+  const isClaiming = claimDonationMutation.isPending;
 
   // Flux pub récompensée dormant tant qu'aucun vrai ad tag n'est configuré
   // (VITE_SPONSOR_AD_TAG) : aucun contenu de démo ne doit tourner en prod.
@@ -41,18 +79,7 @@ export const PricingPage: React.FC = () => {
   };
 
   const handleConfirmRefill = async () => {
-    try {
-      await apiClient('/api/v1/profiles/refill_quota/', { method: 'POST' });
-      await checkAuth();
-      addToast(
-        t('billing.pricing.refill_success', 'Votre quota quotidien a été rechargé !'),
-        'success',
-      );
-    } catch (error) {
-      console.error('Failed to refill quota:', error);
-      addToast(t('billing.pricing.refill_error', 'Erreur lors de la recharge de quota.'), 'error');
-      throw error;
-    }
+    await refillMutation.mutateAsync();
   };
 
   const handleAction = (type: 'boost' | 'refill') => {
@@ -64,31 +91,12 @@ export const PricingPage: React.FC = () => {
     setActiveModal(type);
   };
 
-  const handleClaimDonation = async () => {
+  const handleClaimDonation = () => {
     if (!user) {
       navigate('/login?redirect=/pricing/');
       return;
     }
-    setIsClaiming(true);
-    try {
-      await apiClient('/api/v1/profiles/claim_donation/', { method: 'POST' });
-      await refetchUser();
-      addToast(
-        t(
-          'billing.pricing.donation_success',
-          'Merci pour votre soutien ! Badge Sponsor Or et couleur de pseudo débloqués.',
-        ),
-        'success',
-      );
-    } catch (error) {
-      console.error('Failed to claim donation:', error);
-      addToast(
-        t('billing.pricing.donation_error', 'Erreur lors de la validation du don.'),
-        'error',
-      );
-    } finally {
-      setIsClaiming(false);
-    }
+    claimDonationMutation.mutate();
   };
 
   return (

@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import PricingPage from '../PricingPage';
 import { useAuthStore } from '../../../store/authStore';
 
@@ -20,6 +21,15 @@ vi.mock('react-router-dom', async (importOriginal) => {
     useNavigate: () => mockNavigate,
   };
 });
+
+const renderWithQueryClient = (ui: React.ReactElement) => {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>{ui}</BrowserRouter>
+    </QueryClientProvider>,
+  );
+};
 
 describe('PricingPage (Espace Sponsors)', () => {
   beforeEach(() => {
@@ -41,11 +51,7 @@ describe('PricingPage (Espace Sponsors)', () => {
   it('renders correctly for guests', () => {
     mockGuest();
 
-    render(
-      <BrowserRouter>
-        <PricingPage />
-      </BrowserRouter>,
-    );
+    renderWithQueryClient(<PricingPage />);
 
     expect(screen.getByText(/Sponsoring & Boost/i)).toBeInTheDocument();
     expect(screen.getByText(/Recharge Quota/i)).toBeInTheDocument();
@@ -56,11 +62,7 @@ describe('PricingPage (Espace Sponsors)', () => {
     vi.stubEnv('VITE_SPONSOR_AD_TAG', 'https://ads.example.com/vast.xml');
     mockGuest();
 
-    render(
-      <BrowserRouter>
-        <PricingPage />
-      </BrowserRouter>,
-    );
+    renderWithQueryClient(<PricingPage />);
 
     const boostButton = screen.getByText('ACTIVER LE BOOST');
     fireEvent.click(boostButton);
@@ -74,11 +76,7 @@ describe('PricingPage (Espace Sponsors)', () => {
   it('disables both sponsor CTAs when no ad tag is configured', () => {
     mockGuest();
 
-    render(
-      <BrowserRouter>
-        <PricingPage />
-      </BrowserRouter>,
-    );
+    renderWithQueryClient(<PricingPage />);
 
     const soonButtons = screen.getAllByText(/SPONSORS BIENTÔT DISPONIBLES/i);
     expect(soonButtons).toHaveLength(2);
@@ -90,11 +88,7 @@ describe('PricingPage (Espace Sponsors)', () => {
   it('never opens the sponsor modal when no ad tag is configured', () => {
     mockGuest();
 
-    render(
-      <BrowserRouter>
-        <PricingPage />
-      </BrowserRouter>,
-    );
+    renderWithQueryClient(<PricingPage />);
 
     const soonButtons = screen.getAllByText(/SPONSORS BIENTÔT DISPONIBLES/i);
     soonButtons.forEach((label) => {
@@ -110,11 +104,7 @@ describe('PricingPage (Espace Sponsors)', () => {
     vi.stubEnv('VITE_SPONSOR_AD_TAG', 'https://ads.example.com/vast.xml');
     mockGuest();
 
-    render(
-      <BrowserRouter>
-        <PricingPage />
-      </BrowserRouter>,
-    );
+    renderWithQueryClient(<PricingPage />);
 
     expect(screen.getByText('RECHARGER MON QUOTA').closest('button')).toBeEnabled();
     expect(screen.getByText('ACTIVER LE BOOST').closest('button')).toBeEnabled();
