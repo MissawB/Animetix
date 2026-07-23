@@ -68,11 +68,12 @@ const LabHubPage: React.FC = () => {
         accent={creativeAccent}
         hubUrl="/forge-hub/"
         hubLabel={t('lab_hub.btn_creative_hub', 'ACCÉDER AU HUB COMPLET')}
+        ink="kin"
       />
 
       <div className="mb-24 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
         {translatedCreativeLabs.map((lab) => (
-          <LabHubCompactCard key={lab.id} lab={lab} />
+          <LabHubCompactCard key={lab.id} lab={lab} ink="kin" />
         ))}
       </div>
 
@@ -82,11 +83,12 @@ const LabHubPage: React.FC = () => {
         accent={cognitionAccent}
         hubUrl="/cognition-hub/"
         hubLabel={t('lab_hub.btn_cognition_hub', 'ACCÉDER AU HUB COMPLET')}
+        ink="ai"
       />
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
         {translatedCognitionLabs.map((lab) => (
-          <LabHubCompactCard key={lab.id} lab={lab} />
+          <LabHubCompactCard key={lab.id} lab={lab} ink="ai" />
         ))}
       </div>
 

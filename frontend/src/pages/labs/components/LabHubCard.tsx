@@ -2,20 +2,23 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { SEAL_INKS, type SealInk } from './shared/LabKit';
 import type { LabEntry } from '../labHubData';
 
 /** Grande carte papier de la grille principale. Chaque lab porte son sceau :
- *  un hanko kanji vermillon en tête et le même glyphe en filigrane géant —
- *  c'est lui qui différencie les cartes, pas une couleur d'accent. Le survol
- *  s'exprime en or. Le lien principal est « étiré » sur toute la carte via un
- *  pseudo-élément — le lien catalogue reste un frère (jamais un descendant)
- *  pour éviter les ancres imbriquées. `featured` : la « une » de la grille,
- *  sur deux colonnes. */
-export const LabHubCard: React.FC<{ lab: LabEntry; featured?: boolean }> = ({
+ *  un hanko kanji encré à la couleur de sa famille (shu/kin/ai) et le même
+ *  glyphe en filigrane géant — c'est le sceau qui différencie les cartes.
+ *  Le survol s'exprime en or (couleur d'interaction). Le lien principal est
+ *  « étiré » sur toute la carte via un pseudo-élément — le lien catalogue
+ *  reste un frère (jamais un descendant) pour éviter les ancres imbriquées.
+ *  `featured` : la « une » de la grille, sur deux colonnes. */
+export const LabHubCard: React.FC<{ lab: LabEntry; featured?: boolean; ink?: SealInk }> = ({
   lab,
   featured = false,
+  ink = 'shu',
 }) => {
   const { t } = useTranslation();
+  const inkColor = SEAL_INKS[ink];
   return (
     <article
       className={`group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-[#FDB913]/60 ${
@@ -37,9 +40,10 @@ export const LabHubCard: React.FC<{ lab: LabEntry; featured?: boolean }> = ({
       >
         <div className="mb-8 flex items-start justify-between gap-4">
           <span
-            className={`explore-stamp -rotate-2 select-none font-bold not-italic ${
+            className={`-rotate-2 inline-block select-none rounded-[2px] border-2 px-1.5 py-0.5 font-bold not-italic leading-none ${
               featured ? 'text-2xl' : 'text-lg'
             }`}
+            style={{ borderColor: inkColor, color: inkColor }}
             aria-hidden
           >
             {lab.glyph}

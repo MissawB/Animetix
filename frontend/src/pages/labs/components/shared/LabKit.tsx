@@ -14,6 +14,17 @@ export const PAPER = '#F4F1E8';
 export const SHU = '#E8442B';
 export const GOLD = '#FDB913';
 export const GRAPHITE = '#8F94A5';
+/** Quatrième encre d'imprimeur (ai/gunjō, l'indigo des estampes) — réservée
+ *  aux familles de labs, jamais aux actions. */
+export const AI_INDIGO = '#5D7FD3';
+
+/** Les trois encres de sceau : shu (protocoles), kin (forge), ai (cognition). */
+export type SealInk = 'shu' | 'kin' | 'ai';
+export const SEAL_INKS: Record<SealInk, string> = {
+  shu: SHU,
+  kin: GOLD,
+  ai: AI_INDIGO,
+};
 
 /** Champ de saisie standard (input / textarea / select). */
 export const LAB_INPUT =

@@ -1,11 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { SEAL_INKS, type SealInk } from './shared/LabKit';
 import type { LabEntry } from '../labHubData';
 
 /** Carte papier compacte partagée par les sections Forge créative et
  *  Cognition core. Même langage de sceau que la grande carte : le kanji du
- *  lab en vermillon tient lieu d'identité, le survol s'exprime en or. */
-export const LabHubCompactCard: React.FC<{ lab: LabEntry }> = ({ lab }) => (
+ *  lab, encré à la couleur de sa famille, tient lieu d'identité ; le survol
+ *  s'exprime en or. */
+export const LabHubCompactCard: React.FC<{ lab: LabEntry; ink?: SealInk }> = ({
+  lab,
+  ink = 'shu',
+}) => (
   <Link to={lab.url} className="group block h-full no-underline">
     <article className="relative h-full overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 transition-all duration-300 group-hover:-translate-y-1 group-hover:border-[#FDB913]/60">
       <span
@@ -16,7 +21,8 @@ export const LabHubCompactCard: React.FC<{ lab: LabEntry }> = ({ lab }) => (
       </span>
       <div className="mb-6 flex items-start justify-between gap-3">
         <span
-          className="select-none text-2xl font-bold leading-none text-[#E8442B] transition-colors group-hover:text-[#FDB913]"
+          className="select-none text-2xl font-bold leading-none"
+          style={{ color: SEAL_INKS[ink] }}
           aria-hidden
         >
           {lab.glyph}
