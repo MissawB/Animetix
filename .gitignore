@@ -29,7 +29,6 @@ winvenv/
 venv/
 ENV/
 env/
-ENV/
 
 # --- Django ---
 *.log
@@ -86,21 +85,15 @@ docs/images/architecture_custom.png
 .DS_Store
 Thumbs.db
 
+# --- Agent / Editor Tooling ---
 .gemini/
-gha-creds-*.json
-
-# Geminni/Superpowers
 .superpowers/
 .worktrees/
+.agents/
+.claude/
+.playwright-mcp/
+gha-creds-*.json
 .tmp_dagster_home_*/
-.venv/
-.idea/
-__pycache__/
-*.pyc
-.env
-wandb/
-.pytest_cache/
-*.sqlite3
 
 # ML Ops artifacts (generated reports, datasets, training data)
 # Exception: data/mlops/gold_dataset.json stays tracked — it is a test fixture
@@ -110,9 +103,6 @@ scripts/data/mlops/
 
 # Superpowers / agent-generated plans and specs
 docs/superpowers/
-
-# Local agent tooling (skills manifests, editor-extension cruft)
-.agents/
 
 # Node modules at root
 node_modules/
@@ -136,17 +126,10 @@ data/processed/manga_covers_failures.json
 /package.json
 /package-lock.json
 
-
-# Local agent tooling (skills manifests, editor-extension cruft)
-.agents/
-
 # Artefact Windows récurrent : lint-staged passe core.hooksPath=/dev/null à ses
 # commandes git internes, et git-lfs y "répare" ses hooks → dossier littéral
 # dev/null/ recréé à chaque commit. Inoffensif, on l'ignore.
 /dev/
-
-# Claude Code session/harness directory
-.claude/
 
 # dbt build artifacts & local state
 backend/pipeline/dbt_project/target/
@@ -166,4 +149,3 @@ coverage.xml
 
 # Catalogue offline généré au runtime (SQLite), pas une source
 backend/api/animetix/static/animetix/data/
-.playwright-mcp/

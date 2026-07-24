@@ -9,9 +9,13 @@ scripts/
 ├── archive/        # One-off scripts archived to avoid cluttering curation/
 ├── benchmark/      # Latency, compiler, and ingestion quality benchmarking tools
 ├── curation/       # Active dataset curation, translations, and database tools
+├── data/           # Data pipeline helpers and conversion scripts
 ├── deploy/         # Cloudflare, GCP, and Hugging Face deployment scripts
 ├── verify/         # SSRF, API, and cloud environment validation scripts
-└── root/           # Core command-line runners and drift detection scripts
+├── detect_embedding_drift.py  # Monitors embedding drifts for vector index health
+├── run_cmd.py      # Cross-platform task runner for Git pre-commit hooks
+├── run_in_venv.py  # Executes commands within the active virtualenv
+└── sync_api.py     # Synchronises OpenAPI schema + frontend types
 ```
 
 ## Description of Scripts

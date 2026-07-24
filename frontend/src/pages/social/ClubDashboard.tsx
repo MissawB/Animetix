@@ -16,6 +16,7 @@ import ClubChat from '../../features/social/components/ClubChat';
 import { socialService } from '../../features/social/services/socialService';
 import { useToastStore } from '../../store/toastStore';
 import { useClub } from '../../features/social/hooks/useClub';
+import { Modal } from '../../components/ui/Modal';
 import { useTranslation } from 'react-i18next';
 
 interface Member {
@@ -321,99 +322,89 @@ const ClubDashboard: React.FC = () => {
       </div>
 
       {/* Creation Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-lg rounded-3xl p-8 border border-gray-100 dark:border-white/5 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-4">
-              <h3 className="text-xl font-black italic uppercase tracking-tight">
-                {t('social.club.plan_event', 'Planifier un événement')}
-              </h3>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="text-xs text-gray-400 font-bold hover:text-red-500 border-none bg-transparent cursor-pointer"
-              >
-                {t('social.club.close', 'Fermer')}
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateEvent} className="space-y-6">
-              <div className="space-y-2">
-                <label
-                  htmlFor="event-title"
-                  className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
-                >
-                  <FileText className="w-3 h-3" />{' '}
-                  {t('social.club.event_title', "Titre de l'événement")}
-                </label>
-                <input
-                  id="event-title"
-                  type="text"
-                  required
-                  aria-label={t('social.club.event_title', "Titre de l'événement")}
-                  placeholder={t(
-                    'social.club.event_title_placeholder',
-                    'Ex : Soirée analyse Scan Shonen Jump 125',
-                  )}
-                  value={newEventTitle}
-                  onChange={(e) => setNewEventTitle(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="event-description"
-                  className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
-                >
-                  <Info className="w-3 h-3" />{' '}
-                  {t('social.club.event_desc_label', "Description de l'activité")}
-                </label>
-                <textarea
-                  id="event-description"
-                  required
-                  rows={4}
-                  aria-label={t('social.club.event_desc_label', "Description de l'activité")}
-                  placeholder={t(
-                    'social.club.event_desc_placeholder',
-                    'Expliquez le concept, le déroulement, ou les prérequis pour cet événement...',
-                  )}
-                  value={newEventDescription}
-                  onChange={(e) => setNewEventDescription(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary resize-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="event-date"
-                  className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
-                >
-                  <Clock className="w-3 h-3" /> {t('social.club.event_date', 'Date et Heure')}
-                </label>
-                <input
-                  id="event-date"
-                  type="datetime-local"
-                  required
-                  aria-label={t('social.club.event_date', 'Date et Heure')}
-                  value={newEventDate}
-                  onChange={(e) => setNewEventDate(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-brand-primary text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 border-none cursor-pointer disabled:opacity-50"
-              >
-                {isSubmitting
-                  ? t('social.club.creating', 'Création en cours...')
-                  : t('social.club.confirm_event', "Confirmer l'événement")}
-              </button>
-            </form>
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title={t('social.club.plan_event', 'Planifier un événement')}
+        size="md"
+        contentClassName="bg-white dark:bg-navy-900 border-gray-100 dark:border-white/5 rounded-3xl shadow-2xl"
+      >
+        <form onSubmit={handleCreateEvent} className="space-y-6">
+          <div className="space-y-2">
+            <label
+              htmlFor="event-title"
+              className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
+            >
+              <FileText className="w-3 h-3" />{' '}
+              {t('social.club.event_title', "Titre de l'événement")}
+            </label>
+            <input
+              id="event-title"
+              type="text"
+              required
+              aria-label={t('social.club.event_title', "Titre de l'événement")}
+              placeholder={t(
+                'social.club.event_title_placeholder',
+                'Ex : Soirée analyse Scan Shonen Jump 125',
+              )}
+              value={newEventTitle}
+              onChange={(e) => setNewEventTitle(e.target.value)}
+              className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary"
+            />
           </div>
-        </div>
-      )}
+
+          <div className="space-y-2">
+            <label
+              htmlFor="event-description"
+              className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
+            >
+              <Info className="w-3 h-3" />{' '}
+              {t('social.club.event_desc_label', "Description de l'activité")}
+            </label>
+            <textarea
+              id="event-description"
+              required
+              rows={4}
+              aria-label={t('social.club.event_desc_label', "Description de l'activité")}
+              placeholder={t(
+                'social.club.event_desc_placeholder',
+                'Expliquez le concept, le déroulement, ou les prérequis pour cet événement...',
+              )}
+              value={newEventDescription}
+              onChange={(e) => setNewEventDescription(e.target.value)}
+              className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary resize-none"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="event-date"
+              className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
+            >
+              <Clock className="w-3 h-3" /> {t('social.club.event_date', 'Date et Heure')}
+            </label>
+            <input
+              id="event-date"
+              type="datetime-local"
+              required
+              aria-label={t('social.club.event_date', 'Date et Heure')}
+              value={newEventDate}
+              onChange={(e) => setNewEventDate(e.target.value)}
+              className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-brand-primary text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 border-none cursor-pointer disabled:opacity-50"
+          >
+            {isSubmitting
+              ? t('social.club.creating', 'Création en cours...')
+              : t('social.club.confirm_event', "Confirmer l'événement")}
+          </button>
+        </form>
+      </Modal>
     </div>
   );
 };

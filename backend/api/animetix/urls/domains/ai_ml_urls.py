@@ -311,4 +311,19 @@ urlpatterns = [
         observability.ObservabilityView.as_view(),
         name="api_observability",
     ),
+    path(
+        "multiverse/gallery/",
+        api_views.MultiverseGalleryView.as_view(),
+        name="api_multiverse_gallery",
+    ),
+    path(
+        "multiverse/catalog/",
+        api_views.MultiverseCatalogView.as_view(),
+        name="api_multiverse_catalog",
+    ),
+    path(
+        "multiverse/<str:universe_name>/export-pdf/",
+        api_views.MultiverseExportPDFView.as_view(),
+        name="api_multiverse_export_pdf",
+    ),
 ]

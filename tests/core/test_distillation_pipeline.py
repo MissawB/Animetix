@@ -48,10 +48,11 @@ def test_fine_tune_student(mock_teacher, mock_prompt_manager, mock_gold_dataset_
         ModelDistillationPipeline,
     )
 
-    ModelDistillationPipeline(
+    pipeline = ModelDistillationPipeline(
         teacher_engine=mock_teacher,
         prompt_manager=mock_prompt_manager,
         gold_dataset_port=mock_gold_dataset_port,
     )
-    # Placeholder to ensure test runner passes
-    assert True
+    assert pipeline.teacher == mock_teacher
+    assert pipeline.prompt_manager == mock_prompt_manager
+    assert pipeline.gold_dataset_port == mock_gold_dataset_port

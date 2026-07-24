@@ -10,6 +10,8 @@ on:
       - 'backend/**'
       - 'frontend/**'
       - 'requirements.txt'
+      - 'requirements-web.txt'
+      - 'requirements-brain.txt'
       - 'deploy/**'
       - 'scripts/deploy/huggingface/**'
       - '.github/workflows/deploy_to_hf.yml'

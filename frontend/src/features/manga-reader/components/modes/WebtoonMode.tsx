@@ -27,7 +27,7 @@ export const WebtoonMode = () => {
           setVisibleCount((prev) => Math.min(pages.length, prev + 3));
         }
       },
-      { rootMargin: '600px' } // Pre-trigger loading 600px before reaching the end
+      { rootMargin: '600px' }, // Pre-trigger loading 600px before reaching the end
     );
 
     const currentSentinel = sentinelRef.current;
@@ -63,7 +63,7 @@ export const WebtoonMode = () => {
       {
         rootMargin: '-25% 0px -50% 0px', // Focus window in the upper/middle viewport area
         threshold: 0.1,
-      }
+      },
     );
 
     const observedElements: HTMLDivElement[] = [];
@@ -81,27 +81,41 @@ export const WebtoonMode = () => {
   }, [visibleCount, pages.length]);
 
   if (pages.length === 0) {
-    return <div className="flex items-center justify-center h-64 text-gray-500 italic">Aucune page chargée</div>;
+    return (
+      <div className="flex items-center justify-center h-64 text-gray-500 italic">
+        Aucune page chargée
+      </div>
+    );
   }
 
   // Sizing and spacing classes helper functions
   const getGapClass = (size: GapSize) => {
     switch (size) {
-      case 'none': return 'gap-0';
-      case 'small': return 'gap-4';
-      case 'medium': return 'gap-8';
-      default: return 'gap-0';
+      case 'none':
+        return 'gap-0';
+      case 'small':
+        return 'gap-4';
+      case 'medium':
+        return 'gap-8';
+      default:
+        return 'gap-0';
     }
   };
 
   const getMaxWidthClass = (width: ImageWidth) => {
     switch (width) {
-      case 'scale-80': return 'max-w-lg';
-      case 'scale-100': return 'max-w-2xl';
-      case 'scale-xl': return 'max-w-3xl';
-      case 'scale-2xl': return 'max-w-4xl';
-      case 'scale-full': return 'max-w-full w-full';
-      default: return 'max-w-2xl';
+      case 'scale-80':
+        return 'max-w-lg';
+      case 'scale-100':
+        return 'max-w-2xl';
+      case 'scale-xl':
+        return 'max-w-3xl';
+      case 'scale-2xl':
+        return 'max-w-4xl';
+      case 'scale-full':
+        return 'max-w-full w-full';
+      default:
+        return 'max-w-2xl';
     }
   };
 
@@ -112,22 +126,30 @@ export const WebtoonMode = () => {
       {visiblePages.map((page, index) => (
         <div
           key={page.index}
-          ref={(el) => { pageRefs.current[index] = el; }}
+          ref={(el) => {
+            pageRefs.current[index] = el;
+          }}
           data-index={page.index}
           className={`w-full flex justify-center transition-all duration-300 ${getMaxWidthClass(imageWidth)}`}
         >
+          {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
           <img
             src={page.url}
             alt={`Page ${page.index + 1}`}
-            role="presentation"
             className="w-full h-auto block rounded-lg shadow-md border border-white/5"
-            onLoad={(e) => setPageDimensions(page.url, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
+            onLoad={(e) =>
+              setPageDimensions(
+                page.url,
+                e.currentTarget.naturalWidth,
+                e.currentTarget.naturalHeight,
+              )
+            }
             loading="lazy"
             decoding="async"
           />
         </div>
       ))}
-      
+
       {/* Scroll Sentinel */}
       {visibleCount < pages.length && (
         <div
@@ -140,4 +162,3 @@ export const WebtoonMode = () => {
     </div>
   );
 };
-

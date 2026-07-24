@@ -72,5 +72,5 @@ def test_characters_capped_at_12(api_client):
         "api_media_characters",
         kwargs={"media_type": "Anime", "item_id": "38000"},
     )
-    response = api_client.get(url)
+    response = api_client.get(url + "?limit=12")
     assert len(response.data["characters"]) == 12

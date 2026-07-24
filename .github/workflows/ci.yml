@@ -160,6 +160,9 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: false
     - name: Check OpenAPI schema is up to date
+      # Runs even when pytest fails: a schema drift is a separate concern that
+      # should not be masked by a test failure.
+      if: always()
       # The committed schema.yaml is the source of truth for the frontend types
       # (frontend/src/types/api.d.ts, via `npm run generate:api`). A serializer or
       # route change that isn't re-exported leaves the front typed against a stale

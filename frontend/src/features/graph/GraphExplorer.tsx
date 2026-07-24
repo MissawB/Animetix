@@ -1,11 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useGraphData } from './useGraphData';
 import { GraphNode, GraphLink } from '../../types';
 
-const ForceGraph2D = lazy(
-  () => import('react-force-graph-2d'),
-) as unknown as React.ComponentType<any>;
+import ForceGraph2D, { type NodeObject, type LinkObject } from '../../components/LazyForceGraph2D';
 
 interface GraphExplorerProps {
   initialId: string;
@@ -87,10 +84,10 @@ export function GraphExplorer({ initialId, initialType }: GraphExplorerProps) {
           >
             <ForceGraph2D
               graphData={data}
-              nodeAutoColorBy={(node: any) => (node as GraphNode).labels?.[0]}
-              nodeColor={(node: any) => getNodeColor(node as GraphNode)}
-              nodeLabel={(node: any) => getLabel(node as GraphNode)}
-              linkLabel={(link: any) => (link as GraphLink).type}
+              nodeAutoColorBy={(node: NodeObject) => (node as GraphNode).labels?.[0]}
+              nodeColor={(node: NodeObject) => getNodeColor(node as GraphNode)}
+              nodeLabel={(node: NodeObject) => getLabel(node as GraphNode)}
+              linkLabel={(link: LinkObject) => (link as GraphLink).type}
               backgroundColor="#111827"
             />
           </Suspense>

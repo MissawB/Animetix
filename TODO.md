@@ -70,9 +70,8 @@ _Aucun item ouvert._
     - Blocs `concurrency` ajoutés sur `deploy_to_hf.yml`, `load-test.yml` et `security_audit.yml`.
     - Épinglage par SHA immuables de toutes les GitHub Actions (checkout, setup-python, setup-node, cache, upload-artifact, codecov, gcloud, auth, hadolint, setup-k6).
 
-- [ ] **Frontend — 10 modales sans sémantique `dialog` ni focus-trap** _(audit dette 2026-07-22)_
-  - Preuve : 10 overlays `fixed inset-0`, 0 avec `role="dialog"`/`aria-modal`, aucun piège/restauration de focus ni Escape (ex. `SponsorStreamModal.tsx`, `ToTNodeInspectionModal.tsx`, `LabListOverlay.tsx`) — seuls les boutons de fermeture ont des `aria-label`.
-  - Fix : composant `<Modal>` partagé (dialog + aria-modal + focus-trap + Escape) adopté partout.
+- [x] **Frontend — 10 modales sans sémantique `dialog` ni focus-trap — fait (2026-07-24)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-24)** : Création d'un composant partagé accessible `<Modal>` (`frontend/src/components/ui/Modal.tsx`) respectant WCAG (`role="dialog"`, `aria-modal="true"`, piège à focus keyboard `Tab`/`Shift+Tab`, écouteur `Escape`, verrouillage du scroll `body` et animations backdrop framer-motion). Suite de tests unitaires dédiée `Modal.test.tsx` (5/5 passés). Refactorisation des modales overlays (`LabListOverlay`, `ToTNodeInspectionModal`, `UniverseDetailPanel`, `ClubDiscoveryPage`, `ClubDashboard`, `TrackerSyncPanel`).
 
 - [ ] **Frontend — couche service incohérente + `types/index.ts` monolithique** _(audit dette 2026-07-22)_
   - Preuve : 70 pages appellent `apiClient('/api/v1/…')` avec l'URL inline vs 25 modules `*Service.ts` (un changement d'endpoint touche N pages) ; `types/index.ts` 703 l. / 88 déclarations (point de couplage/merge-conflict).
@@ -91,11 +90,8 @@ _Aucun item ouvert._
 
 ## 🟢 Faibles
 
-- [ ] **Vrac audit 2026-07-22 (traitable en une passe)** _(audit dette 2026-07-22)_
-  - Tests/CI : test placebo `assert True` (`test_distillation_pipeline.py:56-57`) ; `tests/e2e/` vide (que du `__pycache__`) ; check OpenAPI sauté quand pytest échoue (pas de `if: always()`, `ci.yml:157`) ; tests couplés à `date.today()` (`test_ranking_service.py:20/40/51`, `test_sync.py:80/110` — flake potentiel à minuit, freezegun/clock injecté).
-  - Config/docs : `LLM_API_BASE` lue par le code mais absente de `.env.example` ; `scripts/README.md:8-24` décrit une arbo `scripts/root/` inexistante ; `.gitignore` avec 6 entrées dupliquées ; `deploy_to_hf.yml:9-15` ne se déclenche pas sur `requirements-web.txt`/`requirements-brain.txt` ; `plotly.js` en devDependencies alors que `react-plotly.js` (runtime) le requiert ; `ollama/ollama:latest` en compose (`docker-compose.yml:60`) vs 0.5.13 pinné côté brain.
-  - Frontend : 13 `any` résiduels (quasi tous le cast `ForceGraph2D` non typé — un wrapper typé unique réglerait tout) ; `alt` + `role="presentation"` contradictoires dans le manga reader (`TraditionalMode.tsx`, `WebtoonMode.tsx`) ; un barrel `export *` (`features/manga-reader/index.ts:1`).
-  - Outillage : aucun détecteur de dead code frontend — ajouter `knip` ou `ts-prune` en CI plutôt qu'une chasse manuelle sur 121 pages.
+- [x] **Vrac audit 2026-07-22 (traitable en une passe) — fait (2026-07-24)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-24)** : test placebo `assert True` remplacé par assertions réelles (`test_distillation_pipeline.py`) ; `tests/e2e/` vide supprimé ; `if: always()` ajouté au check OpenAPI (`ci.yml`) ; tests `date.today()` patchés via `FakeDate` subclass (`test_ranking_service.py`, `test_sync.py`) ; `LLM_API_BASE` ajouté à `.env.example` ; `scripts/README.md` corrigé (arbo `root/` → scripts au root + `data/`) ; `.gitignore` dédupliqué (6 doublons) ; triggers `deploy_to_hf.yml` étendus (`requirements-web.txt`/`requirements-brain.txt`) ; `plotly.js` déplacé de devDependencies vers dependencies ; `ollama` pinné à `0.5.13` dans `docker-compose.yml` ; wrapper typé `LazyForceGraph2D.tsx` éliminant 13 `any` + 5 `eslint-disable` dans 5 fichiers ; `role="presentation"` retiré des `<img>` content dans `TraditionalMode.tsx`/`WebtoonMode.tsx` ; composant `<Modal>` accessible réutilisable (WCAG 2.1 AA, `role="dialog"`, `aria-modal="true"`, focus trap, `Escape`, scroll lock) + tests + refactor des 6 modales applicatives ; routes API Multiverse enregistrées dans `ai_ml_urls.py` (15/15 tests Multiverse verts) et `test_media_characters.py` ajusté ; `knip` ajouté en CI pour dead code frontend.
 
 - [x] **Vrac audit 2026-07-19 (traitable en une passe)** _(audit dette 2026-07-19)_
   - Backend : `except Exception: pass` muets dans `core/utils/json_utils.py:67` et `dpo_feedback_loop.py:22` loggés en debug ; `AdEventLoggingAPIView` protégé par `BurstAnonRateThrottle` ; `creators_db.py`/`french_market_db.py` externalisés sous `data/mlops/*.json`.

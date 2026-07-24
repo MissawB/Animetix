@@ -1,12 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useCallback, useRef, lazy, Suspense } from 'react';
+import React, { useState, useCallback, useRef, Suspense } from 'react';
 import { Network } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { type ForceGraphMethods } from 'react-force-graph-2d';
-
-const ForceGraph2D = lazy(
-  () => import('react-force-graph-2d'),
-) as unknown as React.ComponentType<any>;
+import ForceGraph2D, { type ForceGraphMethods } from '../../components/LazyForceGraph2D';
 
 import { useSSE } from '../../hooks/useSSE';
 import { apiClient } from '../../utils/apiClient';
