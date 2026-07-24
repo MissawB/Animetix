@@ -2,6 +2,7 @@ import logging
 
 from core.domain.services.berrix_economy import FEATURE_BX_COSTS
 from dependency_injector.wiring import Provide, inject
+from django.db.models import Count
 from django_ratelimit.decorators import ratelimit
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -24,11 +25,12 @@ def list_vs_battles(request):
     """Liste les combats publics récents pour l'Arène."""
     battles = (
         VsBattle.objects.filter(is_public=True)
+        .annotate(likes_count=Count("likes"))
         .select_related("creator")
         .prefetch_related("likes")
         .order_by("-created_at")[:20]
     )
-    serializer = VsBattleSerializer(battles, many=True)
+    serializer = VsBattleSerializer(battles, many=True, context={"request": request})
     return Response(serializer.data)
 
 

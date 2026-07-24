@@ -35,7 +35,7 @@ export const ActiveMiningCard: React.FC<ActiveMiningCardProps> = ({
         <p className="text-xs text-gray-400 font-bold uppercase tracking-wide">
           {t(
             'billing.power_station.active_desc',
-            'Regardez un spot de transmission sponsorisé pour recharger.',
+            "Lancez une recharge d'énergie pour créditer votre portefeuille.",
           )}
         </p>
       </div>

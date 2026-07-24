@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 
 interface AdPreferenceState {
-  // Whether ads are shown. Disabling ads also pauses passive Bx mining, because
-  // AdSlot renders nothing when this is false (no ad mounted -> adSlotsVisible 0).
+  // Whether ads are shown. AdSlot renders nothing when this is false.
   adsEnabled: boolean;
   setAdsEnabled: (enabled: boolean) => void;
 }

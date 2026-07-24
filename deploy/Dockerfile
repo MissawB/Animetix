@@ -85,4 +85,8 @@ RUN python backend/api/manage.py collectstatic --noinput
 RUN mkdir -p data/raw data/processed data/models data/artifacts && chown -R appuser:appuser /app
 USER appuser
 EXPOSE 7860
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -fs http://127.0.0.1:7860/health || exit 1
+
 CMD ["supervisord", "-c", "deploy/supervisord.conf"]

@@ -178,7 +178,7 @@ def test_generate_error_branch_returns_500(client, monkeypatch):
     monkeypatch.setattr(brain_engine, "generate", boom)
     resp = client.post("/generate", json={"prompt": "x"})
     assert resp.status_code == 500
-    assert resp.json()["detail"] == "engine down"
+    assert resp.json()["detail"] == "Internal server error"
 
 
 # --- similarity --------------------------------------------------------------
@@ -216,7 +216,7 @@ def test_visual_similarity_error_branch(client, monkeypatch):
         json={"query": "q", "item_id": "i", "media_type": "m"},
     )
     assert resp.status_code == 500
-    assert resp.json()["detail"] == "bad"
+    assert resp.json()["detail"] == "Internal server error"
 
 
 # --- vision: embedding / detect / describe -----------------------------------
@@ -250,7 +250,7 @@ def test_vision_embedding_error_branch(client, monkeypatch):
     )
     resp = client.post("/vision/embedding", json={"image": _b64(b"x")})
     assert resp.status_code == 500
-    assert resp.json()["detail"] == "emb fail"
+    assert resp.json()["detail"] == "Internal server error"
 
 
 # --- vision: CLIP text-tower embedding (visual search, text query) -----------
@@ -294,7 +294,7 @@ def test_vision_embedding_text_error_branch_is_honest_never_a_200(client, monkey
     )
     resp = client.post("/vision/embedding/text", json={"text": "x", "model_id": "m"})
     assert resp.status_code == 500
-    assert resp.json()["detail"] == "clip text fail"
+    assert resp.json()["detail"] == "Internal server error"
 
 
 def test_vision_embedding_text_requires_a_model_id(client):
@@ -334,7 +334,7 @@ def test_vision_character_embedding_error_branch_is_honest_never_a_200(
     )
     resp = client.post("/vision/character/embedding", json={"image": _b64(b"x")})
     assert resp.status_code == 500
-    assert resp.json()["detail"] == "ccip fail"
+    assert resp.json()["detail"] == "Internal server error"
 
 
 def test_vision_detect_returns_objects(client, monkeypatch):

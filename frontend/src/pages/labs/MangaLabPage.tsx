@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Upload, Wand2, Languages, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../utils/apiClient';
@@ -13,9 +14,52 @@ import {
   LAB_CTA,
 } from './components/shared/LabKit';
 
+interface LabResponse {
+  status: string;
+  image?: string;
+}
+
 const MangaLabPage: React.FC = () => {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState<boolean>(false);
+
+  const cleanMutation = useMutation<LabResponse, Error, File>({
+    mutationFn: (file) => {
+      const formData = new FormData();
+      formData.append('image', file);
+      return apiClient('/api/v1/labs/manga-lab/clean/', {
+        method: 'POST',
+        body: formData,
+        headers: {},
+      });
+    },
+    onSuccess: (response) => {
+      if (response && response.status === 'success' && response.image) {
+        setCleanedUrl(`data:image/png;base64,${response.image}`);
+        setView('clean');
+      }
+    },
+  });
+
+  const translateMutation = useMutation<LabResponse, Error, { file: File; targetLang: string }>({
+    mutationFn: ({ file, targetLang }) => {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('target_lang', targetLang);
+      return apiClient('/api/v1/labs/manga-lab/translate/', {
+        method: 'POST',
+        body: formData,
+        headers: {},
+      });
+    },
+    onSuccess: (response) => {
+      if (response && response.status === 'success' && response.image) {
+        setTranslatedUrl(`data:image/png;base64,${response.image}`);
+        setView('translated');
+      }
+    },
+  });
+
+  const loading = cleanMutation.isPending || translateMutation.isPending;
 
   const translatedLanguageOptions = React.useMemo(
     () => [
@@ -46,53 +90,14 @@ const MangaLabPage: React.FC = () => {
     }
   };
 
-  const handleClean = async () => {
+  const handleClean = () => {
     if (!imageFile) return;
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', imageFile);
-
-      const response = await apiClient('/api/v1/labs/manga-lab/clean/', {
-        method: 'POST',
-        body: formData,
-        headers: {},
-      });
-
-      if (response && response.status === 'success' && response.image) {
-        setCleanedUrl(`data:image/png;base64,${response.image}`);
-        setView('clean');
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    cleanMutation.mutate(imageFile);
   };
 
-  const handleTranslate = async () => {
+  const handleTranslate = () => {
     if (!imageFile) return;
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', imageFile);
-      formData.append('target_lang', targetLanguage);
-
-      const response = await apiClient('/api/v1/labs/manga-lab/translate/', {
-        method: 'POST',
-        body: formData,
-        headers: {},
-      });
-
-      if (response && response.status === 'success' && response.image) {
-        setTranslatedUrl(`data:image/png;base64,${response.image}`);
-        setView('translated');
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    translateMutation.mutate({ file: imageFile, targetLang: targetLanguage });
   };
 
   const getActiveImageUrl = () => {

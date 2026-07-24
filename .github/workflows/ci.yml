@@ -23,6 +23,9 @@ on:
         type: boolean
         default: false # opt-in: don't bill LLM APIs on a plain dispatch
 
+permissions:
+  contents: read
+
 # Cancel superseded runs on the same ref (e.g. rapid PR pushes) to stop redundant
 # work piling up. The event_name is part of the group so a push to main never
 # cancels an in-flight manual deploy (workflow_dispatch) on the same ref.
@@ -34,8 +37,9 @@ jobs:
   lint:
     name: Lint & Format Check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
       with:
@@ -47,7 +51,7 @@ jobs:
         docker-images: true
         swap-storage: true
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@f6ec4389a5e1507a06a23e416f69963ed1361f32 # v5.3.0
       with:
         python-version: '3.12'
     - name: Install Tools
@@ -66,8 +70,9 @@ jobs:
     name: Validate Docker Build
     needs: lint
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
       with:
@@ -91,7 +96,7 @@ jobs:
     timeout-minutes: 45
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v7
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     # Free disk space BEFORE pulling images / installing the heavy ML stack,
     # otherwise the runner (~14 GB free) runs out of space.
     - name: Free Disk Space
@@ -107,7 +112,7 @@ jobs:
     - name: Start Services
       run: docker compose -f deploy/docker-compose.test.yml up -d
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@f6ec4389a5e1507a06a23e416f69963ed1361f32 # v5.3.0
       with:
         python-version: '3.12'
         # Cache pip's wheel cache (~/.cache/pip, untouched by Free Disk Space) so the
@@ -149,7 +154,7 @@ jobs:
       # Runs even when the coverage gate fails so the report is always published.
       # Non-blocking: never fails the job on upload/token issues.
       if: always()
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@0565863a31f2c77d09d784dd8023679d60a78736 # v5.3.1
       with:
         files: ./coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -194,9 +199,9 @@ jobs:
     timeout-minutes: 60
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v7
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@f6ec4389a5e1507a06a23e416f69963ed1361f32 # v5.3.0
       with:
         python-version: '3.12'
         cache: 'pip'
@@ -231,7 +236,7 @@ jobs:
     timeout-minutes: 30
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v7
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
       with:
@@ -250,7 +255,7 @@ jobs:
     # re-downloaded on every run. With a warm cache the pull below is a fast
     # manifest check. Static key: model blobs are content-addressed.
     - name: Cache Ollama models
-      uses: actions/cache@v6
+      uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
       with:
         path: ~/.ollama
         key: ollama-models-qwen3-0.6b
@@ -272,7 +277,7 @@ jobs:
     - name: Start Services
       run: docker compose -f deploy/docker-compose.test.yml up -d
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@f6ec4389a5e1507a06a23e416f69963ed1361f32 # v5.3.0
       with:
         python-version: '3.12'
         cache: 'pip'
@@ -313,7 +318,7 @@ jobs:
     timeout-minutes: 30
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v7
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
       with:
@@ -325,7 +330,7 @@ jobs:
         docker-images: true
         swap-storage: true
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@f6ec4389a5e1507a06a23e416f69963ed1361f32 # v5.3.0
       with:
         python-version: '3.12'
         cache: 'pip'
@@ -354,9 +359,10 @@ jobs:
   frontend-checks:
     name: Frontend Lint & Types
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-    - uses: actions/checkout@v7
-    - uses: actions/setup-node@v7
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - uses: actions/setup-node@39370e3970a6d050c080011e81310111e3070b4f # v4.1.0
       with:
         node-version: 22
         cache: 'npm'
@@ -378,7 +384,7 @@ jobs:
       # Runs even if the coverage gate fails so the report is always published.
       # Non-blocking: never fails the job on upload/token issues.
       if: always()
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@0565863a31f2c77d09d784dd8023679d60a78736 # v5.3.1
       with:
         files: frontend/coverage/lcov.info
         flags: frontend
@@ -389,9 +395,10 @@ jobs:
     # No `needs`: this job never touches the Docker image (npm + Playwright
     # only) — the old docker-build dependency just delayed e2e feedback.
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-    - uses: actions/checkout@v7
-    - uses: actions/setup-node@v7
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - uses: actions/setup-node@39370e3970a6d050c080011e81310111e3070b4f # v4.1.0
       with:
         node-version: 22
         cache: 'npm'
@@ -412,7 +419,7 @@ jobs:
       # Toujours uploadé : le rapport HTML + (en cas d'échec) traces/screenshots/vidéos
       # de test-results/, pour diagnostiquer les échecs e2e sans reproduire en local.
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b4f1c5c30355bd8572d024d235088c71593c6e28 # v4.4.3
       with:
         name: playwright-report
         path: |
@@ -428,6 +435,7 @@ jobs:
     # and only when the deploy box is explicitly ticked. Never runs on push/PR.
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy_to_prod && success()
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # Add required reviewers on the "production" environment (repo Settings >
     # Environments) to gate this deploy behind a manual approval.
     environment: production
@@ -441,7 +449,7 @@ jobs:
       PROD_IMAGE: europe-west9-docker.pkg.dev/animetix/animetix-repo/web
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v7
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       # data/processed/*.json & data/artifacts/* are Git LFS. Without lfs:true the
       # checkout has pointer stubs, Cloud Build ships those into the image, and
       # sync_catalog then fails: json.load on a pointer -> "Expecting value line 1".
@@ -451,12 +459,12 @@ jobs:
     # service account needs: roles/cloudbuild.builds.editor, roles/run.admin, and
     # roles/iam.serviceAccountUser on the prod runtime service account.
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
+      uses: google-github-actions/auth@6fc49f247192a0f05e5ad4d672a24683057e05e5 # v2.1.7
       with:
         workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
         service_account: ${{ vars.SERVICE_ACCOUNT_EMAIL }}
     - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
+      uses: google-github-actions/setup-gcloud@6189d52e0f113b31d8f8ef691060ebfb43c0d8d4 # v2.1.4
     - name: Build & push prod image (Cloud Build)
       # Tag the image with the exact commit SHA so the deploy below pins this
       # build's artifact, not the mutable :latest tag.
@@ -548,6 +556,7 @@ jobs:
     # added alongside this job brings it back under 10 min (warm cache).
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy_brain && success()
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     environment: production
     permissions:
       contents: read
@@ -559,16 +568,16 @@ jobs:
       BRAIN_IMAGE: europe-west9-docker.pkg.dev/animetix/animetix-repo/brain
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v7
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         lfs: true
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
+      uses: google-github-actions/auth@6fc49f247192a0f05e5ad4d672a24683057e05e5 # v2.1.7
       with:
         workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
         service_account: ${{ vars.SERVICE_ACCOUNT_EMAIL }}
     - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
+      uses: google-github-actions/setup-gcloud@6189d52e0f113b31d8f8ef691060ebfb43c0d8d4 # v2.1.4
     - name: Build & push brain image (Cloud Build)
       # _BUILD_TARGET=brain: only the brain image. The gguf stages hit the
       # Docker cache when the model hasn't changed (~10 min vs 2 h cold).

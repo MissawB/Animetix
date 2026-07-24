@@ -7,13 +7,8 @@ import { usePassiveMiningStore } from '../../../store/passiveMiningStore';
 export const PassiveAdMiner: React.FC = () => {
   const { user, refetchUser } = useAuthStore();
   const { addToast } = useToastStore();
-  const { 
-    isEnabled, 
-    setTimeLeft, 
-    setStatus, 
-    incrementTotalMined, 
-    setLastMinedAt 
-  } = usePassiveMiningStore();
+  const { isEnabled, setTimeLeft, setStatus, incrementTotalMined, setLastMinedAt } =
+    usePassiveMiningStore();
 
   const isMiningRef = useRef(false);
 
@@ -28,14 +23,6 @@ export const PassiveAdMiner: React.FC = () => {
       if (isMiningRef.current) return;
 
       const currentState = usePassiveMiningStore.getState();
-
-      // Mining is funded by ads: only progress while at least one ad is on screen.
-      if (currentState.adSlotsVisible <= 0) {
-        setStatus('OFFLINE');
-        return;
-      }
-      setStatus('ONLINE');
-
       const currentTimeLeft = currentState.timeLeft;
 
       if (currentTimeLeft <= 1) {
@@ -43,9 +30,9 @@ export const PassiveAdMiner: React.FC = () => {
         setStatus('ONLINE'); // Processing / Mining
         try {
           const response = await apiClient('/api/v1/billing/wallet/mine/', {
-            method: 'POST'
+            method: 'POST',
           });
-          
+
           if (response.status === 'success') {
             await refetchUser();
             incrementTotalMined(response.earned);
@@ -54,7 +41,7 @@ export const PassiveAdMiner: React.FC = () => {
             setTimeLeft(180);
           }
         } catch (error) {
-          console.error("Passive mining failed:", error);
+          console.error('Passive mining failed:', error);
           setStatus('COOLDOWN');
           setTimeLeft(60); // Check again in 60s
         } finally {
@@ -68,8 +55,16 @@ export const PassiveAdMiner: React.FC = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [user, isEnabled, setTimeLeft, setStatus, incrementTotalMined, setLastMinedAt, refetchUser, addToast]);
+  }, [
+    user,
+    isEnabled,
+    setTimeLeft,
+    setStatus,
+    incrementTotalMined,
+    setLastMinedAt,
+    refetchUser,
+    addToast,
+  ]);
 
   return null;
 };
-

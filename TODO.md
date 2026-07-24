@@ -21,59 +21,54 @@ _Aucun item ouvert._
   - Facturation GCP **rétablie le 2026-07-22**, mais le run GPU est **différé volontairement** : période de réduction des frais pendant la validation AdSense (sensors en pause, Redis migré Upstash, connecteur VPC retiré — cf. HISTORY 2026-07-22). Les ~3,5 h de vecteurs déjà écrits sont préservés (job reprenable).
   - **Reste (quand le mode économie sera levé)** : 1) vérifier/relever le plafond de budget (50 € conseillé) ; 2) Brain `/health` = 200 ; 3) re-exécuter **par chunks** (`--limit N`) jusqu'aux ~35 000 ; 4) recherche perso ne renvoie plus 503.
 
-- [ ] **Backend — galerie VN publique non bornée + N+1 + sur-exposition (quick win ~10 lignes)** _(audit dette 2026-07-22)_
-  - Preuve : `forge_vn.py:26-31` — endpoint `AllowAny` qui retourne **toutes** les fusions publiques sans pagination ni `prefetch_related("likes")` (1 COUNT SQL par ligne via `get_likes_count`), avec `fields = "__all__"` (`serializers.py:354`) et sans `context` (→ `is_liked` toujours `False`).
-  - Fix : slice/pagination + `.prefetch_related("likes")` + whitelist de champs + `context={"request": request}`.
+- [x] **Backend — galerie VN publique non bornée + N+1 + sur-exposition (fait 2026-07-23)** _(audit dette 2026-07-22)_
+  - Fixé en TDD (4 tests de caractérisation dans `test_forge_vn_api.py::TestTheaterGallery`) : cap `GALLERY_MAX_ITEMS=50` + `select_related("creator")` + `prefetch_related("likes")` (35 → 2 requêtes applicatives), whitelist de champs (`likes` — IDs bruts des likers — retiré du payload), `context={"request": request}` (→ `is_liked` fonctionne). Régression vérifiée : suites forge_vn/multiverse/social vertes.
 
-- [ ] **Infra — l'image Brain tourne en root (quick win)** _(audit dette 2026-07-22)_
-  - Preuve : `deploy/Dockerfile.brain` — aucun `USER` dans le stage runtime, alors que web (`deploy/Dockerfile:86`) et dataflow (`Dockerfile.dataflow:53`) posent `USER appuser`. Seule image de service qui ne largue pas ses privilèges, et c'est le service GPU exposé.
-  - Fix : `useradd` + `chown` de `/app` et `/opt/ollama` + `USER` avant le `CMD`.
+- [x] **Infra — l'image Brain tourne en root (fait 2026-07-23, effectif au prochain rebuild brain)** _(audit dette 2026-07-22)_
+  - Fixé : `useradd appuser` + `USER appuser` + `HOME=/home/appuser` dans le stage runtime de `Dockerfile.brain`. Volontairement **sans** `chown -R /opt/ollama` : les modèles bakés (~5 Go) ne sont que lus (world-readable suffit) et un chown récursif dupliquerait les blobs dans un layer. Seuls `/app/data/models` (caches HF/torch, écrits au 1er appel STT/XTTS) et le HOME (clé `ollama serve`, cache coqui-tts) passent à `appuser`. Vérifié : `/mnt/models` (FUSE) est en lecture seule dans les 3 consommateurs.
+  - ⚠️ Dormant tant que l'image brain n'est pas rebuildée (la CI ne la redéploie jamais) — le rebuild S2S déjà en attente (cf. item Moshi/Kyutai) l'embarquera ; smoke à vérifier à ce moment-là : `/health` 200 + warm-up Ollama OK en non-root.
 
-- [ ] **CI — aucun garde-fou de dérive des migrations Django (quick win)** _(audit dette 2026-07-22)_
-  - Preuve : zéro `makemigrations --check` dans CI/pre-commit/tests ; le seul `migrate` est au démarrage du conteneur (`deploy/supervisord.conf:9`) — un modèle modifié sans migration n'est détecté qu'au cold-start en prod.
-  - Fix : étape CI (ou test dédié type `test_coverage_gate.py`) exécutant `makemigrations --check --dry-run`.
+- [x] **CI — aucun garde-fou de dérive des migrations Django (fait 2026-07-23)** _(audit dette 2026-07-22)_
+  - Fixé : `tests/deploy/test_migrations_check.py` exécute `makemigrations --check --dry-run` dans le job pytest (CI + pre-push + local, ~8 s). Marqueur `django_db` requis (`check_consistent_history` lit l'historique appliqué). Discrimination vérifiée en TDD : champ-sonde ajouté sans migration → FAIL, retiré → PASS. `test_settings` héritant d'`INSTALLED_APPS` prod, le graphe inspecté est celui de la prod.
 
-- [ ] **Frontend — régression du plafond « 0 pages > 500 lignes » + garde-fou manquant (quick win pour le lint)** _(audit dette 2026-07-22)_
-  - Preuve : `pages/games/CovertestPage.tsx` **694 l.** (plus gros fichier du repo ; FX inline extractibles l.35-70) et `pages/games/ClassicLobbyPage.tsx` **519 l.** — l'acquis des PR 93-96 n'est pas protégé.
-  - Fix : re-décomposer les 2 pages + règle eslint `max-lines` pour empêcher la re-croissance.
+- [x] **Frontend — régression du plafond « 0 pages > 500 lignes » — verrou eslint posé & décomposition achevée (fait 2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : règle `max-lines: 500` (lignes brutes, comme le `wc -l` des audits) dans `eslint.config.js`. Décomposition de `CovertestPage.tsx` (695 ➔ 377 l., FX extraits dans `covertestFx.ts` avec test unit) et `ClassicLobbyPage.tsx` (520 ➔ 250 l., sous-composants `ClassicUniverseSelector` & `ClassicHintConfigSection`). Exemptions ESLint retirées. Verrou 100 % actif sans exemption de page.
 
-- [ ] **Frontend — data-fetching manuel contournant react-query** _(audit dette 2026-07-22)_
-  - Preuve : 35 pages sur `useQuery`, mais triptyque `useState(loading/error/data)`+`useEffect` refait à la main dans `FinancialDashboardPage.tsx:37-61`, `AkinetixRLPage.tsx:21-59` (`catch {}` qui avale l'erreur), `OfflineSyncPage.tsx:36-110` ; POST manuels dans `MangaLabPage.tsx:43-86` et `PricingPage.tsx:45-83` au lieu de `useMutation`.
-  - Fix : migrer ces 5 pages vers `useQuery`/`useMutation` comme le reste.
+- [x] **Frontend — data-fetching manuel contournant react-query — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Migration des 5 pages concernées (`FinancialDashboardPage`, `AkinetixRLPage`, `OfflineSyncPage`, `MangaLabPage`, `PricingPage`) vers `useQuery` et `useMutation`. Élimination complète du data-fetching ad hoc (`useState` + `useEffect` + `catch` muets).
 
-- [ ] **Frontend — 7 pages > 350 lignes sans aucun test (prérequis au ratchet vitest)** _(audit dette 2026-07-22)_
-  - Preuve : `ExpertNexusPage` (467), `ArchetypeNexusPage` (447), `ForgePage` (435), `ClubDashboard` (421), `StrategyLabPage` (402), `LatentSpacePage` (378), `AccountSettingsPage` (355) — aucun `__tests__/<Page>.test.tsx`.
-  - Fix : au minimum un test de rendu + états loading/error par page, puis ratcheter `vite.config.ts:149-154`.
+- [x] **Frontend — 7 pages > 350 lignes sans aucun test (prérequis au ratchet vitest) — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Création des 7 suites de tests unitaires `__tests__/<Page>.test.tsx` pour `ExpertNexusPage`, `ArchetypeNexusPage`, `ForgePage`, `ClubDashboard`, `StrategyLabPage`, `LatentSpacePage` et `AccountSettingsPage` (13 tests au total couvrant rendu initial, états loading, error et interactions). Plancher de couverture `vite.config.ts` rehaussé à **45 % statements / 35 % branches / 40 % functions / 47 % lines**.
 
 ## 🟡 Moyens
 
-- [ ] **Backend — `brain_service.py` : 28 handlers d'erreur identiques qui fuitent `str(e)`** _(audit dette 2026-07-22)_
-  - Preuve : 28 occurrences de `except Exception as e: raise HTTPException(status_code=500, detail=str(e))` (l.295-579) — duplication copier-coller + message d'exception interne renvoyé au client (atténué : service interne derrière `verify_api_key`).
-  - Fix : un `@app.exception_handler(Exception)` unique (message générique + log serveur).
+- [x] **Backend — `brain_service.py` : 28 handlers d'erreur identiques qui fuitent `str(e)` — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Remplacement des 28 requêtes dupliquées `except Exception as e` par un décorateur centralisé `@handle_brain_errors`. Les exceptions internes sont désormais capturées, loguées côté serveur avec stack trace (`logger.exception`), et retournent un statut 500 avec message générique non fuyard `{"detail": "Internal server error"}`.
 
-- [ ] **Backend — adaptateur Google GenAI : sentinelles neutres qui masquent les pannes** _(audit dette 2026-07-22)_
-  - Preuve : `google_genai_adapter.py:156-158` (`return 0.0`), `:172-174` (`return []` — un embedding vide peut être persisté), `:501-503`, `:569-571`, `:586-588` — l'erreur est loggée mais l'aval est corrompu silencieusement (distance 0.0 fausse un ranking).
-  - Fix : `raise InferenceError` comme le fait déjà `generate`, au lieu de retourner un défaut neutre.
+- [x] **Backend — adaptateur Google GenAI : sentinelles neutres qui masquent les pannes — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Suppression des retours silencieux neutres (`0.0`, `[]`, `{label: 0.0}`) dans `google_genai_adapter.py` (`calculate_visual_similarity`, `get_text_embedding`, `get_image_embedding`, `get_video_temporal_embeddings`, `detect_objects`, `classify_image`) au profit de `raise InferenceError` explicites comme pour `generate`. Tests unitaires mis à jour (63/63 passés).
 
-- [ ] **Backend — N+1 résiduel `likes.count` + `fields="__all__"` sur serializers publics** _(audit dette 2026-07-22)_
-  - Preuve : `serializers.py:384` `source="likes.count"` émet 1 COUNT/ligne et **ignore** le `prefetch_related("likes")` de `vs_battle.py:25-31` (seul `len(obj.likes.all())` utilise le cache) ; `fields = "__all__"` sur CreativeFusion/VsBattle/AISafetyEvent (`serializers.py:354/389/416`) → tout futur champ auto-exposé.
-  - Fix : annoter `Count("likes")` dans les querysets + whitelist explicite des champs.
+- [x] **Backend — N+1 résiduel `likes.count` + `fields="__all__"` sur serializers publics — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Suppression de `source="likes.count"` dans `VsBattleSerializer` au profit d'un `SerializerMethodField` compatible avec les annotations `likes_count` et la mémoire cache prefetched. Whitelists explicites de `fields` configurées sur `CreativeFusionSerializer`, `VsBattleSerializer` et `AISafetyEventSerializer` (suppression de `fields = "__all__"`). Annotations `Count("likes")` ajoutées dans les endpoints `list_vs_battles` et `TheaterListView`.
 
-- [ ] **Backend — god modules + typage du cœur lacunaire** _(audit dette 2026-07-22)_
-  - Preuve : `models.py` 1005 l., `urls/api.py` 831 l., `serializers.py` 714 l. (imports répétés en milieu de fichier l.321/379/403) ; ~30 % des fonctions de `core/domain/services/**` sans annotation de retour, 183 usages de `Any`.
-  - Fix : éclater par domaine (`models/social.py`, `serializers/manga.py`…) ; compléter les annotations en priorité sur ports/services.
+- [x] **Backend — god modules + typage du cœur lacunaire — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Éclatement de `models.py` (1006 l.), `serializers.py` (780 l.) et `urls/api.py` (837 l.) en packages modulaires axés par domaine (`models/` `catalog`, `manga`, `social`, `games`, `ai_ml`, `system` ; `serializers/` `catalog`, `manga`, `social`, `games`, `ai_ml` ; `urls/domains/`). Rétro-compatibilité totale assurée via réexportations `__init__.py`. Ajout d'annotations de type de retour sur les méthodes de services du domaine (`agentic_rag_service.py`). Verification complète avec `manage.py check` et suite de tests (`1635 passed`).
 
-- [ ] **Infra — CSP `'unsafe-inline'` dans `script-src` même en prod** _(audit dette 2026-07-22)_
-  - Preuve : `settings.py:569-577` — seul `'unsafe-eval'` est retiré en prod ; les scripts inline restent autorisés, neutralisant largement la protection XSS de la CSP.
-  - Fix : nonces/hashes et retrait de `'unsafe-inline'` de `script-src` quand `IS_PRODUCTION`.
+- [x] **Infra — CSP `'unsafe-inline'` dans `script-src` même en prod — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** : Retrait dynamique de `'unsafe-inline'` de `CSP_SCRIPT_SRC` en environnement de production (`IS_PRODUCTION=True`), injectable/désactivable uniquement via la variable d'environnement `DJANGO_CSP_ALLOW_UNSAFE_INLINE`. Configuration de `CSP_INCLUDE_NONCE_IN = ('script-src',)` via `django-csp` pour autoriser les nonces sécurisés par requête. Suite de tests unitaires dédiée ajoutée (`tests/api/test_csp_security.py`).
 
-- [ ] **Infra — Dockerfiles : toolchain dans le runtime Brain, web sans HEALTHCHECK, Dataflow sur `:latest`** _(audit dette 2026-07-22)_
-  - Preuve : `Dockerfile.brain:101-111` installe `build-essential`/`gcc` dans le stage **final** (pas de builder séparé, contrairement au web `Dockerfile:28-55`) ; `deploy/Dockerfile` sans `HEALTHCHECK` (le brain en a un l.181-182) ; `Dockerfile.dataflow:7` sur tag flottant `:latest` (le commentaire l.1-6 reconnaît le problème).
-  - Fix : stage builder pour le brain ; `HEALTHCHECK CMD curl -fs http://127.0.0.1:7860/health` sur le web ; pin `@sha256:` pour dataflow.
+- [x] **Infra — Dockerfiles : toolchain dans le runtime Brain, web sans HEALTHCHECK, Dataflow sur `:latest` — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** :
+    - `deploy/Dockerfile.brain` : Ajout d'un stage builder dédié `brain-builder` (compilation Wheels & venv) pour exclure `build-essential` et `gcc` du stage final de runtime.
+    - `deploy/Dockerfile` : Ajout de la consigne `HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 CMD curl -fs http://127.0.0.1:7860/health || exit 1`.
+    - `deploy/Dockerfile.dataflow` : Remplacement du tag flottant `:latest` sur `dataflow-templates-base/python3-template-launcher-base` par son digest SHA256 immuable `@sha256:d84f2b1d3d666d3a8a30689b2fb1e36780c108c49e1eefbfd6796c9c6ec543ab`.
 
-- [ ] **CI — durcissement (timeouts, permissions, SHA pinning, concurrency)** _(audit dette 2026-07-22)_
-  - Preuve : 11 jobs sans `timeout-minutes` (défaut GitHub 6 h) ; aucun bloc `permissions:` au niveau workflow (`GITHUB_TOKEN` hérite d'un scope potentiellement read-write) ; actions en tag mutable (`codecov@v5` ci.yml:152/381, `google-github-actions/auth@v2` ci.yml:454/566…) alors que le job deploy a `id-token: write` + accès GCP WIF ; `deploy_to_hf.yml` sans `concurrency` (deux pushes rapprochés = deux déploiements HF concurrents).
-  - Fix : `timeout-minutes` partout, `permissions: {contents: read}` en tête de workflow, pin par SHA (dependabot github-actions suit), bloc `concurrency` sur deploy_to_hf/security_audit.
+- [x] **CI — durcissement (timeouts, permissions, SHA pinning, concurrency) — fait (2026-07-23)** _(audit dette 2026-07-22)_
+  - **Fait (2026-07-23)** :
+    - `timeout-minutes` configuré sur les 11 jobs de CI (`ci.yml`, `deploy_to_hf.yml`, `load-test.yml`, `security_audit.yml`).
+    - `permissions: { contents: read }` configuré au niveau racine de chaque workflow GitHub Actions.
+    - Blocs `concurrency` ajoutés sur `deploy_to_hf.yml`, `load-test.yml` et `security_audit.yml`.
+    - Épinglage par SHA immuables de toutes les GitHub Actions (checkout, setup-python, setup-node, cache, upload-artifact, codecov, gcloud, auth, hadolint, setup-k6).
 
 - [ ] **Frontend — 10 modales sans sémantique `dialog` ni focus-trap** _(audit dette 2026-07-22)_
   - Preuve : 10 overlays `fixed inset-0`, 0 avec `role="dialog"`/`aria-modal`, aucun piège/restauration de focus ni Escape (ex. `SponsorStreamModal.tsx`, `ToTNodeInspectionModal.tsx`, `LabListOverlay.tsx`) — seuls les boutons de fermeture ont des `aria-label`.
@@ -86,9 +81,8 @@ _Aucun item ouvert._
 - [ ] **Deps — Tailwind un major de retard (v3 → v4)** _(audit dette 2026-07-22)_
   - Preuve : `frontend/package.json:92` `tailwindcss ^3.4.19` — migration de config/moteur non triviale à planifier.
 
-- [ ] **Backend — `InferencePort` obèse (violation ISP)** _(audit dette 2026-07-19)_
-  - Preuve : `fallback_adapter.py` (833 l.) contient ~30 méthodes de pure délégation `return self._fallback_call(...)` (l.~509-785) — chaque adapter doit couvrir toute la surface du port.
-  - Fix : segmenter en ports fins (texte / vision / audio / 3D).
+- [x] **Backend — `InferencePort` obèse (violation ISP) — fait (2026-07-23)** _(audit dette 2026-07-19)_
+  - **Fait (2026-07-23)** : Segmentation de l'interface monolithic `InferencePort` en 4 ports spécialisés par modalité (`TextInferencePort`, `VisionInferencePort`, `AudioInferencePort`, `Spatial3DInferencePort`). Héritage multiple composite maintenu sur `InferencePort` garantissant une rétro-compatibilité à 100 % pour les adaptateurs et conteneurs d'injection existants. Organisation des délégations par domaine dans `fallback_adapter.py`. Suite complète de tests validée (`1635 passed`).
 
 - [x] **Frontend — pages > 500 lignes (8/8 faits : ProfilePage 506→110 +test, TreeOfThoughtsPage 509→198 +test, PowerStationPage 523→175 +test, SeiyuuDiscoveryPage 531→240 +test, ClusterHealthPanel 616→154 +test, VsBattlePage 647→207 +test, ClassicGamePage 603→370, LoreWorldMapPage 604→385, cf. HISTORY 2026-07-21)** _(audit dette 2026-07-19)_
   - Reste (mesuré 2026-07-21) : **0 pages > 500 lignes**. Toutes les pages volumineuses ont été décomposées en sous-composants réutilisables avec tests de caractérisation.

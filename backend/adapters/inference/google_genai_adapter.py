@@ -133,6 +133,8 @@ class GoogleGenAIAdapter(
         """Calcule la similitude visuelle entre une requête (texte) et une image (item)."""
         import math  # noqa: E402
 
+        if not self.client:
+            raise InferenceError("Google GenAI client is not initialized.")
         try:
             # On génère l'embedding de la requête
             q_emb = self.get_text_embedding(query)
@@ -142,7 +144,9 @@ class GoogleGenAIAdapter(
             )
 
             if not q_emb or not item_emb:
-                return 0.5
+                raise InferenceError(
+                    f"Could not compute embeddings for visual similarity ({query!r}, {item_id!r})."
+                )
 
             # Cosine similarity
             dot_product = sum(a * b for a, b in zip(q_emb, item_emb))
@@ -155,12 +159,12 @@ class GoogleGenAIAdapter(
             return float(dot_product / (norm_q * norm_i))
         except Exception as e:
             logger.error(f"Visual similarity failed: {e}")
-            return 0.0
+            raise InferenceError(f"Visual similarity failed: {e}") from e
 
     def get_text_embedding(self, text: str) -> List[float]:
         """Génère un embedding vectoriel pour un texte donné via Gemini."""
         if not self.client:
-            return []
+            raise InferenceError("Google GenAI client is not initialized.")
         try:
             res = self.client.models.embed_content(
                 model=self.embedding_model,
@@ -171,7 +175,7 @@ class GoogleGenAIAdapter(
             return res.embeddings[0].values
         except Exception as e:
             logger.error(f"Google GenAI Embedding failed: {e}")
-            return []
+            raise InferenceError(f"Google GenAI Embedding failed: {e}") from e
 
     def get_image_embedding(
         self, image_data: bytes, model_id: Optional[str] = None
@@ -192,7 +196,7 @@ class GoogleGenAIAdapter(
         panne de CE modèle et de continuer quand même avec sa réponse.
         """
         if not self.client:
-            return []
+            raise InferenceError("Google GenAI client is not initialized.")
         if model_id and model_id != self.embedding_model:
             raise InferenceNotImplementedError(
                 f"GoogleGenAIAdapter ne sait servir que son propre modèle "
@@ -500,6 +504,9 @@ class GoogleGenAIAdapter(
                 return segments
         except Exception as e:
             logger.error(f"Google GenAI Video Temporal Analysis failed: {e}")
+            raise InferenceError(
+                f"Google GenAI Video Temporal Analysis failed: {e}"
+            ) from e
         return []
 
     def localize_video_actions(
@@ -568,6 +575,7 @@ class GoogleGenAIAdapter(
                 return objects
         except Exception as e:
             logger.error(f"Google GenAI Object Detection failed: {e}")
+            raise InferenceError(f"Google GenAI Object Detection failed: {e}") from e
         return []
 
     def classify_image(
@@ -585,6 +593,7 @@ class GoogleGenAIAdapter(
                 return json.loads(match.group(0))
         except Exception as e:
             logger.error(f"Google GenAI Classification failed: {e}")
+            raise InferenceError(f"Google GenAI Classification failed: {e}") from e
         return {label: 0.0 for label in candidate_labels}
 
     def visual_rerank(

@@ -480,14 +480,14 @@
   },
   "billing": {
     "power_station": {
-      "active_desc": "Watch a sponsored transmission spot to recharge.",
+      "active_desc": "Launch an energy recharge to credit your wallet.",
       "berrix_system": "Berrix System",
       "dont_close_console": "Do not close the console",
       "energy_injected": "Energy injected: +{{earned}} Bx!",
       "passive_desc": "Mine Berrix in the background while you browse or play.",
       "recharge_error": "Error during the recharge.",
       "start_recharge": "Start the recharge",
-      "subtitle": "Manage your Berrix (Bx) tokens and optimize your attention mining.",
+      "subtitle": "Manage your Berrix (Bx) tokens and track your earnings.",
       "transmission_active": "TRANSMISSION ACTIVE"
     },
     "pricing": {
@@ -525,13 +525,13 @@
       "refill_desc": "Immediately reset your AI request counter for the day. Ideal if you are stuck in the middle of an intense exploration session.",
       "refill_error": "Error while refilling the quota.",
       "refill_feature_1": "Instant reset",
-      "refill_feature_2": "Ultra-fast sponsor (4 seconds)",
+      "refill_feature_2": "One-click refill",
       "refill_success": "Your daily quota has been refilled!",
       "refill_title": "Quota Refill",
-      "standard_desc": "Standard quota active. Watch a sponsor below to boost your account.",
+      "standard_desc": "Standard quota active. Activate the boost below to level up.",
       "status_boosted": "Boosted Status",
       "status_standard": "Standard Status",
-      "subtitle": "Fund the AI engine through advertising and reach the next level",
+      "subtitle": "Support the AI engine and reach the next level",
       "support_badge": "Support Animetix",
       "title_part1": "Sponsoring &",
       "title_part2": "Boost Center",
@@ -2451,7 +2451,7 @@
         "title": "Our mission"
       },
       "tech": {
-        "body": "The platform combines an AI reasoning engine, a graph knowledge base (Neo4j), semantic vector search, and generative models (image, voice, text). Logic games stay free; GPU/AI features use credits called Berrix, earned by playing and watching rewarded ads — no purchase required.",
+        "body": "The platform combines an AI reasoning engine, a graph knowledge base (Neo4j), semantic vector search, and generative models (image, voice, text). Logic games stay free; GPU/AI features use credits called Berrix, earned by playing — no purchase required.",
         "title": "The technology"
       },
       "title": "About Animetix"
@@ -2488,7 +2488,7 @@
         "title": "Your rights (GDPR)"
       },
       "s_third": {
-        "p1": "We rely on processors that handle certain data on our behalf: Google AdSense (advertising and rewarded ads), Google/Firebase (authentication), and AI inference providers for the Labs features. Each applies its own privacy policy. We do not sell your personal data.",
+        "p1": "We rely on processors that handle certain data on our behalf: Google AdSense (advertising), Google/Firebase (authentication), and AI inference providers for the Labs features. Each applies its own privacy policy. We do not sell your personal data.",
         "title": "Third-party services"
       },
       "title": "Privacy Policy",
@@ -2702,7 +2702,7 @@
   "search.hub.visual_placeholder": "Describe a visual scene or a specific moment...",
   "settings": {
     "ads": "Ads",
-    "adsHint": "Disabling ads also pauses passive Bx mining.",
+    "adsHint": "Ads help fund the servers. You can re-enable them at any time.",
     "adsToggle": "Show ads",
     "close_drawer": "Close settings",
     "manageConsent": "Manage my consent",

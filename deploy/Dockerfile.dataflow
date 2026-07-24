@@ -1,10 +1,6 @@
 # --- Stage 1: Get Python Flex Template Launcher Binary ---
-# `:latest` est la forme recommandée par Google pour ce launcher. Pour une build
-# 100 % reproductible, l'épingler par digest :
-#   docker pull gcr.io/dataflow-templates-base/python3-template-launcher-base:latest
-#   docker inspect --format='{{index .RepoDigests 0}}' <image>
-# puis remplacer `:latest` par `@sha256:<digest>`. (Le SDK Beam, lui, est déjà épinglé.)
-FROM gcr.io/dataflow-templates-base/python3-template-launcher-base:latest AS launcher
+# Pin l'image par digest sha256 pour des builds 100 % reproductibles (audit dette 2026-07-22).
+FROM gcr.io/dataflow-templates-base/python3-template-launcher-base@sha256:d84f2b1d3d666d3a8a30689b2fb1e36780c108c49e1eefbfd6796c9c6ec543ab AS launcher
 
 # --- Stage 2: Build Application Image ---
 FROM apache/beam_python3.12_sdk:2.75.0

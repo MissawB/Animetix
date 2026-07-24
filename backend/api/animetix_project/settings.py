@@ -563,18 +563,25 @@ CSP_STYLE_SRC = (
     "https://cdn.jsdelivr.net",
 )
 
-# En production, on retire 'unsafe-eval' pour bloquer les exécutions de scripts non sécurisées.
+# En production, on retire 'unsafe-eval' et 'unsafe-inline' pour bloquer les exécutions de scripts non sécurisées.
 # On autorise uniquement si nécessaire via env.
 _ALLOW_UNSAFE_EVAL = env.bool("DJANGO_CSP_ALLOW_UNSAFE_EVAL", default=not IS_PRODUCTION)
+_ALLOW_UNSAFE_INLINE = env.bool(
+    "DJANGO_CSP_ALLOW_UNSAFE_INLINE", default=not IS_PRODUCTION
+)
 _csp_script_src = [
     "'self'",
-    "'unsafe-inline'",
     "https://cdn.jsdelivr.net",
     "https://huggingface.co",
 ]
+if _ALLOW_UNSAFE_INLINE:
+    _csp_script_src.append("'unsafe-inline'")
 if _ALLOW_UNSAFE_EVAL:
     _csp_script_src.append("'unsafe-eval'")
 CSP_SCRIPT_SRC = tuple(_csp_script_src)
+
+if not _ALLOW_UNSAFE_INLINE:
+    CSP_INCLUDE_NONCE_IN = ("script-src",)
 
 _EXTRA_IMG = env.list("EXTRA_CSP_IMG_SRC", default=[])
 _csp_img_src = [

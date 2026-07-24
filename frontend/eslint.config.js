@@ -11,8 +11,10 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 export default defineConfig([
   // `dist` is the build output; `src/types/api.d.ts` is generated from schema.yaml
   // (`npm run generate:api`) and would otherwise drown lint output in
-  // no-irregular-whitespace noise we don't control.
-  globalIgnores(['dist', 'src/types/api.d.ts']),
+  // no-irregular-whitespace noise we don't control. `playwright-report`,
+  // `test-results` and `coverage` are local test artifacts (minified JS) that
+  // made local `npm run lint` explode with ~4000 vendor errors.
+  globalIgnores(['dist', 'src/types/api.d.ts', 'playwright-report', 'test-results', 'coverage']),
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -57,7 +59,20 @@ export default defineConfig([
       // forbidden (use the dev-only `logger` in src/utils/logger.ts instead);
       // console.warn/error stay allowed for real problems.
       'no-console': ['error', { allow: ['warn', 'error'] }],
+      // Verrou du plafond « 0 fichiers > 500 lignes » (PR 93-96 + audit dette
+      // 2026-07-22) : les 8 pages décomposées avaient re-régressé faute de
+      // garde-fou. Lignes brutes (pas de skip) pour coller au `wc -l` des audits.
+      'max-lines': ['error', { max: 500, skipBlankLines: false, skipComments: false }],
     },
+  },
+  {
+    // Dette connue, trackée dans TODO.md (audit 2026-07-22) : exemptions à
+    // retirer une par une au fil des décompositions. Ne RIEN ajouter ici —
+    // décomposer le fichier à la place.
+    files: [
+      'src/types/index.ts',
+    ],
+    rules: { 'max-lines': 'off' },
   },
   ...storybook.configs["flat/recommended"],
   // Must stay LAST: turns off ESLint rules that would conflict with Prettier

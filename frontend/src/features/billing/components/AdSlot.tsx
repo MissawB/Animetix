@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { logAdEvent } from '../services/billingService';
-import { usePassiveMiningStore } from '../../../store/passiveMiningStore';
 import { useAdPreferenceStore } from '../../../store/adPreferenceStore';
 
 // Real Google AdSense display unit. Configure via env:
@@ -34,37 +33,28 @@ interface AdSlotProps {
   /** AdSense format hint (data-ad-format). */
   format?: string;
   className?: string;
-  /** When true, this ad's visibility funds passive Bx mining while it is mounted. */
-  fundsMining?: boolean;
   label?: string;
 }
 
 /**
- * Une vraie pub AdSense. Tant qu'elle est montée, elle alimente le minage passif
- * (via le compteur du store) — c'est ce qui « finance » les Bx crédités.
+ * Une vraie pub AdSense. Strictement décorrélée de toute récompense in-app
+ * (règlement AdSense : aucune compensation pour le visionnage d'annonces).
  */
 export const AdSlot: React.FC<AdSlotProps> = ({
   slot,
   format = 'auto',
   className = '',
-  fundsMining = true,
   label = 'Publicité',
 }) => {
-  const registerAd = usePassiveMiningStore((s) => s.registerAd);
-  const unregisterAd = usePassiveMiningStore((s) => s.unregisterAd);
   const adsEnabled = useAdPreferenceStore((s) => s.adsEnabled);
   const hasRealAds = Boolean(ADSENSE_CLIENT && slot);
 
-  // Impression tracking + mining registration for the lifetime of the slot.
+  // Impression tracking for the lifetime of the slot.
   // Skipped entirely when the user has disabled ads.
   useEffect(() => {
     if (!adsEnabled) return;
     logAdEvent('impression', 'banner');
-    if (fundsMining) registerAd();
-    return () => {
-      if (fundsMining) unregisterAd();
-    };
-  }, [adsEnabled, fundsMining, registerAd, unregisterAd]);
+  }, [adsEnabled]);
 
   // Ask AdSense to fill the unit once the script is in place.
   useEffect(() => {
@@ -77,8 +67,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
     }
   }, [adsEnabled, hasRealAds]);
 
-  // User disabled ads in settings: render nothing (this also pauses mining,
-  // since no slot is mounted -> adSlotsVisible stays 0).
+  // User disabled ads in settings: render nothing.
   if (!adsEnabled) return null;
 
   if (!hasRealAds) {

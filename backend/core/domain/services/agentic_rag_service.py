@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Dict, Generator, Optional
+from typing import Any, Dict, Generator, Optional
 
 from core.config import get_config
 from core.ports.config_port import ConfigPort
@@ -84,11 +84,11 @@ class AgenticRAGService:
             elif self.orchestrator and hasattr(self.orchestrator, key):
                 setattr(self.orchestrator, key, val)
 
-    def _execute_search(self, query: str, requires_web: bool) -> tuple:
+    def _execute_search(self, query: str, requires_web: bool) -> tuple[list, str]:
         """Stub method for testing compatibility and mocking."""
         return [], ""
 
-    def _record_agent_trace(self, state_name: str, details: dict):
+    def _record_agent_trace(self, state_name: str, details: dict) -> None:
         if not self.config.get("VERTEX_AI_AGENT_OBSERVABILITY_ACTIVE", False):
             return
 
@@ -517,7 +517,7 @@ class AgenticRAGService:
         )
         return fallback, True
 
-    def _store_results(self, query: str, answer: str, user_id: Optional[str]):
+    def _store_results(self, query: str, answer: str, user_id: Optional[str]) -> None:
         if self.semantic_cache:
             try:
                 self.semantic_cache.set_cached_response(query, answer)
@@ -540,7 +540,7 @@ class AgenticRAGService:
             except (InferenceError, InfrastructureError, RuntimeError) as e:
                 logger.error(f"Unexpected error in memory storage: {e}")
 
-    def _extract_json(self, text: str) -> Dict:
+    def _extract_json(self, text: str) -> Dict[str, Any]:
         from core.utils.json_utils import extract_json
 
         try:

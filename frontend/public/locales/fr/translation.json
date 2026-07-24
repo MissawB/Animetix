@@ -480,14 +480,14 @@
   },
   "billing": {
     "power_station": {
-      "active_desc": "Regardez un spot de transmission sponsorisé pour recharger.",
+      "active_desc": "Lancez une recharge d'énergie pour créditer votre portefeuille.",
       "berrix_system": "Système Berrix",
       "dont_close_console": "Ne fermez pas la console",
       "energy_injected": "Énergie injectée : +{{earned}} Bx !",
       "passive_desc": "Mine des Berrix en arrière-plan pendant que vous naviguez ou jouez.",
       "recharge_error": "Erreur lors de la recharge.",
       "start_recharge": "Lancer la recharge",
-      "subtitle": "Gérez vos jetons Berrix (Bx) et optimisez votre attention mining.",
+      "subtitle": "Gérez vos jetons Berrix (Bx) et suivez vos gains.",
       "transmission_active": "TRANSMISSION ACTIVE"
     },
     "pricing": {
@@ -525,13 +525,13 @@
       "refill_desc": "Réinitialisez immédiatement votre compteur de requêtes IA pour la journée. Idéal si vous êtes bloqué au milieu d'une session d'exploration intense.",
       "refill_error": "Erreur lors de la recharge de quota.",
       "refill_feature_1": "Remise à zéro instantanée",
-      "refill_feature_2": "Sponsor ultra-rapide (4 secondes)",
+      "refill_feature_2": "Recharge en un clic",
       "refill_success": "Votre quota quotidien a été rechargé !",
       "refill_title": "Recharge Quota",
-      "standard_desc": "Quota standard actif. Regardez un sponsor ci-dessous pour booster votre compte.",
+      "standard_desc": "Quota standard actif. Activez le boost ci-dessous pour passer au niveau supérieur.",
       "status_boosted": "Statut Boosté",
       "status_standard": "Statut Standard",
-      "subtitle": "Financez le moteur IA par la publicité et accédez au niveau supérieur",
+      "subtitle": "Soutenez le moteur IA et accédez au niveau supérieur",
       "support_badge": "Soutenir Animetix",
       "title_part1": "Centre de",
       "title_part2": "Sponsoring & Boost",
@@ -2451,7 +2451,7 @@
         "title": "Notre mission"
       },
       "tech": {
-        "body": "La plateforme combine un moteur de raisonnement par IA, une base de connaissances en graphe (Neo4j), de la recherche vectorielle sémantique et des modèles génératifs (image, voix, texte). Les jeux de logique restent gratuits ; les fonctionnalités GPU/IA utilisent des crédits appelés Berrix, que l'on gagne en jouant et en regardant des publicités récompensées — aucun achat n'est nécessaire.",
+        "body": "La plateforme combine un moteur de raisonnement par IA, une base de connaissances en graphe (Neo4j), de la recherche vectorielle sémantique et des modèles génératifs (image, voix, texte). Les jeux de logique restent gratuits ; les fonctionnalités GPU/IA utilisent des crédits appelés Berrix, que l'on gagne en jouant — aucun achat n'est nécessaire.",
         "title": "La technologie"
       },
       "title": "À propos d’Animetix"
@@ -2488,7 +2488,7 @@
         "title": "Vos droits (RGPD)"
       },
       "s_third": {
-        "p1": "Nous nous appuyons sur des sous-traitants qui traitent certaines données pour notre compte : Google AdSense (publicité et publicités récompensées), Google/Firebase (authentification), ainsi que des fournisseurs d'inférence IA pour les fonctionnalités des Labs. Chacun applique sa propre politique de confidentialité. Nous ne vendons pas vos données personnelles.",
+        "p1": "Nous nous appuyons sur des sous-traitants qui traitent certaines données pour notre compte : Google AdSense (publicité), Google/Firebase (authentification), ainsi que des fournisseurs d'inférence IA pour les fonctionnalités des Labs. Chacun applique sa propre politique de confidentialité. Nous ne vendons pas vos données personnelles.",
         "title": "Services tiers"
       },
       "title": "Politique de confidentialité",
@@ -2702,7 +2702,7 @@
   "search.hub.visual_placeholder": "Décrivez une scène visuelle ou un moment précis...",
   "settings": {
     "ads": "Publicités",
-    "adsHint": "Désactiver les pubs met aussi en pause le minage passif de Bx.",
+    "adsHint": "Les publicités aident à financer les serveurs. Vous pouvez les réactiver à tout moment.",
     "adsToggle": "Afficher les publicités",
     "close_drawer": "Fermer les paramètres",
     "manageConsent": "Gérer mon consentement",

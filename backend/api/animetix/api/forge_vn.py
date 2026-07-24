@@ -15,19 +15,31 @@ from ..serializers import CreativeFusionSerializer
 
 logger = get_logger("animetix.api.vn")
 
+# Hard cap on the public gallery: the endpoint is AllowAny, an unbounded
+# queryset lets anyone pull the whole table in one request.
+GALLERY_MAX_ITEMS = 50
+
 
 class TheaterListView(APIView):
     """
-    Returns a list of all public fusions that have a generated Visual Novel script.
+    Returns the latest public fusions that have a generated Visual Novel script.
     """
 
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        fusions = CreativeFusion.objects.filter(
-            vn_script__isnull=False, is_public=True
-        ).order_by("-created_at")
-        serializer = CreativeFusionSerializer(fusions, many=True)
+        from django.db.models import Count
+
+        fusions = (
+            CreativeFusion.objects.filter(vn_script__isnull=False, is_public=True)
+            .annotate(likes_count=Count("likes"))
+            .select_related("creator")
+            .prefetch_related("likes")
+            .order_by("-created_at")[:GALLERY_MAX_ITEMS]
+        )
+        serializer = CreativeFusionSerializer(
+            fusions, many=True, context={"request": request}
+        )
         return Response(serializer.data)
 
 
