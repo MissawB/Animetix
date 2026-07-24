@@ -59,7 +59,7 @@ export const BlindtestPlayer: React.FC<BlindtestPlayerProps> = ({
     <div className="flex flex-col items-center py-8">
       {/* Current format */}
       <div className="mb-8">
-        <span className="px-4 py-1.5 rounded-full bg-yellow-400/15 border border-yellow-400/30 text-yellow-600 dark:text-yellow-400 text-[11px] font-black uppercase tracking-widest">
+        <span className="px-4 py-1.5 rounded-full bg-[#FDB913]/10 border border-[#FDB913]/30 text-[#FDB913] text-[11px] font-black uppercase tracking-widest">
           {currentMode === 'OP'
             ? t('games.blindtest.game.format_opening', 'Opening')
             : t('games.blindtest.game.format_ending', 'Ending')}
@@ -71,7 +71,7 @@ export const BlindtestPlayer: React.FC<BlindtestPlayerProps> = ({
            covers it until the first guess; afterwards the clip is revealed
            distorted — colour effect always on, blur easing each guess. */
         <div
-          className="relative w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl bg-[#0d0d12]"
+          className="relative w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl bg-[#0B0C10]"
           style={{ aspectRatio: String(aspect) }}
         >
           <video
@@ -113,10 +113,10 @@ export const BlindtestPlayer: React.FC<BlindtestPlayerProps> = ({
                 }}
               >
                 <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-white/15" />
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500 grid place-items-center border-4 border-black/40 shadow-inner">
-                  <Music className="w-6 h-6 text-black/80" />
+                <div className="w-16 h-16 rounded-full bg-[#FDB913] grid place-items-center border-4 border-black/40 shadow-inner">
+                  <Music className="w-6 h-6 text-[#0B0C10]/80" />
                 </div>
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#0f0f1a] border border-white/20" />
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#0B0C10] border border-white/20" />
               </div>
             </div>
           )}
@@ -158,10 +158,10 @@ export const BlindtestPlayer: React.FC<BlindtestPlayerProps> = ({
             }}
           >
             <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500 grid place-items-center border-4 border-black/40 shadow-inner">
-              <Music className="w-9 h-9 text-black/80" />
+            <div className="w-24 h-24 rounded-full bg-[#FDB913] grid place-items-center border-4 border-black/40 shadow-inner">
+              <Music className="w-9 h-9 text-[#0B0C10]/80" />
             </div>
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#0f0f1a] border border-white/20" />
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#0B0C10] border border-white/20" />
           </div>
           <span className="absolute inset-0 grid place-items-center pointer-events-none">
             <span className="bg-black/60 backdrop-blur-sm text-white p-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -188,7 +188,7 @@ export const BlindtestPlayer: React.FC<BlindtestPlayerProps> = ({
         </button>
       )}
 
-      <p className="mt-8 font-bold text-gray-500 uppercase tracking-widest text-xs">
+      <p className="mt-8 font-bold text-[#8F94A5] uppercase tracking-widest text-xs">
         {isPlaying
           ? t('games.blindtest.game.playing', 'Lecture en cours…')
           : hintsEnabled
@@ -199,7 +199,7 @@ export const BlindtestPlayer: React.FC<BlindtestPlayerProps> = ({
             : t('games.blindtest.game.listen_hint_disc', 'Cliquez sur le disque pour écouter')}
       </p>
       {typeof attemptsLeft === 'number' && (
-        <p className="mt-2 text-[11px] font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400">
+        <p className="mt-2 text-[11px] font-black uppercase tracking-widest text-[#FDB913]">
           {t('games.blindtest.game.attempts_left', {
             defaultValue: '{{count}} tentative{{plural}} restante{{plural}}',
             count: attemptsLeft,

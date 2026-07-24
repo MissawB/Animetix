@@ -58,12 +58,12 @@ const WorldBossPage: React.FC = () => {
   if (error || !boss)
     return (
       <AnimatedPage>
-        <div className="flex min-h-screen flex-col items-center justify-center bg-black p-6 text-center text-white">
-          <Skull size={80} className="mb-6 text-gray-800" />
-          <h2 className="mb-4 text-4xl font-black uppercase italic">
+        <div className="flex min-h-screen flex-col items-center justify-center bg-[#0B0C10] p-6 text-center text-[#F4F1E8]">
+          <Skull size={80} className="mb-6 text-[#8F94A5]/40" />
+          <h2 className="font-manga mb-4 text-4xl font-black uppercase italic">
             {t('games.world_boss.no_boss_title', 'Aucun boss actif')}
           </h2>
-          <p className="max-w-md text-gray-500">
+          <p className="max-w-md text-[#8F94A5]">
             {t(
               'games.world_boss.no_boss_desc',
               'Le monde est en sécurité pour le moment... Reviens plus tard pour le prochain raid mondial !',
@@ -85,209 +85,226 @@ const WorldBossPage: React.FC = () => {
   return (
     <AnimatedPage>
       <div
-        className={`mx-auto max-w-7xl px-6 py-12 text-white transition-colors ${
-          limiterBreak ? 'bg-red-950/20' : ''
+        className={`min-h-screen bg-[#0B0C10] text-[#F4F1E8] transition-colors ${
+          limiterBreak ? 'bg-[#E8442B]/10' : ''
         }`}
       >
-        <header className="mb-12 text-center">
-          <h1 className="text-6xl font-black uppercase italic md:text-7xl">{boss.title}</h1>
-          <div className="mt-4 flex items-center justify-center gap-6 text-xs font-bold uppercase tracking-widest text-gray-400">
-            <span className="flex items-center gap-2">
-              <Trophy size={14} className="text-yellow-500" />
-              {t('games.world_boss.xp_reward', 'RÉCOMPENSE : {{xp}} XP', { xp: boss.reward_xp })}
+        <div className="mx-auto max-w-7xl px-6 py-12">
+          <header className="mb-12 text-center">
+            <span className="explore-stamp mb-4 inline-block -rotate-2" aria-hidden>
+              王
             </span>
-            {question && (
-              <span>
-                {t('games.world_boss.best_tier', 'Meilleur palier')} : {question.best_tier}
+            <h1 className="font-manga text-6xl font-black uppercase italic md:text-7xl">
+              {boss.title}
+            </h1>
+            <div className="mt-4 flex items-center justify-center gap-6 text-xs font-bold uppercase tracking-widest text-[#8F94A5]">
+              <span className="flex items-center gap-2">
+                <Trophy size={14} className="text-[#FDB913]" />
+                {t('games.world_boss.xp_reward', 'RÉCOMPENSE : {{xp}} XP', { xp: boss.reward_xp })}
               </span>
-            )}
-            {question && question.run_damage > 0 && (
-              <span>
-                {t('games.world_boss.run_damage', 'Dégâts de la montée')} : {question.run_damage}
-              </span>
-            )}
-          </div>
-
-          <div className="mx-auto mt-8 max-w-3xl">
-            <div className="mb-2 flex items-end justify-between font-mono">
-              <span className="text-3xl font-black italic">
-                {(boss.current_hp ?? 0).toLocaleString('fr-FR')}
-                <span className="text-lg font-normal text-gray-600">
-                  {' '}
-                  / {(boss.total_hp ?? 0).toLocaleString('fr-FR')}
+              {question && (
+                <span>
+                  {t('games.world_boss.best_tier', 'Meilleur palier')} : {question.best_tier}
                 </span>
-              </span>
-              <span className="text-xl font-black text-red-500">{Math.round(hpPercent)}%</span>
+              )}
+              {question && question.run_damage > 0 && (
+                <span>
+                  {t('games.world_boss.run_damage', 'Dégâts de la montée')} : {question.run_damage}
+                </span>
+              )}
             </div>
-            <div className="h-4 overflow-hidden rounded-full border border-white/5 bg-gray-900 p-1">
-              <motion.div
-                animate={{ width: `${hpPercent}%` }}
-                transition={{ duration: 1, ease: 'circOut' }}
-                className="h-full rounded-full bg-red-500"
-              />
+
+            <div className="mx-auto mt-8 max-w-3xl">
+              <div className="mb-2 flex items-end justify-between font-mono">
+                <span className="text-3xl font-black italic">
+                  {(boss.current_hp ?? 0).toLocaleString('fr-FR')}
+                  <span className="text-lg font-normal text-[#8F94A5]">
+                    {' '}
+                    / {(boss.total_hp ?? 0).toLocaleString('fr-FR')}
+                  </span>
+                </span>
+                <span className="text-xl font-black text-[#E8442B]">{Math.round(hpPercent)}%</span>
+              </div>
+              <div className="h-4 overflow-hidden rounded-full border border-[#F4F1E8]/10 bg-[#0F1016] p-1">
+                <motion.div
+                  animate={{ width: `${hpPercent}%` }}
+                  transition={{ duration: 1, ease: 'circOut' }}
+                  className="h-full rounded-full bg-[#E8442B]"
+                />
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-          <aside className={limiterBreak ? 'lg:-mx-4' : ''}>
-            <TierLadder tier={tier} limiterBreak={limiterBreak} />
-            {question && tier >= 12 && !limiterBreak && question.streak > 0 && (
-              <p className="mt-3 text-center font-mono text-xs font-bold uppercase tracking-widest text-amber-400">
-                {t('games.world_boss.limiter_progress', '{{n}}/5 au palier 12', {
-                  n: question.streak,
-                })}
-              </p>
-            )}
-          </aside>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+            <aside className={limiterBreak ? 'lg:-mx-4' : ''}>
+              <TierLadder tier={tier} limiterBreak={limiterBreak} />
+              {question && tier >= 12 && !limiterBreak && question.streak > 0 && (
+                <p className="mt-3 text-center font-mono text-xs font-bold uppercase tracking-widest text-[#FDB913]">
+                  {t('games.world_boss.limiter_progress', '{{n}}/5 au palier 12', {
+                    n: question.streak,
+                  })}
+                </p>
+              )}
+            </aside>
 
-          <main className="lg:col-span-2">
-            <div className="rounded-3xl border border-white/5 bg-gray-900/50 p-8 backdrop-blur-xl">
-              {!question ? (
-                <div className="space-y-6 text-center">
-                  <p className="leading-relaxed text-gray-400">
-                    {t(
-                      'games.world_boss.protocol_desc',
-                      "Chaque bonne réponse double les dégâts du palier suivant : 1, 2, 4… jusqu'à 2 048. Une seule erreur et tu repars du palier 1 — mais les dégâts déjà infligés restent acquis à la communauté. Cinq bonnes réponses au palier 12 déclenchent le Brisage de Limiteur.",
-                    )}
-                  </p>
-                  {/* Cliquable hors connexion, le bouton n'offrait qu'un 401 en
+            <main className="lg:col-span-2">
+              <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8">
+                {!question ? (
+                  <div className="space-y-6 text-center">
+                    <p className="leading-relaxed text-[#8F94A5]">
+                      {t(
+                        'games.world_boss.protocol_desc',
+                        "Chaque bonne réponse double les dégâts du palier suivant : 1, 2, 4… jusqu'à 2 048. Une seule erreur et tu repars du palier 1 — mais les dégâts déjà infligés restent acquis à la communauté. Cinq bonnes réponses au palier 12 déclenchent le Brisage de Limiteur.",
+                      )}
+                    </p>
+                    {/* Cliquable hors connexion, le bouton n'offrait qu'un 401 en
                       toast : la seule chose qu'il pouvait faire, c'est échouer.
                       Un visiteur anonyme le voit désactivé, et la ligne
                       ci-dessous lui dit pourquoi. */}
-                  <button
-                    type="button"
-                    onClick={start}
-                    disabled={phase === 'answering' || !isAuthenticated}
-                    className="rounded-2xl bg-amber-500 px-10 py-4 font-black uppercase italic tracking-widest text-black transition hover:bg-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {t('games.world_boss.start', 'Commencer la montée')}
-                  </button>
-                  {!isAuthenticated && (
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-600">
-                      {t('games.world_boss.login_required', 'Connecte-toi pour frapper le boss.')}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-black uppercase tracking-widest text-gray-500">
-                        {t('games.world_boss.tier', 'Palier {{n}}', { n: question.tier })}
-                      </div>
-                      <div className="font-mono text-3xl font-black text-amber-400">
-                        {t('games.world_boss.damage_at_tier', '{{dmg}} dégâts', {
-                          dmg: question.damage,
-                        })}
-                      </div>
-                    </div>
-                    <TimerRing
-                      questionId={questionId}
-                      seconds={question.timer}
-                      paused={phase !== 'asking'}
-                      onExpire={() => answer(-1)}
-                    />
+                    <button
+                      type="button"
+                      onClick={start}
+                      disabled={phase === 'answering' || !isAuthenticated}
+                      className="font-manga rounded-xl bg-[#E8442B] px-10 py-4 font-black uppercase italic tracking-widest text-[#F4F1E8] transition hover:bg-[#c93a24] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {t('games.world_boss.start', 'Commencer la montée')}
+                    </button>
+                    {!isAuthenticated && (
+                      <p className="text-xs font-bold uppercase tracking-widest text-[#8F94A5]">
+                        {t('games.world_boss.login_required', 'Connecte-toi pour frapper le boss.')}
+                      </p>
+                    )}
                   </div>
+                ) : (
+                  <div className="space-y-8">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-black uppercase tracking-widest text-[#8F94A5]">
+                          {t('games.world_boss.tier', 'Palier {{n}}', { n: question.tier })}
+                        </div>
+                        <div className="font-mono text-3xl font-black text-[#FDB913]">
+                          {t('games.world_boss.damage_at_tier', '{{dmg}} dégâts', {
+                            dmg: question.damage,
+                          })}
+                        </div>
+                      </div>
+                      <TimerRing
+                        questionId={questionId}
+                        seconds={question.timer}
+                        paused={phase !== 'asking'}
+                        onExpire={() => answer(-1)}
+                      />
+                    </div>
 
-                  <QuestionCard
-                    question={question}
-                    verdict={verdict}
-                    onPick={answer}
-                    locked={phase === 'answering' || verdict !== null}
-                  />
+                    <QuestionCard
+                      question={question}
+                      verdict={verdict}
+                      onPick={answer}
+                      locked={phase === 'answering' || verdict !== null}
+                    />
 
-                  <AnimatePresence>
-                    {verdict && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-3 text-center"
-                      >
-                        <p
-                          className={`text-2xl font-black italic ${
-                            verdict.correct ? 'text-emerald-400' : 'text-red-500'
-                          }`}
+                    <AnimatePresence>
+                      {verdict && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-3 text-center"
                         >
-                          {verdict.correct
-                            ? t('games.world_boss.correct', '+{{dmg}} dégâts', {
-                                dmg: verdict.damage_dealt,
-                              })
-                            : verdict.late
-                              ? t('games.world_boss.too_late', 'Temps écoulé — retour au palier 1')
-                              : t('games.world_boss.wrong', 'Raté — retour au palier 1')}
-                        </p>
-                        {!verdict.correct && (
-                          <p className="text-gray-400">
-                            {t('games.world_boss.answer_was', 'La réponse était : {{answer}}', {
-                              answer: verdict.correct_label,
+                          <p
+                            className={`text-2xl font-black italic ${
+                              verdict.correct ? 'text-[#FDB913]' : 'text-[#E8442B]'
+                            }`}
+                          >
+                            {verdict.correct
+                              ? t('games.world_boss.correct', '+{{dmg}} dégâts', {
+                                  dmg: verdict.damage_dealt,
+                                })
+                              : verdict.late
+                                ? t(
+                                    'games.world_boss.too_late',
+                                    'Temps écoulé — retour au palier 1',
+                                  )
+                                : t('games.world_boss.wrong', 'Raté — retour au palier 1')}
+                          </p>
+                          {!verdict.correct && (
+                            <p className="text-[#8F94A5]">
+                              {t('games.world_boss.answer_was', 'La réponse était : {{answer}}', {
+                                answer: verdict.correct_label,
+                              })}
+                            </p>
+                          )}
+                          <p className="text-sm text-[#8F94A5]/70">
+                            {t('games.world_boss.subject_was', "Il s'agissait de « {{title}} »", {
+                              title: verdict.subject,
                             })}
                           </p>
-                        )}
-                        <p className="text-sm text-gray-600">
-                          {t('games.world_boss.subject_was', "Il s'agissait de « {{title}} »", {
-                            title: verdict.subject,
-                          })}
-                        </p>
-                        {verdict.limiter_break && (
-                          <p className="font-black uppercase italic tracking-widest text-red-400">
-                            {t(
-                              'games.world_boss.limiter_break_on',
-                              'BRISAGE DE LIMITEUR — dégâts doublés, plus aucune limite',
-                            )}
-                          </p>
-                        )}
-                        {bossDefeated ? (
-                          <p className="font-black uppercase italic tracking-widest text-emerald-400">
-                            {t(
-                              'games.world_boss.defeated',
-                              'Le boss est vaincu. Rendez-vous la semaine prochaine.',
-                            )}
-                          </p>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={next}
-                            disabled={phase === 'answering'}
-                            className="rounded-2xl bg-white px-8 py-3 font-black uppercase italic tracking-widest text-black transition hover:bg-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {t('games.world_boss.next', 'Question suivante')}
-                          </button>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-            </div>
-          </main>
-
-          <aside className="rounded-3xl border border-white/5 bg-gray-900/50 p-6 backdrop-blur-xl">
-            <h3 className="mb-6 flex items-center gap-3 text-lg font-black uppercase italic">
-              <Zap size={18} className="text-yellow-500" fill="currentColor" />
-              {t('games.world_boss.top_raiders', 'Meilleurs raiders')}
-            </h3>
-            <div className="space-y-2">
-              {leaderboard && leaderboard.length > 0 ? (
-                leaderboard.map((row: LeaderboardRow, i: number) => (
-                  <div key={row.id} className="flex items-center gap-3 rounded-xl bg-black/40 p-3">
-                    <span className="w-6 text-center font-black italic text-gray-600">{i + 1}</span>
-                    <span className="flex-1 truncate font-bold text-white/90">{row.username}</span>
-                    <span className="font-mono text-sm font-black text-amber-400">
-                      {t('games.world_boss.tier', 'Palier {{n}}', { n: row.best_tier })}
-                    </span>
+                          {verdict.limiter_break && (
+                            <p className="font-black uppercase italic tracking-widest text-[#E8442B]">
+                              {t(
+                                'games.world_boss.limiter_break_on',
+                                'BRISAGE DE LIMITEUR — dégâts doublés, plus aucune limite',
+                              )}
+                            </p>
+                          )}
+                          {bossDefeated ? (
+                            <p className="font-black uppercase italic tracking-widest text-[#FDB913]">
+                              {t(
+                                'games.world_boss.defeated',
+                                'Le boss est vaincu. Rendez-vous la semaine prochaine.',
+                              )}
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={next}
+                              disabled={phase === 'answering'}
+                              className="font-manga rounded-xl border border-[#F4F1E8]/20 bg-transparent px-8 py-3 font-black uppercase italic tracking-widest text-[#F4F1E8] transition hover:border-[#FDB913] hover:text-[#FDB913] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913] disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {t('games.world_boss.next', 'Question suivante')}
+                            </button>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                ))
-              ) : (
-                <p className="py-10 text-center font-black uppercase italic tracking-widest text-gray-700">
-                  {t(
-                    'games.world_boss.no_raiders',
-                    'Aucun raider pour le moment. Sois le premier !',
-                  )}
-                </p>
-              )}
-            </div>
-          </aside>
+                )}
+              </div>
+            </main>
+
+            <aside className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6">
+              <h3 className="font-manga mb-6 flex items-center gap-3 text-lg font-black uppercase italic">
+                <Zap size={18} className="text-[#FDB913]" fill="currentColor" />
+                {t('games.world_boss.top_raiders', 'Meilleurs raiders')}
+              </h3>
+              <div className="space-y-2">
+                {leaderboard && leaderboard.length > 0 ? (
+                  leaderboard.map((row: LeaderboardRow, i: number) => (
+                    <div
+                      key={row.id}
+                      className="flex items-center gap-3 rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-3"
+                    >
+                      <span className="w-6 text-center font-black italic text-[#8F94A5]">
+                        {i + 1}
+                      </span>
+                      <span className="flex-1 truncate font-bold text-[#F4F1E8]">
+                        {row.username}
+                      </span>
+                      <span className="font-mono text-sm font-black text-[#FDB913]">
+                        {t('games.world_boss.tier', 'Palier {{n}}', { n: row.best_tier })}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="py-10 text-center font-black uppercase italic tracking-widest text-[#8F94A5]/60">
+                    {t(
+                      'games.world_boss.no_raiders',
+                      'Aucun raider pour le moment. Sois le premier !',
+                    )}
+                  </p>
+                )}
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
     </AnimatedPage>

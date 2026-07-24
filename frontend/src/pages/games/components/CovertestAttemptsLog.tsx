@@ -17,19 +17,19 @@ export const CovertestAttemptsLog: React.FC<CovertestAttemptsLogProps> = ({ gues
 
   return (
     <div className="mt-10 space-y-3">
-      <h4 className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] mb-2">
+      <h4 className="text-[10px] font-black text-[#8F94A5]/60 uppercase tracking-[0.2em] mb-2">
         {t('games.covertest.attempts_log', 'Journal des tentatives')}
       </h4>
       {guesses.length === 0 && (
-        <p className="text-center py-6 opacity-20 italic text-sm">
+        <p className="text-center py-6 text-[#8F94A5]/50 italic text-sm">
           {t('games.covertest.no_attempts', 'Aucune tentative pour le moment.')}
         </p>
       )}
       {guesses.map((g, i) => (
         <div
           key={i}
-          className={`flex items-center gap-3 p-3 rounded-2xl border-l-4 ${
-            g.is_correct ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'
+          className={`flex items-center gap-3 p-3 rounded-2xl border-l-4 bg-[#0F1016] ${
+            g.is_correct ? 'border-[#FDB913]' : 'border-[#E8442B]'
           }`}
         >
           {g.image ? (
@@ -40,13 +40,13 @@ export const CovertestAttemptsLog: React.FC<CovertestAttemptsLogProps> = ({ gues
               loading="lazy"
             />
           ) : (
-            <span className="w-9 h-12 rounded-lg bg-black/10 dark:bg-white/10 shrink-0" />
+            <span className="w-9 h-12 rounded-lg bg-[#F4F1E8]/10 shrink-0" />
           )}
-          <span className="font-bold flex-grow truncate">{g.title}</span>
+          <span className="font-bold flex-grow truncate text-[#F4F1E8]">{g.title}</span>
           <span
             className={`shrink-0 grid place-items-center w-7 h-7 rounded-full ${
-              g.is_correct ? 'bg-green-500' : 'bg-red-500'
-            } text-white`}
+              g.is_correct ? 'bg-[#FDB913] text-[#0B0C10]' : 'bg-[#E8442B] text-[#F4F1E8]'
+            }`}
           >
             {g.is_correct ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
           </span>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DifficultySelector } from './components/DifficultySelector';
-import { Target, Play, Sparkles, Loader2 } from 'lucide-react';
+import { Play, Sparkles, Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { classicGameService } from '../../features/games/services/classicService';
@@ -24,13 +24,11 @@ const Section: React.FC<{
 }> = ({ step, title, hint, children }) => (
   <div>
     <div className="flex items-baseline gap-3 mb-4">
-      <span className="shrink-0 w-6 h-6 rounded-lg bg-blue-500/10 text-blue-500 grid place-items-center font-black text-xs">
+      <span className="shrink-0 w-6 h-6 rounded-md bg-[#E8442B]/12 text-[#E8442B] grid place-items-center font-black text-xs">
         {step}
       </span>
-      <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500">
-        {title}
-      </h2>
-      {hint && <span className="text-[11px] font-bold text-gray-400/80">{hint}</span>}
+      <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#8F94A5]">{title}</h2>
+      {hint && <span className="text-[11px] font-bold text-[#8F94A5]/80">{hint}</span>}
     </div>
     {children}
   </div>
@@ -47,25 +45,25 @@ const ClassicLobbyPage: React.FC = () => {
       key: 'Easy',
       label: t('games.classic.lobby.difficulties.easy.label', 'Facile'),
       sub: t('games.classic.lobby.difficulties.easy.sub', 'Titres très connus'),
-      active: 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-400',
+      active: 'border-[#FDB913] bg-[#FDB913]/10 text-[#FDB913]',
     },
     {
       key: 'Normal',
       label: t('games.classic.lobby.difficulties.normal.label', 'Normal'),
       sub: t('games.classic.lobby.difficulties.normal.sub', 'Grand public'),
-      active: 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400',
+      active: 'border-[#FDB913] bg-[#FDB913]/10 text-[#FDB913]',
     },
     {
       key: 'Hard',
       label: t('games.classic.lobby.difficulties.hard.label', 'Difficile'),
       sub: t('games.classic.lobby.difficulties.hard.sub', 'Pour connaisseurs'),
-      active: 'border-orange-500 bg-orange-500/10 text-orange-600 dark:text-orange-400',
+      active: 'border-[#E8442B] bg-[#E8442B]/10 text-[#E8442B]',
     },
     {
       key: 'Impossible',
       label: t('games.classic.lobby.difficulties.impossible.label', 'Impossible'),
       sub: t('games.classic.lobby.difficulties.impossible.sub', 'Pépites obscures'),
-      active: 'border-red-600 bg-red-600/10 text-red-600 dark:text-red-400',
+      active: 'border-[#E8442B] bg-[#E8442B]/10 text-[#E8442B]',
     },
   ];
 
@@ -141,94 +139,111 @@ const ClassicLobbyPage: React.FC = () => {
     universe === 'Anime' ? 'Anime' : universe === 'Manga' ? 'Manga' : 'Personnages';
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-14">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-500 text-[10px] font-black uppercase tracking-[0.3em] mb-6">
-          <Target className="w-3.5 h-3.5" /> {t('games.classic.lobby.badge', 'Déduction')}
-        </div>
-        <h1 className="text-5xl md:text-6xl font-black italic manga-font tracking-tighter uppercase text-black dark:text-white leading-none">
-          ANIMETIX{' '}
-          <span className="text-blue-500">
-            {t('games.classic.lobby.title_highlight', 'CLASSIQUE')}
-          </span>
-        </h1>
-        <p className="mt-4 text-base font-medium text-gray-500 dark:text-white/50">
-          {t(
-            'games.classic.lobby.subtitle',
-            "Configure ta traque, puis pars démasquer l'œuvre mystère.",
-          )}
-        </p>
-      </div>
-
-      <div className="rounded-[2.5rem] border-2 border-black/5 dark:border-white/10 bg-surface-card p-7 md:p-9 shadow-token-card space-y-10">
-        {/* Univers */}
-        <Section step={1} title={t('games.classic.lobby.section_universe', 'Univers')}>
-          <ClassicUniverseSelector universe={universe} setUniverse={setUniverse} />
-        </Section>
-
-        {/* Difficulté */}
-        <Section
-          step={2}
-          title={t('games.classic.lobby.section_difficulty', 'Difficulté')}
-          hint={t('games.classic.lobby.section_difficulty_hint', "Rareté de l'œuvre à trouver")}
-        >
-          <DifficultySelector options={DIFFICULTIES} value={difficulty} onChange={setDifficulty} />
-        </Section>
-
-        {/* Indices */}
-        <Section
-          step={3}
-          title={t('games.classic.lobby.section_hints', 'Indices')}
-          hint={hintCountLabel(config.length)}
-        >
-          <ClassicHintConfigSection
-            hintMode={hintMode}
-            setHintMode={setHintMode}
-            hintOrder={hintOrder}
-            enabled={enabled}
-            move={move}
-            toggle={toggle}
-            unlockAt={unlockAt}
-            classicPreset={CLASSIC_PRESET}
-            unlockStep={UNLOCK_STEP}
+    <div className="min-h-screen bg-[#0B0C10] text-[#F4F1E8]">
+      <div className="max-w-3xl mx-auto px-6 py-14">
+        {/* Header — plaque de protocole */}
+        <header className="relative mb-12">
+          <div
+            className="explore-halftone pointer-events-none absolute -inset-x-6 -top-10 h-40"
+            aria-hidden
           />
-        </Section>
+          <div className="relative flex items-center gap-3">
+            <span className="explore-stamp -rotate-2" aria-hidden>
+              推
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+              {t('games.classic.lobby.badge', 'Déduction')}
+            </span>
+          </div>
+          <h1 className="font-manga relative mt-4 text-5xl md:text-6xl font-black uppercase italic leading-none tracking-tighter text-[#F4F1E8]">
+            ANIMETIX{' '}
+            <span className="text-[#E8442B]">
+              {t('games.classic.lobby.title_highlight', 'CLASSIQUE')}
+            </span>
+          </h1>
+          <p className="relative mt-4 max-w-2xl text-base leading-relaxed text-[#8F94A5]">
+            {t(
+              'games.classic.lobby.subtitle',
+              "Configure ta traque, puis pars démasquer l'œuvre mystère.",
+            )}
+          </p>
+          <span className="relative mt-8 block h-px bg-[#F4F1E8]/10" aria-hidden />
+        </header>
 
-        {/* Launch */}
-        <button
-          onClick={launch}
-          disabled={launching}
-          className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-500 text-white font-black italic manga-font tracking-widest text-lg py-5 rounded-2xl shadow-xl shadow-blue-600/20 hover:scale-[1.01] active:scale-95 transition-all disabled:opacity-60 disabled:hover:scale-100"
-        >
-          {launching ? (
-            <>
-              <Loader2 className="w-6 h-6 animate-spin" />{' '}
-              {t('games.classic.lobby.launching', 'Préparation…')}
-            </>
-          ) : (
-            <>
-              <Play className="w-6 h-6 fill-current" />{' '}
-              {t('games.classic.lobby.launch', 'Lancer la partie')}
-            </>
-          )}
-        </button>
-        <p className="-mt-4 text-center text-[11px] font-bold uppercase tracking-widest text-gray-400 flex items-center justify-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-          {universeLabel} · {DIFFICULTIES.find((d) => d.key === difficulty)?.label} ·{' '}
-          {hintMode === 'classic'
-            ? t('games.classic.lobby.modes.classic.label', 'Classique')
-            : hintMode === 'tryhard'
-              ? t('games.classic.lobby.modes.tryhard.label', 'Tryhard')
-              : t('games.classic.lobby.modes.custom.label', 'Personnalisé')}{' '}
-          (
-          {t('games.classic.lobby.hint_count', {
-            defaultValue: '{{count}} indice{{plural}}',
-            count: config.length,
-            plural: config.length > 1 ? 's' : '',
-          })}
-          )
-        </p>
+        <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 sm:p-8 md:p-9 space-y-10">
+          {/* Univers */}
+          <Section step={1} title={t('games.classic.lobby.section_universe', 'Univers')}>
+            <ClassicUniverseSelector universe={universe} setUniverse={setUniverse} />
+          </Section>
+
+          {/* Difficulté */}
+          <Section
+            step={2}
+            title={t('games.classic.lobby.section_difficulty', 'Difficulté')}
+            hint={t('games.classic.lobby.section_difficulty_hint', "Rareté de l'œuvre à trouver")}
+          >
+            <DifficultySelector
+              options={DIFFICULTIES}
+              value={difficulty}
+              onChange={setDifficulty}
+              hoverClassName="hover:border-[#FDB913]/40"
+            />
+          </Section>
+
+          {/* Indices */}
+          <Section
+            step={3}
+            title={t('games.classic.lobby.section_hints', 'Indices')}
+            hint={hintCountLabel(config.length)}
+          >
+            <ClassicHintConfigSection
+              hintMode={hintMode}
+              setHintMode={setHintMode}
+              hintOrder={hintOrder}
+              enabled={enabled}
+              move={move}
+              toggle={toggle}
+              unlockAt={unlockAt}
+              classicPreset={CLASSIC_PRESET}
+              unlockStep={UNLOCK_STEP}
+            />
+          </Section>
+
+          {/* Launch */}
+          <button
+            onClick={launch}
+            disabled={launching}
+            className="w-full flex items-center justify-center gap-3 bg-[#E8442B] hover:bg-[#c93a24] text-[#F4F1E8] font-manga font-black italic uppercase tracking-widest text-lg py-5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913]"
+          >
+            {launching ? (
+              <>
+                <Loader2 className="w-6 h-6 animate-spin" />{' '}
+                {t('games.classic.lobby.launching', 'Préparation…')}
+              </>
+            ) : (
+              <>
+                <Play className="w-6 h-6 fill-current" />{' '}
+                {t('games.classic.lobby.launch', 'Lancer la partie')}
+              </>
+            )}
+          </button>
+          <p className="-mt-4 text-center text-[11px] font-bold uppercase tracking-widest text-[#8F94A5] flex items-center justify-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#FDB913]" />
+            {universeLabel} · {DIFFICULTIES.find((d) => d.key === difficulty)?.label} ·{' '}
+            {hintMode === 'classic'
+              ? t('games.classic.lobby.modes.classic.label', 'Classique')
+              : hintMode === 'tryhard'
+                ? t('games.classic.lobby.modes.tryhard.label', 'Tryhard')
+                : t('games.classic.lobby.modes.custom.label', 'Personnalisé')}{' '}
+            (
+            {t('games.classic.lobby.hint_count', {
+              defaultValue: '{{count}} indice{{plural}}',
+              count: config.length,
+              plural: config.length > 1 ? 's' : '',
+            })}
+            )
+          </p>
+        </div>
       </div>
     </div>
   );

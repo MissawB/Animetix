@@ -13,7 +13,6 @@ import {
   ThumbsDown,
 } from 'lucide-react';
 import { useAkinetixStore } from '../../features/games/stores/akinetixStore';
-import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { useTranslation } from 'react-i18next';
@@ -53,8 +52,8 @@ const AkinetixPage: React.FC = () => {
 
   if (isLoading)
     return (
-      <div className="flex justify-center items-center py-20 px-6 max-w-4xl mx-auto">
-        <div className="w-full space-y-8">
+      <div className="min-h-screen bg-[#0B0C10] flex justify-center items-center py-20 px-6">
+        <div className="w-full max-w-4xl space-y-8">
           <CardSkeleton />
           <div className="grid grid-cols-3 gap-4">
             <CardSkeleton />
@@ -67,26 +66,23 @@ const AkinetixPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-[70vh] py-20 px-6">
-        <Card
-          padding="lg"
-          className="text-center border-red-500/50 bg-red-500/5 max-w-2xl w-full relative overflow-hidden"
-        >
-          <div className="absolute top-0 left-0 w-full h-1 bg-red-500 animate-pulse" />
-          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-6 opacity-80" />
-          <h2 className="text-4xl font-black text-red-500 mb-4 tracking-tighter uppercase">
+      <div className="min-h-screen bg-[#0B0C10] text-[#F4F1E8] flex justify-center items-center py-20 px-6">
+        <div className="text-center rounded-2xl border border-[#E8442B]/40 bg-[#0F1016] p-8 md:p-10 max-w-2xl w-full relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-[#E8442B] animate-pulse" />
+          <AlertTriangle className="w-16 h-16 text-[#E8442B] mx-auto mb-6" />
+          <h2 className="font-manga text-4xl font-black italic text-[#E8442B] mb-4 tracking-tighter uppercase">
             {t('games.akinetix.anomaly', 'Anomalie Détectée')}
           </h2>
-          <p className="mb-10 text-white/60 font-bold leading-relaxed">{error}</p>
+          <p className="mb-10 text-[#8F94A5] font-bold leading-relaxed">{error}</p>
           <Button
             variant="danger"
             size="lg"
             onClick={() => restartGame()}
-            className="uppercase tracking-widest font-black"
+            className="uppercase tracking-widest font-black !bg-[#E8442B] hover:!bg-[#c93a24] text-[#F4F1E8]"
           >
             {t('games.akinetix.reset_core', 'Réinitialiser le Noyau')}
           </Button>
-        </Card>
+        </div>
       </div>
     );
   }
@@ -94,251 +90,252 @@ const AkinetixPage: React.FC = () => {
   if (!gameState) return null;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12 lg:py-20">
-      <header className="mb-12 text-center">
-        <div className="inline-flex items-center justify-center p-4 bg-blue-500/10 rounded-full mb-6 relative">
-          <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full animate-pulse" />
-          <Brain className="w-12 h-12 text-blue-500 relative z-10" />
-        </div>
-        <h1 className="text-5xl md:text-7xl font-black italic manga-font mb-4 tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-          Akinetix
-        </h1>
-        <p className="text-white/50 font-bold uppercase tracking-[0.2em] text-sm md:text-base">
-          {t('games.akinetix.tagline', "L'IA peut-elle lire dans vos pensées ?")}
-        </p>
-      </header>
+    <div className="min-h-screen bg-[#0B0C10] text-[#F4F1E8]">
+      <div className="max-w-6xl mx-auto px-6 py-12 lg:py-20">
+        <header className="mb-12 text-center">
+          <div className="inline-flex items-center gap-3 mb-5">
+            <span className="explore-stamp -rotate-2" aria-hidden>
+              読
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+              {t('games.akinetix.tagline', "L'IA peut-elle lire dans vos pensées ?")}
+            </span>
+          </div>
+          <div className="inline-flex items-center justify-center mb-4">
+            <Brain className="w-12 h-12 text-[#E8442B]" />
+          </div>
+          <h1 className="font-manga text-5xl md:text-7xl font-black italic mb-2 tracking-tighter uppercase text-[#F4F1E8]">
+            Akinetix
+          </h1>
+        </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: History */}
-        <div className="lg:col-span-4 order-2 lg:order-1 hidden md:block">
-          <Card
-            padding="md"
-            className="bg-[#0a0a0a] border-white/5 sticky top-24 max-h-[600px] flex flex-col"
-          >
-            <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-[0.2em] flex items-center gap-2 text-white shrink-0">
-              <History className="w-4 h-4" /> {t('games.akinetix.journal', "Journal d'Analyse")}
-            </h3>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: History */}
+          <div className="lg:col-span-4 order-2 lg:order-1 hidden md:block">
+            <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 sticky top-24 max-h-[600px] flex flex-col">
+              <h3 className="text-xs font-black uppercase text-[#8F94A5] mb-6 tracking-[0.2em] flex items-center gap-2 shrink-0">
+                <History className="w-4 h-4" /> {t('games.akinetix.journal', "Journal d'Analyse")}
+              </h3>
 
-            <div
-              ref={historyScrollRef}
-              className="overflow-y-auto pr-2 custom-scrollbar flex-1 space-y-4"
-            >
-              {gameState.history.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center opacity-20 py-20">
-                  <Sparkles className="w-8 h-8 mb-4" />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-center">
-                    {t('games.akinetix.not_started', "L'analyse n'a pas encore commencé")}
-                  </p>
-                </div>
-              ) : (
-                gameState.history.map((item: { q: string; a: string }, i: number) => (
-                  <div
-                    key={i}
-                    className="bg-[#121212] p-4 rounded-2xl border border-white/5 animate-slide-up"
-                  >
-                    <p className="text-xs font-bold text-white/80 mb-2 leading-relaxed">{item.q}</p>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          item.a === 'OUI'
-                            ? 'bg-green-500'
-                            : item.a === 'NON'
-                              ? 'bg-red-500'
-                              : 'bg-yellow-500'
-                        }`}
-                      />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-white/50">
-                        {item.a}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
-        </div>
-
-        {/* Center/Right Column: Main Game Area */}
-        <div className="lg:col-span-8 order-1 lg:order-2 space-y-8">
-          <Card
-            padding="lg"
-            className="relative overflow-hidden bg-gradient-to-b from-[#1a1a2e] to-[#0a0a14] border-blue-500/20 shadow-2xl shadow-blue-900/20 min-h-[400px] flex flex-col justify-center"
-          >
-            {/* Background Decorations */}
-            <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-              <Target className="w-64 h-64 text-blue-500 spin-slow" />
-            </div>
-            <div className="absolute inset-0 bg-[url('/static/img/noise.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
-
-            <div className="relative z-10 flex flex-col items-center text-center">
-              <Badge
-                variant="primary"
-                className="mb-6 bg-blue-500/20 text-blue-400 border-blue-500/30 backdrop-blur-md"
+              <div
+                ref={historyScrollRef}
+                className="overflow-y-auto pr-2 custom-scrollbar flex-1 space-y-4"
               >
-                {t('games.akinetix.question_num', {
-                  defaultValue: 'Question #{{num}}',
-                  num: gameState.history.length + 1,
-                })}
-              </Badge>
-
-              {/* Barre de progression : confiance de l'IA (à quel point elle est
-                  proche de deviner). */}
-              {!showActualTargetInput && (
-                <div className="w-full max-w-md mx-auto mb-10">
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-2">
-                    <span className="flex items-center gap-1.5">
-                      <Target className="w-3 h-3" />{' '}
-                      {t('games.akinetix.ai_confidence', "Confiance de l'IA")}
-                    </span>
-                    <span className="text-blue-400">
-                      {Math.round((gameState.confidence ?? 0) * 100)}%
-                    </span>
+                {gameState.history.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-[#8F94A5]/40 py-20">
+                    <Sparkles className="w-8 h-8 mb-4" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-center">
+                      {t('games.akinetix.not_started', "L'analyse n'a pas encore commencé")}
+                    </p>
                   </div>
-                  <div className="w-full h-2.5 rounded-full bg-white/5 overflow-hidden border border-white/5">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_12px_rgba(59,130,246,0.5)] transition-all duration-700 ease-out"
-                      style={{
-                        width: `${Math.min(100, Math.round((gameState.confidence ?? 0) * 100))}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="text-3xl md:text-5xl mb-12 font-black text-white leading-tight drop-shadow-lg">
-                {gameState.gameOver && !showActualTargetInput ? (
-                  <div className="animate-fade-in">
-                    <span className="block text-sm text-blue-400 uppercase tracking-widest mb-4">
-                      {t('games.akinetix.ai_decided', "L'IA a tranché :")}
-                    </span>
-                    <span className="text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                      {gameState.aiGuess}
-                    </span>
-                  </div>
-                ) : showActualTargetInput ? (
-                  <span className="text-yellow-400">
-                    {t('games.akinetix.who_really', 'À qui pensiez-vous réellement ?')}
-                  </span>
                 ) : (
-                  <span className="italic">{gameState.currentQuestion}</span>
+                  gameState.history.map((item: { q: string; a: string }, i: number) => (
+                    <div
+                      key={i}
+                      className="bg-[#0B0C10] p-4 rounded-xl border border-[#F4F1E8]/5 animate-slide-up"
+                    >
+                      <p className="text-xs font-bold text-[#F4F1E8]/80 mb-2 leading-relaxed">
+                        {item.q}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            item.a === 'OUI'
+                              ? 'bg-[#FDB913]'
+                              : item.a === 'NON'
+                                ? 'bg-[#E8442B]'
+                                : 'bg-[#8F94A5]'
+                          }`}
+                        />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                          {item.a}
+                        </span>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
+            </div>
+          </div>
 
-              {/* Action Buttons */}
-              <div className="w-full max-w-2xl mx-auto">
-                {!gameState.gameOver ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 md:gap-6">
-                      <Button
-                        variant="success"
-                        size="lg"
-                        onClick={() => submitAnswer('OUI')}
-                        className="py-6 text-lg font-black uppercase tracking-widest bg-green-500 hover:bg-green-600 border-none shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-all"
-                      >
-                        <Check className="w-6 h-6 mr-2" /> {t('common.yes')}
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="lg"
-                        onClick={() => submitAnswer('NON')}
-                        className="py-6 text-lg font-black uppercase tracking-widest bg-red-500 hover:bg-red-600 border-none shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all"
-                      >
-                        <X className="w-6 h-6 mr-2" /> {t('common.no')}
-                      </Button>
+          {/* Center/Right Column: Main Game Area */}
+          <div className="lg:col-span-8 order-1 lg:order-2 space-y-8">
+            <div className="relative overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 md:p-10 min-h-[400px] flex flex-col justify-center">
+              {/* Background Decorations */}
+              <div className="absolute top-0 right-0 p-12 opacity-[0.04] pointer-events-none">
+                <Target className="w-64 h-64 text-[#E8442B] spin-slow" />
+              </div>
+
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <Badge
+                  variant="primary"
+                  className="mb-6 !bg-[#E8442B]/15 !text-[#E8442B] !border-[#E8442B]/30"
+                >
+                  {t('games.akinetix.question_num', {
+                    defaultValue: 'Question #{{num}}',
+                    num: gameState.history.length + 1,
+                  })}
+                </Badge>
+
+                {/* Barre de progression : confiance de l'IA (à quel point elle est
+                  proche de deviner). */}
+                {!showActualTargetInput && (
+                  <div className="w-full max-w-md mx-auto mb-10">
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-[#8F94A5] mb-2">
+                      <span className="flex items-center gap-1.5">
+                        <Target className="w-3 h-3" />{' '}
+                        {t('games.akinetix.ai_confidence', "Confiance de l'IA")}
+                      </span>
+                      <span className="text-[#FDB913]">
+                        {Math.round((gameState.confidence ?? 0) * 100)}%
+                      </span>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <Button
-                        variant="secondary"
-                        onClick={() => submitAnswer('PROBABLEMENT')}
-                        className="py-4 text-sm font-black uppercase tracking-wider bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/30 transition-all"
-                      >
-                        <ThumbsUp className="w-4 h-4 mr-2" />{' '}
-                        {t('games.akinetix.probably', 'Probablement')}
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        onClick={() => submitAnswer('PROBABLEMENT PAS')}
-                        className="py-4 text-sm font-black uppercase tracking-wider bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/30 transition-all"
-                      >
-                        <ThumbsDown className="w-4 h-4 mr-2" />{' '}
-                        {t('games.akinetix.probably_not', 'Probablement pas')}
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        onClick={() => submitAnswer('JE NE SAIS PAS')}
-                        className="py-4 text-sm font-black uppercase tracking-wider bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 border border-yellow-500/30 transition-all"
-                      >
-                        <HelpCircle className="w-4 h-4 mr-2" />{' '}
-                        {t('games.akinetix.dont_know', 'Je ne sais pas')}
-                      </Button>
+                    <div className="w-full h-2.5 rounded-full bg-[#F4F1E8]/5 overflow-hidden border border-[#F4F1E8]/5">
+                      <div
+                        className="h-full rounded-full bg-[#FDB913] transition-all duration-700 ease-out"
+                        style={{
+                          width: `${Math.min(100, Math.round((gameState.confidence ?? 0) * 100))}%`,
+                        }}
+                      />
                     </div>
                   </div>
-                ) : showActualTargetInput ? (
-                  <div className="flex flex-col gap-4 animate-fade-in">
-                    <input
-                      type="text"
-                      value={actualTarget}
-                      onChange={(e) => setActualTarget(e.target.value)}
-                      className="w-full p-6 rounded-2xl bg-black/50 border-2 border-white/10 focus:border-yellow-400 outline-none font-bold text-xl text-center text-white placeholder-white/20 backdrop-blur-md transition-all"
-                      placeholder={t(
-                        'games.akinetix.target_placeholder',
-                        'Nom exact du personnage...',
-                      )}
-                      aria-label={t('games.akinetix.target_aria', 'Nom exact du personnage')}
-                      autoFocus
-                    />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                )}
+
+                <div className="text-3xl md:text-5xl mb-12 font-black text-[#F4F1E8] leading-tight">
+                  {gameState.gameOver && !showActualTargetInput ? (
+                    <div className="animate-fade-in">
+                      <span className="block text-sm text-[#E8442B] uppercase tracking-widest mb-4">
+                        {t('games.akinetix.ai_decided', "L'IA a tranché :")}
+                      </span>
+                      <span className="font-manga text-5xl md:text-7xl italic text-[#FDB913]">
+                        {gameState.aiGuess}
+                      </span>
+                    </div>
+                  ) : showActualTargetInput ? (
+                    <span className="text-[#FDB913]">
+                      {t('games.akinetix.who_really', 'À qui pensiez-vous réellement ?')}
+                    </span>
+                  ) : (
+                    <span className="italic">{gameState.currentQuestion}</span>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="w-full max-w-2xl mx-auto">
+                  {!gameState.gameOver ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 md:gap-6">
+                        <Button
+                          variant="success"
+                          size="lg"
+                          onClick={() => submitAnswer('OUI')}
+                          className="py-6 text-lg font-black uppercase tracking-widest !bg-[#FDB913] hover:!bg-[#e0a50f] !text-[#0B0C10] border-none transition-colors"
+                        >
+                          <Check className="w-6 h-6 mr-2" /> {t('common.yes')}
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="lg"
+                          onClick={() => submitAnswer('NON')}
+                          className="py-6 text-lg font-black uppercase tracking-widest !bg-[#E8442B] hover:!bg-[#c93a24] !text-[#F4F1E8] border-none transition-colors"
+                        >
+                          <X className="w-6 h-6 mr-2" /> {t('common.no')}
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <Button
+                          variant="secondary"
+                          onClick={() => submitAnswer('PROBABLEMENT')}
+                          className="py-4 text-sm font-black uppercase tracking-wider !bg-[#FDB913]/10 !text-[#FDB913] hover:!bg-[#FDB913]/20 border border-[#FDB913]/30 transition-colors"
+                        >
+                          <ThumbsUp className="w-4 h-4 mr-2" />{' '}
+                          {t('games.akinetix.probably', 'Probablement')}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => submitAnswer('PROBABLEMENT PAS')}
+                          className="py-4 text-sm font-black uppercase tracking-wider !bg-[#E8442B]/10 !text-[#E8442B] hover:!bg-[#E8442B]/20 border border-[#E8442B]/30 transition-colors"
+                        >
+                          <ThumbsDown className="w-4 h-4 mr-2" />{' '}
+                          {t('games.akinetix.probably_not', 'Probablement pas')}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => submitAnswer('JE NE SAIS PAS')}
+                          className="py-4 text-sm font-black uppercase tracking-wider !bg-[#8F94A5]/10 !text-[#8F94A5] hover:!bg-[#8F94A5]/20 border border-[#8F94A5]/30 transition-colors"
+                        >
+                          <HelpCircle className="w-4 h-4 mr-2" />{' '}
+                          {t('games.akinetix.dont_know', 'Je ne sais pas')}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : showActualTargetInput ? (
+                    <div className="flex flex-col gap-4 animate-fade-in">
+                      <input
+                        type="text"
+                        value={actualTarget}
+                        onChange={(e) => setActualTarget(e.target.value)}
+                        className="w-full p-6 rounded-xl bg-[#0B0C10] border border-[#F4F1E8]/15 focus:border-[#FDB913] outline-none font-bold text-xl text-center text-[#F4F1E8] placeholder-[#8F94A5]/50 transition-colors"
+                        placeholder={t(
+                          'games.akinetix.target_placeholder',
+                          'Nom exact du personnage...',
+                        )}
+                        aria-label={t('games.akinetix.target_aria', 'Nom exact du personnage')}
+                        autoFocus
+                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        <Button
+                          variant="primary"
+                          size="lg"
+                          onClick={() => submitConfirmation(false, actualTarget)}
+                          disabled={!actualTarget.trim()}
+                          className="py-5 font-black uppercase tracking-widest !bg-[#E8442B] hover:!bg-[#c93a24] !text-[#F4F1E8]"
+                        >
+                          {t('games.akinetix.confirm_victory', 'CONFIRMER LA VICTOIRE')}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          onClick={() => setShowActualTargetInput(false)}
+                          className="py-5 font-black uppercase tracking-widest !border-[#F4F1E8]/15 hover:!border-[#FDB913] !text-[#F4F1E8]"
+                        >
+                          {t('common.cancel', 'Annuler')}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-fade-in">
                       <Button
                         variant="primary"
                         size="lg"
-                        onClick={() => submitConfirmation(false, actualTarget)}
-                        disabled={!actualTarget.trim()}
-                        className="py-5 font-black uppercase tracking-widest"
+                        onClick={() => submitConfirmation(true)}
+                        className="py-6 !bg-[#FDB913] hover:!bg-[#e0a50f] !text-[#0B0C10] border-none font-black uppercase tracking-widest"
                       >
-                        {t('games.akinetix.confirm_victory', 'CONFIRMER LA VICTOIRE')}
+                        {t('games.akinetix.its_right', "C'EST BIEN ÇA !")}
                       </Button>
                       <Button
                         variant="outline"
                         size="lg"
-                        onClick={() => setShowActualTargetInput(false)}
-                        className="py-5 font-black uppercase tracking-widest border-white/20 hover:bg-white/10 text-white"
+                        onClick={() => setShowActualTargetInput(true)}
+                        className="py-6 !border-[#E8442B]/50 !text-[#E8442B] hover:!bg-[#E8442B]/10 font-black uppercase tracking-widest"
                       >
-                        {t('common.cancel', 'Annuler')}
+                        {t('games.akinetix.ai_wrong', "NON, L'IA S'EST TROMPÉE")}
                       </Button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-fade-in">
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      onClick={() => submitConfirmation(true)}
-                      className="py-6 bg-blue-600 hover:bg-blue-700 border-none font-black uppercase tracking-widest shadow-[0_0_30px_rgba(37,99,235,0.4)]"
-                    >
-                      {t('games.akinetix.its_right', "C'EST BIEN ÇA !")}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => setShowActualTargetInput(true)}
-                      className="py-6 border-2 border-red-500/50 text-red-400 hover:bg-red-500/10 font-black uppercase tracking-widest"
-                    >
-                      {t('games.akinetix.ai_wrong', "NON, L'IA S'EST TROMPÉE")}
-                    </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
-          </Card>
 
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              onClick={() => restartGame()}
-              className="text-xs font-black uppercase tracking-widest border-white/10 text-white/50 hover:text-white hover:bg-white/5"
-            >
-              {t('games.akinetix.restart', 'Recommencer une partie')}
-            </Button>
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                onClick={() => restartGame()}
+                className="text-xs font-black uppercase tracking-widest !border-[#F4F1E8]/10 !text-[#8F94A5] hover:!text-[#F4F1E8] hover:!border-[#FDB913]"
+              >
+                {t('games.akinetix.restart', 'Recommencer une partie')}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

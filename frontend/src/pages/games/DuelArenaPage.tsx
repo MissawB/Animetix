@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuthStore } from "../../store/authStore";
-import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { useAuthStore } from '../../store/authStore';
+import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Sword, User, Zap, Trophy, Timer, XCircle, Users, Radio } from 'lucide-react';
@@ -36,35 +36,35 @@ const DuelArenaPage: React.FC = () => {
     if (!roomCode) return;
     let isMounted = true;
     const initSocket = async () => {
-        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const wsUrl = `${protocol}://${window.location.host}/ws/duel/${roomCode}/`;
-        const ws = new WebSocket(wsUrl);
+      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      const wsUrl = `${protocol}://${window.location.host}/ws/duel/${roomCode}/`;
+      const ws = new WebSocket(wsUrl);
 
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'duel_state') {
-                setGameState(data);
-            } else if (data.type === 'opponent_guess') {
-                setLogs(prev => [{ type: 'guess', ...data }, ...prev.slice(0, 4)]);
-            } else if (data.type === 'duel_finished') {
-                setWinner(data.winner);
-                setLogs(prev => [{ type: 'win', ...data }, ...prev]);
-            }
-        };
-
-        ws.onclose = () => {
-            // Optionnel : gérer la déconnexion
-        };
-
-        if (isMounted) {
-            setSocket(ws);
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'duel_state') {
+          setGameState(data);
+        } else if (data.type === 'opponent_guess') {
+          setLogs((prev) => [{ type: 'guess', ...data }, ...prev.slice(0, 4)]);
+        } else if (data.type === 'duel_finished') {
+          setWinner(data.winner);
+          setLogs((prev) => [{ type: 'win', ...data }, ...prev]);
         }
+      };
+
+      ws.onclose = () => {
+        // Optionnel : gérer la déconnexion
+      };
+
+      if (isMounted) {
+        setSocket(ws);
+      }
     };
 
     initSocket();
     return () => {
-        isMounted = false;
-        // socket?.close() est géré par la fermeture de ws dans le cleanup
+      isMounted = false;
+      // socket?.close() est géré par la fermeture de ws dans le cleanup
     };
   }, [roomCode]);
 
@@ -75,177 +75,229 @@ const DuelArenaPage: React.FC = () => {
     setGuess('');
   };
 
-  if (!gameState) return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
+  if (!gameState)
+    return (
+      <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+          className="w-12 h-12 border-4 border-[#E8442B] border-t-transparent rounded-full"
         />
-    </div>
-  );
+      </div>
+    );
 
   const isWaiting = !gameState.player2;
 
   return (
     <AnimatedPage>
-      <div className="max-w-6xl mx-auto px-6 py-12 text-white">
-        <header className="flex justify-between items-center mb-12">
+      <div className="min-h-screen bg-[#0B0C10] text-[#F4F1E8]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+          <header className="flex justify-between items-center mb-12">
             <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-600/20 rounded-2xl border border-blue-500/30">
-                    <Timer size={24} className="text-blue-500" />
+              <div className="p-3 rounded-2xl border border-[#FDB913]/30 bg-[#FDB913]/10">
+                <Timer size={24} className="text-[#FDB913]" />
+              </div>
+              <div>
+                <div className="text-[#8F94A5] text-[10px] font-black uppercase tracking-widest">
+                  {t('games.duel.room_code', 'Salon Code')}
                 </div>
-                <div>
-                    <div className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{t('games.duel.room_code', 'Salon Code')}</div>
-                    <div className="text-2xl font-mono font-black tracking-widest text-blue-500">{roomCode}</div>
+                <div className="text-2xl font-mono font-black tracking-widest text-[#FDB913]">
+                  {roomCode}
                 </div>
+              </div>
             </div>
 
-            <button 
-                onClick={() => navigate('/game/duel/lobby/')}
-                className="text-gray-600 hover:text-white transition-colors flex items-center gap-2 font-bold uppercase text-xs tracking-widest"
+            <button
+              onClick={() => navigate('/game/duel/lobby/')}
+              className="text-[#8F94A5] hover:text-[#F4F1E8] transition-colors flex items-center gap-2 font-bold uppercase text-xs tracking-widest bg-transparent border-none cursor-pointer"
             >
-                <XCircle size={18} /> {t('games.duel.quit', 'Quitter')}
+              <XCircle size={18} /> {t('games.duel.quit', 'Quitter')}
             </button>
-        </header>
+          </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Players Header */}
             <div className="lg:col-span-2 space-y-8">
-                <div className="flex items-center justify-center gap-8 md:gap-16">
-                    {/* Player 1 */}
-                    <div className="text-center">
-                        <div className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 ${user?.username === gameState.player1 ? 'border-blue-500' : 'border-gray-800'} p-2 mb-4 relative`}>
-                            <div className="w-full h-full bg-gray-900 rounded-full flex items-center justify-center">
-                                <User size={48} className="text-gray-700" />
-                            </div>
-                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase italic">P1</div>
-                        </div>
-                        <div className="font-black italic uppercase text-lg">{gameState.player1}</div>
+              <div className="flex items-center justify-center gap-8 md:gap-16">
+                {/* Player 1 — camp A (shu) */}
+                <div className="text-center">
+                  <div
+                    className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 ${user?.username === gameState.player1 ? 'border-[#E8442B]' : 'border-[#F4F1E8]/15'} p-2 mb-4 relative`}
+                  >
+                    <div className="w-full h-full bg-[#0F1016] rounded-full flex items-center justify-center">
+                      <User size={48} className="text-[#8F94A5]/50" />
                     </div>
-
-                    <div className="text-4xl font-black italic text-red-600 animate-pulse mt-[-40px]">VS</div>
-
-                    {/* Player 2 */}
-                    <div className="text-center">
-                        <div className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 ${user?.username === gameState.player2 ? 'border-blue-500' : (gameState.player2 ? 'border-gray-800' : 'border-dashed border-gray-700')} p-2 mb-4 relative`}>
-                            <div className="w-full h-full bg-gray-900 rounded-full flex items-center justify-center">
-                                {gameState.player2 ? <User size={48} className="text-gray-700" /> : <Zap size={32} className="text-gray-800 animate-pulse" />}
-                            </div>
-                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase italic">P2</div>
-                        </div>
-                        <div className="font-black italic uppercase text-lg">
-                            {gameState.player2 || t('games.duel.waiting_short', 'Attente...')}
-                        </div>
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#E8442B] text-[#F4F1E8] px-3 py-1 rounded-full text-[10px] font-black uppercase italic">
+                      P1
                     </div>
+                  </div>
+                  <div className="font-black italic uppercase text-lg">{gameState.player1}</div>
                 </div>
 
-                {isWaiting ? (
-                    <div className="bg-blue-600/10 border-2 border-dashed border-blue-500/30 rounded-3xl p-12 text-center">
-                        <motion.div 
-                            animate={{ scale: [1, 1.1, 1] }} 
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className="text-blue-500 mb-4 flex justify-center"
-                        >
-                            <Users size={64} />
-                        </motion.div>
-                        <h3 className="text-2xl font-black italic uppercase mb-2">{t('games.duel.waiting_opponent', "En attente d'un adversaire")}</h3>
-                        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">{t('games.duel.share_code_1', 'Partagez le code')} <span className="text-blue-500">{roomCode}</span> {t('games.duel.share_code_2', 'pour inviter un ami')}</p>
-                    </div>
-                ) : (
-                    <div className="space-y-8">
-                        {/* Duel Feedback Visualizer */}
-                        <div className="aspect-video bg-gradient-to-br from-navy-900/50 to-black rounded-3xl border border-white/5 relative overflow-hidden flex items-center justify-center p-12 text-center">
-                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
-                             
-                             <AnimatePresence mode="wait">
-                                {winner ? (
-                                    <motion.div 
-                                        initial={{ scale: 0.5, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        className="relative z-10"
-                                    >
-                                        <Trophy size={80} className="text-yellow-500 mx-auto mb-6" />
-                                        <h2 className="text-5xl font-black italic uppercase mb-2">
-                                            {winner === user?.username ? t('games.duel.victory', 'VICTOIRE !') : t('games.duel.defeat', 'DÉFAITE')}
-                                        </h2>
-                                        <p className="text-gray-400 font-bold uppercase tracking-widest">{t('games.duel.title_was', 'Le titre était :')} <span className="text-blue-500">{gameState.secret_title || 'REDACTED'}</span></p>
-                                        <button
-                                            onClick={() => navigate('/game/duel/lobby/')}
-                                            className="mt-8 bg-white text-black px-8 py-3 rounded-xl font-black italic uppercase tracking-widest hover:scale-105 transition-all"
-                                        >
-                                            {t('games.duel.back_to_lobby', 'Retour au Lobby')}
-                                        </button>
-                                    </motion.div>
-                                ) : (
-                                    <motion.div 
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        className="relative z-10"
-                                    >
-                                        <Sword size={64} className="text-red-500 mx-auto mb-6 animate-bounce" />
-                                        <h3 className="text-3xl font-black italic uppercase mb-4">{t('games.duel.in_progress', 'Duel en cours !')}</h3>
-                                        <p className="text-gray-500 uppercase font-bold tracking-widest text-sm">{t('games.duel.guess_before', { defaultValue: "Devinez l'œuvre {{mediaType}} avant l'adversaire", mediaType: gameState.media_type })}</p>
-                                    </motion.div>
-                                )}
-                             </AnimatePresence>
-                        </div>
+                <div className="text-4xl font-black italic text-[#E8442B] animate-pulse mt-[-40px]">
+                  VS
+                </div>
 
-                        {/* Input Form */}
-                        {!winner && (
-                            <form onSubmit={handleGuess} className="relative group">
-                                <input 
-                                    type="text" 
-                                    value={guess}
-                                    onChange={(e) => setGuess(e.target.value)}
-                                    placeholder={t('games.duel.answer_placeholder', 'VOTRE RÉPONSE...')}
-                                    aria-label={t('games.duel.answer_aria', 'Votre réponse')}
-                                    className="w-full bg-black border-2 border-gray-800 rounded-2xl px-6 py-5 focus:border-red-600 outline-none transition-all font-bold tracking-widest uppercase placeholder:text-gray-700"
-                                />
-                                <button 
-                                    type="submit"
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-red-600 hover:bg-red-500 px-8 py-3 rounded-xl font-black italic uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
-                                >
-                                    {t('games.duel.send', 'ENVOYER')} <Zap size={16} fill="currentColor" />
-                                </button>
-                            </form>
-                        )}
+                {/* Player 2 — camp B (papier) */}
+                <div className="text-center">
+                  <div
+                    className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 ${user?.username === gameState.player2 ? 'border-[#F4F1E8]' : gameState.player2 ? 'border-[#F4F1E8]/15' : 'border-dashed border-[#F4F1E8]/20'} p-2 mb-4 relative`}
+                  >
+                    <div className="w-full h-full bg-[#0F1016] rounded-full flex items-center justify-center">
+                      {gameState.player2 ? (
+                        <User size={48} className="text-[#8F94A5]/50" />
+                      ) : (
+                        <Zap size={32} className="text-[#8F94A5]/30 animate-pulse" />
+                      )}
                     </div>
-                )}
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#F4F1E8] text-[#0B0C10] px-3 py-1 rounded-full text-[10px] font-black uppercase italic">
+                      P2
+                    </div>
+                  </div>
+                  <div className="font-black italic uppercase text-lg">
+                    {gameState.player2 || t('games.duel.waiting_short', 'Attente...')}
+                  </div>
+                </div>
+              </div>
+
+              {isWaiting ? (
+                <div className="rounded-2xl border-2 border-dashed border-[#FDB913]/30 bg-[#FDB913]/[0.05] p-12 text-center">
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="text-[#FDB913] mb-4 flex justify-center"
+                  >
+                    <Users size={64} />
+                  </motion.div>
+                  <h3 className="font-manga text-2xl font-black italic uppercase mb-2">
+                    {t('games.duel.waiting_opponent', "En attente d'un adversaire")}
+                  </h3>
+                  <p className="text-[#8F94A5] font-bold uppercase tracking-widest text-xs">
+                    {t('games.duel.share_code_1', 'Partagez le code')}{' '}
+                    <span className="text-[#FDB913]">{roomCode}</span>{' '}
+                    {t('games.duel.share_code_2', 'pour inviter un ami')}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Duel Feedback Visualizer */}
+                  <div className="aspect-video rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] relative overflow-hidden flex items-center justify-center p-12 text-center">
+                    <div
+                      className="explore-halftone absolute inset-0 pointer-events-none"
+                      aria-hidden
+                    />
+
+                    <AnimatePresence mode="wait">
+                      {winner ? (
+                        <motion.div
+                          initial={{ scale: 0.5, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="relative z-10"
+                        >
+                          <Trophy size={80} className="text-[#FDB913] mx-auto mb-6" />
+                          <h2 className="font-manga text-5xl font-black italic uppercase mb-2">
+                            {winner === user?.username
+                              ? t('games.duel.victory', 'VICTOIRE !')
+                              : t('games.duel.defeat', 'DÉFAITE')}
+                          </h2>
+                          <p className="text-[#8F94A5] font-bold uppercase tracking-widest">
+                            {t('games.duel.title_was', 'Le titre était :')}{' '}
+                            <span className="text-[#FDB913]">
+                              {gameState.secret_title || 'REDACTED'}
+                            </span>
+                          </p>
+                          <button
+                            onClick={() => navigate('/game/duel/lobby/')}
+                            className="mt-8 bg-[#F4F1E8] text-[#0B0C10] px-8 py-3 rounded-xl font-manga font-black italic uppercase tracking-widest hover:bg-[#E8442B] hover:text-[#F4F1E8] transition-colors border-none cursor-pointer"
+                          >
+                            {t('games.duel.back_to_lobby', 'Retour au Lobby')}
+                          </button>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="relative z-10"
+                        >
+                          <Sword size={64} className="text-[#E8442B] mx-auto mb-6 animate-bounce" />
+                          <h3 className="font-manga text-3xl font-black italic uppercase mb-4">
+                            {t('games.duel.in_progress', 'Duel en cours !')}
+                          </h3>
+                          <p className="text-[#8F94A5] uppercase font-bold tracking-widest text-sm">
+                            {t('games.duel.guess_before', {
+                              defaultValue: "Devinez l'œuvre {{mediaType}} avant l'adversaire",
+                              mediaType: gameState.media_type,
+                            })}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Input Form */}
+                  {!winner && (
+                    <form onSubmit={handleGuess} className="relative group">
+                      <input
+                        type="text"
+                        value={guess}
+                        onChange={(e) => setGuess(e.target.value)}
+                        placeholder={t('games.duel.answer_placeholder', 'VOTRE RÉPONSE...')}
+                        aria-label={t('games.duel.answer_aria', 'Votre réponse')}
+                        className="w-full bg-[#0F1016] border border-[#F4F1E8]/15 rounded-xl px-6 py-5 focus:border-[#FDB913] outline-none transition-colors font-bold tracking-widest uppercase text-[#F4F1E8] placeholder:text-[#8F94A5]/50"
+                      />
+                      <button
+                        type="submit"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-[#E8442B] hover:bg-[#c93a24] text-[#F4F1E8] px-8 py-3 rounded-lg font-manga font-black italic uppercase tracking-widest transition-colors flex items-center gap-2 border-none cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913]"
+                      >
+                        {t('games.duel.send', 'ENVOYER')} <Zap size={16} fill="currentColor" />
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Duel Logs / Sidebar */}
-            <div className="bg-gray-900/50 backdrop-blur-xl p-8 rounded-3xl border border-white/5 h-fit">
-                <h3 className="text-xl font-black italic uppercase mb-8 flex items-center gap-3">
-                    <Radio size={20} className="text-red-500" />
-                    {t('games.duel.combat_feed', 'Flux de combat')}
-                </h3>
-                
-                <div className="space-y-4">
-                    {logs.length > 0 ? logs.map((log, i) => (
-                        <motion.div 
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            key={i}
-                            className={`p-4 rounded-xl border-l-4 ${log.type === 'win' ? 'bg-yellow-500/10 border-yellow-500' : 'bg-black/40 border-blue-500'} text-xs font-bold uppercase tracking-widest`}
-                        >
-                            {log.type === 'win' ? (
-                                <div className="flex items-center gap-2 text-yellow-500">
-                                    <Trophy size={14} /> {t('games.duel.won_duel', { defaultValue: '{{name}} a remporté le duel !', name: log.winner })}
-                                </div>
-                            ) : (
-                                <div className="text-gray-400">
-                                    <span className="text-blue-500">@{log.player}</span> {t('games.duel.attempted_attack', 'a tenté une attaque :')} <span className="text-white">{log.score}%</span>
-                                </div>
-                            )}
-                        </motion.div>
-                    )) : (
-                        <div className="text-center py-12 text-gray-700 uppercase font-black italic tracking-widest text-xs">
-                            {t('games.duel.waiting_actions', "En attente d'actions...")}
+            <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 h-fit">
+              <h3 className="font-manga text-xl font-black italic uppercase mb-8 flex items-center gap-3">
+                <Radio size={20} className="text-[#E8442B]" />
+                {t('games.duel.combat_feed', 'Flux de combat')}
+              </h3>
+
+              <div className="space-y-4">
+                {logs.length > 0 ? (
+                  logs.map((log, i) => (
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      key={i}
+                      className={`p-4 rounded-xl border-l-4 ${log.type === 'win' ? 'bg-[#FDB913]/10 border-[#FDB913]' : 'bg-[#0B0C10] border-[#F4F1E8]/20'} text-xs font-bold uppercase tracking-widest`}
+                    >
+                      {log.type === 'win' ? (
+                        <div className="flex items-center gap-2 text-[#FDB913]">
+                          <Trophy size={14} />{' '}
+                          {t('games.duel.won_duel', {
+                            defaultValue: '{{name}} a remporté le duel !',
+                            name: log.winner,
+                          })}
                         </div>
-                    )}
-                </div>
+                      ) : (
+                        <div className="text-[#8F94A5]">
+                          <span className="text-[#FDB913]">@{log.player}</span>{' '}
+                          {t('games.duel.attempted_attack', 'a tenté une attaque :')}{' '}
+                          <span className="text-[#F4F1E8]">{log.score}%</span>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-[#8F94A5]/50 uppercase font-black italic tracking-widest text-xs">
+                    {t('games.duel.waiting_actions', "En attente d'actions...")}
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
         </div>
       </div>
     </AnimatedPage>
@@ -253,5 +305,3 @@ const DuelArenaPage: React.FC = () => {
 };
 
 export default DuelArenaPage;
-
-

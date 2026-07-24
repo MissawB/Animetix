@@ -24,7 +24,7 @@ export const BlindtestBonusRecap: React.FC<BlindtestBonusRecapProps> = ({
   return (
     <div className="mt-3 space-y-1 text-sm font-black uppercase tracking-wide">
       {bonusArtistOn && (
-        <p className={artistCorrect ? 'text-green-500' : 'text-red-400'}>
+        <p className={artistCorrect ? 'text-[#FDB913]' : 'text-[#E8442B]'}>
           {artistCorrect
             ? t('games.blindtest.game.bonus_singer_ok', 'Chanteur ✓ +25')
             : t('games.blindtest.game.bonus_singer_ko', {
@@ -34,7 +34,7 @@ export const BlindtestBonusRecap: React.FC<BlindtestBonusRecapProps> = ({
         </p>
       )}
       {bonusSeqOn && (
-        <p className={seqCorrect ? 'text-green-500' : 'text-red-400'}>
+        <p className={seqCorrect ? 'text-[#FDB913]' : 'text-[#E8442B]'}>
           {seqCorrect
             ? t('games.blindtest.game.bonus_number_ok', 'Numéro ✓ +25')
             : t('games.blindtest.game.bonus_number_ko', {

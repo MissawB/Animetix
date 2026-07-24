@@ -62,10 +62,10 @@ const UndercoverRoom: React.FC = () => {
   // Paint revealed roles metadata.
   const roleMeta = (role?: string): { label: string; cls: string } => {
     if (role === 'Undercover')
-      return { label: t('games.undercover.roles.intruder', '⚠ Intrus'), cls: 'text-red-400' };
+      return { label: t('games.undercover.roles.intruder', '⚠ Intrus'), cls: 'text-[#E8442B]' };
     if (role === 'MrWhite')
-      return { label: t('games.undercover.roles.mrwhite', '◐ Mr. White'), cls: 'text-purple-300' };
-    return { label: t('games.undercover.roles.civil', '✓ Civil'), cls: 'text-green-400' };
+      return { label: t('games.undercover.roles.mrwhite', '◐ Mr. White'), cls: 'text-[#F4F1E8]' };
+    return { label: t('games.undercover.roles.civil', '✓ Civil'), cls: 'text-[#FDB913]' };
   };
 
   const STATUS: Record<string, string> = {
@@ -81,7 +81,7 @@ const UndercoverRoom: React.FC = () => {
   if (!connected) {
     return (
       <div className="min-h-[60vh] grid place-items-center">
-        <div className="flex flex-col items-center gap-4 text-red-400">
+        <div className="flex flex-col items-center gap-4 text-[#E8442B]">
           <Radio className="w-12 h-12 animate-pulse" />
           <p className="font-black uppercase tracking-[0.4em] animate-pulse">
             {t('games.undercover.room.connecting', 'Connexion au réseau sécurisé…')}
@@ -96,8 +96,7 @@ const UndercoverRoom: React.FC = () => {
   const iAmPendingWhite = state === 'mrwhite_guess' && pendingWhite === myId;
   const isMrWhite = myRole.role === 'MrWhite';
 
-  const panel =
-    'rounded-[2rem] border-2 border-white/5 bg-[#0d0f17]/80 backdrop-blur-xl shadow-2xl';
+  const panel = 'rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016]';
 
   // ── Winner banner content (ended) ───────────────────────────────────────
   const winnerBanner = () => {
@@ -105,14 +104,14 @@ const UndercoverRoom: React.FC = () => {
     const whites = result?.mrwhite_winners || [];
     if (w === 'civils') {
       return {
-        cls: 'bg-green-500/10 border-green-500',
+        cls: 'bg-[#FDB913]/10 border-[#FDB913]',
         title: t('games.undercover.room.winner_civils_title', '🎯 Les Civils gagnent !'),
         sub: t('games.undercover.room.winner_civils_sub', 'Toutes les menaces ont été démasquées.'),
       };
     }
     if (w === 'mrwhite') {
       return {
-        cls: 'bg-purple-500/10 border-purple-400',
+        cls: 'bg-[#F4F1E8]/10 border-[#F4F1E8]',
         title: t('games.undercover.room.winner_mrwhite_title', '◐ Mr. White gagne !'),
         sub: t('games.undercover.room.winner_mrwhite_sub', {
           defaultValue: '{{names}} a deviné le mot des civils.',
@@ -121,7 +120,7 @@ const UndercoverRoom: React.FC = () => {
       };
     }
     return {
-      cls: 'bg-red-500/10 border-red-500',
+      cls: 'bg-[#E8442B]/10 border-[#E8442B]',
       title: t('games.undercover.room.winner_intruders_title', '🕵️ Les infiltrés gagnent !'),
       sub: whites.length
         ? t('games.undercover.room.winner_intruders_sub_mrwhite', {
@@ -135,20 +134,20 @@ const UndercoverRoom: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
       {/* ── Mission banner ───────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-[2.5rem] border-2 border-red-500/30 bg-gradient-to-br from-red-950/50 via-[#0d0f17] to-[#0d0f17] p-7 sm:p-9 mb-8 shadow-[0_0_60px_-15px_rgba(239,68,68,0.4)]">
+      <div className="relative overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-7 sm:p-9 mb-8">
         <div
-          className="absolute inset-0 opacity-[0.07] pointer-events-none"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(45deg, #fff 0 2px, transparent 2px 14px)',
-          }}
+          className="explore-halftone absolute -inset-x-6 -top-10 h-40 pointer-events-none"
+          aria-hidden
         />
-        <div className="absolute -right-10 -top-10 w-48 h-48 bg-red-600/20 blur-[80px] rounded-full pointer-events-none" />
         <div className="relative">
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-red-500 mb-3">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-[#E8442B] mb-3">
+            <span className="explore-stamp -rotate-2" aria-hidden>
+              潜
+            </span>
             <Fingerprint className="w-4 h-4" />{' '}
             {t('games.undercover.classified_badge', 'Dossier classifié · Undercover')}
-            <span className="ml-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-500/15 text-red-400 normal-case tracking-wider">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />{' '}
+            <span className="ml-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E8442B]/15 text-[#E8442B] normal-case tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E8442B] animate-pulse" />{' '}
               {players.length > 1
                 ? t('games.undercover.room.agents_count_plural', {
                     defaultValue: '{{count}} agents',
@@ -160,7 +159,7 @@ const UndercoverRoom: React.FC = () => {
                   })}
             </span>
             {round > 0 && state !== 'ended' && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 normal-case tracking-wider">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#F4F1E8]/10 text-[#8F94A5] normal-case tracking-wider">
                 {t('games.undercover.room.round_badge', {
                   defaultValue: 'Manche {{round}}',
                   round,
@@ -169,7 +168,7 @@ const UndercoverRoom: React.FC = () => {
             )}
             <span
               className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full normal-case tracking-wider ${
-                isPublic ? 'bg-green-500/15 text-green-400' : 'bg-white/10 text-white/60'
+                isPublic ? 'bg-[#FDB913]/15 text-[#FDB913]' : 'bg-[#F4F1E8]/10 text-[#8F94A5]'
               }`}
             >
               {isPublic ? <Globe className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
@@ -179,25 +178,25 @@ const UndercoverRoom: React.FC = () => {
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <h1 className="text-5xl sm:text-7xl font-black italic manga-font uppercase tracking-tighter text-white leading-none">
+            <h1 className="text-5xl sm:text-7xl font-black italic font-manga uppercase tracking-tighter text-[#F4F1E8] leading-none">
               {t('games.undercover.room.title', 'Mission')}
             </h1>
             <button
               onClick={copyCode}
               title={t('games.undercover.room.copy_code_title', 'Copier le code de la salle')}
-              className="group inline-flex items-center gap-3 rounded-2xl border-2 border-red-500/40 bg-red-500/10 hover:bg-red-500/20 px-5 py-2.5 transition-all"
+              className="group inline-flex items-center gap-3 rounded-xl border border-[#FDB913]/40 bg-[#FDB913]/10 hover:bg-[#FDB913]/20 px-5 py-2.5 transition-colors"
             >
-              <span className="text-3xl sm:text-4xl font-black tracking-[0.25em] text-red-400 font-mono">
+              <span className="text-3xl sm:text-4xl font-black tracking-[0.25em] text-[#FDB913] font-mono">
                 {code}
               </span>
               {copied ? (
-                <Check className="w-5 h-5 text-green-400" />
+                <Check className="w-5 h-5 text-[#FDB913]" />
               ) : (
-                <Copy className="w-5 h-5 text-red-400 opacity-60 group-hover:opacity-100" />
+                <Copy className="w-5 h-5 text-[#FDB913] opacity-60 group-hover:opacity-100" />
               )}
             </button>
           </div>
-          <p className="mt-3 text-sm font-bold uppercase tracking-widest text-white/40">
+          <p className="mt-3 text-sm font-bold uppercase tracking-widest text-[#8F94A5]">
             {STATUS[state]}
           </p>
         </div>

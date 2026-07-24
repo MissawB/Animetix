@@ -43,19 +43,19 @@ export const ClassicUniverseSelector: React.FC<ClassicUniverseSelectorProps> = (
           key={key}
           onClick={() => setUniverse(key)}
           aria-pressed={universe === key}
-          className={`flex flex-col items-center gap-3 p-5 sm:p-6 rounded-3xl border-2 transition-all ${
+          className={`flex flex-col items-center gap-3 p-5 sm:p-6 rounded-2xl border-2 transition-colors ${
             universe === key
-              ? 'border-blue-500 bg-blue-500/10 shadow-lg'
-              : 'border-black/5 dark:border-white/10 hover:border-blue-500/50'
+              ? 'border-[#FDB913] bg-[#FDB913]/10'
+              : 'border-[#F4F1E8]/10 hover:border-[#FDB913]/50'
           }`}
         >
           <Icon
-            className={`w-8 h-8 sm:w-9 sm:h-9 ${universe === key ? 'text-blue-500' : 'text-gray-400'}`}
+            className={`w-8 h-8 sm:w-9 sm:h-9 ${universe === key ? 'text-[#FDB913]' : 'text-[#8F94A5]'}`}
           />
-          <span className="manga-font text-base sm:text-lg text-black dark:text-white text-center leading-none">
+          <span className="font-manga text-base sm:text-lg text-[#F4F1E8] text-center leading-none">
             {label}
           </span>
-          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-gray-400 text-center">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#8F94A5] text-center">
             {sub}
           </span>
         </button>

@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import { Calendar, ArrowLeft, CheckCircle2, Loader2, ChevronLeft, ChevronRight, Star, Trophy } from 'lucide-react';
+import {
+  Calendar,
+  ArrowLeft,
+  CheckCircle2,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Trophy,
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDailyChallenge } from '../../features/utils/hooks/useDailyChallenge';
 import { classicGameService } from '../../features/games/services/classicService';
 import { CLASSIC_STATE_QUERY_KEY } from '../../features/games/hooks/useClassicGame';
-import { Button } from "../../components/ui/Button";
-import { Skeleton } from "../../components/ui/Skeleton";
+import { Button } from '../../components/ui/Button';
+import { Skeleton } from '../../components/ui/Skeleton';
 import { useToastStore } from '../../store/toastStore';
 import { useTranslation } from 'react-i18next';
 
@@ -27,7 +36,13 @@ const DailyChallengePage: React.FC = () => {
     if (launching) return;
     setLaunching(mode.id);
     try {
-      const state = await classicGameService.start(mode.media_type ?? 'Anime', 'Normal', undefined, true, day);
+      const state = await classicGameService.start(
+        mode.media_type ?? 'Anime',
+        'Normal',
+        undefined,
+        true,
+        day,
+      );
       queryClient.setQueryData(CLASSIC_STATE_QUERY_KEY, state);
       navigate('/game/classic/play/');
     } catch {
@@ -36,53 +51,70 @@ const DailyChallengePage: React.FC = () => {
     }
   };
 
-  if (isLoading) return (
-    <div className="min-h-screen pb-20">
-      <div className="h-64 w-full bg-gray-200 dark:bg-navy-900 animate-pulse rounded-b-[4rem]" />
-      <div className="max-w-7xl mx-auto px-6 -mt-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Skeleton className="h-80 rounded-[3rem]" />
-            <Skeleton className="h-80 rounded-[3rem]" />
-            <Skeleton className="h-80 rounded-[3rem]" />
+  if (isLoading)
+    return (
+      <div className="min-h-screen bg-[#0B0C10] pb-20">
+        <div className="h-64 w-full bg-[#0F1016] border-b border-[#F4F1E8]/10 animate-pulse" />
+        <div className="max-w-7xl mx-auto px-6 -mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Skeleton className="h-80 rounded-2xl" />
+            <Skeleton className="h-80 rounded-2xl" />
+            <Skeleton className="h-80 rounded-2xl" />
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
 
-  if (isError || !data) return <div className="text-center py-20 text-red-500 font-bold">{t('common.error')}</div>;
+  if (isError || !data)
+    return (
+      <div className="min-h-screen bg-[#0B0C10] text-center py-20 text-[#E8442B] font-bold">
+        {t('common.error')}
+      </div>
+    );
 
   const daily = data as DailyChallenge;
 
   return (
-    <div className="min-h-screen pb-20">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-yellow-400 to-orange-500 py-16 px-6 shadow-2xl mb-12 rounded-b-[4rem]">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-6xl md:text-8xl font-black italic manga-font tracking-tighter uppercase text-black mb-4">
-            DÉFIS DU JOUR<span className="text-white">.</span>
+    <div className="min-h-screen bg-[#0B0C10] text-[#F4F1E8] pb-20">
+      {/* En-tête */}
+      <div className="relative border-b border-[#F4F1E8]/10 bg-[#0F1016] py-16 px-6 mb-12 overflow-hidden">
+        <div className="explore-halftone pointer-events-none absolute inset-0" aria-hidden />
+        <div className="relative max-w-4xl mx-auto text-center">
+          <div className="mb-4 flex items-center justify-center gap-3">
+            <span className="explore-stamp -rotate-2" aria-hidden>
+              日
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+              Défi quotidien
+            </span>
+          </div>
+          <h1 className="font-manga text-6xl md:text-8xl font-black italic tracking-tighter uppercase text-[#F4F1E8] mb-4">
+            DÉFIS DU JOUR<span className="text-[#E8442B]">.</span>
           </h1>
-          <p className="text-xl font-bold uppercase tracking-widest text-black/60">
-            {daily.is_today ? 'Une seule cible par univers, à débusquer.' : 'Rejoue un défi passé pour battre ton score.'}
+          <p className="text-base leading-relaxed text-[#8F94A5]">
+            {daily.is_today
+              ? 'Une seule cible par univers, à débusquer.'
+              : 'Rejoue un défi passé pour battre ton score.'}
           </p>
 
-          {/* Date navigation */}
+          {/* Navigation par date */}
           <div className="mt-8 flex items-center justify-center gap-3">
             <button
               onClick={() => daily.prev_date && setDate(daily.prev_date)}
               disabled={!daily.prev_date}
               aria-label="Jour précédent"
-              className="grid place-items-center w-10 h-10 rounded-full bg-black text-white disabled:opacity-30 hover:scale-110 transition-transform"
+              className="grid place-items-center w-10 h-10 rounded-full border border-[#F4F1E8]/15 text-[#F4F1E8] disabled:opacity-30 hover:border-[#FDB913] transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <span className="inline-flex items-center gap-2 rounded-full bg-black text-white px-5 py-2 text-xs font-black uppercase tracking-widest">
-              <Calendar className="w-4 h-4" /> {daily.date}
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#F4F1E8]/15 bg-[#0B0C10] text-[#F4F1E8] px-5 py-2 text-xs font-black uppercase tracking-widest">
+              <Calendar className="w-4 h-4 text-[#FDB913]" /> {daily.date}
             </span>
             <button
               onClick={() => daily.next_date && setDate(daily.next_date)}
               disabled={!daily.next_date}
               aria-label="Jour suivant"
-              className="grid place-items-center w-10 h-10 rounded-full bg-black text-white disabled:opacity-30 hover:scale-110 transition-transform"
+              className="grid place-items-center w-10 h-10 rounded-full border border-[#F4F1E8]/15 text-[#F4F1E8] disabled:opacity-30 hover:border-[#FDB913] transition-colors"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -92,13 +124,13 @@ const DailyChallengePage: React.FC = () => {
             {!daily.is_today && (
               <button
                 onClick={() => setDate(undefined)}
-                className="rounded-full bg-white text-black px-5 py-2 text-xs font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-transform"
+                className="rounded-full border border-[#F4F1E8]/15 text-[#F4F1E8] px-5 py-2 text-xs font-black uppercase tracking-widest hover:border-[#FDB913] transition-colors"
               >
                 Aujourd'hui
               </button>
             )}
-            <span className="inline-flex items-center gap-2 rounded-full bg-white text-black px-5 py-2 text-xs font-black uppercase tracking-widest shadow-lg">
-              <Trophy className="w-4 h-4 text-yellow-500" /> {daily.total_score ?? 0} pts
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#FDB913]/40 bg-[#FDB913]/10 text-[#FDB913] px-5 py-2 text-xs font-black uppercase tracking-widest">
+              <Trophy className="w-4 h-4" /> {daily.total_score ?? 0} pts
             </span>
           </div>
         </div>
@@ -119,8 +151,15 @@ const DailyChallengePage: React.FC = () => {
 
               {/* Title Overlay (Brush Style) */}
               <div className="absolute top-8 left-8 z-30 transform -rotate-6 transition-transform group-hover:rotate-0">
-                <h2 className="manga-font text-white text-5xl leading-[0.8] uppercase tracking-tighter" style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000' }}>
-                  {mode.brush1}<br />
+                <h2
+                  className="manga-font text-white text-5xl leading-[0.8] uppercase tracking-tighter"
+                  style={{
+                    textShadow:
+                      '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000',
+                  }}
+                >
+                  {mode.brush1}
+                  <br />
                   <span className="text-yellow-400 text-3xl ml-4">{mode.brush2}</span>
                 </h2>
               </div>
@@ -135,12 +174,20 @@ const DailyChallengePage: React.FC = () => {
               {/* Description */}
               <div className="absolute bottom-8 left-8 right-8 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <p className="text-white font-bold text-sm italic leading-tight drop-shadow-md">
-                  {mode.completed ? 'Déjà résolu — rejoue pour améliorer ton score.' : mode.description}
+                  {mode.completed
+                    ? 'Déjà résolu — rejoue pour améliorer ton score.'
+                    : mode.description}
                 </p>
               </div>
 
               {/* Character Icon */}
-              <img src={mode.icon} alt="" className="absolute -right-4 -bottom-4 h-[85%] object-contain object-bottom z-20 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110" loading="lazy" decoding="async" />
+              <img
+                src={mode.icon}
+                alt=""
+                className="absolute -right-4 -bottom-4 h-[85%] object-contain object-bottom z-20 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110"
+                loading="lazy"
+                decoding="async"
+              />
 
               {launching === mode.id && (
                 <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center">
@@ -158,7 +205,13 @@ const DailyChallengePage: React.FC = () => {
         </div>
 
         <div className="mt-20 text-center">
-          <Button as={Link} to="/" variant="outline" size="lg" className="italic px-12">
+          <Button
+            as={Link}
+            to="/"
+            variant="outline"
+            size="lg"
+            className="italic px-12 border-[#F4F1E8]/15 text-[#F4F1E8] hover:border-[#FDB913] hover:bg-transparent"
+          >
             <ArrowLeft className="w-5 h-5" /> RETOUR À L'ACCUEIL
           </Button>
         </div>

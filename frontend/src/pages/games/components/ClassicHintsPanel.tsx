@@ -16,14 +16,14 @@ import {
 import type { ClassicHintKey, ClassicHints } from '../../../types';
 
 const HINT_META: Record<ClassicHintKey, { icon: React.ElementType; tone: string }> = {
-  year: { icon: Calendar, tone: 'text-blue-500' },
-  origin: { icon: Globe, tone: 'text-teal-500' },
-  tags: { icon: Tags, tone: 'text-yellow-500' },
-  genres: { icon: Shapes, tone: 'text-orange-500' },
-  studio: { icon: Clapperboard, tone: 'text-purple-500' },
-  letter: { icon: CaseSensitive, tone: 'text-pink-500' },
-  words: { icon: Hash, tone: 'text-cyan-500' },
-  desc: { icon: ScrollText, tone: 'text-green-500' },
+  year: { icon: Calendar, tone: 'text-[#FDB913]' },
+  origin: { icon: Globe, tone: 'text-[#FDB913]' },
+  tags: { icon: Tags, tone: 'text-[#FDB913]' },
+  genres: { icon: Shapes, tone: 'text-[#FDB913]' },
+  studio: { icon: Clapperboard, tone: 'text-[#FDB913]' },
+  letter: { icon: CaseSensitive, tone: 'text-[#FDB913]' },
+  words: { icon: Hash, tone: 'text-[#FDB913]' },
+  desc: { icon: ScrollText, tone: 'text-[#FDB913]' },
 };
 
 interface Props {
@@ -43,14 +43,14 @@ export const ClassicHintsPanel: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <div className="rounded-[2rem] border-2 border-black/5 dark:border-white/10 bg-surface-card p-6 shadow-token-card">
-      <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest opacity-40 mb-5">
-        <Sparkles className="w-4 h-4 text-yellow-500" />{' '}
+    <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6">
+      <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-[#8F94A5] mb-5">
+        <Sparkles className="w-4 h-4 text-[#FDB913]" />{' '}
         {t('games.classic.game.hints_title', 'Indices')}
       </div>
       <div className="space-y-3">
         {hintKeys.length === 0 && (
-          <p className="text-xs font-bold opacity-30 text-center py-4">
+          <p className="text-xs font-bold text-[#8F94A5]/70 text-center py-4">
             {t('games.classic.game.no_hints', 'Aucun indice pour cette partie.')}
           </p>
         )}
@@ -67,30 +67,30 @@ export const ClassicHintsPanel: React.FC<Props> = ({
           return (
             <div
               key={key}
-              className={`rounded-2xl border p-3.5 transition-all ${
+              className={`rounded-2xl border p-3.5 transition-colors ${
                 revealed
-                  ? 'border-yellow-500/40 bg-yellow-500/[0.06]'
-                  : 'border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02]'
+                  ? 'border-[#FDB913]/40 bg-[#FDB913]/[0.06]'
+                  : 'border-[#F4F1E8]/5 bg-[#F4F1E8]/[0.02]'
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wide">
-                  <Icon className={`w-4 h-4 ${revealed ? meta.tone : 'opacity-30'}`} />
+                <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#F4F1E8]">
+                  <Icon className={`w-4 h-4 ${revealed ? meta.tone : 'text-[#8F94A5]/50'}`} />
                   {label}
                 </span>
                 {revealed ? (
-                  <Check className="w-4 h-4 text-yellow-500" />
+                  <Check className="w-4 h-4 text-[#FDB913]" />
                 ) : canReveal ? (
                   <button
                     type="button"
                     onClick={() => onReveal(key)}
                     disabled={revealing}
-                    className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-yellow-500 text-black hover:scale-105 active:scale-95 transition-transform disabled:opacity-50"
+                    className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#FDB913] text-[#0B0C10] hover:bg-[#e0a50f] active:scale-95 transition-colors disabled:opacity-50"
                   >
                     {t('games.classic.game.reveal', 'Révéler')}
                   </button>
                 ) : (
-                  <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider opacity-40">
+                  <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-[#8F94A5]">
                     <Lock className="w-3 h-3" />{' '}
                     {t('games.classic.game.unlock_at', {
                       defaultValue: '{{count}} essais',
@@ -101,14 +101,12 @@ export const ClassicHintsPanel: React.FC<Props> = ({
               </div>
 
               {revealed && h?.value && (
-                <p className="mt-2 text-sm font-semibold leading-snug text-yellow-700 dark:text-yellow-200/90">
-                  {h.value}
-                </p>
+                <p className="mt-2 text-sm font-semibold leading-snug text-[#FDB913]">{h.value}</p>
               )}
               {!revealed && !canReveal && (
-                <div className="mt-2.5 h-1 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
+                <div className="mt-2.5 h-1 rounded-full bg-[#F4F1E8]/10 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-yellow-500/60 transition-all duration-500"
+                    className="h-full rounded-full bg-[#FDB913]/60 transition-all duration-500"
                     style={{ width: `${progress * 100}%` }}
                   />
                 </div>
