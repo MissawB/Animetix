@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
-import { 
-  Swords,
-  Scale, 
-  Zap,
-  CheckCircle2, 
-  Sparkles,
-  User,
-  Gavel,
-  History,
-  Target
-} from 'lucide-react';
+import { Swords, Scale, Zap, Sparkles, Gavel, History, Target } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { apiClient } from "../../utils/apiClient";
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { Badge } from "../../components/ui/Badge";
-import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { apiClient } from '../../utils/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { useTranslation } from 'react-i18next';
+import {
+  LabPage,
+  LabHeader,
+  LabPanel,
+  LabEmpty,
+  LabGuide,
+  LAB_INPUT,
+  LAB_LABEL,
+  LAB_CTA,
+  LAB_BTN_GHOST,
+  SHU,
+  GOLD,
+  AI_INDIGO,
+} from '../labs/components/shared/LabKit';
 
 interface DebateResult {
   pro_argument: string;
@@ -25,246 +25,382 @@ interface DebateResult {
   judge_conclusion: string;
 }
 
+/** Les trois voix du duel : thèse (kin), antithèse (shu), synthèse (ai). */
+const AGENTS = {
+  pro: { seal: '賛', ink: GOLD },
+  anti: { seal: '否', ink: SHU },
+  judge: { seal: '裁', ink: AI_INDIGO },
+} as const;
+
+interface AgentSealProps {
+  seal: string;
+  ink: string;
+}
+
+/** Cachet d'agent : kanji encré dans la voix de l'agent. */
+const AgentSeal: React.FC<AgentSealProps> = ({ seal, ink }) => (
+  <span
+    className="flex h-9 w-9 flex-none items-center justify-center rounded-[2px] border-2 text-sm font-black"
+    style={{ borderColor: ink, color: ink }}
+    aria-hidden
+  >
+    {seal}
+  </span>
+);
+
+interface ArgumentPanelProps {
+  seal: string;
+  ink: string;
+  label: string;
+  text: string;
+}
+
+/** Plaidoirie d'un agent : panneau papier signé de son cachet. */
+const ArgumentPanel: React.FC<ArgumentPanelProps> = ({ seal, ink, label, text }) => (
+  <section
+    className="relative overflow-hidden rounded-2xl border bg-[#0F1016] p-6 sm:p-8"
+    style={{ borderColor: `${ink}40` }}
+  >
+    <span
+      className="font-manga pointer-events-none absolute -right-3 -top-8 text-8xl font-black italic opacity-[0.07]"
+      style={{ color: ink }}
+      aria-hidden
+    >
+      {seal}
+    </span>
+    <div className="relative mb-5 flex items-center gap-3">
+      <AgentSeal seal={seal} ink={ink} />
+      <span className="text-xs font-black uppercase tracking-widest" style={{ color: ink }}>
+        {label}
+      </span>
+    </div>
+    <p className="relative text-sm leading-relaxed text-[#F4F1E8]/85">{text}</p>
+  </section>
+);
+
 const AIDebateArenaPage: React.FC = () => {
   const [mediaTitle, setMediaTitle] = useState('');
   const [topic, setTopic] = useState('');
   const [debateResult, setDebateResult] = useState<DebateResult | null>(null);
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useTranslation();
 
   const mutation = useMutation({
-    mutationFn: (data: { media_title: string; topic: string }) => 
-        apiClient('/api/v1/cognition/debate-arena/', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        }),
+    mutationFn: (data: { media_title: string; topic: string }) =>
+      apiClient('/api/v1/cognition/debate-arena/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
     onSuccess: (data) => {
-        setDebateResult(data);
-    }
+      setDebateResult(data);
+    },
   });
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (mediaTitle.trim() && topic.trim()) {
-        mutation.mutate({ media_title: mediaTitle, topic: topic });
+      mutation.mutate({ media_title: mediaTitle, topic: topic });
     }
   };
 
   return (
-    <AnimatedPage>
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        
-        {/* Header Arena */}
-        <header className="mb-16 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-[0.3em] mb-6">
-               <Swords className="w-4 h-4 fill-current" /> Game Theory Arena v2.0
-            </div>
-            <h1 className="text-7xl font-black italic manga-font tracking-tighter uppercase mb-4">
-                AI DEBATE <span className="text-red-500 text-glow">ARENA</span>
-            </h1>
-            <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl mx-auto leading-relaxed">
-                {t('social.debate.subtitle', 'Orchestrez des confrontations sémantiques entre agents spécialisés basées sur les faits du Knowledge Graph.')}
-            </p>
-        </header>
+    <LabPage>
+      <LabHeader
+        glyph="論"
+        code="Duel sémantique · Game Theory"
+        title="Arène du"
+        accent="débat"
+        lede={t(
+          'social.debate.subtitle',
+          'Orchestrez des confrontations sémantiques entre agents spécialisés basées sur les faits du Knowledge Graph.',
+        )}
+      />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            
-            {/* Configuration du Débat */}
-            <div className="lg:col-span-4 space-y-8">
-                <Card padding="lg" className="bg-navy-950/50 border-white/10 rounded-[3rem] shadow-2xl">
-                    <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-yellow-500" /> {t('social.debate.settings_title', 'Paramètres du Duel')}
-                    </h3>
-                    <form onSubmit={onSubmit} className="space-y-6">
-                        <div className="space-y-2">
-                            <label htmlFor="media-title" className="text-[10px] font-black uppercase tracking-widest opacity-30 ml-4">{t('social.debate.target_media', 'Œuvre Cible')}</label>
-                            <input
-                                id="media-title"
-                                type="text"
-                                aria-label={t('social.debate.target_media', 'Œuvre Cible')}
-                                value={mediaTitle}
-                                onChange={(e) => setMediaTitle(e.target.value)}
-                                placeholder="ex: Attack on Titan"
-                                className="w-full bg-black border-2 border-white/5 rounded-2xl py-4 px-6 text-sm font-bold focus:border-red-600 outline-none transition-all placeholder:opacity-20"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label htmlFor="debate-topic" className="text-[10px] font-black uppercase tracking-widest opacity-30 ml-4">{t('social.debate.topic_title', 'Thématique du Débat')}</label>
-                            <textarea
-                                id="debate-topic"
-                                aria-label={t('social.debate.topic_title', 'Thématique du Débat')}
-                                value={topic}
-                                onChange={(e) => setTopic(e.target.value)}
-                                rows={4}
-                                placeholder={t('social.debate.topic_placeholder', "ex: La fin de l'œuvre est-elle cohérente avec le développement d'Eren ?")}
-                                className="w-full bg-black border-2 border-white/5 rounded-2xl py-4 px-6 text-sm font-bold focus:border-red-600 outline-none transition-all placeholder:opacity-20 resize-none"
-                            />
-                        </div>
-                        <Button 
-                            type="submit" 
-                            disabled={mutation.isPending || !mediaTitle.trim() || !topic.trim()}
-                            className="w-full bg-red-600 hover:bg-red-500 text-white py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
-                        >
-                            {mutation.isPending ? <Zap className="w-6 h-6 animate-spin" /> : t('social.debate.launch_btn', 'LANCER LA CONFRONTATION')}
-                        </Button>
-                    </form>
-                </Card>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        {/* Configuration du débat */}
+        <div className="space-y-8 lg:col-span-4">
+          <LabPanel title={t('social.debate.settings_title', 'Paramètres du Duel')} corner="論戦">
+            <form onSubmit={onSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label htmlFor="media-title" className={LAB_LABEL}>
+                  {t('social.debate.target_media', 'Œuvre Cible')}
+                </label>
+                <input
+                  id="media-title"
+                  type="text"
+                  aria-label={t('social.debate.target_media', 'Œuvre Cible')}
+                  value={mediaTitle}
+                  onChange={(e) => setMediaTitle(e.target.value)}
+                  placeholder="ex: Attack on Titan"
+                  className={LAB_INPUT}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="debate-topic" className={LAB_LABEL}>
+                  {t('social.debate.topic_title', 'Thématique du Débat')}
+                </label>
+                <textarea
+                  id="debate-topic"
+                  aria-label={t('social.debate.topic_title', 'Thématique du Débat')}
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  rows={4}
+                  placeholder={t(
+                    'social.debate.topic_placeholder',
+                    "ex: La fin de l'œuvre est-elle cohérente avec le développement d'Eren ?",
+                  )}
+                  className={`${LAB_INPUT} resize-none`}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={mutation.isPending || !mediaTitle.trim() || !topic.trim()}
+                className={LAB_CTA}
+              >
+                {mutation.isPending ? (
+                  <Zap className="h-5 w-5 animate-spin" />
+                ) : (
+                  t('social.debate.launch_btn', 'LANCER LA CONFRONTATION')
+                )}
+              </button>
+            </form>
+          </LabPanel>
 
-                <Card padding="lg" className="bg-white/5 border-white/5 opacity-50">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest mb-4">{t('social.debate.how_it_works', 'Fonctionnement')}</h4>
-                    <ul className="space-y-4">
-                        <li className="flex gap-3 text-[10px] font-bold uppercase leading-relaxed">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> {t('social.debate.agent_pro_desc', 'Agent PRO : Défend une thèse favorable.')}
-                        </li>
-                        <li className="flex gap-3 text-[10px] font-bold uppercase leading-relaxed">
-                            <CheckCircle2 className="w-4 h-4 text-red-500 shrink-0" /> {t('social.debate.agent_anti_desc', 'Agent ANTI : Apporte une contradiction argumentée.')}
-                        </li>
-                        <li className="flex gap-3 text-[10px] font-bold uppercase leading-relaxed">
-                            <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" /> {t('social.debate.agent_judge_desc', 'Agent JUGE : Synthétise et rend le verdict final.')}
-                        </li>
-                    </ul>
-                </Card>
-            </div>
-
-            {/* Visualisation du Débat */}
-            <div className="lg:col-span-8">
-                <AnimatePresence mode="wait">
-                    {mutation.isPending ? (
-                        <motion.div 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }} 
-                            exit={{ opacity: 0 }}
-                            className="h-full flex flex-col items-center justify-center py-24 text-center"
-                        >
-                            <div className="relative w-32 h-32 mb-8">
-                                <motion.div 
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                    className="absolute inset-0 border-t-4 border-red-500 rounded-full"
-                                />
-                                <Swords className="w-16 h-16 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
-                            </div>
-                            <h3 className="text-2xl font-black italic manga-font uppercase mb-2">{t('social.debate.inference_running', 'Inférence en cours')}</h3>
-                            <p className="text-xs font-bold opacity-30 uppercase tracking-[0.2em]">{t('social.debate.agents_consulting', 'Les agents consultent le Knowledge Graph...')}</p>
-                        </motion.div>
-                    ) : debateResult ? (
-                        <motion.div 
-                            initial={{ opacity: 0, y: 20 }} 
-                            animate={{ opacity: 1, y: 0 }} 
-                            className="space-y-8"
-                        >
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {/* Pro Argument */}
-                                <Card padding="lg" className="bg-emerald-500/5 border-emerald-500/20 relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-3xl -mr-12 -mt-12" />
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-500">
-                                            <User className="w-5 h-5" />
-                                        </div>
-                                        <span className="text-xs font-black uppercase tracking-widest text-emerald-500">Agent PRO</span>
-                                    </div>
-                                    <p className="text-sm font-bold leading-relaxed italic opacity-80">{debateResult.pro_argument}</p>
-                                </Card>
-
-                                {/* Anti Argument */}
-                                <Card padding="lg" className="bg-red-500/5 border-red-500/20 relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 blur-3xl -mr-12 -mt-12" />
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="p-2 rounded-xl bg-red-500/20 text-red-500">
-                                            <User className="w-5 h-5" />
-                                        </div>
-                                        <span className="text-xs font-black uppercase tracking-widest text-red-500">Agent ANTI</span>
-                                    </div>
-                                    <p className="text-sm font-bold leading-relaxed italic opacity-80">{debateResult.anti_argument}</p>
-                                </Card>
-                            </div>
-
-                            {/* Verdict du Juge */}
-                            <Card padding="none" className="bg-black border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.15)] rounded-[3.5rem] overflow-hidden">
-                                <div className="bg-blue-600 px-12 py-6 flex items-center justify-between">
-                                    <h3 className="text-2xl font-black italic manga-font uppercase text-white flex items-center gap-4">
-                                        <Gavel className="w-8 h-8" /> {t('social.debate.judge_verdict', 'VERDICT DU JUGE')}
-                                    </h3>
-                                    <Badge variant="neutral" className="bg-black/20 text-white border-none uppercase font-black italic">Final Resolution</Badge>
-                                </div>
-                                <div className="p-12">
-                                    <p className="text-xl font-bold leading-relaxed text-white/90 whitespace-pre-wrap">
-                                        {debateResult.judge_conclusion}
-                                    </p>
-                                    
-                                    <div className="mt-12 pt-8 border-t border-white/5 flex flex-wrap gap-8 items-center justify-between">
-                                        <div className="flex gap-8">
-                                            <div className="flex items-center gap-2">
-                                                <Scale className="w-4 h-4 text-blue-500" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('social.debate.objectivity', 'Objectivité: {{percent}}%', { percent: 98 })}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Target className="w-4 h-4 text-emerald-500" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('social.debate.based_on_facts', 'Basé sur {{count}} faits', { count: 12 })}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-4">
-                                            <Button variant="outline" className="rounded-xl px-6 py-2 text-[10px] font-black uppercase border-white/10">{t('social.debate.useful', 'UTILE')}</Button>
-                                            <Button variant="outline" className="rounded-xl px-6 py-2 text-[10px] font-black uppercase border-white/10">{t('social.debate.biased', 'BIAISÉ')}</Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </Card>
-                        </motion.div>
-                    ) : (
-                        <div className="h-full flex flex-col items-center justify-center py-32 opacity-10 text-center border-4 border-dashed border-white/5 rounded-[4rem]">
-                            <Swords className="w-32 h-32 mb-8" />
-                            <h3 className="text-4xl font-black italic manga-font uppercase mb-4">{t('social.debate.arena_waiting', 'Arène en attente')}</h3>
-                            <p className="text-sm font-bold uppercase tracking-[0.3em]">{t('social.debate.arena_waiting_desc', "Configurez un duel pour voir l'IA débattre.")}</p>
-                        </div>
-                    )}
-                </AnimatePresence>
-            </div>
-        </div>
-
-        {/* MLOps Section */}
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card padding="lg" className="bg-navy-900/40 border-white/5">
-                <History className="w-8 h-8 text-gray-500 mb-4" />
-                <h4 className="text-xs font-black uppercase tracking-widest mb-2 text-white">{t('social.debate.dpo_generation', 'Génération DPO')}</h4>
-                <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">{t('social.debate.dpo_generation_desc', "Chaque débat génère une paire d'entraînement (Chosen/Rejected) pour affiner la neutralité des modèles futurs.")}</p>
-            </Card>
-            <Card padding="lg" className="bg-navy-900/40 border-white/5">
-                <Sparkles className="w-8 h-8 text-blue-500 mb-4" />
-                <h4 className="text-xs font-black uppercase tracking-widest mb-2 text-white">{t('social.debate.knowledge_grounding', 'Knowledge Grounding')}</h4>
-                <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">{t('social.debate.knowledge_grounding_desc', 'Les agents utilisent le RAG Agentique pour sourcer leurs arguments directement dans la base de lore sémantique.')}</p>
-            </Card>
-            <Card padding="lg" className="bg-navy-900/40 border-white/5">
-                <Scale className="w-8 h-8 text-red-500 mb-4" />
-                <h4 className="text-xs font-black uppercase tracking-widest mb-2 text-white">{t('social.debate.game_theory', 'Théorie des Jeux')}</h4>
-                <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">{t('social.debate.game_theory_desc', "L'équilibre de Nash est recherché entre les arguments pour garantir une synthèse finale la plus juste possible.")}</p>
-            </Card>
-        </div>
-        {/* Explanation Cards Section */}
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card padding="lg" className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
-                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <Swords className="w-64 h-64 text-red-500" />
-                </div>
-                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3 text-red-400">
-                    <Swords className="w-5 h-5" /> {t('labs.ai_debate_arena.explainer_title')}
-                </h4>
-                <div className="space-y-4 relative z-10">
-                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                        {t('labs.ai_debate_arena.explainer_text_card1')}
-                    </p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                        {t('labs.ai_debate_arena.explainer_text_card2')}
-                    </p>
-                </div>
-            </Card>
-            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed text-red-200/40">
-                    {t('labs.ai_debate_arena.subtitle')}
+          <LabPanel title={t('social.debate.how_it_works', 'Fonctionnement')}>
+            <ul className="space-y-5">
+              <li className="flex items-start gap-4">
+                <AgentSeal seal={AGENTS.pro.seal} ink={AGENTS.pro.ink} />
+                <p className="pt-1 text-sm leading-relaxed text-[#8F94A5]">
+                  {t('social.debate.agent_pro_desc', 'Agent PRO : Défend une thèse favorable.')}
                 </p>
-            </div>
+              </li>
+              <li className="flex items-start gap-4">
+                <AgentSeal seal={AGENTS.anti.seal} ink={AGENTS.anti.ink} />
+                <p className="pt-1 text-sm leading-relaxed text-[#8F94A5]">
+                  {t(
+                    'social.debate.agent_anti_desc',
+                    'Agent ANTI : Apporte une contradiction argumentée.',
+                  )}
+                </p>
+              </li>
+              <li className="flex items-start gap-4">
+                <AgentSeal seal={AGENTS.judge.seal} ink={AGENTS.judge.ink} />
+                <p className="pt-1 text-sm leading-relaxed text-[#8F94A5]">
+                  {t(
+                    'social.debate.agent_judge_desc',
+                    'Agent JUGE : Synthétise et rend le verdict final.',
+                  )}
+                </p>
+              </li>
+            </ul>
+          </LabPanel>
+        </div>
+
+        {/* Visualisation du débat */}
+        <div className="lg:col-span-8">
+          <AnimatePresence mode="wait">
+            {mutation.isPending ? (
+              <motion.div
+                key="pending"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex h-full flex-col items-center justify-center py-24 text-center"
+              >
+                <div className="relative mb-8 h-28 w-28">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                    className="absolute inset-0 rounded-full border-2 border-[#F4F1E8]/10 border-t-[#E8442B]"
+                  />
+                  <span
+                    className="font-manga absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse text-4xl font-black italic text-[#F4F1E8]"
+                    aria-hidden
+                  >
+                    論
+                  </span>
+                </div>
+                <h3 className="font-manga text-2xl font-black uppercase italic text-[#F4F1E8]">
+                  {t('social.debate.inference_running', 'Inférence en cours')}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#8F94A5]">
+                  {t(
+                    'social.debate.agents_consulting',
+                    'Les agents consultent le Knowledge Graph...',
+                  )}
+                </p>
+              </motion.div>
+            ) : debateResult ? (
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+              >
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                  <ArgumentPanel
+                    seal={AGENTS.pro.seal}
+                    ink={AGENTS.pro.ink}
+                    label="Agent PRO"
+                    text={debateResult.pro_argument}
+                  />
+                  <ArgumentPanel
+                    seal={AGENTS.anti.seal}
+                    ink={AGENTS.anti.ink}
+                    label="Agent ANTI"
+                    text={debateResult.anti_argument}
+                  />
+                </div>
+
+                {/* Verdict du juge */}
+                <section className="overflow-hidden rounded-2xl border border-[#5D7FD3]/30 bg-[#0F1016]">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#5D7FD3]/30 bg-[#5D7FD3]/10 px-6 py-5 sm:px-8">
+                    <h3 className="font-manga flex items-center gap-3 text-xl font-black uppercase italic text-[#F4F1E8]">
+                      <Gavel className="h-6 w-6 text-[#5D7FD3]" />
+                      {t('social.debate.judge_verdict', 'VERDICT DU JUGE')}
+                    </h3>
+                    <span className="rounded-[2px] border-2 border-[#5D7FD3] px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-[#5D7FD3]">
+                      Final Resolution
+                    </span>
+                  </div>
+                  <div className="p-6 sm:p-8">
+                    <p className="whitespace-pre-wrap text-base leading-relaxed text-[#F4F1E8]/90">
+                      {debateResult.judge_conclusion}
+                    </p>
+                    <div className="mt-8 flex flex-wrap items-center justify-between gap-6 border-t border-[#F4F1E8]/10 pt-6">
+                      <div className="flex flex-wrap gap-6">
+                        <div className="flex items-center gap-2">
+                          <Scale className="h-4 w-4 text-[#5D7FD3]" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                            {t('social.debate.objectivity', 'Objectivité: {{percent}}%', {
+                              percent: 98,
+                            })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Target className="h-4 w-4 text-[#FDB913]" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                            {t('social.debate.based_on_facts', 'Basé sur {{count}} faits', {
+                              count: 12,
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <button type="button" className={LAB_BTN_GHOST}>
+                          {t('social.debate.useful', 'UTILE')}
+                        </button>
+                        <button type="button" className={LAB_BTN_GHOST}>
+                          {t('social.debate.biased', 'BIAISÉ')}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </motion.div>
+            ) : (
+              <LabEmpty
+                icon={<Swords className="h-16 w-16" />}
+                title={t('social.debate.arena_waiting', 'Arène en attente')}
+                hint={t(
+                  'social.debate.arena_waiting_desc',
+                  "Configurez un duel pour voir l'IA débattre.",
+                )}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </div>
-    </AnimatedPage>
+
+      {/* Coulisses MLOps */}
+      <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6">
+          <History className="mb-4 h-6 w-6 text-[#8F94A5]" />
+          <h4 className="text-xs font-black uppercase tracking-widest text-[#F4F1E8]">
+            {t('social.debate.dpo_generation', 'Génération DPO')}
+          </h4>
+          <p className="mt-2 text-sm leading-relaxed text-[#8F94A5]">
+            {t(
+              'social.debate.dpo_generation_desc',
+              "Chaque débat génère une paire d'entraînement (Chosen/Rejected) pour affiner la neutralité des modèles futurs.",
+            )}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6">
+          <Sparkles className="mb-4 h-6 w-6 text-[#5D7FD3]" />
+          <h4 className="text-xs font-black uppercase tracking-widest text-[#F4F1E8]">
+            {t('social.debate.knowledge_grounding', 'Knowledge Grounding')}
+          </h4>
+          <p className="mt-2 text-sm leading-relaxed text-[#8F94A5]">
+            {t(
+              'social.debate.knowledge_grounding_desc',
+              'Les agents utilisent le RAG Agentique pour sourcer leurs arguments directement dans la base de lore sémantique.',
+            )}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6">
+          <Scale className="mb-4 h-6 w-6 text-[#E8442B]" />
+          <h4 className="text-xs font-black uppercase tracking-widest text-[#F4F1E8]">
+            {t('social.debate.game_theory', 'Théorie des Jeux')}
+          </h4>
+          <p className="mt-2 text-sm leading-relaxed text-[#8F94A5]">
+            {t(
+              'social.debate.game_theory_desc',
+              "L'équilibre de Nash est recherché entre les arguments pour garantir une synthèse finale la plus juste possible.",
+            )}
+          </p>
+        </div>
+      </div>
+
+      {/* Notice de l'arène */}
+      <section className="relative mt-8 overflow-hidden rounded-2xl border border-[#E8442B]/25 bg-[#0F1016] p-6 sm:p-8">
+        <span
+          className="font-manga pointer-events-none absolute -bottom-14 -right-4 text-[11rem] font-black italic leading-none text-[#E8442B]/[0.05]"
+          aria-hidden
+        >
+          論
+        </span>
+        <div className="relative mb-5 flex items-center gap-3">
+          <Swords className="h-4 w-4 text-[#E8442B]" />
+          <h3 className="font-manga text-sm font-black uppercase italic tracking-wide text-[#F4F1E8]">
+            {t('labs.ai_debate_arena.explainer_title')}
+          </h3>
+          <span className="h-px flex-1 bg-[#F4F1E8]/10" aria-hidden />
+        </div>
+        <div className="relative grid gap-6 md:grid-cols-2">
+          <p className="text-sm leading-relaxed text-[#8F94A5]">
+            {t('labs.ai_debate_arena.explainer_text_card1')}
+          </p>
+          <p className="text-sm leading-relaxed text-[#8F94A5]">
+            {t('labs.ai_debate_arena.explainer_text_card2')}
+          </p>
+        </div>
+        <p className="relative mt-6 border-t border-[#F4F1E8]/10 pt-4 text-xs italic leading-relaxed text-[#8F94A5]/70">
+          {t('labs.ai_debate_arena.subtitle')}
+        </p>
+      </section>
+
+      <LabGuide
+        steps={[
+          {
+            title: 'Cible une œuvre',
+            body: "Nomme l'anime, le manga ou le jeu qui servira de terrain au duel — les agents ne plaident que sur des faits indexés.",
+          },
+          {
+            title: 'Pose la thématique',
+            body: 'Formule une question tranchée, idéalement polémique : plus la thèse est discutable, plus la confrontation est riche.',
+          },
+          {
+            title: 'Lance la confrontation',
+            body: 'Les agents 賛 (thèse) et 否 (antithèse) plaident tour à tour en sourçant leurs arguments dans le Knowledge Graph.',
+          },
+          {
+            title: 'Jauge le verdict',
+            body: "L'agent 裁 rend une synthèse arbitrée. Lis-la comme un avis motivé, pas comme une vérité définitive.",
+          },
+        ]}
+        note="Ton vote Utile ou Biaisé sur chaque verdict alimente les paires DPO qui calibrent la neutralité des prochains juges — l'arène s'affine à chaque duel."
+      />
+    </LabPage>
   );
 };
 
