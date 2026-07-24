@@ -1,17 +1,17 @@
 import React from 'react';
-import { Card } from '../../../components/ui/Card';
 
 /** A single KPI tile in the Transparency dashboard header grid. The version tile
- *  uses a smaller, clamped value style via `valueClassName`. */
+ *  uses a smaller, clamped value style via `valueClassName`. Voix données : la
+ *  valeur est encrée en or, l'étiquette en graphite. */
 export const TransparencyKpiCard: React.FC<{
   icon: React.ReactNode;
   value: React.ReactNode;
   label: string;
   valueClassName?: string;
 }> = ({ icon, value, label, valueClassName = 'text-4xl font-black italic mb-1' }) => (
-  <Card className="!bg-navy-900/20 !border-white/5 p-8 flex flex-col items-center text-center transition-all hover:scale-105">
+  <div className="flex flex-col items-center rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 text-center transition-colors hover:border-[#5D7FD3]/40">
     {icon}
-    <span className={valueClassName}>{value}</span>
-    <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">{label}</span>
-  </Card>
+    <span className={`font-manga text-[#FDB913] ${valueClassName}`}>{value}</span>
+    <span className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">{label}</span>
+  </div>
 );

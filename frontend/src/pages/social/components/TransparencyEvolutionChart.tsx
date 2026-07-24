@@ -1,9 +1,8 @@
 import React from 'react';
 import { TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
 import Plot from '../../../components/LazyPlot';
+import { LabPanel } from '../../labs/components/shared/LabKit';
 
 /** Semantic-accuracy evolution chart. The Plotly chart (lazy-loaded) renders
  *  only from two data points on; otherwise a "not enough data" placeholder. */
@@ -12,21 +11,15 @@ export const TransparencyEvolutionChart: React.FC<{
 }> = ({ timeline }) => {
   const { t } = useTranslation();
   return (
-    <section>
-      <div className="flex items-center justify-between mb-12">
-        <h2 className="text-4xl font-black italic uppercase manga-font tracking-tighter flex items-center gap-4">
-          <TrendingUp className="w-10 h-10 text-blue-500" />{' '}
-          {t('social.transparency.evolution_title', 'Évolution du Modèle Expert')}
-        </h2>
-        <Badge
-          variant="neutral"
-          className="!bg-white/5 !border-white/10 uppercase text-[10px] py-2 px-4"
-        >
-          Metric: Semantic Accuracy
-        </Badge>
-      </div>
-
-      <Card className="!bg-navy-900/20 !border-white/5 p-10 h-[450px]">
+    <LabPanel
+      title={t('social.transparency.evolution_title', 'Évolution du Modèle Expert')}
+      corner={
+        <span className="flex items-center gap-1.5">
+          <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" /> Metric: Semantic Accuracy
+        </span>
+      }
+    >
+      <div className="h-[420px]">
         {timeline.length >= 2 ? (
           <Plot
             data={[
@@ -36,8 +29,8 @@ export const TransparencyEvolutionChart: React.FC<{
                 type: 'scatter',
                 mode: 'lines',
                 fill: 'tozeroy',
-                line: { color: '#3b82f6', width: 4, shape: 'spline' },
-                fillcolor: 'rgba(59,130,246,0.18)',
+                line: { color: '#FDB913', width: 4, shape: 'spline' },
+                fillcolor: 'rgba(253,185,19,0.15)',
                 hovertemplate: 'Accuracy: %{y:.0%}<extra></extra>',
               },
             ]}
@@ -47,19 +40,19 @@ export const TransparencyEvolutionChart: React.FC<{
               plot_bgcolor: 'rgba(0,0,0,0)',
               margin: { l: 44, r: 20, t: 10, b: 36 },
               xaxis: {
-                gridcolor: 'rgba(255,255,255,0.03)',
-                tickfont: { color: '#ffffff33', size: 10 },
+                gridcolor: 'rgba(244,241,232,0.05)',
+                tickfont: { color: '#8F94A5', size: 10 },
                 showline: false,
                 zeroline: false,
               },
               yaxis: {
-                gridcolor: 'rgba(255,255,255,0.03)',
-                tickfont: { color: '#ffffff33', size: 10 },
+                gridcolor: 'rgba(244,241,232,0.05)',
+                tickfont: { color: '#8F94A5', size: 10 },
                 showline: false,
                 zeroline: false,
                 tickformat: '.0%',
               },
-              font: { family: 'Montserrat', color: '#fff' },
+              font: { family: 'Montserrat', color: '#F4F1E8' },
               hovermode: 'x unified',
               showlegend: false,
             }}
@@ -68,12 +61,12 @@ export const TransparencyEvolutionChart: React.FC<{
             useResizeHandler
           />
         ) : (
-          <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
-            <TrendingUp className="w-12 h-12 mb-4" />
+          <div className="flex h-full flex-col items-center justify-center text-center text-[#8F94A5]">
+            <TrendingUp className="mb-4 h-12 w-12 opacity-40" aria-hidden="true" />
             <p className="text-xs font-black uppercase tracking-widest">
               {t('social.transparency.not_enough_data', "Pas encore assez de données d'évaluation")}
             </p>
-            <p className="text-[10px] font-bold uppercase tracking-widest mt-1 opacity-60">
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-[#8F94A5]/70">
               {t(
                 'social.transparency.chart_hint',
                 "La courbe apparaîtra dès plusieurs cycles d'évaluation enregistrés.",
@@ -81,7 +74,7 @@ export const TransparencyEvolutionChart: React.FC<{
             </p>
           </div>
         )}
-      </Card>
-    </section>
+      </div>
+    </LabPanel>
   );
 };

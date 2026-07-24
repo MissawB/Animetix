@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { labService } from '../../features/labs/services/labService';
 import { OpenDataset } from '../../types';
-import { Card } from '../../components/ui/Card';
-import { Share2, Download, FileText, Database, Loader2, ExternalLink } from 'lucide-react';
+import { Download, Database, Loader2, ExternalLink } from 'lucide-react';
 import { useToastStore } from '../../store/toastStore';
 import { useTranslation } from 'react-i18next';
+import { LabPage, LabHeader } from '../labs/components/shared/LabKit';
+
+/** Encre du module Open Data (la donnée) — or. */
+const DATA_INK = '#FDB913';
 
 // Jeux de données publiés sur le Hub Hugging Face (consultables / téléchargeables
 // directement là-bas).
@@ -26,6 +29,20 @@ const HF_DATASETS = [
     url: 'https://huggingface.co/datasets/MissawB/otaku-gold-dataset',
   },
 ];
+
+/** Titre de section à barre d'encre or (voix données). */
+const SectionTitle: React.FC<{ children: React.ReactNode; className?: string }> = ({
+  children,
+  className = '',
+}) => (
+  <div className={`mb-6 flex items-center gap-3 ${className}`}>
+    <span className="h-4 w-1 flex-none bg-[#FDB913]" aria-hidden />
+    <h2 className="font-manga text-sm font-black uppercase italic tracking-wide text-[#F4F1E8]">
+      {children}
+    </h2>
+    <span className="h-px flex-1 bg-[#F4F1E8]/10" aria-hidden />
+  </div>
+);
 
 const OpenDataPage: React.FC = () => {
   const [datasets, setDatasets] = useState<OpenDataset[]>([]);
@@ -110,125 +127,121 @@ const OpenDataPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-20 text-center text-white font-black animate-pulse uppercase tracking-[0.3em] flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-10 h-10 animate-spin text-brand-primary" />
-        {t('social.opendata.loading', 'Synchronisation avec le dépôt open-source...')}
+      <div className="flex min-h-screen w-full flex-col items-center justify-center gap-4 bg-[#0B0C10] text-center">
+        <Loader2 className="h-10 w-10 animate-spin text-[#FDB913]" aria-hidden="true" />
+        <p className="animate-pulse text-xs font-black uppercase tracking-[0.3em] text-[#8F94A5]">
+          {t('social.opendata.loading', 'Synchronisation avec le dépôt open-source...')}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
-      <div className="mb-12">
-        <h1 className="text-4xl font-black italic manga-font tracking-tighter uppercase flex items-center gap-3">
-          <Share2 className="w-8 h-8 text-teal-400 animate-pulse" />{' '}
-          {t('social.opendata.title', 'PORTAIL DE DONNÉES OUVERTES')}
-        </h1>
-        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-2">
-          {t(
-            'social.opendata.subtitle',
-            'Nos jeux de données publics — en téléchargement direct ou sur Hugging Face.',
-          )}
-        </p>
-      </div>
+    <LabPage>
+      <LabHeader
+        glyph="開"
+        code="Registre · Open Data"
+        title="Portail"
+        accent="Open Data"
+        lede={t(
+          'social.opendata.subtitle',
+          'Nos jeux de données publics — en téléchargement direct ou sur Hugging Face.',
+        )}
+      />
 
       {/* Téléchargement direct */}
-      <h2 className="text-xs font-black uppercase tracking-[0.25em] text-teal-400 mb-4">
-        {t('social.opendata.direct_download', 'Téléchargement direct')}
-      </h2>
+      <SectionTitle>{t('social.opendata.direct_download', 'Téléchargement direct')}</SectionTitle>
 
-      {/* Dataset Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {datasets.map((dataset) => (
-          <Card
+          <article
             key={dataset.id}
-            padding="lg"
-            className="flex flex-col justify-between hover:border-teal-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-teal-950/10 group relative overflow-hidden"
+            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#FDB913]/60"
           >
-            {/* Background Accent */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-bl-full pointer-events-none group-hover:bg-teal-500/10 transition-colors" />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -bottom-5 -right-2 select-none text-[5.5rem] font-black leading-none text-[#F4F1E8]/[0.045] transition-colors duration-500 group-hover:text-[#FDB913]/[0.08]"
+            >
+              開
+            </span>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-teal-500/10 text-teal-400 group-hover:scale-110 transition-transform">
-                  {dataset.id === 'dpo_pairs' ? (
-                    <Database className="w-6 h-6" />
-                  ) : (
-                    <FileText className="w-6 h-6" />
-                  )}
-                </div>
-                <div>
-                  <h4 className="font-black text-md uppercase tracking-tight text-white group-hover:text-teal-400 transition-colors">
-                    {dataset.name}
-                  </h4>
-                  <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider bg-white/5 dark:bg-black/20 px-2 py-0.5 rounded">
-                    {t('social.opendata.format', 'Format')} {dataset.format}
-                  </span>
-                </div>
+            <div className="relative space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <span
+                  className="select-none text-2xl font-bold leading-none"
+                  style={{ color: DATA_INK }}
+                  aria-hidden
+                >
+                  開
+                </span>
+                <span className="rounded bg-[#F4F1E8]/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#8F94A5]">
+                  {t('social.opendata.format', 'Format')} {dataset.format}
+                </span>
               </div>
 
-              <p className="text-xs text-gray-400 leading-relaxed font-medium">
-                {dataset.description}
-              </p>
+              <h4 className="font-manga text-lg font-black uppercase italic tracking-tight text-[#F4F1E8]">
+                {dataset.name}
+              </h4>
+              <p className="text-xs leading-relaxed text-[#8F94A5]">{dataset.description}</p>
 
-              {/* Metadata list */}
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5 text-[10px] font-black uppercase tracking-wider text-gray-500">
-                <div>
-                  <span className="block text-[8px] opacity-40">
+              {/* Métadonnées */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] px-4 py-3">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8F94A5]">
                     {t('social.opendata.file_size', 'Taille du fichier')}
-                  </span>
-                  <span className="text-white">{formatBytes(dataset.size_bytes)}</span>
+                  </p>
+                  <p className="mt-1 text-xs font-black uppercase text-[#F4F1E8]">
+                    {formatBytes(dataset.size_bytes)}
+                  </p>
                 </div>
-                <div>
-                  <span className="block text-[8px] opacity-40">
+                <div className="rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] px-4 py-3">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8F94A5]">
                     {t('social.opendata.last_update', 'Dernière mise à jour')}
-                  </span>
-                  <span className="text-white">{formatDate(dataset.updated_at)}</span>
+                  </p>
+                  <p className="mt-1 text-xs font-black uppercase text-[#F4F1E8]">
+                    {formatDate(dataset.updated_at)}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="pt-6 mt-6 border-t border-white/5">
+            <div className="relative mt-6 border-t border-[#F4F1E8]/10 pt-6">
               <button
                 onClick={() => handleDownload(dataset)}
                 disabled={downloadingId !== null}
-                className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-black font-black uppercase text-xs tracking-widest py-3 px-6 rounded-xl transition-all duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed group-hover:scale-[1.02]"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-[#FDB913] px-6 py-3.5 text-xs font-black uppercase tracking-widest text-[#0B0C10] transition-colors hover:bg-[#e0a60e] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4F1E8]"
               >
                 {downloadingId === dataset.id ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin text-black" />
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                     {t('social.opendata.preparing', 'Préparation...')}
                   </>
                 ) : (
                   <>
-                    <Download className="w-4 h-4 text-black group-hover:translate-y-0.5 transition-transform" />
+                    <Download className="h-4 w-4" aria-hidden="true" />
                     {t('social.opendata.download_btn', 'Télécharger le dataset')}
                   </>
                 )}
               </button>
             </div>
-          </Card>
+          </article>
         ))}
 
         {datasets.length === 0 && (
-          <Card
-            padding="lg"
-            className="col-span-full text-center py-20 border-dashed border-2 border-white/5"
-          >
-            <Database className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <p className="font-bold text-gray-500 italic">
+          <div className="col-span-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#F4F1E8]/15 px-8 py-20 text-center">
+            <Database className="mb-4 h-12 w-12 text-[#8F94A5]/40" aria-hidden="true" />
+            <p className="text-sm italic text-[#8F94A5]">
               {t('social.opendata.empty', 'Aucun dataset en téléchargement direct pour le moment.')}
             </p>
-          </Card>
+          </div>
         )}
       </div>
 
       {/* Sur Hugging Face */}
-      <h2 className="text-xs font-black uppercase tracking-[0.25em] text-teal-400 mt-14 mb-4">
+      <SectionTitle className="mt-14">
         {t('social.opendata.on_hf', 'Sur Hugging Face')}
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      </SectionTitle>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {HF_DATASETS.map((ds) => (
           <a
             key={ds.url}
@@ -238,42 +251,40 @@ const OpenDataPage: React.FC = () => {
             aria-label={t('social.opendata.aria_label', '{{name}} — voir sur Hugging Face', {
               name: ds.name,
             })}
-            className="no-underline group"
+            className="group block h-full no-underline"
           >
-            <Card
-              padding="lg"
-              className="h-full flex flex-col justify-between hover:border-teal-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-teal-950/10 relative overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-bl-full pointer-events-none group-hover:bg-teal-500/10 transition-colors" />
+            <article className="flex h-full flex-col justify-between rounded-2xl border border-[#F4F1E8]/15 p-6 transition-colors duration-300 group-hover:border-[#FDB913]">
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-teal-500/10 text-teal-400 group-hover:scale-110 transition-transform">
-                    <Database className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-black text-md uppercase tracking-tight text-white group-hover:text-teal-400 transition-colors">
-                      {ds.name}
-                    </h4>
-                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider bg-white/5 dark:bg-black/20 px-2 py-0.5 rounded">
-                      {ds.tag}
-                    </span>
-                  </div>
+                <div className="flex items-start justify-between gap-3">
+                  <span
+                    className="select-none text-2xl font-bold leading-none opacity-70"
+                    style={{ color: DATA_INK }}
+                    aria-hidden
+                  >
+                    開
+                  </span>
+                  <span className="rounded bg-[#F4F1E8]/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#8F94A5]">
+                    {ds.tag}
+                  </span>
                 </div>
-                <p className="text-xs text-gray-400 leading-relaxed font-medium">
+                <h4 className="font-manga text-lg font-black uppercase italic tracking-tight text-[#F4F1E8] transition-colors group-hover:text-[#FDB913]">
+                  {ds.name}
+                </h4>
+                <p className="text-xs leading-relaxed text-[#8F94A5]">
                   {t(ds.descriptionKey, ds.descriptionDefault)}
                 </p>
               </div>
-              <div className="pt-6 mt-6 border-t border-white/5">
-                <span className="w-full inline-flex items-center justify-center gap-2 border border-teal-500/30 text-teal-400 group-hover:bg-teal-500/10 font-black uppercase text-xs tracking-widest py-3 px-6 rounded-xl transition-all duration-300">
-                  <ExternalLink className="w-4 h-4" />
+              <div className="mt-6 border-t border-[#F4F1E8]/10 pt-6">
+                <span className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#F4F1E8]/15 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-[#8F94A5] transition-colors group-hover:border-[#FDB913] group-hover:text-[#F4F1E8]">
+                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
                   {t('social.opendata.view_hf', 'Voir sur Hugging Face')}
                 </span>
               </div>
-            </Card>
+            </article>
           </a>
         ))}
       </div>
-    </div>
+    </LabPage>
   );
 };
 

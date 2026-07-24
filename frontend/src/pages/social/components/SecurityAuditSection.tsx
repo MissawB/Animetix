@@ -13,14 +13,16 @@ const AuditRow = ({
   suffix: string;
   icon: React.ReactNode;
 }) => (
-  <div className="flex items-center justify-between group">
+  <div className="group flex items-center justify-between">
     <div className="flex items-center gap-4">
-      <div className="p-3 bg-white/5 rounded-2xl group-hover:bg-purple-500/10 transition-colors">
+      <div className="rounded-xl bg-[#F4F1E8]/5 p-3 transition-colors group-hover:bg-[#5D7FD3]/10">
         {icon}
       </div>
-      <span className="text-[11px] font-black uppercase tracking-widest opacity-60">{label}</span>
+      <span className="text-[11px] font-black uppercase tracking-widest text-[#8F94A5]">
+        {label}
+      </span>
     </div>
-    <span className="font-black italic text-sm">
+    <span className="text-sm font-black italic text-[#FDB913]">
       {typeof value === 'number' && value < 1 ? value.toFixed(3) : value}
       {suffix}
     </span>
@@ -33,9 +35,10 @@ export const SecurityAuditSection: React.FC<{
 }> = ({ ethicsAudit }) => {
   const { t } = useTranslation();
   return (
-    <section className="p-10 rounded-[3rem] bg-navy-900/40 border border-white/5 space-y-10">
-      <h3 className="text-2xl font-black italic uppercase manga-font tracking-tight flex items-center gap-3 text-purple-400">
-        <Scale className="w-6 h-6" /> {t('social.transparency.security_audit', 'Audit de Sécurité')}
+    <section className="space-y-10 rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 sm:p-10">
+      <h3 className="font-manga flex items-center gap-3 text-2xl font-black uppercase italic tracking-tight text-[#5D7FD3]">
+        <Scale className="h-6 w-6" aria-hidden="true" />{' '}
+        {t('social.transparency.security_audit', 'Audit de Sécurité')}
       </h3>
       <div className="space-y-8">
         <AuditRow
@@ -46,7 +49,7 @@ export const SecurityAuditSection: React.FC<{
               : t('social.transparency.insufficient_data', 'Données insuffisantes')
           }
           suffix={ethicsAudit?.safety_compliance != null ? '%' : ''}
-          icon={<Lock className="text-purple-400" />}
+          icon={<Lock className="text-[#5D7FD3]" aria-hidden="true" />}
         />
         <AuditRow
           label={t('social.transparency.hallucination_rate', "Taux d'Hallucination")}
@@ -56,11 +59,11 @@ export const SecurityAuditSection: React.FC<{
               : t('social.transparency.insufficient_data', 'Données insuffisantes')
           }
           suffix={ethicsAudit?.hallucination_rate != null ? '%' : ''}
-          icon={<AlertTriangle className="text-purple-400" />}
+          icon={<AlertTriangle className="text-[#5D7FD3]" aria-hidden="true" />}
         />
       </div>
 
-      <p className="pt-8 border-t border-white/5 text-[10px] font-bold opacity-30 uppercase tracking-widest leading-relaxed">
+      <p className="border-t border-[#F4F1E8]/10 pt-8 text-[10px] font-bold uppercase leading-relaxed tracking-widest text-[#8F94A5]">
         {t(
           'social.transparency.audit_footnote',
           "Conformité = part des interactions évaluées non bloquées par le garde-fou. Hallucination = part des réponses signalées par l'évaluation automatique.",
