@@ -28,40 +28,46 @@ export const WorldBossBanner: React.FC = () => {
 
   return (
     <section className="mb-16 text-left">
-      <h2 className="text-3xl font-black mb-6 flex items-baseline text-black dark:text-white uppercase italic manga-font">
+      <h2 className="text-3xl font-black mb-6 flex items-baseline text-[#F4F1E8] uppercase italic font-manga">
         {isEn ? 'Community' : t('home.community_title', 'Communautaire')}
-        <span className="text-yellow-400 text-3xl leading-none ml-1">.</span>
+        <span className="text-[#E8442B] text-3xl leading-none ml-1">.</span>
       </h2>
       <Link to="/game/world-boss/active/" className="block no-underline group">
-        <div className="relative w-full h-[280px] bg-gradient-to-r from-red-950 to-black rounded-[3rem] overflow-hidden shadow-2xl border-4 border-red-600/20 group-hover:border-red-600/60 transition-all duration-500 flex items-center p-8 md:p-16">
+        <div className="relative w-full h-[280px] bg-[#0F1016] rounded-2xl overflow-hidden shadow-2xl border border-[#E8442B]/25 group-hover:border-[#E8442B]/60 transition-all duration-500 flex items-center p-8 md:p-16">
           {/* Carbon-fibre grain */}
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-red-600/10 to-transparent"></div>
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[#E8442B]/10 to-transparent"></div>
 
           {/* Signature: breathing danger aura behind the boss */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[420px] h-[420px] rounded-full bg-red-600/25 blur-[100px] animate-boss-pulse group-hover:bg-red-500/40 transition-colors duration-500 pointer-events-none z-0"></div>
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[420px] h-[420px] rounded-full bg-[#E8442B]/25 blur-[100px] animate-boss-pulse group-hover:bg-[#E8442B]/40 transition-colors duration-500 pointer-events-none z-0"></div>
 
           {/* Signature: alert beam scanning across the banner */}
-          <div className="absolute top-0 left-0 h-full w-1/3 bg-gradient-to-r from-transparent via-red-500/30 to-transparent blur-xl animate-boss-sweep pointer-events-none z-0"></div>
+          <div className="absolute top-0 left-0 h-full w-1/3 bg-gradient-to-r from-transparent via-[#E8442B]/30 to-transparent blur-xl animate-boss-sweep pointer-events-none z-0"></div>
 
           <div className="relative z-10 max-w-2xl">
             {hasEvent && (
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600 text-white text-[10px] font-black uppercase tracking-widest mb-6 animate-pulse">
-                <span className="w-2 h-2 rounded-full bg-white"></span> {isEn ? 'Live Event' : t('home.live_event', 'Event en cours')}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E8442B] text-[#F4F1E8] text-[10px] font-black uppercase tracking-widest mb-6 animate-pulse">
+                <span className="w-2 h-2 rounded-full bg-[#F4F1E8]"></span>{' '}
+                {isEn ? 'Live Event' : t('home.live_event', 'Event en cours')}
               </div>
             )}
-            <h2 className="text-4xl md:text-6xl font-black italic manga-font tracking-tighter uppercase text-white mb-4 leading-none">
-              WORLD <span className="text-red-600 text-glow">BOSS</span>
+            <h2 className="text-4xl md:text-6xl font-black italic font-manga tracking-tighter uppercase text-[#F4F1E8] mb-4 leading-none">
+              WORLD <span className="text-[#E8442B]">BOSS</span>
             </h2>
-            <p className="text-sm md:text-lg font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed italic">
-              {isEn ? 'Join the global community to take down the legendary Titan.' : t('home.world_boss_desc', 'Rejoignez la communauté mondiale pour terrasser le Titan légendaire.')}
+            <p className="text-sm md:text-lg font-bold text-[#8F94A5] uppercase tracking-[0.2em] leading-relaxed italic">
+              {isEn
+                ? 'Join the global community to take down the legendary Titan.'
+                : t(
+                    'home.world_boss_desc',
+                    'Rejoignez la communauté mondiale pour terrasser le Titan légendaire.',
+                  )}
             </p>
           </div>
 
           {/* The boss lunges forward and flares on hover (no generic rotate) */}
           <img
             src="/static/img/modes/WorldBoss.png"
-            className="absolute right-0 md:right-6 bottom-0 h-[85%] md:h-[100%] object-contain drop-shadow-[0_20px_50px_rgba(220,38,38,0.5)] group-hover:scale-105 group-hover:-translate-x-2 transition-transform duration-700 ease-out z-20 pointer-events-none"
+            className="absolute right-0 md:right-6 bottom-0 h-[85%] md:h-[100%] object-contain drop-shadow-[0_20px_50px_rgba(232,68,43,0.45)] group-hover:scale-105 group-hover:-translate-x-2 transition-transform duration-700 ease-out z-20 pointer-events-none"
             alt="World Boss"
             loading="lazy"
             decoding="async"

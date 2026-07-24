@@ -39,12 +39,23 @@ export const HeroSection: React.FC = () => {
   }, [heroIndex]);
 
   return (
-    <section className="max-w-[1600px] mx-auto px-6 md:px-20 py-20 md:pb-32 min-h-[500px] flex flex-col md:flex-row items-center justify-between gap-12">
+    <section className="relative max-w-[1600px] mx-auto px-6 md:px-20 py-20 md:pb-32 min-h-[500px] flex flex-col md:flex-row items-center justify-between gap-12">
+      {/* Trame halftone discrète (édition de nuit) */}
+      <div className="explore-halftone absolute inset-0 pointer-events-none" aria-hidden />
+      {/* Sceau volume, très discret */}
+      <span
+        className="font-manga pointer-events-none absolute -top-2 right-6 md:right-24 text-[10rem] leading-none font-black italic text-[#F4F1E8]/[0.04] select-none"
+        aria-hidden
+      >
+        巻
+      </span>
+
       <div className="z-10 md:w-1/2 text-left">
-        <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter mb-8 uppercase text-black dark:text-white manga-font leading-none">
-          ANIMETIX
+        <span className="explore-stamp mb-6">ANIMETIX · ÉDITION DE NUIT</span>
+        <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter mt-6 mb-8 uppercase text-[#F4F1E8] font-manga leading-none">
+          ANIME<span className="text-[#E8442B]">TIX</span>
         </h1>
-        <p className="text-xl md:text-2xl mb-10 text-gray-700 dark:text-gray-300 font-medium leading-relaxed max-w-lg">
+        <p className="text-xl md:text-2xl mb-10 text-[#8F94A5] font-medium leading-relaxed max-w-lg">
           {isEn
             ? 'Artificial intelligence in service of your passion.'
             : t('home.hero_tagline', "L'intelligence artificielle au service de votre passion.")}
@@ -52,13 +63,13 @@ export const HeroSection: React.FC = () => {
         <div className="flex flex-wrap gap-6">
           <Link
             to="/daily-challenge/"
-            className="bg-yellow-400 hover:bg-yellow-500 text-black font-black italic manga-font text-sm py-4 px-10 rounded-2xl shadow-2xl hover:scale-105 active:scale-95 transition-all no-underline inline-block border-2 border-black"
+            className="bg-[#E8442B] hover:bg-[#c9391f] text-[#F4F1E8] font-manga font-black italic uppercase text-sm py-4 px-10 rounded-2xl hover:scale-105 active:scale-95 transition-all no-underline inline-block border border-[#E8442B]"
           >
             {t('nav.daily', 'Défi Quotidien')}
           </Link>
           <Link
             to="/leaderboard/"
-            className="bg-gray-800 dark:bg-gray-700 text-white font-black italic manga-font py-4 px-10 rounded-2xl text-sm tracking-wider uppercase transition-all duration-300 hover:bg-black dark:hover:bg-gray-600 hover:scale-105 active:scale-95 no-underline inline-block shadow-2xl"
+            className="bg-[#0F1016] text-[#F4F1E8] font-manga font-black italic py-4 px-10 rounded-2xl text-sm tracking-wider uppercase transition-all duration-300 border border-[#F4F1E8]/10 hover:border-[#FDB913]/60 hover:text-[#FDB913] hover:scale-105 active:scale-95 no-underline inline-block"
           >
             {t('nav.leaderboard', 'Classement')}
           </Link>
@@ -66,15 +77,18 @@ export const HeroSection: React.FC = () => {
       </div>
 
       <div className="md:w-1/2 relative mt-10 md:mt-0 flex justify-center">
-        <DynamicAuraWrapper>
-          {/* key={src} remonte l'élément à chaque rotation → l'animation CSS hero-swap rejoue. */}
-          <img
-            key={HERO_IMAGES[heroIndex]}
-            src={HERO_IMAGES[heroIndex]}
-            alt="Hero Illustration"
-            className="w-[500px] md:w-[600px] z-10 relative hero-img hero-swap transform"
-          />
-        </DynamicAuraWrapper>
+        {/* Cadre papier décalé façon fiche d'œuvre */}
+        <div className="relative rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-3 rotate-[-2deg] shadow-2xl">
+          <DynamicAuraWrapper>
+            {/* key={src} remonte l'élément à chaque rotation → l'animation CSS hero-swap rejoue. */}
+            <img
+              key={HERO_IMAGES[heroIndex]}
+              src={HERO_IMAGES[heroIndex]}
+              alt="Hero Illustration"
+              className="w-[500px] md:w-[600px] z-10 relative hero-img hero-swap transform"
+            />
+          </DynamicAuraWrapper>
+        </div>
       </div>
     </section>
   );
