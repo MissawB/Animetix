@@ -264,10 +264,12 @@ class MediaDetailView(APIView):
     def __init__(
         self,
         catalog_service=Provide[Container.core.catalog_service],
+        synopsis_translator=Provide[Container.core.synopsis_translator],
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.catalog_service = catalog_service
+        self.synopsis_translator = synopsis_translator
 
     def get(self, request, media_type, item_id):
         from ...models import MediaItem  # noqa: E402
@@ -276,6 +278,13 @@ class MediaDetailView(APIView):
         # 1. Tentative via SQL direct (Source of Truth)
         try:
             item_obj = MediaItem.objects.get(media_type=media_type, external_id=item_id)
+            if not item_obj.synopsis_fr and item_obj.description:
+                fr = self.synopsis_translator.translate_to_fr(
+                    item_obj.title, item_obj.description
+                )
+                if fr:
+                    item_obj.synopsis_fr = fr
+                    item_obj.save(update_fields=["synopsis_fr"])
             serializer = MediaItemSerializer(item_obj)
             return Response(serializer.data)
         except MediaItem.DoesNotExist:
