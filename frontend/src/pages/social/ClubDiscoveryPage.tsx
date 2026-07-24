@@ -35,7 +35,11 @@ const ClubDiscoveryPage: React.FC = () => {
 
   const { data: clubs = [] } = useQuery<Club[]>({
     queryKey: ['clubs-list'],
-    queryFn: () => apiClient('/api/v1/clubs/'),
+    queryFn: async () => {
+      const data = await apiClient('/api/v1/clubs/');
+      // L'endpoint est paginé DRF : la liste est dans `results`.
+      return Array.isArray(data) ? data : (data?.results ?? []);
+    },
   });
 
   const createMutation = useMutation({
@@ -47,7 +51,9 @@ const ClubDiscoveryPage: React.FC = () => {
     },
   });
 
-  const filteredClubs = clubs.filter(
+  // Garde contre un cache persisté (IndexedDB, 24h) datant d'avant la
+  // normalisation : il peut encore contenir l'objet paginé DRF brut.
+  const filteredClubs = (Array.isArray(clubs) ? clubs : []).filter(
     (club) =>
       (selectedTheme === 'All' || club.theme === selectedTheme) &&
       (club.name.toLowerCase().includes(filter.toLowerCase()) ||
