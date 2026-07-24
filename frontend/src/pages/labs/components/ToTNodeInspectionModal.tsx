@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, X } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
@@ -14,10 +14,24 @@ export const ToTNodeInspectionModal: React.FC<ToTNodeInspectionModalProps> = ({
   selectedNode,
   onClose,
 }) => {
+  useEffect(() => {
+    if (!selectedNode) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNode, onClose]);
+
   return (
     <AnimatePresence>
       {selectedNode && (
         <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Inspection de nœud"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 20 }}

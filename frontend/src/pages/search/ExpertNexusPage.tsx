@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSSE, type SSEEvent } from '../../hooks/useSSE';
 import {
@@ -16,11 +15,11 @@ import { useSearchParams, Link } from 'react-router-dom';
 
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { type ForceGraphMethods, type NodeObject, type LinkObject } from 'react-force-graph-2d';
-
-const ForceGraph2D = React.lazy(
-  () => import('react-force-graph-2d'),
-) as unknown as React.ComponentType<any>;
+import ForceGraph2D, {
+  type ForceGraphMethods,
+  type NodeObject,
+  type LinkObject,
+} from '../../components/LazyForceGraph2D';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -319,7 +318,7 @@ const ExpertNexusPage: React.FC = () => {
                     }
                   >
                     <ForceGraph2D
-                      ref={graphRef as any}
+                      ref={graphRef as unknown as React.RefObject<ForceGraphMethods>}
                       graphData={graphData}
                       nodeLabel="agent"
                       nodeColor="color"
@@ -327,9 +326,18 @@ const ExpertNexusPage: React.FC = () => {
                       linkColor="color"
                       linkWidth={2}
                       backgroundColor="#000000"
-                      onEngineStop={() => (graphRef.current as any)?.zoomToFit(400, 20)}
+                      onEngineStop={() =>
+                        (graphRef.current as unknown as ForceGraphMethods | null)?.zoomToFit(
+                          400,
+                          20,
+                        )
+                      }
                       nodeCanvasObjectMode={() => 'after'}
-                      nodeCanvasObject={(node: GraphNode, ctx: any, globalScale: any) => {
+                      nodeCanvasObject={(
+                        node: GraphNode,
+                        ctx: CanvasRenderingContext2D,
+                        globalScale: number,
+                      ) => {
                         const label = node.agent;
                         const fontSize = 12 / globalScale;
                         ctx.font = `${fontSize}px Sans-Serif`;

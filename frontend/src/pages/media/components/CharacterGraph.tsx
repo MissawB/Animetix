@@ -1,14 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { lazy, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Maximize2, Minimize2, LocateFixed, ZoomIn, ZoomOut } from 'lucide-react';
 import { useCharacterGraph } from '../../../features/media/hooks/useCharacterGraph';
 
 // ~200 Ko : chargé uniquement quand la vue Graphe est ouverte
-const ForceGraph2D = lazy(
-  () => import('react-force-graph-2d'),
-) as unknown as React.ComponentType<any>;
+import ForceGraph2D, {
+  type ForceGraphMethods,
+  type NodeObject,
+  type LinkObject,
+} from '../../../components/LazyForceGraph2D';
 
 const INK = '#0B0C10';
 const PAPER = 'rgba(244, 241, 232, 0.9)';
@@ -28,7 +29,7 @@ export const CharacterGraph: React.FC<CharacterGraphProps> = ({ mediaType, itemI
   const navigate = useNavigate();
   const { data, isLoading, isError } = useCharacterGraph(mediaType, itemId);
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const fgRef = React.useRef<any>(null);
+  const fgRef = React.useRef<ForceGraphMethods | null>(null);
   const didFitRef = React.useRef(false);
   const [size, setSize] = React.useState({ width: 0, height: 480 });
   const [expanded, setExpanded] = React.useState(false);
@@ -110,15 +111,19 @@ export const CharacterGraph: React.FC<CharacterGraphProps> = ({ mediaType, itemI
   const lerpFactor = reducedMotion ? 1 : 0.25;
 
   const paintNode = React.useCallback(
-    (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    (
+      node: NodeObject & Record<string, unknown>,
+      ctx: CanvasRenderingContext2D,
+      globalScale: number,
+    ) => {
       // facteur de survol lissé (0 -> 1) : tout en découle en fondu
       const target = node.id === hoverRef.current ? 1 : 0;
-      node.__h = (node.__h ?? 0) + (target - (node.__h ?? 0)) * lerpFactor;
+      node.__h = ((node.__h as number) ?? 0) + (target - ((node.__h as number) ?? 0)) * lerpFactor;
       const h = node.__h as number;
-      const x = node.x;
-      const y = node.y;
-      const r = (node.__r as number) * (1 + 0.16 * h);
-      const img = node.image ? imgCache.current.get(node.image) : undefined;
+      const x = node.x ?? 0;
+      const y = node.y ?? 0;
+      const r = ((node.__r as number) ?? 10) * (1 + 0.16 * h);
+      const img = node.image ? imgCache.current.get(node.image as string) : undefined;
       const drawable = !!img && img.complete && img.naturalWidth > 0;
 
       // médaillon : portrait découpé en cercle, sinon initiale sur encre
@@ -128,10 +133,10 @@ export const CharacterGraph: React.FC<CharacterGraphProps> = ({ mediaType, itemI
       ctx.closePath();
       if (drawable) {
         ctx.clip();
-        const side = Math.min(img!.naturalWidth, img!.naturalHeight);
-        const sx = (img!.naturalWidth - side) / 2;
-        const sy = (img!.naturalHeight - side) / 2;
-        ctx.drawImage(img!, sx, sy, side, side, x - r, y - r, r * 2, r * 2);
+        const side = Math.min(img.naturalWidth, img.naturalHeight);
+        const sx = (img.naturalWidth - side) / 2;
+        const sy = (img.naturalHeight - side) / 2;
+        ctx.drawImage(img, sx, sy, side, side, x - r, y - r, r * 2, r * 2);
         // voile d'encre qui se lève au survol
         ctx.fillStyle = `rgba(11, 12, 16, ${0.18 * (1 - h)})`;
         ctx.fill();
@@ -142,7 +147,7 @@ export const CharacterGraph: React.FC<CharacterGraphProps> = ({ mediaType, itemI
         ctx.textBaseline = 'middle';
         ctx.fillStyle = GOLD;
         ctx.font = `700 ${Math.max(r, 6)}px Montserrat, sans-serif`;
-        ctx.fillText(node.name.charAt(0), x, y);
+        ctx.fillText((node.name as string).charAt(0), x, y);
       }
       ctx.restore();
 
@@ -162,7 +167,7 @@ export const CharacterGraph: React.FC<CharacterGraphProps> = ({ mediaType, itemI
       }
 
       // nom : fondu au survol, permanent pour les têtes d'affiche / au zoom
-      const staticLabel = globalScale > 1.4 || (node.__r as number) > 12;
+      const staticLabel = globalScale > 1.4 || ((node.__r as number) ?? 0) > 12;
       const labelAlpha = staticLabel ? 1 : h;
       if (labelAlpha > 0.03) {
         const fontSize = Math.max(11 / globalScale, 3);
@@ -173,9 +178,9 @@ export const CharacterGraph: React.FC<CharacterGraphProps> = ({ mediaType, itemI
         const ly = y + r + 3 / globalScale;
         ctx.lineWidth = 3 / globalScale;
         ctx.strokeStyle = 'rgba(11, 12, 16, 0.9)';
-        ctx.strokeText(node.name, x, ly);
+        ctx.strokeText(node.name as string, x, ly);
         ctx.fillStyle = h > 0.5 ? GOLD : PAPER;
-        ctx.fillText(node.name, x, ly);
+        ctx.fillText(node.name as string, x, ly);
         ctx.globalAlpha = 1;
       }
     },
@@ -183,18 +188,19 @@ export const CharacterGraph: React.FC<CharacterGraphProps> = ({ mediaType, itemI
   );
 
   const paintLink = React.useCallback(
-    (link: any, ctx: CanvasRenderingContext2D) => {
-      const s = link.source;
-      const t2 = link.target;
-      if (typeof s !== 'object' || typeof t2 !== 'object') return;
+    (link: LinkObject & Record<string, unknown>, ctx: CanvasRenderingContext2D) => {
+      const s = link.source as (NodeObject & Record<string, unknown>) | undefined;
+      const t2 = link.target as (NodeObject & Record<string, unknown>) | undefined;
+      if (!s || !t2 || typeof s !== 'object' || typeof t2 !== 'object') return;
       const hov = hoverRef.current;
       const hot = hov != null && (s.id === hov || t2.id === hov);
       // halo progressif : papier -> or selon le facteur de survol lissé
-      link.__h = (link.__h ?? 0) + ((hot ? 1 : 0) - (link.__h ?? 0)) * lerpFactor;
+      link.__h =
+        ((link.__h as number) ?? 0) + ((hot ? 1 : 0) - ((link.__h as number) ?? 0)) * lerpFactor;
       const h = link.__h as number;
       ctx.beginPath();
-      ctx.moveTo(s.x, s.y);
-      ctx.lineTo(t2.x, t2.y);
+      ctx.moveTo(s.x ?? 0, s.y ?? 0);
+      ctx.lineTo(t2.x ?? 0, t2.y ?? 0);
       ctx.strokeStyle = `rgba(${244 + 9 * h}, ${241 - 56 * h}, ${232 - 213 * h}, ${
         0.16 + 0.55 * h
       })`;
@@ -205,22 +211,22 @@ export const CharacterGraph: React.FC<CharacterGraphProps> = ({ mediaType, itemI
   );
 
   const paintPointerArea = React.useCallback(
-    (node: any, color: string, ctx: CanvasRenderingContext2D) => {
+    (node: NodeObject & Record<string, unknown>, color: string, ctx: CanvasRenderingContext2D) => {
       ctx.beginPath();
-      ctx.arc(node.x, node.y, (node.__r as number) + 4, 0, 2 * Math.PI);
+      ctx.arc(node.x ?? 0, node.y ?? 0, ((node.__r as number) ?? 0) + 4, 0, 2 * Math.PI);
       ctx.fillStyle = color;
       ctx.fill();
     },
     [],
   );
 
-  const onNodeHover = React.useCallback((node: any) => {
-    hoverRef.current = node ? node.id : null;
+  const onNodeHover = React.useCallback((node: NodeObject | null) => {
+    hoverRef.current = node ? (node.id as string) : null;
     setHovering(!!node);
   }, []);
 
   const onNodeClick = React.useCallback(
-    (node: any) => navigate(`/media/Character/${node.id}/`),
+    (node: NodeObject) => navigate(`/media/Character/${node.id}/`),
     [navigate],
   );
 
@@ -320,7 +326,7 @@ export const CharacterGraph: React.FC<CharacterGraphProps> = ({ mediaType, itemI
           height={size.height}
           backgroundColor={INK}
           onEngineStop={onEngineStop}
-          nodeVal={(node: any) => node.__r}
+          nodeVal={(n: NodeObject) => (n as Record<string, unknown>).__r as number}
           nodeLabel={() => ''}
           linkCanvasObjectMode={() => 'replace'}
           linkCanvasObject={paintLink}

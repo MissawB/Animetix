@@ -1,11 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useRef, useCallback, useMemo, useState, useEffect, lazy, Suspense } from 'react';
+import React, { useRef, useCallback, useMemo, useState, useEffect, Suspense } from 'react';
 
 import { GraphNode, GraphData } from '../../../../types';
 
-const ForceGraph2D = lazy(
-  () => import('react-force-graph-2d'),
-) as unknown as React.ComponentType<any>;
+import ForceGraph2D from '../../../../components/LazyForceGraph2D';
 
 interface NexusMapProps {
   data: GraphData;

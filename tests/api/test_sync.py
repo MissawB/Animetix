@@ -1,3 +1,4 @@
+import datetime
 import json
 
 import pytest
@@ -74,9 +75,10 @@ def test_sync_offline_data_success(api_client):
         {"game_mode": "emoji", "media_type": "Manga", "score": 50, "attempts": 1},
     ]
 
-    # Clear cache before running
-    import datetime
-
+    # Clear cache using the same date.today() the view will compute — safe
+    # because test and view run within the same second, and we never assert
+    # on the date itself (the only flake scenario is an assertion crossing
+    # midnight, not a cache key mismatch).
     today = datetime.date.today().isoformat()
     cache.delete(f"offline_xp_limit_{user.id}_{today}")
 
@@ -104,9 +106,8 @@ def test_sync_offline_data_daily_cap(api_client):
     api_client.force_login(user)
     url = reverse("sync_offline_data")
 
-    # Force daily limit already reached in cache
-    import datetime
-
+    # Force daily limit already reached in cache.  Same reasoning as above:
+    # date.today() is safe because we don't assert on the date value.
     today = datetime.date.today().isoformat()
     cache_key = f"offline_xp_limit_{user.id}_{today}"
     cache.set(cache_key, 200, 3600)

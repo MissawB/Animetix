@@ -1,1 +1,1 @@
-export * from './components/MangaReader';
+export { MangaReader } from './components/MangaReader';
