@@ -94,7 +94,7 @@ const ClubDashboard: React.FC = () => {
 
   if (isLoadingClub) {
     return (
-      <div className="p-20 text-center animate-pulse font-black uppercase tracking-widest bg-navy-950 min-h-screen text-white">
+      <div className="min-h-screen animate-pulse bg-[#0B0C10] p-20 text-center font-black uppercase tracking-widest text-[#F4F1E8]">
         {t('social.club.syncing', 'Synchronisation avec le club...')}
       </div>
     );
@@ -104,21 +104,21 @@ const ClubDashboard: React.FC = () => {
   const description = club?.description;
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-navy-950 text-surface-text overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#0B0C10] text-[#F4F1E8]">
       {/* Header */}
-      <div className="flex-none p-4 lg:p-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
+      <div className="flex flex-none items-center justify-between border-b border-[#F4F1E8]/10 p-4 lg:p-6">
         <div className="flex items-center gap-4">
           <Link
             to="/social/discovery/"
-            className="p-2 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-colors"
+            className="rounded-xl p-2 text-[#8F94A5] transition-colors hover:bg-[#F4F1E8]/5 hover:text-[#F4F1E8]"
           >
             <ChevronLeft className="w-6 h-6" />
           </Link>
           <div>
-            <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none">
+            <h1 className="font-manga text-xl font-black uppercase italic leading-none tracking-tighter text-[#F4F1E8]">
               {clubName}
             </h1>
-            <div className="flex items-center gap-2 mt-1 opacity-60">
+            <div className="mt-1 flex items-center gap-2 text-[#8F94A5]">
               <Users className="w-3 h-3" />
               <span className="text-[10px] font-bold uppercase tracking-widest">
                 {t('social.club.active_members', '{{count}} Membres actifs', {
@@ -131,57 +131,57 @@ const ClubDashboard: React.FC = () => {
 
         <div className="flex items-center gap-2">
           {/* Tabs Selector */}
-          <div className="flex bg-gray-100 dark:bg-navy-800 p-1 rounded-xl mr-4">
+          <div className="mr-4 flex rounded-xl border border-[#F4F1E8]/10 bg-[#0F1016] p-1">
             <button
               onClick={() => setActiveTab('chat')}
-              className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all ${
+              className={`rounded-lg px-4 py-2 text-xs font-black uppercase tracking-wider transition-colors ${
                 activeTab === 'chat'
-                  ? 'bg-white dark:bg-navy-900 shadow-md text-brand-primary'
-                  : 'text-gray-500 hover:text-gray-800 dark:hover:text-white'
+                  ? 'bg-[#E8442B] text-[#F4F1E8]'
+                  : 'text-[#8F94A5] hover:text-[#F4F1E8]'
               }`}
             >
               {t('social.club.discussion', 'Discussion')}
             </button>
             <button
               onClick={() => setActiveTab('events')}
-              className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all ${
+              className={`rounded-lg px-4 py-2 text-xs font-black uppercase tracking-wider transition-colors ${
                 activeTab === 'events'
-                  ? 'bg-white dark:bg-navy-900 shadow-md text-brand-primary'
-                  : 'text-gray-500 hover:text-gray-800 dark:hover:text-white'
+                  ? 'bg-[#E8442B] text-[#F4F1E8]'
+                  : 'text-[#8F94A5] hover:text-[#F4F1E8]'
               }`}
             >
               {t('social.club.events', 'Événements ({{count}})', { count: events.length })}
             </button>
           </div>
 
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-colors text-gray-500">
+          <button className="rounded-xl p-2 text-[#8F94A5] transition-colors hover:bg-[#F4F1E8]/5 hover:text-[#F4F1E8]">
             <Bell className="w-5 h-5" />
           </button>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-colors text-gray-500">
+          <button className="rounded-xl p-2 text-[#8F94A5] transition-colors hover:bg-[#F4F1E8]/5 hover:text-[#F4F1E8]">
             <Settings className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-grow flex overflow-hidden relative">
+      <div className="relative flex flex-grow overflow-hidden">
         {/* Active View: Chat */}
         {activeTab === 'chat' && (
-          <div className="flex-1 p-4 lg:p-6 overflow-hidden">
+          <div className="flex-1 overflow-hidden p-4 lg:p-6">
             <ClubChat clubId={id || ''} clubName={clubName} />
           </div>
         )}
 
         {/* Active View: Events */}
         {activeTab === 'events' && (
-          <div className="flex-grow p-6 overflow-y-auto space-y-6">
-            <div className="max-w-4xl mx-auto space-y-6">
+          <div className="flex-grow space-y-6 overflow-y-auto p-6">
+            <div className="mx-auto max-w-4xl space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-black italic tracking-tight uppercase">
+                  <h2 className="font-manga text-2xl font-black uppercase italic tracking-tight text-[#F4F1E8]">
                     {t('social.club.scheduled_events', 'Événements programmés')}
                   </h2>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">
+                  <p className="mt-1 text-xs font-bold uppercase tracking-wider text-[#8F94A5]">
                     {t(
                       'social.club.events_desc',
                       'Découvrez et rejoignez les activités organisées par le club.',
@@ -190,16 +190,16 @@ const ClubDashboard: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="group relative bg-brand-primary text-white hover:scale-105 active:scale-95 px-5 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center gap-2 border-none cursor-pointer"
+                  className="group relative flex items-center gap-2 rounded-xl border-none bg-[#E8442B] px-5 py-3 font-manga text-xs font-black uppercase italic tracking-widest text-[#F4F1E8] transition-colors hover:bg-[#c93a24] cursor-pointer"
                 >
                   <Plus className="w-4 h-4" /> {t('social.club.create_event', 'Créer un événement')}
                 </button>
               </div>
 
               {events.length === 0 ? (
-                <div className="p-16 border-2 border-dashed border-gray-200 dark:border-white/5 rounded-3xl text-center space-y-4">
-                  <Calendar className="w-12 h-12 text-gray-300 dark:text-navy-700 mx-auto" />
-                  <p className="font-bold text-gray-500">
+                <div className="space-y-4 rounded-2xl border border-dashed border-[#F4F1E8]/15 p-16 text-center">
+                  <Calendar className="mx-auto h-12 w-12 text-[#8F94A5]/40" />
+                  <p className="font-bold text-[#8F94A5]">
                     {t(
                       'social.club.no_events',
                       "Aucun événement n'est actuellement programmé pour ce club.",
@@ -207,7 +207,7 @@ const ClubDashboard: React.FC = () => {
                   </p>
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="text-xs text-brand-primary font-black uppercase tracking-widest hover:underline border-none bg-transparent cursor-pointer"
+                    className="cursor-pointer border-none bg-transparent text-xs font-black uppercase tracking-widest text-[#E8442B] hover:underline"
                   >
                     {t(
                       'social.club.launch_first_event',
@@ -221,14 +221,14 @@ const ClubDashboard: React.FC = () => {
                     <Link
                       key={event.id}
                       to={`/clubs/${id}/events/${event.id}`}
-                      className="group bg-white dark:bg-navy-900 border border-gray-100 dark:border-white/5 hover:border-brand-primary/30 p-6 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all no-underline text-surface-text flex flex-col justify-between"
+                      className="group flex flex-col justify-between rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 text-[#F4F1E8] no-underline transition-colors hover:border-[#E8442B]/40"
                     >
                       <div className="space-y-4">
                         <div className="flex items-start justify-between">
-                          <span className="p-3 bg-brand-primary/10 rounded-xl text-brand-primary group-hover:scale-110 transition-transform">
+                          <span className="rounded-xl bg-[#E8442B]/10 p-3 text-[#E8442B] transition-transform group-hover:scale-110">
                             <Calendar className="w-6 h-6" />
                           </span>
-                          <span className="text-[10px] bg-gray-100 dark:bg-navy-800 text-gray-500 font-black tracking-widest uppercase px-3 py-1 rounded-full flex items-center gap-1">
+                          <span className="flex items-center gap-1 rounded-full bg-[#F4F1E8]/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
                             <Clock className="w-3 h-3" />
                             {new Date(event.event_date).toLocaleDateString('fr-FR', {
                               day: 'numeric',
@@ -239,15 +239,15 @@ const ClubDashboard: React.FC = () => {
                           </span>
                         </div>
                         <div className="space-y-2">
-                          <h3 className="text-lg font-black uppercase tracking-tight group-hover:text-brand-primary transition-colors line-clamp-1">
+                          <h3 className="font-manga line-clamp-1 text-lg font-black uppercase italic tracking-tight text-[#F4F1E8] transition-colors group-hover:text-[#E8442B]">
                             {event.title}
                           </h3>
-                          <p className="text-xs text-gray-400 leading-relaxed line-clamp-3">
+                          <p className="line-clamp-3 text-xs leading-relaxed text-[#8F94A5]">
                             {event.description}
                           </p>
                         </div>
                       </div>
-                      <div className="pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-xs font-black uppercase tracking-widest text-brand-primary">
+                      <div className="mt-4 flex items-center justify-between border-t border-[#F4F1E8]/10 pt-4 text-xs font-black uppercase tracking-widest text-[#E8442B]">
                         <span>{t('social.club.view_details', 'Voir les détails')}</span>
                         <ChevronLeft className="w-4 h-4 rotate-180" />
                       </div>
@@ -260,14 +260,14 @@ const ClubDashboard: React.FC = () => {
         )}
 
         {/* Sidebar - Members & Info */}
-        <div className="hidden lg:flex w-80 flex-col border-l border-gray-100 dark:border-white/5 bg-white dark:bg-navy-900 overflow-hidden">
-          <div className="p-6 space-y-8 overflow-y-auto">
+        <div className="hidden w-80 flex-col overflow-hidden border-l border-[#F4F1E8]/10 bg-[#0F1016] lg:flex">
+          <div className="space-y-8 overflow-y-auto p-6">
             {/* Club Info */}
             <div className="space-y-3">
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
+              <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[#8F94A5]">
                 <Info className="w-3 h-3" /> About Club
               </h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <p className="text-sm leading-relaxed text-[#8F94A5]">
                 {description ||
                   t('social.club.no_description', 'Pas de description disponible pour ce club.')}
               </p>
@@ -275,7 +275,7 @@ const ClubDashboard: React.FC = () => {
 
             {/* Member List */}
             <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
+              <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[#8F94A5]">
                 <Users className="w-3 h-3" />{' '}
                 {t('social.club.members_online', 'Membres — {{count}} en ligne', {
                   count: members.filter((m) => m.status === 'online').length,
@@ -285,28 +285,28 @@ const ClubDashboard: React.FC = () => {
                 {members.map((member) => (
                   <div
                     key={member.id}
-                    className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors group"
+                    className="group flex items-center justify-between rounded-xl p-2 transition-colors hover:bg-[#F4F1E8]/5"
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E8442B]/15 text-xs font-bold text-[#E8442B]">
                           {member.username[0]}
                         </div>
                         <div
-                          className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-white dark:border-navy-900 rounded-full ${
-                            member.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
+                          className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-[#0F1016] ${
+                            member.status === 'online' ? 'bg-[#FDB913]' : 'bg-[#8F94A5]'
                           }`}
                         />
                       </div>
                       <div>
-                        <p className="text-sm font-bold">{member.username}</p>
+                        <p className="text-sm font-bold text-[#F4F1E8]">{member.username}</p>
                         <p
                           className={`text-[9px] font-black uppercase tracking-widest ${
                             member.role === 'admin'
-                              ? 'text-red-500'
+                              ? 'text-[#E8442B]'
                               : member.role === 'moderator'
-                                ? 'text-blue-500'
-                                : 'text-gray-400'
+                                ? 'text-[#FDB913]'
+                                : 'text-[#8F94A5]'
                           }`}
                         >
                           {member.role}
@@ -327,13 +327,13 @@ const ClubDashboard: React.FC = () => {
         onClose={() => setShowCreateModal(false)}
         title={t('social.club.plan_event', 'Planifier un événement')}
         size="md"
-        contentClassName="bg-white dark:bg-navy-900 border-gray-100 dark:border-white/5 rounded-3xl shadow-2xl"
+        contentClassName="bg-[#0F1016] border border-[#F4F1E8]/10 rounded-2xl shadow-2xl"
       >
         <form onSubmit={handleCreateEvent} className="space-y-6">
           <div className="space-y-2">
             <label
               htmlFor="event-title"
-              className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
+              className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-[#8F94A5]"
             >
               <FileText className="w-3 h-3" />{' '}
               {t('social.club.event_title', "Titre de l'événement")}
@@ -349,14 +349,14 @@ const ClubDashboard: React.FC = () => {
               )}
               value={newEventTitle}
               onChange={(e) => setNewEventTitle(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary"
+              className="w-full rounded-xl border border-[#F4F1E8]/15 bg-[#0B0C10] p-4 text-sm font-medium text-[#F4F1E8] outline-none transition-colors placeholder:text-[#8F94A5]/60 focus:border-[#FDB913]"
             />
           </div>
 
           <div className="space-y-2">
             <label
               htmlFor="event-description"
-              className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
+              className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-[#8F94A5]"
             >
               <Info className="w-3 h-3" />{' '}
               {t('social.club.event_desc_label', "Description de l'activité")}
@@ -372,14 +372,14 @@ const ClubDashboard: React.FC = () => {
               )}
               value={newEventDescription}
               onChange={(e) => setNewEventDescription(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary resize-none"
+              className="w-full resize-none rounded-xl border border-[#F4F1E8]/15 bg-[#0B0C10] p-4 text-sm font-medium text-[#F4F1E8] outline-none transition-colors placeholder:text-[#8F94A5]/60 focus:border-[#FDB913]"
             />
           </div>
 
           <div className="space-y-2">
             <label
               htmlFor="event-date"
-              className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
+              className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-[#8F94A5]"
             >
               <Clock className="w-3 h-3" /> {t('social.club.event_date', 'Date et Heure')}
             </label>
@@ -390,14 +390,14 @@ const ClubDashboard: React.FC = () => {
               aria-label={t('social.club.event_date', 'Date et Heure')}
               value={newEventDate}
               onChange={(e) => setNewEventDate(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary"
+              className="w-full rounded-xl border border-[#F4F1E8]/15 bg-[#0B0C10] p-4 text-sm font-medium text-[#F4F1E8] outline-none transition-colors focus:border-[#FDB913]"
             />
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-brand-primary text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 border-none cursor-pointer disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-none bg-[#E8442B] py-4 font-manga text-xs font-black uppercase italic tracking-widest text-[#F4F1E8] transition-colors hover:bg-[#c93a24] disabled:opacity-50 cursor-pointer"
           >
             {isSubmitting
               ? t('social.club.creating', 'Création en cours...')

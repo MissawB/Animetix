@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { labService } from '../../features/labs/services/labService';
-import { Card } from '../../components/ui/Card';
 import { MessageSquare, ThumbsUp, ThumbsDown, Calendar, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AIFeedback } from '../../types';
@@ -27,127 +26,154 @@ const AIFeedbackHistoryPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-20 text-center text-white font-black animate-pulse uppercase tracking-[0.3em]">
-        {t('social.feedback.loading', "Accès à l'archive neuronale...")}
+      <div className="flex min-h-screen w-full items-center justify-center bg-[#0B0C10] px-6">
+        <p className="animate-pulse text-center text-xs font-black uppercase tracking-[0.3em] text-[#8F94A5]">
+          {t('social.feedback.loading', "Accès à l'archive neuronale...")}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between mb-12">
-        <div>
-          <Link
-            to="/auth/settings/"
-            className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-brand-primary mb-4 no-underline transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" /> {t('social.feedback.settings', 'Paramètres')}
-          </Link>
-          <h1 className="text-4xl font-black italic manga-font tracking-tighter uppercase flex items-center gap-3">
-            <MessageSquare className="w-8 h-8 text-purple-500" />{' '}
-            {t('social.feedback.title', 'HISTORIQUE DES FEEDBACKS IA')}
-          </h1>
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-2">
-            {t(
-              'social.feedback.subtitle',
-              "Consultez vos interactions et aidez-nous à raffiner l'intelligence du système.",
-            )}
-          </p>
-        </div>
-        <div className="text-right hidden md:block">
-          <div className="text-3xl font-black text-brand-primary leading-none">
-            {feedbacks.length}
+    <div className="min-h-screen w-full bg-[#0B0C10] pt-20 text-[#F4F1E8]">
+      <div className="mx-auto max-w-5xl px-6 py-16">
+        <header className="relative mb-12">
+          <div
+            className="explore-halftone pointer-events-none absolute -inset-x-6 -top-10 h-40"
+            aria-hidden
+          />
+          <div className="relative flex items-center justify-between gap-6">
+            <div>
+              <Link
+                to="/auth/settings/"
+                className="mb-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#8F94A5] no-underline transition-colors hover:text-[#F4F1E8]"
+              >
+                <ChevronLeft className="h-4 w-4" /> {t('social.feedback.settings', 'Paramètres')}
+              </Link>
+              <div className="flex items-center gap-3">
+                <span className="explore-stamp -rotate-2" aria-hidden>
+                  声
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+                  {t('social.feedback.eyebrow', 'Registre · Retours IA')}
+                </span>
+              </div>
+              <h1 className="font-manga mt-4 flex items-center gap-3 text-4xl font-black uppercase italic leading-none tracking-tighter text-[#F4F1E8] md:text-5xl">
+                <MessageSquare className="h-8 w-8 text-[#E8442B]" aria-hidden="true" />{' '}
+                {t('social.feedback.title', 'HISTORIQUE DES FEEDBACKS IA')}
+              </h1>
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#8F94A5]">
+                {t(
+                  'social.feedback.subtitle',
+                  "Consultez vos interactions et aidez-nous à raffiner l'intelligence du système.",
+                )}
+              </p>
+            </div>
+            <div className="hidden text-right md:block">
+              <div className="font-manga text-4xl font-black italic leading-none text-[#FDB913]">
+                {feedbacks.length}
+              </div>
+              <div className="mt-1 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                {t('social.feedback.total_returns', 'Retours Totaux')}
+              </div>
+            </div>
           </div>
-          <div className="text-[10px] font-black uppercase opacity-40">
-            {t('social.feedback.total_returns', 'Retours Totaux')}
-          </div>
-        </div>
-      </div>
+          <span className="relative mt-8 block h-px bg-[#F4F1E8]/10" aria-hidden />
+        </header>
 
-      {feedbacks.length === 0 ? (
-        <Card padding="lg" className="text-center py-20">
-          <MessageSquare className="w-12 h-12 text-gray-200 dark:text-navy-800 mx-auto mb-4" />
-          <p className="font-bold text-gray-500 italic">
-            {t('social.feedback.no_feedback', "Vous n'avez pas encore soumis de feedback à l'IA.")}
-          </p>
-          <p className="text-xs text-gray-400 mt-2 uppercase tracking-widest">
-            {t(
-              'social.feedback.vote_instruction',
-              'Utilisez les boutons de vote lors de vos prochaines interactions !',
-            )}
-          </p>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {feedbacks.map((fb) => (
-            <Card
-              key={fb.id}
-              padding="md"
-              className={`border-l-4 ${fb.is_positive ? 'border-l-green-500' : 'border-l-red-500'}`}
-            >
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Status Column */}
-                <div className="flex items-start gap-3 shrink-0">
-                  <div
-                    className={`p-3 rounded-xl ${fb.is_positive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}
-                  >
-                    {fb.is_positive ? (
-                      <ThumbsUp className="w-5 h-5" />
-                    ) : (
-                      <ThumbsDown className="w-5 h-5" />
-                    )}
+        {feedbacks.length === 0 ? (
+          <div className="flex flex-col items-center rounded-2xl border border-dashed border-[#F4F1E8]/15 py-20 text-center">
+            <MessageSquare className="mx-auto mb-4 h-12 w-12 text-[#8F94A5]/30" />
+            <p className="font-bold italic text-[#8F94A5]">
+              {t(
+                'social.feedback.no_feedback',
+                "Vous n'avez pas encore soumis de feedback à l'IA.",
+              )}
+            </p>
+            <p className="mt-2 text-xs uppercase tracking-widest text-[#8F94A5]/70">
+              {t(
+                'social.feedback.vote_instruction',
+                'Utilisez les boutons de vote lors de vos prochaines interactions !',
+              )}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {feedbacks.map((fb) => (
+              <div
+                key={fb.id}
+                className={`rounded-2xl border border-[#F4F1E8]/10 border-l-4 bg-[#0F1016] p-5 ${
+                  fb.is_positive ? 'border-l-[#FDB913]' : 'border-l-[#E8442B]'
+                }`}
+              >
+                <div className="flex flex-col gap-6 md:flex-row">
+                  {/* Status Column */}
+                  <div className="flex shrink-0 items-start gap-3">
+                    <div
+                      className={`rounded-xl p-3 ${
+                        fb.is_positive
+                          ? 'bg-[#FDB913]/10 text-[#FDB913]'
+                          : 'bg-[#E8442B]/10 text-[#E8442B]'
+                      }`}
+                    >
+                      {fb.is_positive ? (
+                        <ThumbsUp className="h-5 w-5" />
+                      ) : (
+                        <ThumbsDown className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div className="flex-1 md:hidden">
+                      <span className="block text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                        {new Date(fb.created_at).toLocaleDateString()}
+                      </span>
+                      <span className="text-xs font-black uppercase tracking-widest text-[#F4F1E8]">
+                        {fb.feedback_type}
+                      </span>
+                    </div>
                   </div>
-                  <div className="md:hidden flex-1">
-                    <span className="text-[10px] font-black uppercase opacity-40 block">
-                      {new Date(fb.created_at).toLocaleDateString()}
-                    </span>
-                    <span className="text-xs font-black uppercase tracking-widest">
+
+                  {/* Content Column */}
+                  <div className="flex-1 space-y-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="space-y-1">
+                        <span className="block text-[9px] font-black uppercase tracking-widest text-[#8F94A5]">
+                          {t('social.feedback.your_request', 'Votre Requête / Contexte')}
+                        </span>
+                        <div className="line-clamp-3 rounded-lg border border-[#F4F1E8]/10 bg-[#0B0C10] p-3 text-xs font-bold italic text-[#F4F1E8]/90">
+                          {fb.input_context || 'N/A'}
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="block text-[9px] font-black uppercase tracking-widest text-[#8F94A5]">
+                          {t('social.feedback.ia_response', "Réponse de l'IA")}
+                        </span>
+                        <div className="line-clamp-3 rounded-lg border border-[#F4F1E8]/10 bg-[#0B0C10] p-3 text-xs font-bold text-[#8F94A5]">
+                          {fb.output_text || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Date Column (Desktop) */}
+                  <div className="hidden shrink-0 flex-col items-end justify-between text-right md:flex">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#E8442B]">
                       {fb.feedback_type}
                     </span>
-                  </div>
-                </div>
-
-                {/* Content Column */}
-                <div className="flex-1 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <span className="text-[9px] font-black uppercase opacity-40 tracking-widest block">
-                        {t('social.feedback.your_request', 'Votre Requête / Contexte')}
-                      </span>
-                      <div className="bg-gray-50 dark:bg-navy-950 p-3 rounded-lg text-xs font-bold italic line-clamp-3">
-                        {fb.input_context || 'N/A'}
-                      </div>
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#8F94A5]">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(fb.created_at).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
                     </div>
-                    <div className="space-y-1">
-                      <span className="text-[9px] font-black uppercase opacity-40 tracking-widest block">
-                        {t('social.feedback.ia_response', "Réponse de l'IA")}
-                      </span>
-                      <div className="bg-gray-50 dark:bg-navy-950 p-3 rounded-lg text-xs font-bold opacity-80 line-clamp-3">
-                        {fb.output_text || 'N/A'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Date Column (Desktop) */}
-                <div className="hidden md:flex flex-col items-end justify-between shrink-0 text-right">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
-                    {fb.feedback_type}
-                  </span>
-                  <div className="text-[10px] font-bold text-gray-400 flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(fb.created_at).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
                   </div>
                 </div>
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

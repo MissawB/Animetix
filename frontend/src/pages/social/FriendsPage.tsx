@@ -2,10 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, UserMinus, UserPlus, Search, Heart, ArrowLeft } from 'lucide-react';
 import { useSocialDashboard } from '../../features/social/hooks/useSocialDashboard';
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { CardSkeleton } from "../../components/ui/Skeleton";
+import { Button } from '../../components/ui/Button';
+import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { CardSkeleton } from '../../components/ui/Skeleton';
 import { useTranslation } from 'react-i18next';
 import { Friendship } from '../../types';
 
@@ -16,15 +15,24 @@ const FriendCard: React.FC<{
 }> = ({ friend, type, onUnfollow }) => {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-navy-900/60 rounded-2xl hover:scale-[1.01] transition-all border border-gray-100 dark:border-white/5 group">
-      <Link to={`/profile/${friend.username}/`} className="flex items-center gap-4 no-underline text-current flex-1 min-w-0">
-        <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center font-black italic text-xl border-2 border-black text-black shadow-lg group-hover:scale-110 transition-transform shrink-0">
+    <div className="group flex items-center justify-between rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-5 transition-colors hover:border-[#F4F1E8]/20">
+      <Link
+        to={`/profile/${friend.username}/`}
+        className="flex min-w-0 flex-1 items-center gap-4 text-current no-underline"
+      >
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#E8442B]/15 text-xl font-black italic text-[#E8442B] transition-transform group-hover:scale-110">
           {friend.username[0].toUpperCase()}
         </div>
         <div className="min-w-0">
-          <div className="font-black text-lg truncate">{friend.username}</div>
-          <div className="text-[10px] uppercase font-black opacity-40 tracking-widest">
-            {t('social.friends.level_since', 'Niveau {{level}} • Depuis {{date}}', { level: friend.level, date: new Date(friend.created_at).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) })}
+          <div className="truncate text-lg font-black text-[#F4F1E8]">{friend.username}</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+            {t('social.friends.level_since', 'Niveau {{level}} • Depuis {{date}}', {
+              level: friend.level,
+              date: new Date(friend.created_at).toLocaleDateString('fr-FR', {
+                month: 'short',
+                year: 'numeric',
+              }),
+            })}
           </div>
         </div>
       </Link>
@@ -32,7 +40,7 @@ const FriendCard: React.FC<{
         <Button
           variant="danger"
           size="sm"
-          className="rounded-full px-4 ml-4 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="ml-4 shrink-0 rounded-full px-4 opacity-0 transition-opacity group-hover:opacity-100 !bg-[#E8442B] hover:!bg-[#c93a24] !text-[#F4F1E8]"
           onClick={() => onUnfollow(friend.to_user)}
         >
           <UserMinus className="w-4 h-4" /> Unfollow
@@ -46,93 +54,138 @@ const FriendsPage: React.FC = () => {
   const { t } = useTranslation();
   const { data, isLoading, isError, toggleFollow } = useSocialDashboard();
 
-  if (isLoading) return (
-    <div className="max-w-5xl mx-auto px-6 py-16 space-y-12">
-      <div className="space-y-4">
-        <CardSkeleton /><CardSkeleton /><CardSkeleton />
+  if (isLoading)
+    return (
+      <div className="min-h-screen bg-[#0B0C10] max-w-5xl mx-auto px-6 py-16 space-y-12">
+        <div className="space-y-4">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
       </div>
-    </div>
-  );
+    );
 
-  if (isError || !data) return (
-    <div className="text-center py-20 text-red-500 font-bold">{t('common.error')}</div>
-  );
+  if (isError || !data)
+    return (
+      <div className="min-h-screen bg-[#0B0C10] text-center py-20 text-[#E8442B] font-bold">
+        {t('common.error')}
+      </div>
+    );
 
   return (
     <AnimatedPage>
-      <div className="max-w-5xl mx-auto px-6 py-16">
-        {/* Header */}
-        <header className="mb-16">
-          <Link to="/social/dashboard/" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity mb-8 no-underline text-current">
-            <ArrowLeft className="w-4 h-4" /> {t('social.friends.back_to_dashboard', 'Retour au Dashboard')}
-          </Link>
-          <h1 className="text-5xl md:text-7xl font-black italic manga-font tracking-tighter uppercase mb-2">
-            {t('social.friends.title_my', 'MON')} <span className="text-yellow-400 text-glow">{t('social.friends.title_network', 'RÉSEAU')}</span>
-          </h1>
-          <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em]">
-            {t('social.friends.subtitle', 'Gérez vos abonnements et vos abonnés.')}
-          </p>
-        </header>
+      <div className="min-h-screen w-full bg-[#0B0C10] pt-20 text-[#F4F1E8]">
+        <div className="max-w-5xl mx-auto px-6 py-16">
+          {/* Header */}
+          <header className="relative mb-16">
+            <div
+              className="explore-halftone pointer-events-none absolute -inset-x-6 -top-12 h-48"
+              aria-hidden
+            />
+            <Link
+              to="/social/dashboard/"
+              className="relative inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#8F94A5] hover:text-[#F4F1E8] transition-colors mb-8 no-underline"
+            >
+              <ArrowLeft className="w-4 h-4" />{' '}
+              {t('social.friends.back_to_dashboard', 'Retour au Dashboard')}
+            </Link>
+            <div className="relative flex items-center gap-3">
+              <span className="explore-stamp -rotate-2" aria-hidden>
+                友
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+                Nexus social · Réseau
+              </span>
+            </div>
+            <h1 className="font-manga relative mt-4 text-5xl md:text-7xl font-black italic tracking-tighter uppercase text-[#F4F1E8]">
+              {t('social.friends.title_my', 'MON')}{' '}
+              <span className="text-[#E8442B]">{t('social.friends.title_network', 'RÉSEAU')}</span>
+            </h1>
+            <p className="relative mt-4 text-base font-medium text-[#8F94A5] uppercase tracking-[0.2em]">
+              {t('social.friends.subtitle', 'Gérez vos abonnements et vos abonnés.')}
+            </p>
+          </header>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-6 mb-16">
-          <Card padding="lg" className="text-center bg-gradient-to-br from-yellow-400/5 to-orange-500/5 border-yellow-500/10">
-            <Users className="w-10 h-10 text-yellow-400 mx-auto mb-4" />
-            <div className="text-4xl font-black italic manga-font text-yellow-400">{data.following.length}</div>
-            <div className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-2">{t('social.friends.following', 'Abonnements')}</div>
-          </Card>
-          <Card padding="lg" className="text-center bg-gradient-to-br from-red-400/5 to-pink-500/5 border-red-500/10">
-            <Heart className="w-10 h-10 text-red-500 mx-auto mb-4" />
-            <div className="text-4xl font-black italic manga-font text-red-500">{data.followers.length}</div>
-            <div className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-2">{t('social.friends.followers', 'Abonnés')}</div>
-          </Card>
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-6 mb-16">
+            <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] px-6 py-8 text-center">
+              <Users className="mx-auto mb-4 h-10 w-10 text-[#FDB913]" />
+              <div className="font-manga text-4xl font-black italic text-[#FDB913]">
+                {data.following.length}
+              </div>
+              <div className="mt-2 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                {t('social.friends.following', 'Abonnements')}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] px-6 py-8 text-center">
+              <Heart className="mx-auto mb-4 h-10 w-10 text-[#E8442B]" />
+              <div className="font-manga text-4xl font-black italic text-[#E8442B]">
+                {data.followers.length}
+              </div>
+              <div className="mt-2 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                {t('social.friends.followers', 'Abonnés')}
+              </div>
+            </div>
+          </div>
+
+          {/* Following */}
+          <section className="mb-16">
+            <h2 className="mb-8 flex items-center gap-2 px-4 text-xs font-black uppercase tracking-[0.3em] text-[#8F94A5]">
+              <UserPlus className="w-4 h-4 text-[#FDB913]" />{' '}
+              {t('social.friends.following_count', 'Abonnements ({{count}})', {
+                count: data.following.length,
+              })}
+            </h2>
+            <div className="space-y-4">
+              {data.following.map((f: Friendship) => (
+                <FriendCard key={f.id} friend={f} type="following" onUnfollow={toggleFollow} />
+              ))}
+              {data.following.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-[#F4F1E8]/15 py-16 text-center">
+                  <Search className="mx-auto mb-4 h-16 w-16 text-[#8F94A5]/30" />
+                  <p className="font-manga text-lg font-black italic uppercase text-[#F4F1E8]/50">
+                    {t('social.friends.no_following', "Vous ne suivez personne pour l'instant.")}
+                  </p>
+                  <p className="mt-2 text-xs text-[#8F94A5]">
+                    {t(
+                      'social.friends.no_following_desc',
+                      "Explorez les profils et commencez à suivre d'autres joueurs !",
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Followers */}
+          <section>
+            <h2 className="mb-8 flex items-center gap-2 px-4 text-xs font-black uppercase tracking-[0.3em] text-[#8F94A5]">
+              <Heart className="w-4 h-4 text-[#E8442B]" />{' '}
+              {t('social.friends.followers_count', 'Abonnés ({{count}})', {
+                count: data.followers.length,
+              })}
+            </h2>
+            <div className="space-y-4">
+              {data.followers.map((f: Friendship) => (
+                <FriendCard key={f.id} friend={f} type="follower" />
+              ))}
+              {data.followers.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-[#F4F1E8]/15 py-16 text-center">
+                  <Users className="mx-auto mb-4 h-16 w-16 text-[#8F94A5]/30" />
+                  <p className="font-manga text-lg font-black italic uppercase text-[#F4F1E8]/50">
+                    {t('social.friends.no_followers', "Pas encore d'abonnés.")}
+                  </p>
+                  <p className="mt-2 text-xs text-[#8F94A5]">
+                    {t(
+                      'social.friends.no_followers_desc',
+                      'Jouez, créez des fusions et grimpez le classement pour attirer des abonnés !',
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
         </div>
-
-        {/* Following */}
-        <section className="mb-16">
-          <h2 className="text-xs font-black uppercase opacity-40 mb-8 tracking-[0.3em] flex items-center gap-2 px-4">
-            <UserPlus className="w-4 h-4 text-yellow-400" /> {t('social.friends.following_count', 'Abonnements ({{count}})', { count: data.following.length })}
-          </h2>
-          <div className="space-y-4">
-            {data.following.map((f: Friendship) => (
-              <FriendCard key={f.id} friend={f} type="following" onUnfollow={toggleFollow} />
-            ))}
-            {data.following.length === 0 && (
-              <div className="text-center py-16 opacity-20">
-                <Search className="w-16 h-16 mx-auto mb-4" />
-                <p className="text-lg font-black italic manga-font uppercase">
-                  {t('social.friends.no_following', "Vous ne suivez personne pour l'instant.")}
-                </p>
-                <p className="text-xs opacity-60 mt-2">
-                  {t('social.friends.no_following_desc', "Explorez les profils et commencez à suivre d'autres joueurs !")}
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Followers */}
-        <section>
-          <h2 className="text-xs font-black uppercase opacity-40 mb-8 tracking-[0.3em] flex items-center gap-2 px-4">
-            <Heart className="w-4 h-4 text-red-500" /> {t('social.friends.followers_count', 'Abonnés ({{count}})', { count: data.followers.length })}
-          </h2>
-          <div className="space-y-4">
-            {data.followers.map((f: Friendship) => (
-              <FriendCard key={f.id} friend={f} type="follower" />
-            ))}
-            {data.followers.length === 0 && (
-              <div className="text-center py-16 opacity-20">
-                <Users className="w-16 h-16 mx-auto mb-4" />
-                <p className="text-lg font-black italic manga-font uppercase">
-                  {t('social.friends.no_followers', "Pas encore d'abonnés.")}
-                </p>
-                <p className="text-xs opacity-60 mt-2">
-                  {t('social.friends.no_followers_desc', 'Jouez, créez des fusions et grimpez le classement pour attirer des abonnés !')}
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
       </div>
     </AnimatedPage>
   );

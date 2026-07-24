@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useProfile } from '../../features/social/hooks/useProfile';
 import { socialService } from '../../features/social/services/socialService';
 import { useAuthStore } from '../../store/authStore';
-import { Card } from '../../components/ui/Card';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { GameHistoryPanel } from '../../features/social/components/GameHistoryPanel';
@@ -33,7 +32,7 @@ const ProfilePage: React.FC = () => {
 
   if (isLoading)
     return (
-      <div className="min-h-[calc(100vh-64px)] bg-[#fffcf0] dark:bg-[#1a1a2e] flex items-center justify-center">
+      <div className="min-h-[calc(100vh-64px)] bg-[#0B0C10] flex items-center justify-center">
         <div className="max-w-4xl w-full mx-auto px-6 py-16">
           <CardSkeleton />
         </div>
@@ -42,8 +41,8 @@ const ProfilePage: React.FC = () => {
 
   if (isError)
     return (
-      <div className="min-h-[calc(100vh-64px)] bg-[#fffcf0] dark:bg-[#1a1a2e] flex items-center justify-center">
-        <div className="text-center py-20 text-red-500 font-bold">{t('common.error')}</div>
+      <div className="min-h-[calc(100vh-64px)] bg-[#0B0C10] flex items-center justify-center">
+        <div className="text-center py-20 text-[#E8442B] font-bold">{t('common.error')}</div>
       </div>
     );
 
@@ -51,12 +50,12 @@ const ProfilePage: React.FC = () => {
 
   return (
     <AnimatedPage>
-      <div className="min-h-[calc(100vh-64px)] bg-[#fffcf0] dark:bg-[#1a1a2e] transition-colors duration-500 bg-manga-overlay">
+      <div className="relative min-h-[calc(100vh-64px)] bg-[#0B0C10] text-[#F4F1E8] transition-colors duration-500 bg-manga-overlay">
+        <span className="explore-stamp absolute right-6 top-6 -rotate-2 z-10" aria-hidden>
+          印
+        </span>
         <div className="max-w-4xl mx-auto px-6 py-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card
-            padding="none"
-            className="overflow-hidden border-none shadow-2xl bg-white dark:bg-[#0f0f1a]"
-          >
+          <section className="overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] shadow-2xl">
             {/* Profile Header */}
             <ProfileHeaderCard
               username={username}
@@ -67,7 +66,7 @@ const ProfilePage: React.FC = () => {
             />
 
             {/* Main Profile Body */}
-            <div className="p-12 text-black dark:text-white">
+            <div className="p-12 text-[#F4F1E8]">
               {/* Stats Grid */}
               <ProfileStatsSection
                 xp={profile.xp}
@@ -93,19 +92,19 @@ const ProfilePage: React.FC = () => {
               <div className="flex flex-col sm:flex-row justify-center gap-4 mt-16">
                 <Link
                   to="/social/dashboard/"
-                  className="font-black rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 border-2 border-gray-800 dark:border-white/20 hover:bg-gray-800 hover:text-white bg-transparent px-10 py-4 italic no-underline text-black dark:text-white"
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-[#F4F1E8]/15 bg-transparent px-10 py-4 font-manga font-black italic uppercase text-[#8F94A5] no-underline transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8]"
                 >
                   {t('social.profile.back_dashboard')}
                 </Link>
                 <Link
                   to="/social/archetype-nexus/"
-                  className="font-black rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 bg-blue-600 text-white px-10 py-4 italic no-underline border-none shadow-blue-500/20"
+                  className="flex items-center justify-center gap-2 rounded-2xl border-none bg-[#E8442B] px-10 py-4 font-manga font-black italic uppercase text-[#F4F1E8] no-underline transition-colors hover:bg-[#c93a24]"
                 >
                   <Brain className="w-5 h-5" /> ARCHETYPE NEXUS
                 </Link>
               </div>
             </div>
-          </Card>
+          </section>
         </div>
       </div>
     </AnimatedPage>

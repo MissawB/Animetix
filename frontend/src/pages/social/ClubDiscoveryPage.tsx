@@ -5,7 +5,6 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';
 import { socialService } from '../../features/social/services/socialService';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { queryClient } from '../../utils/queryClient';
 import { Modal } from '../../components/ui/Modal';
@@ -63,254 +62,271 @@ const ClubDiscoveryPage: React.FC = () => {
   const themes = ['All', 'Shonen', 'Shojo', 'Seinen', 'Sci-Fi', 'Slice of Life', 'General'];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto min-h-screen bg-gray-50 dark:bg-navy-950">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-2 manga-font">
-            Club <span className="text-blue-500">Discovery</span>
-          </h1>
-          <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
-            {t('social.discovery.subtitle', 'Rejoignez une communauté ou créez la vôtre.')}
-          </p>
-        </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black italic uppercase transition-all shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95"
-        >
-          <Plus className="w-5 h-5" /> {t('social.discovery.create_club', 'Créer un Club')}
-        </button>
-      </div>
-
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={
-          <span className="text-2xl font-black italic manga-font uppercase">
-            {t('social.discovery.new_nexus', 'Nouveau Nexus Social')}
-          </span>
-        }
-        size="md"
-        contentClassName="bg-navy-900 border-white/10 rounded-[3rem] shadow-2xl"
-      >
-        <form
-          className="space-y-8"
-          onSubmit={(e) => {
-            e.preventDefault();
-            createMutation.mutate(newClub);
-          }}
-        >
-          <div className="space-y-2">
-            <label
-              htmlFor="club-name"
-              className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1"
-            >
-              {t('social.discovery.club_name', 'Nom du Club')}
-            </label>
-            <input
-              id="club-name"
-              required
-              type="text"
-              aria-label={t('social.discovery.club_name', 'Nom du Club')}
-              className="w-full bg-black border-2 border-white/5 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all"
-              placeholder={t('social.discovery.club_name_placeholder', 'ex: Les Héritiers du Lore')}
-              value={newClub.name}
-              onChange={(e) => setNewClub({ ...newClub, name: e.target.value })}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label
-                htmlFor="club-theme"
-                className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1"
-              >
-                {t('social.discovery.main_theme', 'Thème Principal')}
-              </label>
-              <select
-                id="club-theme"
-                className="w-full bg-black border-2 border-white/5 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all appearance-none"
-                value={newClub.theme}
-                onChange={(e) => setNewClub({ ...newClub, theme: e.target.value })}
-              >
-                {themes
-                  .filter((t) => t !== 'All')
-                  .map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <span className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1 block">
-                {t('social.discovery.confidentiality', 'Confidentialité')}
-              </span>
-              <div className="flex bg-black rounded-2xl p-1 border-2 border-white/5">
-                <button
-                  type="button"
-                  onClick={() => setNewClub({ ...newClub, is_private: false })}
-                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${!newClub.is_private ? 'bg-blue-600 text-white' : 'text-white/20'}`}
-                >
-                  {t('social.discovery.public', 'Public')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNewClub({ ...newClub, is_private: true })}
-                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${newClub.is_private ? 'bg-red-600 text-white' : 'text-white/20'}`}
-                >
-                  {t('social.discovery.private', 'Privé')}
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label
-              htmlFor="club-description"
-              className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1"
-            >
-              {t('social.discovery.description', 'Description (Lore)')}
-            </label>
-            <textarea
-              id="club-description"
-              required
-              rows={4}
-              aria-label={t('social.discovery.description', 'Description (Lore)')}
-              className="w-full bg-black border-2 border-white/5 rounded-3xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all resize-none"
-              placeholder={t(
-                'social.discovery.description_placeholder',
-                "Décrivez l'objectif du club...",
-              )}
-              value={newClub.description}
-              onChange={(e) => setNewClub({ ...newClub, description: e.target.value })}
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={createMutation.isPending}
-            className="w-full py-5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest shadow-xl transition-all"
-          >
-            {createMutation.isPending
-              ? t('social.discovery.creating', 'Création du Nexus...')
-              : t('social.discovery.submit', 'Fonder le Club →')}
-          </Button>
-        </form>
-      </Modal>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-        {/* Filters */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card
-            padding="lg"
-            className="bg-white dark:bg-navy-900 border-gray-100 dark:border-white/5 shadow-sm h-fit"
-          >
-            <h3 className="text-[10px] font-black uppercase opacity-40 mb-6 tracking-widest flex items-center gap-2">
-              <Search className="w-4 h-4" /> Nexus Filter
-            </h3>
-            <div className="space-y-8">
-              <div className="space-y-2">
-                <label htmlFor="nexus-search" className="sr-only">
-                  {t('social.discovery.search_club', 'Rechercher un club')}
-                </label>
-                <input
-                  id="nexus-search"
-                  type="text"
-                  aria-label={t('social.discovery.search_club', 'Rechercher un club')}
-                  placeholder={t(
-                    'social.discovery.search_club_placeholder',
-                    'Rechercher un club...',
-                  )}
-                  className="w-full bg-gray-100 dark:bg-black/40 border-none rounded-xl px-4 py-4 text-xs font-bold focus:ring-2 ring-blue-500/20"
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                />
-              </div>
-              <div className="space-y-4">
-                <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] block">
-                  {t('social.discovery.thematic_sector', 'Secteur Thématique')}
+    <div className="min-h-screen w-full bg-[#0B0C10] px-4 py-12 pt-20 text-[#F4F1E8] sm:px-6">
+      <div className="mx-auto max-w-7xl">
+        <header className="relative mb-12">
+          <div
+            className="explore-halftone pointer-events-none absolute -inset-x-6 -top-12 h-48"
+            aria-hidden
+          />
+          <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="explore-stamp -rotate-2" aria-hidden>
+                  部
                 </span>
-                <div className="flex flex-col gap-2">
-                  {themes.map((theme) => (
-                    <button
-                      key={theme}
-                      onClick={() => setSelectedTheme(theme)}
-                      className={`px-4 py-3 rounded-xl text-left text-[10px] font-black uppercase tracking-widest transition-all ${
-                        selectedTheme === theme
-                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 translate-x-2'
-                          : 'bg-gray-100 dark:bg-white/5 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10'
-                      }`}
-                    >
-                      {theme}
-                    </button>
-                  ))}
-                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+                  Nexus social · Cercles
+                </span>
               </div>
-            </div>
-          </Card>
-
-          <Card padding="lg" className="bg-blue-500/10 border-blue-500/20 text-blue-500/60">
-            <Shield className="w-10 h-10 mb-4 opacity-20" />
-            <p className="text-[10px] font-bold leading-relaxed uppercase italic">
-              {t(
-                'social.discovery.private_hint',
-                'Les clubs privés nécessitent une invitation ou une validation par un officier du cercle.',
-              )}
-            </p>
-          </Card>
-        </div>
-
-        {/* Club Grid */}
-        <div className="lg:col-span-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {filteredClubs.map((club) => (
-              <div
-                key={club.id}
-                className="bg-white dark:bg-navy-900 rounded-[2.5rem] border border-gray-100 dark:border-white/5 p-8 hover:shadow-2xl transition-all group relative overflow-hidden"
-              >
-                {/* Decor */}
-                <Layout className="absolute -right-8 -bottom-8 w-40 h-40 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity rotate-12" />
-
-                <div className="flex items-start justify-between mb-6">
-                  <div className="bg-blue-100 dark:bg-blue-500/10 p-4 rounded-2xl text-blue-600 group-hover:scale-110 transition-transform">
-                    <Users className="w-8 h-8" />
-                  </div>
-                  <Badge
-                    variant="neutral"
-                    className="bg-gray-100 dark:bg-white/5 text-[8px] font-black uppercase tracking-widest"
-                  >
-                    {club.theme}
-                  </Badge>
-                </div>
-                <h2 className="text-2xl font-black italic tracking-tight mb-3 uppercase manga-font group-hover:text-blue-500 transition-colors leading-none">
-                  {club.name}
-                </h2>
-                <p className="text-xs font-medium text-gray-500 mb-8 line-clamp-2 uppercase tracking-wide opacity-60 italic">
-                  "{club.description}"
-                </p>
-                <div className="flex items-center justify-between mt-auto pt-6 border-t border-gray-50 dark:border-white/5">
-                  <span className="text-[10px] font-black flex items-center gap-2 text-gray-400 uppercase tracking-widest">
-                    <Sparkles className="w-3 h-3 text-blue-400" />{' '}
-                    {t('social.discovery.member_count', '{{count}} Membres', {
-                      count: club.member_count,
-                    })}
-                  </span>
-                  <Link
-                    to={`/clubs/${club.id}`}
-                    className="bg-black dark:bg-white dark:text-black text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl no-underline"
-                  >
-                    {t('social.discovery.join', 'Rejoindre')}
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {filteredClubs.length === 0 && (
-            <div className="text-center py-32 opacity-10 border-4 border-dashed border-white/5 rounded-[4rem]">
-              <Users className="w-24 h-24 mx-auto mb-6" />
-              <p className="text-2xl font-black italic manga-font uppercase">
-                {t('social.discovery.no_nexus', 'Aucun Nexus actif dans ce secteur')}
+              <h1 className="font-manga mt-4 text-4xl font-black uppercase italic leading-none tracking-tighter text-[#F4F1E8] md:text-6xl">
+                Club <span className="text-[#E8442B]">Discovery</span>
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-[#8F94A5]">
+                {t('social.discovery.subtitle', 'Rejoignez une communauté ou créez la vôtre.')}
               </p>
             </div>
-          )}
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex flex-none items-center justify-center gap-2 rounded-xl border-none bg-[#E8442B] px-8 py-4 font-manga text-base font-black uppercase italic text-[#F4F1E8] transition-colors hover:bg-[#c93a24] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913] cursor-pointer"
+            >
+              <Plus className="w-5 h-5" /> {t('social.discovery.create_club', 'Créer un Club')}
+            </button>
+          </div>
+          <span className="relative mt-8 block h-px bg-[#F4F1E8]/10" aria-hidden />
+        </header>
+
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={
+            <span className="text-2xl font-black italic font-manga uppercase text-[#F4F1E8]">
+              {t('social.discovery.new_nexus', 'Nouveau Nexus Social')}
+            </span>
+          }
+          size="md"
+          contentClassName="bg-[#0F1016] border border-[#F4F1E8]/10 rounded-2xl shadow-2xl"
+        >
+          <form
+            className="space-y-8"
+            onSubmit={(e) => {
+              e.preventDefault();
+              createMutation.mutate(newClub);
+            }}
+          >
+            <div className="space-y-2">
+              <label
+                htmlFor="club-name"
+                className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5] ml-1"
+              >
+                {t('social.discovery.club_name', 'Nom du Club')}
+              </label>
+              <input
+                id="club-name"
+                required
+                type="text"
+                aria-label={t('social.discovery.club_name', 'Nom du Club')}
+                className="w-full rounded-xl border border-[#F4F1E8]/15 bg-[#0B0C10] px-6 py-4 text-sm font-medium text-[#F4F1E8] outline-none transition-colors placeholder:text-[#8F94A5]/60 focus:border-[#FDB913]"
+                placeholder={t(
+                  'social.discovery.club_name_placeholder',
+                  'ex: Les Héritiers du Lore',
+                )}
+                value={newClub.name}
+                onChange={(e) => setNewClub({ ...newClub, name: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label
+                  htmlFor="club-theme"
+                  className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5] ml-1"
+                >
+                  {t('social.discovery.main_theme', 'Thème Principal')}
+                </label>
+                <select
+                  id="club-theme"
+                  className="w-full appearance-none rounded-xl border border-[#F4F1E8]/15 bg-[#0B0C10] px-6 py-4 text-sm font-medium text-[#F4F1E8] outline-none transition-colors focus:border-[#FDB913]"
+                  value={newClub.theme}
+                  onChange={(e) => setNewClub({ ...newClub, theme: e.target.value })}
+                >
+                  {themes
+                    .filter((t) => t !== 'All')
+                    .map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5] ml-1 block">
+                  {t('social.discovery.confidentiality', 'Confidentialité')}
+                </span>
+                <div className="flex rounded-xl border border-[#F4F1E8]/15 bg-[#0B0C10] p-1">
+                  <button
+                    type="button"
+                    onClick={() => setNewClub({ ...newClub, is_private: false })}
+                    className={`flex-1 rounded-lg py-3 text-[10px] font-black uppercase transition-colors ${!newClub.is_private ? 'bg-[#F4F1E8] text-[#0B0C10]' : 'text-[#8F94A5]'}`}
+                  >
+                    {t('social.discovery.public', 'Public')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewClub({ ...newClub, is_private: true })}
+                    className={`flex-1 rounded-lg py-3 text-[10px] font-black uppercase transition-colors ${newClub.is_private ? 'bg-[#E8442B] text-[#F4F1E8]' : 'text-[#8F94A5]'}`}
+                  >
+                    {t('social.discovery.private', 'Privé')}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="club-description"
+                className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5] ml-1"
+              >
+                {t('social.discovery.description', 'Description (Lore)')}
+              </label>
+              <textarea
+                id="club-description"
+                required
+                rows={4}
+                aria-label={t('social.discovery.description', 'Description (Lore)')}
+                className="w-full resize-none rounded-xl border border-[#F4F1E8]/15 bg-[#0B0C10] px-6 py-4 text-sm font-medium text-[#F4F1E8] outline-none transition-colors placeholder:text-[#8F94A5]/60 focus:border-[#FDB913]"
+                placeholder={t(
+                  'social.discovery.description_placeholder',
+                  "Décrivez l'objectif du club...",
+                )}
+                value={newClub.description}
+                onChange={(e) => setNewClub({ ...newClub, description: e.target.value })}
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={createMutation.isPending}
+              className="w-full rounded-xl !bg-[#E8442B] py-5 font-manga text-xs font-black uppercase italic tracking-widest !text-[#F4F1E8] transition-colors hover:!bg-[#c93a24] disabled:opacity-50"
+            >
+              {createMutation.isPending
+                ? t('social.discovery.creating', 'Création du Nexus...')
+                : t('social.discovery.submit', 'Fonder le Club →')}
+            </Button>
+          </form>
+        </Modal>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+          {/* Filters */}
+          <div className="lg:col-span-1 space-y-6">
+            <section className="h-fit rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 sm:p-8">
+              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                <Search className="w-4 h-4" /> Nexus Filter
+              </h3>
+              <div className="space-y-8">
+                <div className="space-y-2">
+                  <label htmlFor="nexus-search" className="sr-only">
+                    {t('social.discovery.search_club', 'Rechercher un club')}
+                  </label>
+                  <input
+                    id="nexus-search"
+                    type="text"
+                    aria-label={t('social.discovery.search_club', 'Rechercher un club')}
+                    placeholder={t(
+                      'social.discovery.search_club_placeholder',
+                      'Rechercher un club...',
+                    )}
+                    className="w-full rounded-xl border border-[#F4F1E8]/15 bg-[#0B0C10] px-4 py-4 text-xs font-medium text-[#F4F1E8] outline-none transition-colors placeholder:text-[#8F94A5]/60 focus:border-[#FDB913]"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-4">
+                  <span className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#8F94A5]">
+                    {t('social.discovery.thematic_sector', 'Secteur Thématique')}
+                  </span>
+                  <div className="flex flex-col gap-2">
+                    {themes.map((theme) => (
+                      <button
+                        key={theme}
+                        onClick={() => setSelectedTheme(theme)}
+                        className={`rounded-xl px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest transition-colors ${
+                          selectedTheme === theme
+                            ? 'bg-[#E8442B] text-[#F4F1E8]'
+                            : 'bg-[#F4F1E8]/5 text-[#8F94A5] hover:bg-[#F4F1E8]/10'
+                        }`}
+                      >
+                        {theme}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-[#E8442B]/25 bg-[#E8442B]/[0.05] p-6 sm:p-8 text-[#E8442B]/70">
+              <Shield className="mb-4 h-10 w-10 opacity-40" />
+              <p className="text-[10px] font-bold uppercase italic leading-relaxed">
+                {t(
+                  'social.discovery.private_hint',
+                  'Les clubs privés nécessitent une invitation ou une validation par un officier du cercle.',
+                )}
+              </p>
+            </section>
+          </div>
+
+          {/* Club Grid */}
+          <div className="lg:col-span-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {filteredClubs.map((club) => (
+                <div
+                  key={club.id}
+                  className="group relative overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 transition-colors hover:border-[#F4F1E8]/20"
+                >
+                  {/* Decor */}
+                  <Layout className="absolute -right-8 -bottom-8 h-40 w-40 rotate-12 text-[#F4F1E8] opacity-[0.03] transition-opacity group-hover:opacity-[0.06]" />
+
+                  <div className="mb-6 flex items-start justify-between">
+                    <div className="rounded-xl bg-[#E8442B]/10 p-4 text-[#E8442B] transition-transform group-hover:scale-110">
+                      <Users className="w-8 h-8" />
+                    </div>
+                    <Badge
+                      variant="neutral"
+                      className="!bg-[#F4F1E8]/5 !border-[#F4F1E8]/10 text-[8px] font-black uppercase tracking-widest !text-[#8F94A5]"
+                    >
+                      {club.theme}
+                    </Badge>
+                  </div>
+                  <h2 className="font-manga mb-3 text-2xl font-black uppercase italic leading-none tracking-tight text-[#F4F1E8] transition-colors group-hover:text-[#E8442B]">
+                    {club.name}
+                  </h2>
+                  <p className="mb-8 line-clamp-2 text-xs font-medium uppercase italic tracking-wide text-[#8F94A5]">
+                    "{club.description}"
+                  </p>
+                  <div className="mt-auto flex items-center justify-between border-t border-[#F4F1E8]/10 pt-6">
+                    <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                      <Sparkles className="h-3 w-3 text-[#FDB913]" />{' '}
+                      {t('social.discovery.member_count', '{{count}} Membres', {
+                        count: club.member_count,
+                      })}
+                    </span>
+                    <Link
+                      to={`/clubs/${club.id}`}
+                      className="rounded-xl bg-[#F4F1E8] px-8 py-3 text-[10px] font-black uppercase tracking-widest text-[#0B0C10] no-underline transition-colors hover:bg-[#FDB913]"
+                    >
+                      {t('social.discovery.join', 'Rejoindre')}
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {filteredClubs.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-[#F4F1E8]/15 py-32 text-center">
+                <Users className="mx-auto mb-6 h-24 w-24 text-[#8F94A5]/30" />
+                <p className="font-manga text-2xl font-black uppercase italic text-[#F4F1E8]/40">
+                  {t('social.discovery.no_nexus', 'Aucun Nexus actif dans ce secteur')}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

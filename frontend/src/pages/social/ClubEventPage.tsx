@@ -5,7 +5,6 @@ import { socialService } from '../../features/social/services/socialService';
 import { ClubEvent } from '../../types';
 import { useToastStore } from '../../store/toastStore';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import { useTranslation } from 'react-i18next';
 
 const ClubEventPage: React.FC = () => {
@@ -134,42 +133,47 @@ const ClubEventPage: React.FC = () => {
 
   if (!event) {
     return (
-      <div className="p-20 text-center text-white font-black animate-pulse uppercase tracking-[0.3em] bg-navy-950 min-h-screen">
+      <div className="min-h-screen animate-pulse bg-[#0B0C10] p-20 text-center font-black uppercase tracking-[0.3em] text-[#F4F1E8]">
         {t('social.club_event.details_loading', "Chargement des détails de l'événement...")}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-navy-950 text-surface-text py-12 px-6">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#0B0C10] px-6 py-12 pt-20 text-[#F4F1E8]">
+      <div className="mx-auto max-w-5xl space-y-8">
         {/* Back Link */}
         <Link
           to={`/clubs/${id}/`}
-          className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-brand-primary no-underline transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#8F94A5] no-underline transition-colors hover:text-[#E8442B]"
         >
           <ChevronLeft className="w-4 h-4" />{' '}
           {t('social.club_event.back_to_club', 'Retour au club : {{name}}', { name: clubName })}
         </Link>
 
         {/* Hero Section */}
-        <Card
-          hasAura
-          className="relative overflow-hidden p-8 md:p-12 bg-gradient-to-br from-white to-gray-50 dark:from-navy-900 dark:to-navy-950 border border-gray-100 dark:border-white/5 rounded-3xl flex flex-col md:flex-row gap-8 justify-between items-start md:items-center"
-        >
-          <div className="space-y-6 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-[10px] font-black uppercase tracking-widest">
+        <section className="relative flex flex-col items-start justify-between gap-8 overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 md:flex-row md:items-center md:p-12">
+          <span
+            className="font-manga pointer-events-none absolute -bottom-14 -right-4 text-[11rem] font-black italic leading-none text-[#E8442B]/[0.05]"
+            aria-hidden
+          >
+            部
+          </span>
+          <div className="relative max-w-xl space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#E8442B]/25 bg-[#E8442B]/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#E8442B]">
               <Calendar className="w-3.5 h-3.5" />{' '}
               {t('social.club_event.event_badge', 'Événement du Club')}
             </div>
-            <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase leading-none manga-font text-brand-accent">
+            <h1 className="font-manga text-4xl font-black uppercase italic leading-none tracking-tighter text-[#F4F1E8] md:text-5xl">
               {event.title}
             </h1>
-            <p className="text-sm text-gray-400 font-bold leading-relaxed">{event.description}</p>
+            <p className="text-sm font-medium leading-relaxed text-[#8F94A5]">
+              {event.description}
+            </p>
 
-            <div className="flex flex-wrap gap-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <div className="flex flex-wrap gap-4 text-xs font-bold uppercase tracking-wider text-[#8F94A5]">
               <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-brand-primary" />
+                <Clock className="w-4 h-4 text-[#FDB913]" />
                 {new Date(event.event_date).toLocaleDateString('fr-FR', {
                   day: 'numeric',
                   month: 'long',
@@ -179,11 +183,11 @@ const ClubEventPage: React.FC = () => {
                 })}
               </span>
               <span className="flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-brand-primary" />{' '}
+                <MapPin className="w-4 h-4 text-[#E8442B]" />{' '}
                 {t('social.club_event.voice_salon', "Salon Vocal de l'App")}
               </span>
               <span className="flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-brand-primary" />{' '}
+                <Users className="w-4 h-4 text-[#FDB913]" />{' '}
                 {t('social.club_event.registered_count', '{{count}} inscrits', {
                   count: participantsCount,
                 })}
@@ -192,53 +196,53 @@ const ClubEventPage: React.FC = () => {
           </div>
 
           {/* Countdown / Status Box */}
-          <div className="w-full md:w-80 bg-gray-100/50 dark:bg-navy-950/50 border border-gray-200 dark:border-white/5 rounded-2xl p-6 text-center space-y-4">
+          <div className="relative w-full space-y-4 rounded-2xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-6 text-center md:w-80">
             {isEventPast ? (
               <div className="space-y-2">
-                <span className="inline-flex items-center gap-1 text-[10px] bg-red-500/10 text-red-500 font-black tracking-widest uppercase px-3 py-1 rounded-full">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#E8442B]/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#E8442B]">
                   {t('social.club_event.past', 'Terminé')}
                 </span>
-                <p className="text-sm font-bold text-gray-500">
+                <p className="text-sm font-bold text-[#8F94A5]">
                   {t('social.club_event.past_desc', 'Cet événement est passé.')}
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                <span className="inline-flex items-center gap-1 text-[10px] bg-green-500/10 text-green-500 font-black tracking-widest uppercase px-3 py-1 rounded-full">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#FDB913]/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#FDB913]">
                   {t('social.club_event.upcoming', 'À venir')}
                 </span>
 
                 {/* Timer Grid */}
                 <div className="grid grid-cols-4 gap-2">
-                  <div className="bg-white dark:bg-navy-900 rounded-xl p-2.5 border border-gray-200 dark:border-white/5">
-                    <span className="block text-xl font-black text-brand-primary">
+                  <div className="rounded-xl border border-[#F4F1E8]/10 bg-[#0F1016] p-2.5">
+                    <span className="font-manga block text-xl font-black italic text-[#FDB913]">
                       {timeLeft.days}
                     </span>
-                    <span className="text-[8px] font-black uppercase text-gray-400">
+                    <span className="text-[8px] font-black uppercase text-[#8F94A5]">
                       {t('social.club_event.days', 'Jours')}
                     </span>
                   </div>
-                  <div className="bg-white dark:bg-navy-900 rounded-xl p-2.5 border border-gray-200 dark:border-white/5">
-                    <span className="block text-xl font-black text-brand-primary">
+                  <div className="rounded-xl border border-[#F4F1E8]/10 bg-[#0F1016] p-2.5">
+                    <span className="font-manga block text-xl font-black italic text-[#FDB913]">
                       {timeLeft.hours}
                     </span>
-                    <span className="text-[8px] font-black uppercase text-gray-400">
+                    <span className="text-[8px] font-black uppercase text-[#8F94A5]">
                       {t('social.club_event.hours', 'Heures')}
                     </span>
                   </div>
-                  <div className="bg-white dark:bg-navy-900 rounded-xl p-2.5 border border-gray-200 dark:border-white/5">
-                    <span className="block text-xl font-black text-brand-primary">
+                  <div className="rounded-xl border border-[#F4F1E8]/10 bg-[#0F1016] p-2.5">
+                    <span className="font-manga block text-xl font-black italic text-[#FDB913]">
                       {timeLeft.minutes}
                     </span>
-                    <span className="text-[8px] font-black uppercase text-gray-400">
+                    <span className="text-[8px] font-black uppercase text-[#8F94A5]">
                       {t('social.club_event.min', 'Min')}
                     </span>
                   </div>
-                  <div className="bg-white dark:bg-navy-900 rounded-xl p-2.5 border border-gray-200 dark:border-white/5">
-                    <span className="block text-xl font-black text-brand-primary">
+                  <div className="rounded-xl border border-[#F4F1E8]/10 bg-[#0F1016] p-2.5">
+                    <span className="font-manga block text-xl font-black italic text-[#FDB913]">
                       {timeLeft.seconds}
                     </span>
-                    <span className="text-[8px] font-black uppercase text-gray-400">
+                    <span className="text-[8px] font-black uppercase text-[#8F94A5]">
                       {t('social.club_event.sec', 'Sec')}
                     </span>
                   </div>
@@ -246,10 +250,10 @@ const ClubEventPage: React.FC = () => {
 
                 <Button
                   onClick={handleToggleParticipation}
-                  className={`w-full py-4 font-black uppercase tracking-widest rounded-xl transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${
+                  className={`flex w-full items-center justify-center gap-2 rounded-xl border-none py-4 font-manga font-black uppercase italic tracking-widest transition-colors cursor-pointer ${
                     isParticipating
-                      ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg'
-                      : 'bg-brand-primary hover:bg-brand-primary/95 text-white'
+                      ? '!bg-[#FDB913] !text-[#0B0C10] hover:!bg-[#e0a50f]'
+                      : '!bg-[#E8442B] !text-[#F4F1E8] hover:!bg-[#c93a24]'
                   }`}
                 >
                   {isParticipating ? (
@@ -264,36 +268,36 @@ const ClubEventPage: React.FC = () => {
               </div>
             )}
           </div>
-        </Card>
+        </section>
 
         {/* Dual Panel - Info & Discussion */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Left / Center Column: Chat & Discussion */}
-          <div className="md:col-span-2 space-y-6 flex flex-col h-[500px] bg-white dark:bg-navy-900 border border-gray-100 dark:border-white/5 rounded-3xl overflow-hidden p-6">
-            <h3 className="text-sm font-black uppercase tracking-wider text-gray-400 flex items-center gap-2 pb-4 border-b border-gray-100 dark:border-white/5">
+          <div className="flex h-[500px] flex-col space-y-6 overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 md:col-span-2">
+            <h3 className="flex items-center gap-2 border-b border-[#F4F1E8]/10 pb-4 text-sm font-black uppercase tracking-wider text-[#8F94A5]">
               {t('social.club_event.chat_title', "Fil de discussion de l'événement")}
             </h3>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <div className="flex-1 space-y-4 overflow-y-auto pr-2">
               {chatMessages.map((msg, i) => (
                 <div
                   key={i}
-                  className={`flex flex-col max-w-[80%] space-y-1 ${
+                  className={`flex max-w-[80%] flex-col space-y-1 ${
                     msg.sender === t('social.club_event.me', 'Moi')
                       ? 'ml-auto items-end'
                       : 'mr-auto items-start'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-gray-500">{msg.sender}</span>
-                    <span className="text-[9px] text-gray-400">{msg.time}</span>
+                    <span className="text-[10px] font-bold text-[#8F94A5]">{msg.sender}</span>
+                    <span className="text-[9px] text-[#8F94A5]/70">{msg.time}</span>
                   </div>
                   <div
-                    className={`p-3.5 rounded-2xl text-xs font-bold ${
+                    className={`rounded-2xl p-3.5 text-xs font-bold ${
                       msg.sender === t('social.club_event.me', 'Moi')
-                        ? 'bg-brand-primary text-white rounded-tr-none'
-                        : 'bg-gray-100 dark:bg-navy-800 text-surface-text rounded-tl-none'
+                        ? 'rounded-tr-none bg-[#E8442B] text-[#F4F1E8]'
+                        : 'rounded-tl-none bg-[#0B0C10] text-[#F4F1E8]'
                     }`}
                   >
                     {msg.text}
@@ -305,7 +309,7 @@ const ClubEventPage: React.FC = () => {
             {/* Input Form */}
             <form
               onSubmit={handleSendMessage}
-              className="flex gap-2 pt-4 border-t border-gray-100 dark:border-white/5"
+              className="flex gap-2 border-t border-[#F4F1E8]/10 pt-4"
             >
               <input
                 type="text"
@@ -316,11 +320,11 @@ const ClubEventPage: React.FC = () => {
                 )}
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                className="flex-1 bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-xs font-bold focus:outline-none focus:border-brand-primary"
+                className="flex-1 rounded-xl border border-[#F4F1E8]/15 bg-[#0B0C10] p-4 text-xs font-medium text-[#F4F1E8] outline-none transition-colors placeholder:text-[#8F94A5]/60 focus:border-[#FDB913]"
               />
               <button
                 type="submit"
-                className="p-4 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl flex items-center justify-center transition-all border-none cursor-pointer"
+                className="flex items-center justify-center rounded-xl border-none bg-[#E8442B] p-4 text-[#F4F1E8] transition-colors hover:bg-[#c93a24] cursor-pointer"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -328,23 +332,23 @@ const ClubEventPage: React.FC = () => {
           </div>
 
           {/* Right Column: Info & Status */}
-          <div className="bg-white dark:bg-navy-900 border border-gray-100 dark:border-white/5 rounded-3xl p-6 space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-wider text-gray-400 flex items-center gap-2 pb-4 border-b border-gray-100 dark:border-white/5">
+          <div className="space-y-6 rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6">
+            <h3 className="flex items-center gap-2 border-b border-[#F4F1E8]/10 pb-4 text-sm font-black uppercase tracking-wider text-[#8F94A5]">
               {t('social.club_event.ai_stats', "Statistiques de l'IA")}
             </h3>
 
             <div className="space-y-4">
-              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-2xl">
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
+              <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-4">
+                <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
                   {t('social.club_event.expected_impact', 'Impact prévu')}
                 </p>
-                <p className="text-lg font-black text-brand-primary">+250 XP</p>
+                <p className="font-manga text-lg font-black italic text-[#FDB913]">+250 XP</p>
               </div>
-              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-2xl">
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
+              <div className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-4">
+                <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
                   {t('social.club_event.vibe_detected', 'Vibe détectée')}
                 </p>
-                <p className="text-lg font-black text-purple-500">
+                <p className="font-manga text-lg font-black italic text-[#E8442B]">
                   {t('social.club_event.vibe_value', 'Social / Débat')}
                 </p>
               </div>
