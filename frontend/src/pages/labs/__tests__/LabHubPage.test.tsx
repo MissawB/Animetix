@@ -48,7 +48,7 @@ describe('LabHubPage', () => {
 
   it('renders the hub navigation links', () => {
     const { container } = renderPage();
-    expect(container.querySelector('a[href="/forge-hub/"]')).toBeInTheDocument();
-    expect(container.querySelector('a[href="/cognition-hub/"]')).toBeInTheDocument();
+    expect(container.querySelector('a[href="/lab/forge-hub/"]')).toBeInTheDocument();
+    expect(container.querySelector('a[href="/lab/cognition-hub/"]')).toBeInTheDocument();
   });
 });

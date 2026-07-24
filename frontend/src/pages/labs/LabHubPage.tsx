@@ -66,7 +66,7 @@ const LabHubPage: React.FC = () => {
       <LabHubSectionHeader
         title={creativeTitle}
         accent={creativeAccent}
-        hubUrl="/forge-hub/"
+        hubUrl="/lab/forge-hub/"
         hubLabel={t('lab_hub.btn_creative_hub', 'ACCÉDER AU HUB COMPLET')}
         ink="kin"
       />
@@ -81,7 +81,7 @@ const LabHubPage: React.FC = () => {
       <LabHubSectionHeader
         title={cognitionTitle}
         accent={cognitionAccent}
-        hubUrl="/cognition-hub/"
+        hubUrl="/lab/cognition-hub/"
         hubLabel={t('lab_hub.btn_cognition_hub', 'ACCÉDER AU HUB COMPLET')}
         ink="ai"
       />
