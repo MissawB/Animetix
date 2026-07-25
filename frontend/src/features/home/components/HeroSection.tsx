@@ -62,16 +62,13 @@ export const HeroSection: React.FC = () => {
       </div>
 
       <div className="md:w-1/2 relative mt-10 md:mt-0 flex justify-center">
-        {/* Cadre papier décalé façon fiche d'œuvre */}
-        <div className="relative rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-3 rotate-[-2deg] shadow-2xl">
-          <DynamicAuraWrapper>
-            <img
-              src={heroImage}
-              alt="Hero Illustration"
-              className="w-[500px] md:w-[600px] z-10 relative hero-img hero-swap transform"
-            />
-          </DynamicAuraWrapper>
-        </div>
+        <DynamicAuraWrapper>
+          <img
+            src={heroImage}
+            alt="Hero Illustration"
+            className="w-[500px] md:w-[600px] z-10 relative hero-img hero-swap transform"
+          />
+        </DynamicAuraWrapper>
       </div>
     </section>
   );

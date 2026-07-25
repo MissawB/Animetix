@@ -9,11 +9,11 @@ import './App.css';
 
 const App: React.FC = () => {
   return (
-    <div className="w-full bg-transparent transition-colors duration-500 bg-manga-overlay home-bg pb-24">
-      <div className="hero-bg w-full transition-all duration-500 shadow-sm border-b border-gray-100/10 dark:border-navy-950/10">
+    <div className="w-full bg-[#0B0C10] text-[#F4F1E8] pb-24">
+      <div className="w-full">
         <HeroSection />
       </div>
-      <div className="max-w-[1840px] mx-auto px-6 md:px-14 pb-24 mt-12 bg-[#fffcf0] dark:bg-[#1a1a2e] rounded-[3rem] shadow-2xl border border-gray-100 dark:border-white/5 transition-colors duration-500">
+      <div className="max-w-[1840px] mx-auto px-6 md:px-14 pb-24 mt-12">
         <SoloChallenges />
         <WorldBossBanner />
         <MultiplayerModes />
