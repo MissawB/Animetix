@@ -33,10 +33,15 @@ export const Plate: React.FC<{ children: React.ReactNode; className?: string }> 
   className = '',
 }) => (
   <div
-    className={`relative overflow-hidden rounded-[2rem] border border-anime-accent/15 bg-[#0a0a12] ${className}`}
+    className={`relative overflow-hidden rounded-[2rem] border border-[#F4F1E8]/10 bg-[#0B0C10] ${className}`}
   >
-    <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-anime-accent/[0.07] blur-[90px]" />
-    <div className="pointer-events-none absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-anime-accent/[0.05] blur-[110px]" />
+    {/* Filet éditorial shu — signature de l'édition de nuit. */}
+    <span
+      className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-[#E8442B] via-[#E8442B]/20 to-transparent"
+      aria-hidden
+    />
+    <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#FDB913]/[0.07] blur-[90px]" />
+    <div className="pointer-events-none absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-[#FDB913]/[0.05] blur-[110px]" />
     {children}
   </div>
 );
