@@ -1,3 +1,5 @@
+import uuid  # noqa: E402
+
 from django.contrib.auth.models import User  # noqa: E402
 from pydantic import BaseModel, ConfigDict, Field, ValidationError  # noqa: E402
 from rest_framework import permissions, status, viewsets
@@ -25,6 +27,21 @@ from ..serializers import (
     ProfileSerializer,
     SocialUserSerializer,
 )
+
+
+def _sniff_image_ext(head: bytes):
+    """Renvoie l'extension d'un format raster sûr d'après les octets d'en-tête,
+    ou None. Ne se fie jamais au content_type/nom fournis par le client ; rejette
+    de fait SVG/HTML/XML (vecteurs de XSS stocké)."""
+    if head.startswith(b"\xff\xd8\xff"):
+        return "jpg"
+    if head.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if head.startswith((b"GIF87a", b"GIF89a")):
+        return "gif"
+    if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+        return "webp"
+    return None
 
 
 class PersonalizationSchema(BaseModel):
@@ -185,16 +202,24 @@ class ProfileViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": "Aucun fichier fourni."}, status=status.HTTP_400_BAD_REQUEST
             )
-        if not (file.content_type or "").startswith("image/"):
-            return Response(
-                {"error": "Le fichier doit être une image."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         if file.size > 5 * 1024 * 1024:
             return Response(
                 {"error": "Image trop lourde (max 5 Mo)."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        # Le content_type client est falsifiable : on valide les octets réels
+        # (magic bytes). Seuls des formats raster sûrs passent — cela rejette
+        # explicitement SVG/HTML/XML, vecteurs de XSS stocké s'ils étaient servis
+        # inline en same-origin.
+        ext = _sniff_image_ext(file.read(16))
+        file.seek(0)
+        if ext is None:
+            return Response(
+                {"error": "Format non supporté (JPEG, PNG, WEBP ou GIF)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Nom de fichier généré côté serveur — jamais celui fourni par le client.
+        file.name = f"{uuid.uuid4().hex}.{ext}"
         profile = request.user.profile
         profile.avatar = file
         profile.save()
