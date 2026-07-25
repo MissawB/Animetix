@@ -7,10 +7,16 @@ import React, { Suspense } from 'react';
 // (react-plotly.js is declared as an untyped module, hence the casts).
 const Plot = React.lazy(async () => {
   const mod = await import('react-plotly.js');
-  const Component =
-    (mod as unknown as { default?: React.ComponentType<Record<string, unknown>> }).default ??
-    (mod as unknown as React.ComponentType<Record<string, unknown>>);
-  return { default: Component };
+  // react-plotly.js is CJS. Under Vite's *dynamic-import* interop, `mod.default`
+  // is the whole `module.exports` object ({ __esModule: true, default: Plot }),
+  // not the component — so a naive `mod.default` resolves to [object Object] and
+  // React throws "Lazy element type must resolve to a class or function". Unwrap
+  // nested `.default` layers until we reach the actual component (a function).
+  let candidate: unknown = mod;
+  for (let i = 0; i < 5 && candidate && typeof candidate !== 'function'; i += 1) {
+    candidate = (candidate as { default?: unknown }).default;
+  }
+  return { default: candidate as React.ComponentType<Record<string, unknown>> };
 });
 
 // Drop-in replacement for the pages' local `Plot` shim. Forwards all props to
