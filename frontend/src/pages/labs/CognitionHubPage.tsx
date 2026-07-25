@@ -3,93 +3,99 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { cognitionLabs, type LabEntry } from './labHubData';
 
-/** Les trois synapses du noyau cognitif — une encre d'imprimeur chacune. */
-const MODULES = [
-  {
-    id: 'archetype',
-    title: 'Archetype Nexus',
-    sub: 'Convergence synaptique',
-    desc: "Visualisez votre position dans l'espace latent des fans et la convergence de vos traits psychographiques.",
-    url: '/social/archetype-nexus/',
-    glyph: '型',
-    hex: '#5D7FD3',
-    /* position desktop dans la constellation (en %) */
-    x: 18,
-    y: 22,
-    float: 5,
-  },
-  {
-    id: 'memory',
-    title: 'Neuro-Memory',
-    sub: 'Empreinte sémantique',
-    desc: "Gérez l'empreinte sémantique que vous laissez sur l'IA et auditez vos vecteurs de préférence en temps réel.",
-    url: '/social/neuro-memory/',
-    glyph: '憶',
-    hex: '#FDB913',
-    x: 68,
-    y: 14,
-    float: 6.5,
-  },
-  {
-    id: 'simulator',
-    title: 'Counterfactual Simulator',
-    sub: 'Optimisation de timeline',
-    desc: 'Explorez les mondes possibles de vos interactions et calculez le regret contrefactuel minimum.',
-    url: '/search/counterfactual/',
-    glyph: '時',
-    hex: '#E8442B',
-    x: 42,
-    y: 60,
-    float: 5.8,
-  },
-] as const;
+/**
+ * Enrichissement propre au noyau cognitif : chaque lab reçoit une encre de
+ * synapse et un sous-titre court. Les autres champs (titre, desc, url, glyph)
+ * viennent de `cognitionLabs` — source unique, donc le hub ne peut plus oublier
+ * un lab. Un id inconnu retombe sur l'indigo cognitif + son badge.
+ */
+const META: Record<string, { hex: string; sub: string }> = {
+  archetype: { hex: '#5D7FD3', sub: 'Convergence synaptique' },
+  memory: { hex: '#FDB913', sub: 'Empreinte sémantique' },
+  simulator: { hex: '#E8442B', sub: 'Optimisation de timeline' },
+  latent: { hex: '#8B5CF6', sub: 'Géométrie vectorielle' },
+  debate: { hex: '#F43F5E', sub: 'Confrontation sémantique' },
+  'graph-map': { hex: '#34D399', sub: 'Cartographie du lore' },
+  strategy: { hex: '#38BDF8', sub: 'Arbres de décision' },
+};
+
+const AI_INDIGO = '#5D7FD3';
+
+interface Synapse extends LabEntry {
+  hex: string;
+  sub: string;
+  /** position dans la constellation (viewBox 0..100) */
+  x: number;
+  y: number;
+  float: number;
+}
+
+/** Centre de la constellation (le noyau) et rayons de l'orbite, en %. */
+const CORE = { x: 50, y: 47 };
+const RX = 37;
+const RY = 34;
+
+/** Répartit les labs sur une ellipse autour du noyau (premier en haut). */
+const SYNAPSES: Synapse[] = cognitionLabs.map((lab, i) => {
+  const angle = (i / cognitionLabs.length) * Math.PI * 2 - Math.PI / 2;
+  const meta = META[lab.id] ?? { hex: AI_INDIGO, sub: lab.badge };
+  return {
+    ...lab,
+    hex: meta.hex,
+    sub: meta.sub,
+    x: CORE.x + RX * Math.cos(angle),
+    y: CORE.y + RY * Math.sin(angle),
+    float: 5 + ((i * 5) % 4) * 0.5,
+  };
+});
 
 /** Une synapse : nœud lumineux flottant + cartouche, navigation directe. */
 const SynapseNode: React.FC<{
-  module: (typeof MODULES)[number];
+  node: Synapse;
   desc: string;
   className?: string;
   style?: React.CSSProperties;
-}> = ({ module, desc, className = '', style }) => (
-  <motion.div
-    animate={{ y: [0, -12, 0] }}
-    transition={{ repeat: Infinity, duration: module.float, ease: 'easeInOut' }}
-    className={className}
-    style={style}
-  >
-    <Link
-      to={module.url}
-      className="group flex w-56 flex-col items-center text-center no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-[#FDB913]"
+}> = ({ node, desc, className = '', style }) => (
+  <div className={className} style={style}>
+    <motion.div
+      animate={{ y: [0, -12, 0] }}
+      transition={{ repeat: Infinity, duration: node.float, ease: 'easeInOut' }}
     >
-      <span className="relative mb-6 flex h-32 w-32 items-center justify-center">
-        <span
-          aria-hidden
-          className="absolute inset-0 rounded-full opacity-25 blur-[36px] transition-opacity duration-500 group-hover:opacity-60"
-          style={{ backgroundColor: module.hex }}
-        />
-        <span
-          className="relative flex h-full w-full items-center justify-center rounded-full border-2 bg-[#020202]/80 text-5xl font-bold leading-none transition-transform duration-500 group-hover:scale-110"
-          style={{ borderColor: `${module.hex}66`, color: module.hex }}
-          aria-hidden
-        >
-          {module.glyph}
-        </span>
-      </span>
-      <p
-        className="mb-1 text-[10px] font-black uppercase tracking-widest"
-        style={{ color: module.hex }}
+      <Link
+        to={node.url}
+        className="group flex w-48 flex-col items-center text-center no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-[#FDB913]"
       >
-        {module.sub}
-      </p>
-      <h2 className="font-manga text-2xl font-black uppercase italic leading-none text-white">
-        {module.title}
-      </h2>
-      <p className="mt-3 text-[11px] leading-relaxed text-white/40 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-        {desc}
-      </p>
-    </Link>
-  </motion.div>
+        <span className="relative mb-4 flex h-24 w-24 items-center justify-center">
+          <span
+            aria-hidden
+            className="absolute inset-0 rounded-full opacity-30 blur-[28px] transition-opacity duration-500 group-hover:opacity-70"
+            style={{ backgroundColor: node.hex }}
+          />
+          <span
+            className="relative flex h-full w-full items-center justify-center rounded-full border-2 bg-[#020202]/80 text-4xl font-bold leading-none transition-transform duration-500 group-hover:scale-110"
+            style={{ borderColor: `${node.hex}66`, color: node.hex }}
+            aria-hidden
+          >
+            {node.glyph}
+          </span>
+        </span>
+        <p
+          className="mb-1 text-[9px] font-black uppercase tracking-widest"
+          style={{ color: node.hex }}
+        >
+          {node.sub}
+        </p>
+        <h2 className="font-manga text-xl font-black uppercase italic leading-none text-white">
+          {node.title}
+        </h2>
+        <p className="mt-2 text-[10px] leading-relaxed text-white/45 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+          {desc}
+        </p>
+      </Link>
+    </motion.div>
+  </div>
 );
 
 const CognitionHubPage: React.FC = () => {
@@ -106,9 +112,9 @@ const CognitionHubPage: React.FC = () => {
     [],
   );
 
-  const translated = MODULES.map((m) => ({
-    module: m,
-    desc: t(`labs.cognition.${m.id}_desc`, m.desc),
+  const translated = SYNAPSES.map((node) => ({
+    node,
+    desc: t(`labs.cognition.${node.id}_desc`, node.desc),
   }));
 
   return (
@@ -143,65 +149,68 @@ const CognitionHubPage: React.FC = () => {
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/40">
             {t(
               'labs.cognition.hero_title',
-              "Fusion de l'identité numérique, de la mémoire artificielle et de la simulation de futurs possibles.",
+              "Les sept synapses du noyau cognitif. Cliquez sur l'une d'elles pour l'ouvrir.",
             )}
           </p>
         </header>
 
-        {/* La constellation : trois synapses reliées (desktop) */}
-        <div className="relative z-10 hidden h-[560px] w-full max-w-5xl md:block">
+        {/* La constellation : le noyau + les synapses en orbite (desktop) */}
+        <div className="relative z-10 hidden h-[620px] w-full max-w-5xl md:block">
           <svg
             className="pointer-events-none absolute inset-0 h-full w-full"
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
             aria-hidden
           >
-            <line
-              x1={MODULES[0].x + 11}
-              y1={MODULES[0].y + 11}
-              x2={MODULES[1].x + 11}
-              y2={MODULES[1].y + 11}
-              stroke="#F4F1E8"
-              strokeOpacity="0.12"
-              strokeWidth="0.2"
-              strokeDasharray="1.5 1.5"
-            />
-            <line
-              x1={MODULES[1].x + 11}
-              y1={MODULES[1].y + 11}
-              x2={MODULES[2].x + 11}
-              y2={MODULES[2].y + 11}
-              stroke="#F4F1E8"
-              strokeOpacity="0.12"
-              strokeWidth="0.2"
-              strokeDasharray="1.5 1.5"
-            />
-            <line
-              x1={MODULES[2].x + 11}
-              y1={MODULES[2].y + 11}
-              x2={MODULES[0].x + 11}
-              y2={MODULES[0].y + 11}
-              stroke="#F4F1E8"
-              strokeOpacity="0.12"
-              strokeWidth="0.2"
-              strokeDasharray="1.5 1.5"
-            />
+            {SYNAPSES.map((node) => (
+              <line
+                key={node.id}
+                x1={CORE.x}
+                y1={CORE.y}
+                x2={node.x}
+                y2={node.y}
+                stroke={node.hex}
+                strokeOpacity="0.22"
+                strokeWidth="0.18"
+                strokeDasharray="1.2 1.4"
+              />
+            ))}
           </svg>
-          {translated.map(({ module, desc }) => (
+
+          {/* Noyau central */}
+          <div
+            className="absolute -translate-x-1/2 -translate-y-1/2"
+            style={{ left: `${CORE.x}%`, top: `${CORE.y}%` }}
+          >
+            <div className="relative flex h-28 w-28 items-center justify-center">
+              <span
+                aria-hidden
+                className="absolute inset-0 animate-pulse rounded-full bg-[#5D7FD3]/40 blur-[40px]"
+              />
+              <span
+                className="relative flex h-full w-full items-center justify-center rounded-full border border-[#5D7FD3]/40 bg-[#020202]/90 text-5xl font-bold leading-none text-[#5D7FD3]"
+                aria-hidden
+              >
+                核
+              </span>
+            </div>
+          </div>
+
+          {translated.map(({ node, desc }) => (
             <SynapseNode
-              key={module.id}
-              module={module}
+              key={node.id}
+              node={node}
               desc={desc}
-              className="absolute"
-              style={{ left: `${module.x}%`, top: `${module.y}%` }}
+              className="absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${node.x}%`, top: `${node.y}%` }}
             />
           ))}
         </div>
 
         {/* Mobile : synapses empilées */}
-        <div className="z-10 flex flex-col items-center gap-14 md:hidden">
-          {translated.map(({ module, desc }) => (
-            <SynapseNode key={module.id} module={module} desc={desc} />
+        <div className="z-10 flex flex-col items-center gap-12 md:hidden">
+          {translated.map(({ node, desc }) => (
+            <SynapseNode key={node.id} node={node} desc={desc} />
           ))}
         </div>
 
