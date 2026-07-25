@@ -5,8 +5,8 @@ import { DynamicAuraWrapper } from '../../../components/shared/DynamicAuraWrappe
 import { useGameModes } from '../data/useGameModes';
 
 // Pool historique du site Django (`random.choice` côté serveur à chaque visite),
-// perdu à la migration React qui avait figé hero.png. Restauré ici avec une
-// vraie rotation à intervalle, départ aléatoire.
+// perdu à la migration React qui avait figé hero.png. Une seule image est
+// tirée au hasard au chargement de la page — pas de rotation.
 export const HERO_IMAGES = [
   '/static/img/hero.png',
   '/static/img/Dio.png',
@@ -15,28 +15,14 @@ export const HERO_IMAGES = [
   '/static/img/Team_7.png',
   '/static/img/Z_team.png',
 ];
-export const HERO_ROTATION_MS = 8000;
 
 export const HeroSection: React.FC = () => {
   const { t } = useTranslation();
   const { isEn } = useGameModes();
-  const [heroIndex, setHeroIndex] = React.useState(() =>
-    Math.floor(Math.random() * HERO_IMAGES.length),
+  // Tirage unique au montage : l'image reste fixe pour toute la visite.
+  const [heroImage] = React.useState(
+    () => HERO_IMAGES[Math.floor(Math.random() * HERO_IMAGES.length)],
   );
-
-  React.useEffect(() => {
-    const id = window.setInterval(
-      () => setHeroIndex((i) => (i + 1) % HERO_IMAGES.length),
-      HERO_ROTATION_MS,
-    );
-    return () => window.clearInterval(id);
-  }, []);
-
-  // Précharge la prochaine image : le fondu se joue sans flash de chargement.
-  React.useEffect(() => {
-    const next = new Image();
-    next.src = HERO_IMAGES[(heroIndex + 1) % HERO_IMAGES.length];
-  }, [heroIndex]);
 
   return (
     <section className="relative max-w-[1600px] mx-auto px-6 md:px-20 py-20 md:pb-32 min-h-[500px] flex flex-col md:flex-row items-center justify-between gap-12">
@@ -79,10 +65,8 @@ export const HeroSection: React.FC = () => {
         {/* Cadre papier décalé façon fiche d'œuvre */}
         <div className="relative rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-3 rotate-[-2deg] shadow-2xl">
           <DynamicAuraWrapper>
-            {/* key={src} remonte l'élément à chaque rotation → l'animation CSS hero-swap rejoue. */}
             <img
-              key={HERO_IMAGES[heroIndex]}
-              src={HERO_IMAGES[heroIndex]}
+              src={heroImage}
               alt="Hero Illustration"
               className="w-[500px] md:w-[600px] z-10 relative hero-img hero-swap transform"
             />
