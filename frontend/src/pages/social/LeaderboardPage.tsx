@@ -5,6 +5,7 @@ import { useLeaderboard } from '../../features/social/hooks/useLeaderboard';
 import { Profile } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { CardSkeleton } from '../../components/ui/Skeleton';
+import { Avatar } from '../../components/ui/Avatar';
 
 // Podium accents for the top 3 — édition de nuit. L'or (kin) est la voix des
 // données : il porte le rang #1, l'argent (papier) le #2, le graphite le #3.
@@ -44,8 +45,6 @@ const PODIUM = [
     lift: '',
   },
 ];
-
-const initial = (name: string) => (name?.[0] ?? '?').toUpperCase();
 
 const LevelPill: React.FC<{ level: number }> = ({ level }) => {
   const { t } = useTranslation();
@@ -132,8 +131,10 @@ const LeaderboardPage: React.FC = () => {
   const top3 = leaders.slice(0, 3);
   const rest = leaders.slice(3);
 
-  // Statistiques dérivées du classement (voix données).
-  const championXp = leaders[0]?.xp ?? 0;
+  // Statistiques dérivées du classement (voix données). Le classement est trié
+  // par points classés : on prend le max d'XP pour l'échelle des barres afin
+  // qu'elles restent parlantes quel que soit l'ordre.
+  const championXp = leaders.reduce((max, p) => Math.max(max, p.xp ?? 0), 0);
   const totalXp = leaders.reduce((sum, p) => sum + (p.xp ?? 0), 0);
   const maxLevel = leaders.reduce((max, p) => Math.max(max, p.level ?? 0), 0);
   const fmt = (n: number) => n.toLocaleString('fr-FR');
@@ -233,11 +234,12 @@ const LeaderboardPage: React.FC = () => {
                             aria-hidden
                           />
                         )}
-                        <div
-                          className={`relative flex h-20 w-20 items-center justify-center rounded-2xl text-3xl font-black italic ring-4 ${s.avatar} ${s.ring}`}
-                        >
-                          {initial(player.username)}
-                        </div>
+                        <Avatar
+                          src={player.avatar}
+                          name={player.username}
+                          className={`relative h-20 w-20 rounded-2xl text-3xl font-black italic ring-4 ${s.ring}`}
+                          fallbackClassName={s.avatar}
+                        />
                         <Icon
                           className={`absolute -right-3 -top-3 h-8 w-8 ${s.icon}`}
                           aria-hidden="true"
@@ -292,9 +294,12 @@ const LeaderboardPage: React.FC = () => {
                     <span className="w-10 text-center text-lg font-black italic text-[#8F94A5]">
                       #{i + 4}
                     </span>
-                    <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] font-black italic text-[#F4F1E8]">
-                      {initial(player.username)}
-                    </div>
+                    <Avatar
+                      src={player.avatar}
+                      name={player.username}
+                      className="h-11 w-11 flex-shrink-0 rounded-xl border border-[#F4F1E8]/10 font-black italic"
+                      fallbackClassName="bg-[#0B0C10] text-[#F4F1E8]"
+                    />
                     <div className="flex min-w-0 flex-grow flex-col gap-1.5">
                       <span
                         className="truncate font-bold text-[#F4F1E8] transition-colors group-hover:text-[#FDB913]"

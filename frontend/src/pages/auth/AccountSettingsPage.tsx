@@ -7,6 +7,7 @@ import { useToastStore } from '../../store/toastStore';
 import { Link } from 'react-router-dom';
 
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { Avatar } from '../../components/ui/Avatar';
 import { LAB_CTA } from '../labs/components/shared/LabKit';
 
 const PANEL = 'rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 sm:p-8';
@@ -23,6 +24,7 @@ const AccountSettingsPage: React.FC = () => {
 
   const [customColor, setCustomColor] = useState(user?.custom_username_color || '#FFD700');
   const [isSavingColor, setIsSavingColor] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const PRESET_COLORS = [
     { name: t('auth.settings.colors.sponsor_gold', 'Sponsor Or'), hex: '#FFD700' },
@@ -39,6 +41,34 @@ const AccountSettingsPage: React.FC = () => {
       </div>
     );
   }
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      addToast(t('auth.settings.avatar_type_error', 'Le fichier doit être une image.'), 'error');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      addToast(t('auth.settings.avatar_size_error', 'Image trop lourde (max 5 Mo).'), 'error');
+      return;
+    }
+    setIsUploadingAvatar(true);
+    try {
+      await socialService.uploadAvatar(file);
+      await refetchUser();
+      addToast(t('auth.settings.avatar_updated', 'Photo de profil mise à jour !'), 'success');
+    } catch (error) {
+      console.error(error);
+      addToast(
+        t('auth.settings.avatar_update_error', 'Erreur lors de la mise à jour de la photo.'),
+        'error',
+      );
+    } finally {
+      setIsUploadingAvatar(false);
+      e.target.value = '';
+    }
+  };
+
   const handleSaveColor = async (colorToSave: string) => {
     setIsSavingColor(true);
     try {
@@ -78,6 +108,37 @@ const AccountSettingsPage: React.FC = () => {
             {/* Informations générales */}
             <section className={`${PANEL} space-y-6`}>
               <h2 className={H2}>{t('auth.settings.profile', 'Profil')}</h2>
+              <div className="flex items-center gap-5">
+                <Avatar
+                  src={user.avatar}
+                  name={user.username}
+                  className="h-20 w-20 rounded-2xl border border-[#F4F1E8]/10 text-2xl font-black italic"
+                  fallbackClassName="bg-[#FDB913] text-[#0B0C10]"
+                />
+                <div className="space-y-2">
+                  <span className={FIELD_LABEL}>
+                    {t('auth.settings.avatar_label', 'Photo de profil')}
+                  </span>
+                  <label
+                    className={`inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#E8442B] px-4 py-2 text-xs font-black uppercase italic text-[#F4F1E8] transition-colors hover:bg-[#c93a24] ${
+                      isUploadingAvatar ? 'pointer-events-none opacity-50' : ''
+                    }`}
+                  >
+                    {isUploadingAvatar
+                      ? t('auth.settings.avatar_uploading', 'Envoi…')
+                      : t('auth.settings.avatar_change', 'Changer la photo')}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                      disabled={isUploadingAvatar}
+                      aria-label={t('auth.settings.avatar_label', 'Photo de profil')}
+                    />
+                  </label>
+                  <p className="text-[10px] text-[#8F94A5]">JPG · PNG · max 5 Mo</p>
+                </div>
+              </div>
               <div>
                 <span className={FIELD_LABEL}>
                   {t('auth.settings.username_label', "Nom d'utilisateur")}

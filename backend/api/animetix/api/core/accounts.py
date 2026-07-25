@@ -106,7 +106,9 @@ class CurrentUserView(APIView):
 
     def get(self, request):
         if request.user.is_authenticated:
-            serializer = ProfileSerializer(request.user.profile)
+            serializer = ProfileSerializer(
+                request.user.profile, context={"request": request}
+            )
             return Response(serializer.data)
         return Response(
             {"detail": "Not authenticated"}, status=status.HTTP_401_UNAUTHORIZED

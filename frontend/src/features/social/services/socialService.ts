@@ -73,6 +73,16 @@ export const socialService = {
     return apiClient(`/api/v1/profile/${username}/`);
   },
 
+  uploadAvatar: async (file: File): Promise<Profile> => {
+    const form = new FormData();
+    form.append('avatar', file);
+    return apiClient('/api/v1/profiles/avatar/', {
+      method: 'POST',
+      body: form,
+      isFormData: true,
+    });
+  },
+
   updateAccountSettings: async (data: {
     tier?: string;
     custom_username_color?: string;

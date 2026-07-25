@@ -48,6 +48,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     rank = serializers.ReadOnlyField()
     has_api_key = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -65,6 +66,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "rank",
             "unlocked_badges",
             "custom_username_color",
+            "avatar",
             "tier",
             "wallet_balance",
             "personalization_settings",
@@ -73,6 +75,13 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_has_api_key(self, obj):
         return bool(obj.api_key_hash)
+
+    def get_avatar(self, obj):
+        if not obj.avatar:
+            return None
+        url = obj.avatar.url
+        request = self.context.get("request")
+        return request.build_absolute_uri(url) if request else url
 
 
 class NotificationSerializer(serializers.ModelSerializer):

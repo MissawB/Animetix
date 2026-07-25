@@ -122,6 +122,16 @@ urlpatterns = [
 ]
 
 
+# En dev (DEBUG), Django sert les fichiers média uploadés (avatars, etc.).
+# En prod, c'est le stockage objet (GCS) qui les sert directement.
+from django.conf import settings  # noqa: E402
+
+if settings.DEBUG:
+    from django.conf.urls.static import static  # noqa: E402
+
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
 # URLs traduites
 urlpatterns += i18n_patterns(
     path("", include("animetix.urls")),

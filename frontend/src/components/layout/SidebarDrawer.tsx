@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { AdSlot } from '../../features/billing/components/AdSlot';
+import { Avatar } from '../ui/Avatar';
 import { User } from '../../types';
 
 const SIDEBAR_AD_SLOT = import.meta.env.VITE_ADSENSE_SLOT_SIDEBAR as string | undefined;
@@ -156,9 +157,12 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
             className="group mb-5 block rounded-2xl border border-[#FDB913]/25 bg-[#0F1016] p-4 no-underline transition-all hover:border-[#FDB913]/60"
           >
             <div className="mb-3.5 flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 rotate-3 items-center justify-center rounded-2xl border-2 border-[#0B0C10] bg-[#FDB913] text-xl font-black italic text-[#0B0C10] shadow-md transition-transform group-hover:rotate-0">
-                {user.username?.[0]?.toUpperCase()}
-              </div>
+              <Avatar
+                src={user.avatar}
+                name={user.username ?? '?'}
+                className="h-12 w-12 shrink-0 rotate-3 rounded-2xl border-2 border-[#0B0C10] text-xl font-black italic shadow-md transition-transform group-hover:rotate-0"
+                fallbackClassName="bg-[#FDB913] text-[#0B0C10]"
+              />
               <div className="min-w-0">
                 <p className="font-manga m-0 truncate text-base font-black uppercase italic text-[#F4F1E8]">
                   {user.username}

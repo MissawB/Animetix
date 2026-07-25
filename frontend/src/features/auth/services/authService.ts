@@ -11,6 +11,7 @@ export const authService = {
       has_api_key: boolean;
       unlocked_badges: string[];
       custom_username_color?: string;
+      avatar?: string | null;
     }>('/api/v1/auth/me/', { skipToast: true });
     return {
       id: profile.user.id,
@@ -24,6 +25,7 @@ export const authService = {
       has_api_key: profile.has_api_key,
       unlocked_badges: profile.unlocked_badges,
       custom_username_color: profile.custom_username_color,
+      avatar: profile.avatar ?? undefined,
     };
   },
 };

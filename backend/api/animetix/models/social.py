@@ -16,6 +16,9 @@ class Profile(models.Model):
     ranked_max_points = models.IntegerField(default=0)
     unlocked_badges = models.JSONField(default=list)
     custom_username_color = models.CharField(max_length=20, null=True, blank=True)
+    # Photo de profil : FileField (pas d'ImageField → pas de dépendance Pillow).
+    # Stockée via l'infra média (GCS en prod, MEDIA_ROOT en dev).
+    avatar = models.FileField(upload_to="avatars/", null=True, blank=True)
     tier = models.CharField(max_length=20, choices=TIERS, default="free")
     wallet_balance = models.IntegerField(default=1000)
     api_key_hash = models.CharField(max_length=255, unique=True, null=True, blank=True)

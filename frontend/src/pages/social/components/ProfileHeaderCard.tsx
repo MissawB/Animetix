@@ -2,9 +2,11 @@ import React from 'react';
 import { User as UserIcon, Shield, Zap, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '../../../components/ui/Badge';
+import { Avatar } from '../../../components/ui/Avatar';
 
 interface ProfileHeaderCardProps {
   username: string | undefined;
+  avatar?: string | null;
   rank?: string;
   level?: number;
   customUsernameColor?: string | null;
@@ -13,6 +15,7 @@ interface ProfileHeaderCardProps {
 
 export const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
   username,
+  avatar,
   rank,
   level,
   customUsernameColor,
@@ -26,9 +29,12 @@ export const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
         <UserIcon className="w-64 h-64 -rotate-12" />
       </div>
       <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-        <div className="w-32 h-32 bg-black rounded-[2.5rem] flex items-center justify-center text-white text-5xl font-black italic shadow-2xl border-4 border-white/20">
-          {username?.[0]?.toUpperCase()}
-        </div>
+        <Avatar
+          src={avatar}
+          name={username ?? '?'}
+          className="w-32 h-32 rounded-[2.5rem] text-5xl font-black italic shadow-2xl border-4 border-white/20"
+          fallbackClassName="bg-black text-white"
+        />
         <div className="text-center md:text-left">
           <h1
             className="text-5xl font-black italic manga-font tracking-tighter mb-2 uppercase drop-shadow-sm animate-in fade-in duration-300"

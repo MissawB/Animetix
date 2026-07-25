@@ -2,6 +2,7 @@ from django.contrib.auth.models import User  # noqa: E402
 from pydantic import BaseModel, ConfigDict, Field, ValidationError  # noqa: E402
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -169,6 +170,35 @@ class ProfileViewSet(viewsets.ModelViewSet):
     )
     def me(self, request):
         serializer = self.get_serializer(request.user.profile)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def avatar(self, request):
+        """Téléverse la photo de profil de l'utilisateur connecté."""
+        file = request.FILES.get("avatar")
+        if not file:
+            return Response(
+                {"error": "Aucun fichier fourni."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if not (file.content_type or "").startswith("image/"):
+            return Response(
+                {"error": "Le fichier doit être une image."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if file.size > 5 * 1024 * 1024:
+            return Response(
+                {"error": "Image trop lourde (max 5 Mo)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        profile = request.user.profile
+        profile.avatar = file
+        profile.save()
+        serializer = self.get_serializer(profile)
         return Response(serializer.data)
 
     @action(
@@ -507,12 +537,17 @@ class LeaderboardView(APIView):
 
         data = []
         for i, p in enumerate(top_profiles):
+            avatar_url = None
+            if p.avatar:
+                avatar_url = request.build_absolute_uri(p.avatar.url)
             data.append(
                 {
                     "position": i + 1,
                     "username": p.user.username,
                     "points": p.ranked_points if mode == "ranked" else p.xp,
+                    "xp": p.xp,
                     "level": p.level,
+                    "avatar": avatar_url,
                     "is_me": request.user == p.user,
                 }
             )
@@ -531,7 +566,7 @@ class ProfileDetailView(APIView):
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
 
-        serializer = ProfileSerializer(profile)
+        serializer = ProfileSerializer(profile, context={"request": request})
         # On ajoute les succès et les fusions récentes
         data = serializer.data
         data["achievements_count"] = user.userachievement_set.count()

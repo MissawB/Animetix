@@ -24,6 +24,7 @@ export interface Profile {
   username: string;
   xp: number;
   level: number;
+  avatar?: string | null;
   rank?: string;
   achievements_count?: number;
   collection_count?: number;

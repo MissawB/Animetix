@@ -59,6 +59,7 @@ const ProfilePage: React.FC = () => {
             {/* Profile Header */}
             <ProfileHeaderCard
               username={username}
+              avatar={profile.avatar}
               rank={profile.rank}
               level={profile.level}
               customUsernameColor={profile.custom_username_color}
