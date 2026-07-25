@@ -1,9 +1,9 @@
 import React from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { GraphExplorer } from "../../features/graph/GraphExplorer";
-import { SearchBar } from "../../components/SearchBar";
-import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import type { SearchItem } from "../../types";
+import { GraphExplorer } from '../../features/graph/GraphExplorer';
+import { SearchBar } from '../../components/SearchBar';
+import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import type { SearchItem } from '../../types';
 
 import { Zap } from 'lucide-react';
 
@@ -20,41 +20,53 @@ const GraphPage: React.FC = () => {
 
   return (
     <AnimatedPage>
-      <div className="flex flex-col w-full h-[calc(100vh-80px)] bg-black text-white">
+      <div className="flex h-[calc(100vh-80px)] w-full flex-col bg-[#0B0C10] text-[#F4F1E8]">
         {!id || !type ? (
-          <div className="flex flex-col items-center justify-center flex-grow p-8">
-            <h1 className="text-5xl font-black italic tracking-tighter mb-4 text-center">
-              EXPLORE CONNECTIONS
+          <div className="relative flex flex-grow flex-col items-center justify-center p-8">
+            <div
+              className="explore-halftone pointer-events-none absolute inset-x-0 top-10 h-48"
+              aria-hidden
+            />
+            <div className="relative mb-6 flex items-center gap-3">
+              <span className="explore-stamp -rotate-2" aria-hidden>
+                網
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+                Cartographie du graphe · Neo4j
+              </span>
+            </div>
+            <h1 className="font-manga mb-4 text-center text-4xl font-black uppercase italic leading-none tracking-tighter text-[#F4F1E8] md:text-6xl">
+              EXPLORER LES <span className="text-[#E8442B]">CONNEXIONS</span>
             </h1>
-            <p className="text-gray-400 mb-12 text-center max-w-lg uppercase tracking-widest text-xs">
-              Search for an Anime, Character, Game, or Movie to start exploring the localized graph universe.
+            <p className="mb-12 max-w-lg text-center text-sm leading-relaxed text-[#8F94A5]">
+              Cherchez un anime, un personnage, un jeu ou un film pour commencer à explorer son
+              univers de relations dans le graphe.
             </p>
-            <div className="w-full max-w-2xl relative z-20">
-              <SearchBar 
-                onSelect={handleSelect} 
-                placeholder="Search media..." 
-              />
+            <div className="relative z-20 w-full max-w-2xl">
+              <SearchBar onSelect={handleSelect} placeholder="Rechercher une œuvre..." />
             </div>
 
-            <Link 
-              to="/graph/neighborhood/" 
-              className="mt-8 flex items-center gap-2 px-6 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl transition-all no-underline group"
+            <Link
+              to="/graph/neighborhood/"
+              className="group mt-8 flex items-center gap-2 rounded-xl border border-[#F4F1E8]/15 px-6 py-3 no-underline transition-colors hover:border-[#FDB913]"
             >
-              <Zap className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-black uppercase text-blue-500 tracking-widest">Activer l'Explorateur de Voisinage Profond</span>
+              <Zap className="h-4 w-4 text-[#FDB913] transition-transform group-hover:scale-110" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5] transition-colors group-hover:text-[#F4F1E8]">
+                Activer l'Explorateur de Voisinage Profond
+              </span>
             </Link>
           </div>
         ) : (
-          <div className="flex flex-col h-full">
-            <div className="p-4 bg-navy-950 flex items-center justify-between z-10 border-b border-white/10">
-              <button 
+          <div className="flex h-full flex-col">
+            <div className="z-10 flex items-center justify-between border-b border-[#F4F1E8]/10 bg-[#0F1016] p-4">
+              <button
                 onClick={() => setSearchParams({})}
-                className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full text-white font-bold uppercase tracking-widest text-xs transition-colors"
+                className="rounded-full border border-[#F4F1E8]/15 px-6 py-2 text-xs font-black uppercase tracking-widest text-[#8F94A5] transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8]"
               >
-                Back to Search
+                Retour à la recherche
               </button>
             </div>
-            <div className="flex-grow relative z-0">
+            <div className="relative z-0 flex-grow">
               <GraphExplorer initialId={id} initialType={type} />
             </div>
           </div>
@@ -65,5 +77,3 @@ const GraphPage: React.FC = () => {
 };
 
 export default GraphPage;
-
-

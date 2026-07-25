@@ -16,9 +16,6 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -85,56 +82,52 @@ const UniversalSearchHubPage: React.FC = () => {
     { id: 'Actor', label: t('search.hub.tab_seiyuu', 'SEIYUU'), icon: Tv },
   ];
 
+  // Encre d'accent du mode actif : shu pour la méta-recherche (voix éditoriale),
+  // or pour la recherche visuelle (voix données).
+  const accentInk = mode === 'global' ? '#E8442B' : '#FDB913';
+
   return (
     <AnimatedPage>
-      <div className="min-h-screen bg-[#020202] relative overflow-hidden">
-        {/* Ambient Glows */}
-        <div className="fixed inset-0 pointer-events-none z-0 opacity-10">
-          <div
-            className={`absolute top-1/4 left-1/4 w-[600px] h-[600px] blur-[150px] rounded-full transition-colors duration-1000 ${mode === 'global' ? 'bg-blue-600/20' : 'bg-purple-600/20'}`}
-          />
-          <div
-            className={`absolute bottom-1/4 right-1/4 w-[600px] h-[600px] blur-[150px] rounded-full transition-colors duration-1000 ${mode === 'global' ? 'bg-emerald-600/20' : 'bg-red-600/20'}`}
-          />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-6 py-16 relative z-10">
-          <header className="mb-12 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-8">
-              <Terminal className="w-3 h-3" /> Universal Search Protocol v3.0
-            </div>
-            <h1 className="text-8xl font-black italic manga-font uppercase tracking-tighter text-white mb-6">
-              UNIVERSAL{' '}
-              <span
-                className={
-                  mode === 'global' ? 'text-blue-500 text-glow' : 'text-purple-600 text-glow'
-                }
-              >
-                SEARCH
+      <div className="min-h-screen w-full bg-[#0B0C10] pt-20 text-[#F4F1E8]">
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6">
+          <header className="relative mb-14 text-center">
+            <div
+              className="explore-halftone pointer-events-none absolute -inset-x-6 -top-10 h-48"
+              aria-hidden
+            />
+            <div className="relative mb-8 flex items-center justify-center gap-3">
+              <span className="explore-stamp -rotate-2" aria-hidden>
+                探
               </span>
+              <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+                <Terminal className="h-3 w-3" /> Protocole de recherche unifiée · v3.0
+              </span>
+            </div>
+            <h1 className="font-manga relative text-5xl font-black uppercase italic leading-none tracking-tighter text-[#F4F1E8] md:text-8xl">
+              RECHERCHE <span style={{ color: accentInk }}>UNIVERSELLE</span>
             </h1>
 
-            {/* Mode Switcher */}
-            <div className="flex justify-center gap-4 mb-12">
+            {/* Sélecteur de mode */}
+            <div className="mt-10 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setMode('global')}
-                className={`px-8 py-4 rounded-3xl flex items-center gap-3 transition-all font-black italic text-xs uppercase tracking-[0.2em] border-2 ${
+                className={`flex items-center gap-3 rounded-xl border px-7 py-3.5 text-xs font-black uppercase italic tracking-[0.2em] transition-colors ${
                   mode === 'global'
-                    ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_30px_rgba(37,99,235,0.4)] scale-105'
-                    : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
+                    ? 'border-[#E8442B] bg-[#E8442B] text-[#F4F1E8]'
+                    : 'border-[#F4F1E8]/15 bg-transparent text-[#8F94A5] hover:border-[#FDB913] hover:text-[#F4F1E8]'
                 }`}
               >
-                <Search className="w-5 h-5" /> Meta-Search
+                <Search className="h-5 w-5" /> Méta-recherche
               </button>
               <button
                 onClick={() => setMode('visual')}
-                className={`px-8 py-4 rounded-3xl flex items-center gap-3 transition-all font-black italic text-xs uppercase tracking-[0.2em] border-2 ${
+                className={`flex items-center gap-3 rounded-xl border px-7 py-3.5 text-xs font-black uppercase italic tracking-[0.2em] transition-colors ${
                   mode === 'visual'
-                    ? 'bg-purple-600 border-purple-500 text-white shadow-[0_0_30px_rgba(147,51,234,0.4)] scale-105'
-                    : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
+                    ? 'border-[#FDB913] bg-[#FDB913] text-[#0B0C10]'
+                    : 'border-[#F4F1E8]/15 bg-transparent text-[#8F94A5] hover:border-[#FDB913] hover:text-[#F4F1E8]'
                 }`}
               >
-                <Eye className="w-5 h-5" /> Visual Nexus
+                <Eye className="h-5 w-5" /> Nexus visuel
               </button>
               {/* Expert Nexus is a separate streaming page (agentic RAG), so this
                     navigates rather than toggling a local mode. */}
@@ -144,17 +137,15 @@ const UniversalSearchHubPage: React.FC = () => {
                     ? `/search/expert-nexus/?q=${encodeURIComponent(query.trim())}`
                     : '/search/expert-nexus/'
                 }
-                className="px-8 py-4 rounded-3xl flex items-center gap-3 transition-all font-black italic text-xs uppercase tracking-[0.2em] border-2 bg-white/5 border-white/5 text-white/30 hover:bg-white/10 hover:text-blue-400 no-underline"
+                className="flex items-center gap-3 rounded-xl border border-[#F4F1E8]/15 bg-transparent px-7 py-3.5 text-xs font-black uppercase italic tracking-[0.2em] text-[#8F94A5] no-underline transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8]"
               >
-                <Brain className="w-5 h-5" /> Expert Nexus
+                <Brain className="h-5 w-5" /> Expert Nexus
               </Link>
             </div>
 
-            <form onSubmit={handleSearch} className="max-w-3xl mx-auto flex gap-4">
-              <div className="relative flex-grow group">
-                <Search
-                  className={`absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 transition-colors ${mode === 'global' ? 'text-blue-500/20 group-focus-within:text-blue-500' : 'text-purple-500/20 group-focus-within:text-purple-500'}`}
-                />
+            <form onSubmit={handleSearch} className="mx-auto mt-10 flex max-w-3xl gap-3">
+              <div className="group relative flex-grow">
+                <Search className="absolute left-5 top-1/2 h-6 w-6 -translate-y-1/2 text-[#8F94A5]/50 transition-colors group-focus-within:text-[#FDB913]" />
                 <input
                   type="text"
                   aria-label="Rechercher"
@@ -168,15 +159,15 @@ const UniversalSearchHubPage: React.FC = () => {
                           'Décrivez une scène visuelle ou un moment précis...',
                         )
                   }
-                  className="w-full bg-black border-2 border-white/5 rounded-[2.5rem] py-6 pl-16 pr-8 text-lg font-bold focus:border-blue-500 outline-none transition-all placeholder:opacity-20"
+                  className="w-full rounded-2xl border border-[#F4F1E8]/15 bg-[#0F1016] py-5 pl-14 pr-6 text-lg font-medium text-[#F4F1E8] outline-none transition-colors placeholder:text-[#8F94A5]/60 focus:border-[#FDB913]"
                 />
               </div>
-              <Button
+              <button
                 type="submit"
-                className={`px-10 rounded-[2.5rem] font-black italic text-xl uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none ${mode === 'global' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-purple-600 hover:bg-purple-500'}`}
+                className="rounded-2xl border-none bg-[#E8442B] px-8 font-manga text-xl font-black uppercase italic text-[#F4F1E8] transition-colors hover:bg-[#c93a24] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913] cursor-pointer"
               >
-                SCAN
-              </Button>
+                SCANNER
+              </button>
             </form>
           </header>
 
@@ -188,79 +179,73 @@ const UniversalSearchHubPage: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
-                {/* Tabs / Filters */}
-                <div className="flex justify-center gap-2 mb-12 overflow-x-auto pb-4 no-scrollbar">
+                {/* Onglets / Filtres */}
+                <div className="no-scrollbar mb-12 flex justify-center gap-2 overflow-x-auto pb-4">
                   {TABS.map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`px-6 py-3 rounded-2xl flex items-center gap-3 transition-all font-black italic text-[10px] uppercase tracking-widest border-2 ${
+                      className={`flex items-center gap-3 rounded-xl border px-6 py-3 text-[10px] font-black uppercase italic tracking-widest transition-colors ${
                         activeTab === tab.id
-                          ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)] scale-105'
-                          : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
+                          ? 'border-[#E8442B] bg-[#E8442B] text-[#F4F1E8]'
+                          : 'border-[#F4F1E8]/15 bg-transparent text-[#8F94A5] hover:border-[#FDB913] hover:text-[#F4F1E8]'
                       }`}
                     >
-                      <tab.icon className="w-4 h-4" />
+                      <tab.icon className="h-4 w-4" />
                       {tab.label}
                     </button>
                   ))}
                 </div>
 
                 {isGlobalLoading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                     {[1, 2, 3, 4].map((i) => (
                       <CardSkeleton key={i} />
                     ))}
                   </div>
                 ) : filteredGlobalResults.length === 0 ? (
-                  <div className="text-center py-32 opacity-20 border-4 border-dashed border-white/5 rounded-[4rem]">
-                    <Search className="w-24 h-24 mx-auto mb-6" />
-                    <p className="text-2xl font-black italic manga-font uppercase">
+                  <div className="rounded-2xl border border-dashed border-[#F4F1E8]/15 py-32 text-center text-[#8F94A5]">
+                    <Search className="mx-auto mb-6 h-20 w-20 text-[#8F94A5]/40" />
+                    <p className="font-manga text-2xl font-black uppercase italic text-[#F4F1E8]/50">
                       {t('search.hub.no_metadata', 'Aucun résultat meta-data')}
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                     {filteredGlobalResults.map((item: SearchItem, i: number) => (
                       <Link
                         key={i}
                         to={`/media/${item.type}/${item.id}/`}
-                        className="no-underline group"
+                        className="group no-underline"
                       >
-                        <Card
-                          padding="none"
-                          className="h-full overflow-hidden bg-navy-900/40 border-white/5 hover:border-blue-500/30 transition-all duration-500 hover:-translate-y-2 relative rounded-3xl shadow-2xl"
-                        >
-                          <div className="aspect-[2/3] relative overflow-hidden bg-black shadow-inner">
+                        <div className="relative h-full overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] transition-colors duration-300 hover:border-[#FDB913]/40">
+                          <div className="relative aspect-[2/3] overflow-hidden bg-[#0B0C10]">
                             {item.image_url ? (
                               <img
                                 src={item.image_url}
-                                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 alt={item.title}
                                 loading="lazy"
                                 decoding="async"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center opacity-10">
-                                <Sparkles className="w-16 h-16 text-white" />
+                              <div className="flex h-full w-full items-center justify-center opacity-10">
+                                <Sparkles className="h-16 w-16 text-[#F4F1E8]" />
                               </div>
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C10] via-transparent to-transparent opacity-70"></div>
 
-                            <Badge
-                              variant="primary"
-                              className="absolute top-4 right-4 bg-blue-600/80 backdrop-blur-md border-none text-[8px] font-black italic"
-                            >
+                            <span className="absolute right-3 top-3 rounded-[2px] border border-[#E8442B]/60 bg-[#0B0C10]/80 px-2 py-1 text-[8px] font-black uppercase italic tracking-widest text-[#E8442B] backdrop-blur-md">
                               {item.type}
-                            </Badge>
+                            </span>
                           </div>
 
-                          <div className="p-6">
-                            <h3 className="font-black italic text-lg leading-tight mb-2 uppercase manga-font text-white group-hover:text-blue-400 transition-colors line-clamp-2">
+                          <div className="p-5">
+                            <h3 className="font-manga line-clamp-2 text-lg font-black uppercase italic leading-tight text-[#F4F1E8] transition-colors group-hover:text-[#FDB913]">
                               {item.title || item.name}
                             </h3>
                           </div>
-                        </Card>
+                        </div>
                       </Link>
                     ))}
                   </div>
@@ -273,73 +258,70 @@ const UniversalSearchHubPage: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <div className="space-y-12">
-                  <div className="flex items-center justify-between px-4">
-                    <h3 className="text-xs font-black uppercase opacity-40 tracking-widest flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-purple-400" />{' '}
+                <div className="space-y-10">
+                  <div className="flex items-center justify-between px-1">
+                    <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#8F94A5]">
+                      <Layers className="h-4 w-4 text-[#FDB913]" />{' '}
                       {t('search.hub.temporal_segments', 'Segments Temporels Identifiés')}
                     </h3>
                     {visualResults.length > 0 && (
-                      <Badge variant="primary" className="bg-purple-600 text-[8px] font-black">
+                      <span className="rounded-full border border-[#FDB913]/40 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-[#FDB913]">
                         {t('search.hub.moments_found', '{{count}} MOMENTS TROUVÉS', {
                           count: visualResults.length,
                         })}
-                      </Badge>
+                      </span>
                     )}
                   </div>
 
                   {visualMutation.isPending ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                       {[1, 2, 3].map((i) => (
-                        <Card
+                        <div
                           key={i}
-                          className="aspect-video bg-white/5 border-white/5 animate-pulse rounded-3xl"
-                        >
-                          <></>
-                        </Card>
+                          className="aspect-video animate-pulse rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016]"
+                        />
                       ))}
                     </div>
                   ) : visualResults.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                       {visualResults.map((segment, idx) => (
-                        <Card
+                        <div
                           key={idx}
-                          padding="none"
-                          className="group overflow-hidden bg-navy-900/40 border-white/5 hover:border-purple-500/30 transition-all duration-500 rounded-3xl relative shadow-2xl"
+                          className="group relative overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] transition-colors duration-300 hover:border-[#FDB913]/40"
                         >
-                          <div className="aspect-video bg-black relative">
-                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-900/20 to-black">
-                              <Film className="w-12 h-12 text-white/10 group-hover:scale-110 transition-transform duration-700" />
+                          <div className="relative aspect-video bg-[#0B0C10]">
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Film className="h-12 w-12 text-[#F4F1E8]/10 transition-transform duration-500 group-hover:scale-110" />
                             </div>
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <div className="w-16 h-16 rounded-full bg-purple-600 flex items-center justify-center shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-500">
-                                <Play className="w-8 h-8 text-white fill-current" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-[#0B0C10]/40 opacity-0 transition-opacity group-hover:opacity-100">
+                              <div className="flex h-16 w-16 scale-75 items-center justify-center rounded-full bg-[#E8442B] transition-transform duration-300 group-hover:scale-100">
+                                <Play className="h-8 w-8 fill-current text-[#F4F1E8]" />
                               </div>
                             </div>
-                            <div className="absolute bottom-4 right-4 px-3 py-1 bg-black/80 backdrop-blur-md rounded-lg text-[10px] font-mono font-bold text-white flex items-center gap-2">
-                              <Clock className="w-3 h-3 text-purple-400" />
+                            <div className="absolute bottom-3 right-3 flex items-center gap-2 rounded-lg bg-[#0B0C10]/80 px-3 py-1 font-mono text-[10px] font-bold text-[#F4F1E8] backdrop-blur-md">
+                              <Clock className="h-3 w-3 text-[#FDB913]" />
                               {Math.floor(segment.start_time / 60)}:
                               {(segment.start_time % 60).toString().padStart(2, '0')}
                             </div>
                           </div>
-                          <div className="p-6">
-                            <h4 className="font-black italic text-lg uppercase manga-font mb-2 truncate group-hover:text-purple-400 transition-colors">
+                          <div className="p-5">
+                            <h4 className="font-manga mb-2 truncate text-lg font-black uppercase italic text-[#F4F1E8] transition-colors group-hover:text-[#FDB913]">
                               {segment.media_title ||
                                 t('search.hub.video_fallback', 'Vidéo #{{id}}', {
                                   id: segment.video_id,
                                 })}
                             </h4>
-                            <p className="text-[10px] font-bold opacity-40 uppercase leading-relaxed line-clamp-2 italic mb-4">
+                            <p className="line-clamp-2 text-[10px] font-bold uppercase italic leading-relaxed text-[#8F94A5]">
                               "{segment.description}"
                             </p>
                           </div>
-                        </Card>
+                        </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-48 opacity-10 border-4 border-dashed border-white/5 rounded-[4rem]">
-                      <Video className="w-32 h-32 mx-auto mb-8" />
-                      <h3 className="text-4xl font-black italic manga-font uppercase mb-4">
+                    <div className="rounded-2xl border border-dashed border-[#F4F1E8]/15 py-40 text-center text-[#8F94A5]">
+                      <Video className="mx-auto mb-8 h-28 w-28 text-[#8F94A5]/40" />
+                      <h3 className="font-manga mb-4 text-4xl font-black uppercase italic text-[#F4F1E8]/50">
                         {t('search.hub.engine_ready', 'Moteur Optique Prêt')}
                       </h3>
                       <p className="text-sm font-bold uppercase tracking-[0.3em]">
@@ -355,13 +337,13 @@ const UniversalSearchHubPage: React.FC = () => {
             )}
           </AnimatePresence>
 
-          {/* Global Suggestion / Tech stats */}
-          <footer className="mt-32 pt-16 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left opacity-30">
+          {/* Suggestions globales / stats techniques */}
+          <footer className="mt-32 grid grid-cols-1 gap-12 border-t border-[#F4F1E8]/10 pt-16 text-center md:grid-cols-3 md:text-left">
             <div className="space-y-4">
-              <Badge variant="neutral" className="bg-white/5 border-none">
+              <span className="inline-block rounded-full border border-[#F4F1E8]/15 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
                 Multimodal RAG
-              </Badge>
-              <p className="text-[10px] font-bold uppercase leading-relaxed tracking-wider">
+              </span>
+              <p className="text-[10px] font-bold uppercase leading-relaxed tracking-wider text-[#8F94A5]/70">
                 {t(
                   'search.hub.footer_rag',
                   "La recherche unifiée combine les métadonnées de MAL/AniList avec l'analyse d'images par Computer Vision.",
@@ -369,10 +351,10 @@ const UniversalSearchHubPage: React.FC = () => {
               </p>
             </div>
             <div className="space-y-4">
-              <Badge variant="neutral" className="bg-white/5 border-none">
+              <span className="inline-block rounded-full border border-[#F4F1E8]/15 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
                 Knowledge Graph
-              </Badge>
-              <p className="text-[10px] font-bold uppercase leading-relaxed tracking-wider">
+              </span>
+              <p className="text-[10px] font-bold uppercase leading-relaxed tracking-wider text-[#8F94A5]/70">
                 {t(
                   'search.hub.footer_graph',
                   'Toutes les entités sont reliées via Neo4j, permettant de trouver des corrélations thématiques entre anime et manga.',
@@ -380,10 +362,10 @@ const UniversalSearchHubPage: React.FC = () => {
               </p>
             </div>
             <div className="space-y-4">
-              <Badge variant="neutral" className="bg-white/5 border-none">
+              <span className="inline-block rounded-full border border-[#F4F1E8]/15 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
                 Temporal Index
-              </Badge>
-              <p className="text-[10px] font-bold uppercase leading-relaxed tracking-wider">
+              </span>
+              <p className="text-[10px] font-bold uppercase leading-relaxed tracking-wider text-[#8F94A5]/70">
                 {t(
                   'search.hub.footer_temporal',
                   "L'indexation temporelle permet de chercher directement des frames au sein des épisodes.",

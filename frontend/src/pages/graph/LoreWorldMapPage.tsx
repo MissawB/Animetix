@@ -56,7 +56,9 @@ const LoreWorldMapPage: React.FC = () => {
     return (
       <div className="mx-auto max-w-7xl px-6 py-24">
         <Plate className="p-12 text-center">
-          <h2 className="manga-font text-3xl text-red-500">Relevé impossible</h2>
+          <h2 className="font-manga text-3xl font-black uppercase italic text-[#E8442B]">
+            Relevé impossible
+          </h2>
           <p className="mt-4 font-mono text-xs uppercase tracking-[0.25em] text-white/40">
             Le service de cartographie ne répond pas. Réessayez dans un moment.
           </p>
@@ -209,10 +211,15 @@ const LoreWorldMapPage: React.FC = () => {
                   on a real survey sheet. On a phone the map needs every pixel, so the
                   cartouche moves above it instead of covering the coasts. */}
               <div className="pointer-events-none absolute left-6 top-6 max-w-xs border-l-2 border-anime-accent/60 pl-4 lg:left-8 lg:top-8">
-                <p className="font-mono text-[9px] uppercase tracking-[0.35em] text-anime-accent/80">
-                  Division macro-sémantique
-                </p>
-                <h1 className="manga-font mt-1 text-2xl leading-none text-white lg:text-3xl">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="explore-stamp -rotate-2" aria-hidden>
+                    図
+                  </span>
+                  <p className="font-mono text-[9px] uppercase tracking-[0.35em] text-anime-accent/80">
+                    Division macro-sémantique
+                  </p>
+                </div>
+                <h1 className="font-manga mt-1 text-2xl font-black uppercase italic leading-none text-white lg:text-3xl">
                   Lore World Map
                 </h1>
                 <p className="mt-2 hidden font-mono text-[10px] uppercase leading-relaxed tracking-[0.15em] text-white/40 sm:block">
@@ -247,7 +254,9 @@ const LoreWorldMapPage: React.FC = () => {
                     <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/40">
                       {label}
                     </p>
-                    <p className="manga-font truncate text-lg text-white">{value}</p>
+                    <p className="font-manga truncate text-lg font-black uppercase italic text-white">
+                      {value}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -270,7 +279,7 @@ const LoreWorldMapPage: React.FC = () => {
                   <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-anime-accent/80">
                     Territoire relevé
                   </p>
-                  <h2 className="manga-font mt-2 text-2xl leading-tight text-white">
+                  <h2 className="font-manga mt-2 text-2xl font-black uppercase italic leading-tight text-white">
                     {selected.community.name}
                   </h2>
 
@@ -303,7 +312,7 @@ const LoreWorldMapPage: React.FC = () => {
                   <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-anime-accent/80">
                     {generating ? 'Relevé en cours' : 'Planche vierge'}
                   </p>
-                  <h2 className="manga-font mt-2 text-2xl leading-tight text-white">
+                  <h2 className="font-manga mt-2 text-2xl font-black uppercase italic leading-tight text-white">
                     {generating ? 'Le graphe se partitionne' : 'Aucun territoire relevé'}
                   </h2>
                   <p className="mt-5 text-sm leading-relaxed text-white/55">
@@ -326,7 +335,7 @@ const LoreWorldMapPage: React.FC = () => {
             <div className="absolute -bottom-12 -right-12 opacity-5 transition-opacity group-hover:opacity-10">
               <Compass className="h-64 w-64 text-anime-accent" />
             </div>
-            <h4 className="manga-font mb-4 flex items-center gap-3 text-xl text-white">
+            <h4 className="font-manga mb-4 flex items-center gap-3 text-xl font-black uppercase italic text-white">
               <Sparkles className="h-5 w-5 text-anime-accent" /> Guide de la carte
             </h4>
             <div className="relative z-10 space-y-4">
@@ -355,7 +364,7 @@ const LoreWorldMapPage: React.FC = () => {
             <div className="absolute -bottom-12 -right-12 opacity-5 transition-opacity group-hover:opacity-10">
               <Search className="h-64 w-64 text-white" />
             </div>
-            <h4 className="manga-font mb-4 flex items-center gap-3 text-xl text-white">
+            <h4 className="font-manga mb-4 flex items-center gap-3 text-xl font-black uppercase italic text-white">
               <Radar className="h-5 w-5 text-anime-accent" /> Protocole
             </h4>
             <div className="relative z-10 space-y-4">

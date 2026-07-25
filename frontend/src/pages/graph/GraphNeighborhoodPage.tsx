@@ -1,16 +1,16 @@
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { GraphExplorer } from "../../features/graph/GraphExplorer";
-import { SearchBar } from "../../components/SearchBar";
-import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import type { SearchItem } from "../../types";
-import { ArrowLeft, Info, Share2, Download, Zap } from 'lucide-react';
+import { GraphExplorer } from '../../features/graph/GraphExplorer';
+import { SearchBar } from '../../components/SearchBar';
+import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import type { SearchItem } from '../../types';
+import { ArrowLeft, Info, Share2, Download } from 'lucide-react';
 
 const GraphNeighborhoodPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const id = searchParams.get('id');
   const type = searchParams.get('type');
-  
+
   const handleSelect = (item: SearchItem) => {
     if (item.id && item.type) {
       setSearchParams({ id: String(item.id), type: String(item.type) });
@@ -19,66 +19,79 @@ const GraphNeighborhoodPage: React.FC = () => {
 
   return (
     <AnimatedPage>
-      <div className="flex flex-col w-full h-[calc(100vh-80px)] bg-[#05050a] text-white">
+      <div className="flex h-[calc(100vh-80px)] w-full flex-col bg-[#0B0C10] text-[#F4F1E8]">
         {!id || !type ? (
-          <div className="flex flex-col items-center justify-center flex-grow p-8 relative overflow-hidden">
-             {/* Background accents */}
-             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
-             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-[120px] animate-pulse delay-700" />
+          <div className="relative flex flex-grow flex-col items-center justify-center overflow-hidden p-8">
+            {/* Trame de fond */}
+            <div
+              className="explore-halftone pointer-events-none absolute inset-x-0 top-16 h-56"
+              aria-hidden
+            />
 
-             <div className="relative z-10 text-center">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <Zap className="w-6 h-6 text-blue-500" />
-                  <span className="text-blue-500 font-black italic tracking-widest text-[10px] uppercase">Neural Visualizer</span>
-                </div>
-                <h1 className="text-6xl md:text-7xl font-black italic tracking-tighter mb-6 text-white uppercase manga-font">
-                  DEEP <span className="text-blue-500">NEIGHBORHOOD</span>
-                </h1>
-                <p className="text-gray-400 mb-12 max-w-xl mx-auto uppercase tracking-[0.2em] text-[10px] font-bold leading-relaxed">
-                  Explorez librement les relations complexes, les influences cachées et les connexions sémantiques profondes au sein du Knowledge Graph.
-                </p>
-                <div className="w-full max-w-2xl mx-auto shadow-2xl shadow-blue-500/5 relative z-20">
-                  <SearchBar 
-                    onSelect={handleSelect} 
-                    placeholder="Sélectionnez un point d'origine..." 
-                  />
-                </div>
-             </div>
+            <div className="relative z-10 text-center">
+              <div className="mb-4 flex items-center justify-center gap-3">
+                <span className="explore-stamp -rotate-2" aria-hidden>
+                  隣
+                </span>
+                <span className="text-[10px] font-black uppercase italic tracking-[0.3em] text-[#E8442B]">
+                  Visualiseur neuronal
+                </span>
+              </div>
+              <h1 className="font-manga mb-6 text-5xl font-black uppercase italic leading-none tracking-tighter text-[#F4F1E8] md:text-7xl">
+                VOISINAGE <span className="text-[#E8442B]">PROFOND</span>
+              </h1>
+              <p className="mx-auto mb-12 max-w-xl text-sm font-medium leading-relaxed text-[#8F94A5]">
+                Explorez librement les relations complexes, les influences cachées et les connexions
+                sémantiques profondes au sein du Knowledge Graph.
+              </p>
+              <div className="relative z-20 mx-auto w-full max-w-2xl">
+                <SearchBar
+                  onSelect={handleSelect}
+                  placeholder="Sélectionnez un point d'origine..."
+                />
+              </div>
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col h-full">
-            {/* Header Control Panel */}
-            <div className="p-4 bg-black/40 backdrop-blur-md flex items-center justify-between z-10 border-b border-white/5">
+          <div className="flex h-full flex-col">
+            {/* Panneau de contrôle */}
+            <div className="z-10 flex items-center justify-between border-b border-[#F4F1E8]/10 bg-[#0F1016] p-4">
               <div className="flex items-center gap-6">
-                <button 
+                <button
                   onClick={() => setSearchParams({})}
-                  className="p-2 hover:bg-white/5 rounded-full transition-colors group"
+                  className="group rounded-full p-2 transition-colors hover:bg-[#F4F1E8]/5"
                 >
-                  <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white" />
+                  <ArrowLeft className="h-5 w-5 text-[#8F94A5] group-hover:text-[#F4F1E8]" />
                 </button>
-                <div className="hidden md:block h-8 w-[1px] bg-white/10" />
+                <div className="hidden h-8 w-px bg-[#F4F1E8]/10 md:block" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest leading-none mb-1">Origine: {type}</span>
-                  <span className="text-sm font-bold truncate max-w-[200px] leading-none">{id}</span>
+                  <span className="mb-1 text-[9px] font-black uppercase leading-none tracking-widest text-[#FDB913]">
+                    Origine : {type}
+                  </span>
+                  <span className="max-w-[200px] truncate text-sm font-bold leading-none">
+                    {id}
+                  </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/10">
-                  <Info className="w-4 h-4 text-blue-400" />
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Exploration neuronale illimitée</span>
+                <div className="hidden items-center gap-2 rounded-xl border border-[#F4F1E8]/10 px-4 py-2 lg:flex">
+                  <Info className="h-4 w-4 text-[#FDB913]" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#8F94A5]">
+                    Exploration neuronale illimitée
+                  </span>
                 </div>
-                <button className="p-2 hover:bg-white/5 rounded-xl transition-colors text-gray-400 hover:text-white">
-                  <Share2 className="w-4 h-4" />
+                <button className="rounded-xl p-2 text-[#8F94A5] transition-colors hover:bg-[#F4F1E8]/5 hover:text-[#F4F1E8]">
+                  <Share2 className="h-4 w-4" />
                 </button>
-                <button className="p-2 hover:bg-white/5 rounded-xl transition-colors text-gray-400 hover:text-white">
-                  <Download className="w-4 h-4" />
+                <button className="rounded-xl p-2 text-[#8F94A5] transition-colors hover:bg-[#F4F1E8]/5 hover:text-[#F4F1E8]">
+                  <Download className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
-            {/* Main Graph View */}
-            <div className="flex-grow relative z-0">
+            {/* Vue principale du graphe */}
+            <div className="relative z-0 flex-grow">
               <GraphExplorer initialId={id} initialType={type} />
             </div>
           </div>
