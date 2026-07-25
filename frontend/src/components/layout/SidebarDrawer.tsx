@@ -1,29 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  X,
-  Home,
-  Zap,
-  Trophy,
-  Shield,
-  Sparkles,
-  Gamepad2,
-  Search,
-  Compass,
-  Users,
-  UserPlus,
-  FlaskConical,
-  BrainCircuit,
-  Eye,
-  LogIn,
-  Microscope,
-  Database,
-  Share2,
-  Download,
-  BookOpen,
-  type LucideIcon,
-} from 'lucide-react';
+import { X } from 'lucide-react';
 import { AdSlot } from '../../features/billing/components/AdSlot';
 import { User } from '../../types';
 
@@ -39,7 +17,7 @@ interface SidebarDrawerProps {
 
 interface NavDef {
   to: string;
-  icon: LucideIcon;
+  glyph: string;
   label: string;
 }
 
@@ -58,7 +36,7 @@ const NavItem: React.FC<{ item: NavDef; active: boolean; onClick: () => void }> 
   active,
   onClick,
 }) => {
-  const { icon: Icon, to, label } = item;
+  const { glyph, to, label } = item;
   return (
     <Link
       to={to}
@@ -74,11 +52,12 @@ const NavItem: React.FC<{ item: NavDef; active: boolean; onClick: () => void }> 
         <span className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#F4F1E8]" />
       )}
       <span
-        className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-colors ${
-          active ? 'bg-[#0B0C10]/20' : 'bg-[#F4F1E8]/5 group-hover:bg-[#F4F1E8]/10'
+        className={`grid h-8 w-8 shrink-0 place-items-center text-xl font-black leading-none ${
+          active ? 'text-[#F4F1E8]' : 'text-[#8F94A5] group-hover:text-[#F4F1E8]'
         }`}
+        aria-hidden
       >
-        <Icon className={`h-[18px] w-[18px] ${active ? 'text-[#F4F1E8]' : ''}`} />
+        {glyph}
       </span>
       <span
         className={`truncate text-sm tracking-tight ${active ? 'font-black italic' : 'font-bold'}`}
@@ -100,44 +79,40 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   const close = () => toggleSidebar(true);
 
   const mainLinks: NavDef[] = [
-    { to: '/', icon: Home, label: t('nav.home', 'Accueil') },
-    { to: '/daily-challenge/', icon: Zap, label: t('nav.daily', 'Défi Quotidien') },
-    { to: '/games/hub/', icon: Gamepad2, label: t('nav.games', 'Jeux') },
+    { to: '/', glyph: '家', label: t('nav.home', 'Accueil') },
+    { to: '/daily-challenge/', glyph: '日', label: t('nav.daily', 'Défi Quotidien') },
+    { to: '/games/hub/', glyph: '遊', label: t('nav.games', 'Jeux') },
   ];
 
   const exploreLinks: NavDef[] = [
-    { to: '/search/', icon: Search, label: t('nav.search', 'Recherche') },
-    { to: '/explore/', icon: Compass, label: t('nav.explore', 'Explorer') },
-    { to: '/media/manga/library/', icon: BookOpen, label: t('nav.library', 'Ma Bibliothèque') },
-    {
-      to: '/media/manga/offline/',
-      icon: Download,
-      label: t('nav.offline_manga', 'Manga Hors-ligne'),
-    },
+    { to: '/search/', glyph: '探', label: t('nav.search', 'Recherche') },
+    { to: '/explore/', glyph: '冒', label: t('nav.explore', 'Explorer') },
+    { to: '/media/manga/library/', glyph: '蔵', label: t('nav.library', 'Ma Bibliothèque') },
+    { to: '/media/manga/offline/', glyph: '冊', label: t('nav.offline_manga', 'Manga Hors-ligne') },
   ];
 
   const communityLinks: NavDef[] = [
-    { to: '/social/dashboard/', icon: Users, label: t('nav.community', 'Communauté') },
+    { to: '/social/dashboard/', glyph: '会', label: t('nav.community', 'Communauté') },
     ...(isAuthenticated
       ? [
-          { to: '/social/friends/', icon: UserPlus, label: t('nav.friends', 'Amis') },
-          { to: '/social/sync/', icon: Database, label: t('nav.offline_sync', 'Sync Hors-ligne') },
+          { to: '/social/friends/', glyph: '友', label: t('nav.friends', 'Amis') },
+          { to: '/social/sync/', glyph: '同', label: t('nav.offline_sync', 'Sync Hors-ligne') },
         ]
       : []),
-    { to: '/leaderboard/', icon: Trophy, label: t('nav.leaderboard', 'Classement') },
+    { to: '/leaderboard/', glyph: '位', label: t('nav.leaderboard', 'Classement') },
   ];
 
   // Labs is a hub (/lab/) that links to every experimental tool, so a single entry is enough.
   const creationLinks: NavDef[] = [
-    { to: '/lab/forge-hub/', icon: Sparkles, label: t('nav.forge', 'Forge Créative') },
-    { to: '/lab/', icon: FlaskConical, label: t('nav.labs_hub', 'Labs') },
-    { to: '/research/papers/', icon: Microscope, label: t('nav.research', 'Recherche IA') },
+    { to: '/lab/forge-hub/', glyph: '鍛', label: t('nav.forge', 'Forge Créative') },
+    { to: '/lab/', glyph: '実', label: t('nav.labs_hub', 'Labs') },
+    { to: '/research/papers/', glyph: '究', label: t('nav.research', 'Recherche IA') },
   ];
 
   const systemLinks: NavDef[] = [
-    { to: '/social/nexus/', icon: BrainCircuit, label: t('nav.nexus', 'Nexus Pro') },
-    { to: '/social/transparency/', icon: Eye, label: t('navbar.transparency', 'Transparence') },
-    { to: '/social/open-data/', icon: Share2, label: t('nav.open_data', 'Portail Open Data') },
+    { to: '/social/nexus/', glyph: '絆', label: t('nav.nexus', 'Nexus Pro') },
+    { to: '/social/transparency/', glyph: '透', label: t('navbar.transparency', 'Transparence') },
+    { to: '/social/open-data/', glyph: '開', label: t('nav.open_data', 'Portail Open Data') },
   ];
 
   const xp = user?.xp ?? 0;
@@ -246,18 +221,14 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
             <>
               <SectionLabel>{t('nav.account', 'Compte')}</SectionLabel>
               <NavItem
-                item={{
-                  to: '/auth/login/',
-                  icon: LogIn,
-                  label: t('auth.login.link', 'Connexion'),
-                }}
+                item={{ to: '/auth/login/', glyph: '入', label: t('auth.login.link', 'Connexion') }}
                 active={pathname === '/auth/login/'}
                 onClick={close}
               />
               <NavItem
                 item={{
                   to: '/auth/register/',
-                  icon: UserPlus,
+                  glyph: '参',
                   label: t('auth.register.link', "S'inscrire"),
                 }}
                 active={pathname === '/auth/register/'}
@@ -282,7 +253,10 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
               onClick={close}
               className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#E8442B] py-3 text-xs font-black italic uppercase text-[#F4F1E8] no-underline transition-all hover:bg-[#c93a24]"
             >
-              <Shield className="h-4 w-4" /> {t('nav.admin', 'ADMINISTRATION')}
+              <span className="text-base font-black leading-none" aria-hidden>
+                管
+              </span>{' '}
+              {t('nav.admin', 'ADMINISTRATION')}
             </Link>
           </div>
         )}
