@@ -51,13 +51,18 @@ const SYNAPSES: Synapse[] = cognitionLabs.map((lab, i) => {
   };
 });
 
-/** Une synapse : nœud lumineux flottant + cartouche, navigation directe. */
+/** Une synapse : nœud lumineux flottant + cartouche, navigation directe.
+ *  Le survol/focus remonte au parent (légende unique) au lieu d'afficher une
+ *  description sous le nœud, qui chevaucherait les bulles voisines. En mobile
+ *  (empilé), la description reste en ligne — il y a la place. */
 const SynapseNode: React.FC<{
   node: Synapse;
   desc: string;
   className?: string;
   style?: React.CSSProperties;
-}> = ({ node, desc, className = '', style }) => (
+  onActivate?: (n: Synapse) => void;
+  onDeactivate?: () => void;
+}> = ({ node, desc, className = '', style, onActivate, onDeactivate }) => (
   <div className={className} style={style}>
     <motion.div
       animate={{ y: [0, -12, 0] }}
@@ -65,6 +70,10 @@ const SynapseNode: React.FC<{
     >
       <Link
         to={node.url}
+        onMouseEnter={() => onActivate?.(node)}
+        onMouseLeave={() => onDeactivate?.()}
+        onFocus={() => onActivate?.(node)}
+        onBlur={() => onDeactivate?.()}
         className="group flex w-48 flex-col items-center text-center no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-[#FDB913]"
       >
         <span className="relative mb-4 flex h-24 w-24 items-center justify-center">
@@ -90,9 +99,8 @@ const SynapseNode: React.FC<{
         <h2 className="font-manga text-xl font-black uppercase italic leading-none text-white">
           {node.title}
         </h2>
-        <p className="mt-2 text-[10px] leading-relaxed text-white/45 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-          {desc}
-        </p>
+        {/* Description en ligne réservée au mobile empilé (md:hidden). */}
+        <p className="mt-2 text-[10px] leading-relaxed text-white/45 md:hidden">{desc}</p>
       </Link>
     </motion.div>
   </div>
@@ -100,6 +108,7 @@ const SynapseNode: React.FC<{
 
 const CognitionHubPage: React.FC = () => {
   const { t } = useTranslation();
+  const [active, setActive] = React.useState<Synapse | null>(null);
 
   const particleConfig = useMemo(
     () =>
@@ -152,6 +161,22 @@ const CognitionHubPage: React.FC = () => {
               "Les sept synapses du noyau cognitif. Cliquez sur l'une d'elles pour l'ouvrir.",
             )}
           </p>
+          {/* Légende unique (desktop) : la description du nœud survolé s'affiche
+              ici, en haut et toujours visible, pour ne jamais chevaucher les
+              bulles voisines. Hauteur réservée → pas de saut de mise en page. */}
+          <div className="mx-auto mt-5 hidden h-10 max-w-xl items-center justify-center md:flex">
+            {active && (
+              <p className="text-sm leading-relaxed text-white/70 animate-in fade-in duration-200">
+                <span
+                  className="text-[11px] font-black uppercase tracking-widest"
+                  style={{ color: active.hex }}
+                >
+                  {active.title}
+                </span>{' '}
+                — {t(`labs.cognition.${active.id}_desc`, active.desc)}
+              </p>
+            )}
+          </div>
         </header>
 
         {/* La constellation : le noyau + les synapses en orbite (desktop) */}
@@ -203,6 +228,8 @@ const CognitionHubPage: React.FC = () => {
               desc={desc}
               className="absolute -translate-x-1/2 -translate-y-1/2"
               style={{ left: `${node.x}%`, top: `${node.y}%` }}
+              onActivate={setActive}
+              onDeactivate={() => setActive(null)}
             />
           ))}
         </div>
