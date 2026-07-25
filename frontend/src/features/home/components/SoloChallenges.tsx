@@ -22,13 +22,11 @@ export const SoloChallenges: React.FC = () => {
             style={{ animationDelay: `0.${index}s` }}
           >
             <Link to={mode.url} className="block h-full relative no-underline">
-              <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-lg char-card-bg bg-[#0F1016] border border-[#F4F1E8]/10">
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${mode.gradient} opacity-25 mix-blend-screen`}
-                ></div>
+              <div className="absolute inset-0 rounded-[24px] overflow-hidden shadow-lg char-card-bg">
+                <div className={`absolute inset-0 bg-gradient-to-br ${mode.gradient}`}></div>
                 <img
                   src="https://www.transparenttextures.com/patterns/stardust.png"
-                  className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-screen"
+                  className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-screen"
                   alt="Stars"
                   loading="lazy"
                   decoding="async"
