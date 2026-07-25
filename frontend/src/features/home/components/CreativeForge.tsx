@@ -16,7 +16,7 @@ export const CreativeForge: React.FC = () => {
 
       {modesCreative.map((mode) => (
         <Link key={mode.titre} to={mode.url} className="w-full block no-underline group">
-          <div className="relative w-full h-[350px] md:h-[500px] bg-[#0F1016] rounded-2xl border border-[#F4F1E8]/10 overflow-hidden shadow-2xl flex flex-col justify-between p-8 md:p-12 transition-all duration-500 hover:scale-[1.01] hover:border-[#E8442B]/40 active:scale-100">
+          <div className="relative w-full h-[350px] md:h-[500px] bg-[#0B0C10] rounded-2xl border border-[#F4F1E8]/10 overflow-hidden shadow-2xl flex flex-col justify-between p-8 md:p-12 transition-all duration-500 hover:scale-[1.01] hover:border-[#E8442B]/40 active:scale-100">
             <div className="absolute inset-0 w-full h-full flex items-center justify-center z-10 p-4">
               <img
                 src={mode.fusion_image}

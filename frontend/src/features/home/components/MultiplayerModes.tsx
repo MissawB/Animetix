@@ -6,7 +6,7 @@ export const MultiplayerModes: React.FC = () => {
   const { modesMulti, isEn } = useGameModes();
 
   return (
-    <section className="px-6 md:px-10 py-16 bg-[#f1f3f5] dark:bg-[#0f0f1a] rounded-[3rem] border border-black/5 dark:border-white/5 text-left">
+    <section className="px-6 md:px-10 py-16 bg-[#f1f3f5] dark:bg-[#0B0C10] rounded-[3rem] border border-black/5 dark:border-[#F4F1E8]/10 text-left">
       <h2 className="text-3xl font-black mb-12 flex items-baseline text-black dark:text-white uppercase italic manga-font">
         {isEn ? 'With Friends' : 'Entre Amis'}
         <span className="text-yellow-400 text-3xl leading-none ml-1">.</span>
