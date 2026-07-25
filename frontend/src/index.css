@@ -314,10 +314,39 @@ body {
 }
 
 /* --- Scrollbars --- */
-/* Barre fine, arrondie et thématique (accent bleu de la marque). */
+/* Barre thématique « édition de nuit » : piste encre, pouce graphite qui vire
+   au vermillon (shu) au survol. Appliquée globalement pour que la fenêtre, la
+   sidebar et tous les conteneurs défilants soient cohérents. */
+:root {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(143, 148, 165, 0.4) transparent; /* graphite / transparent */
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(143, 148, 165, 0.35); /* graphite */
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(232, 68, 43, 0.85); /* shu */
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Variante fine opt-in (mêmes encres, pouce plus discret). */
 .custom-scrollbar {
   scrollbar-width: thin; /* Firefox */
-  scrollbar-color: rgba(59, 130, 246, 0.45) transparent;
+  scrollbar-color: rgba(143, 148, 165, 0.45) transparent;
 }
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
@@ -327,13 +356,13 @@ body {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(59, 130, 246, 0.4);
+  background-color: rgba(143, 148, 165, 0.4);
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(59, 130, 246, 0.75);
+  background-color: rgba(232, 68, 43, 0.85);
   background-clip: padding-box;
 }
 
