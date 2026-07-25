@@ -12,13 +12,13 @@ import { cognitionLabs, type LabEntry } from './labHubData';
  * un lab. Un id inconnu retombe sur l'indigo cognitif + son badge.
  */
 const META: Record<string, { hex: string; sub: string }> = {
-  archetype: { hex: '#5D7FD3', sub: 'Convergence synaptique' },
-  memory: { hex: '#FDB913', sub: 'Empreinte sémantique' },
-  simulator: { hex: '#E8442B', sub: 'Optimisation de timeline' },
-  latent: { hex: '#8B5CF6', sub: 'Géométrie vectorielle' },
-  debate: { hex: '#F43F5E', sub: 'Confrontation sémantique' },
-  'graph-map': { hex: '#34D399', sub: 'Cartographie du lore' },
-  strategy: { hex: '#38BDF8', sub: 'Arbres de décision' },
+  archetype: { hex: '#5D7FD3', sub: 'Votre profil de goûts' },
+  memory: { hex: '#FDB913', sub: 'Votre mémoire IA' },
+  simulator: { hex: '#E8442B', sub: 'Futurs alternatifs' },
+  latent: { hex: '#8B5CF6', sub: 'Carte des œuvres' },
+  debate: { hex: '#F43F5E', sub: "Duels d'IA" },
+  'graph-map': { hex: '#34D399', sub: 'Carte des univers' },
+  strategy: { hex: '#38BDF8', sub: 'Le meilleur coup' },
 };
 
 const AI_INDIGO = '#5D7FD3';

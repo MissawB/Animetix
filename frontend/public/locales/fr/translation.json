@@ -2019,15 +2019,22 @@
       "waiting_engine_title": "Moteur en attente"
     },
     "cognition": {
+      "archetype_desc": "Le portrait de vos goûts dressé par l'IA : le style qui vous ressemble et comment il évolue.",
       "counterfactual_desc": "Explorez les mondes possibles de vos interactions et calculez le regret contrefactuel minimum.",
+      "debate_desc": "Deux IA s'affrontent en argumentant sur vos animes — assistez au duel.",
+      "graph-map_desc": "Une carte des univers d'anime, regroupés par thèmes et connexions.",
       "guide_footer_1": "Le Cognition Hub unifie les vecteurs d'identité et de décision.",
       "guide_footer_2": "Les données traitées ici servent à affiner les modèles de recommandation neuro-symboliques sans compromettre l'étanchéité de la vie privée numérique.",
       "hero_title": "Les sept synapses du noyau cognitif. Cliquez sur l'une d'elles pour l'ouvrir.",
       "high_dim_projection": "High-Dim Projection",
       "imprint_desc": "Gérez l'empreinte sémantique que vous laissez sur l'IA et auditez vos vecteurs de préférence en temps réel.",
+      "latent_desc": "Une carte où les œuvres proches se ressemblent : promenez-vous pour en découvrir de nouvelles.",
+      "memory_desc": "Voyez et gérez ce que l'IA a retenu de vous, et effacez ce que vous voulez.",
       "psycho_desc": "Visualisez votre position dans l'espace latent des fans et la convergence de vos traits psychographiques.",
       "real_time_imprint": "Real-time Imprint",
-      "regret_version": "Regret Minimizer v2"
+      "regret_version": "Regret Minimizer v2",
+      "simulator_desc": "Rejouez vos choix autrement et voyez comment vos parties auraient pu tourner.",
+      "strategy_desc": "L'IA calcule le meilleur coup à jouer, comme aux échecs, et vous l'explique."
     },
     "compiler": {
       "analysis_desc": "L'IA analyse le graphe d'exécution et génère du code C vectorisé pour les calculs de similarité critique.",

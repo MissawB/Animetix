@@ -2019,15 +2019,22 @@
       "waiting_engine_title": "Engine Awaiting"
     },
     "cognition": {
+      "archetype_desc": "The AI's picture of your taste: the style that fits you and how it evolves.",
       "counterfactual_desc": "Explore possible worlds of your interactions and calculate the minimum counterfactual regret.",
+      "debate_desc": "Two AIs argue about your anime — watch the duel unfold.",
+      "graph-map_desc": "A map of anime universes, grouped by themes and connections.",
       "guide_footer_1": "The Cognition Hub unifies identity and decision vectors.",
       "guide_footer_2": "Data processed here helps refine neuro-symbolic recommendation models without compromising digital privacy boundaries.",
       "hero_title": "The seven synapses of the cognitive core. Click one to open it.",
       "high_dim_projection": "High-Dim Projection",
       "imprint_desc": "Manage the semantic footprint you leave on the AI and audit your preference vectors in real time.",
+      "latent_desc": "A map where similar works sit close together — wander it to discover new ones.",
+      "memory_desc": "See and manage what the AI remembers about you, and erase what you want.",
       "psycho_desc": "Highlight your position in the latent space of fans and the convergence of your psychographic traits.",
       "real_time_imprint": "Real-time Imprint",
-      "regret_version": "Regret Minimizer v2"
+      "regret_version": "Regret Minimizer v2",
+      "simulator_desc": "Replay your choices differently and see how your games could have turned out.",
+      "strategy_desc": "The AI works out the best move to play, like in chess, and explains it."
     },
     "compiler": {
       "analysis_desc": "AI analyzes the execution graph and generates vectorized C code for critical similarity calculations.",
