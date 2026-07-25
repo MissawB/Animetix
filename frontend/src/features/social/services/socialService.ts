@@ -62,7 +62,8 @@ export const socialService = {
   },
 
   getLeaderboard: async (): Promise<Profile[]> => {
-    return apiClient('/api/v1/leaderboard/');
+    // Classement par XP (la page Hall of Fame est centrée sur l'XP).
+    return apiClient('/api/v1/leaderboard/?mode=xp');
   },
 
   searchUsers: async (query: string): Promise<(User & { is_following: boolean })[]> => {
