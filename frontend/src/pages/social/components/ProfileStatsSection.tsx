@@ -1,22 +1,34 @@
 import React from 'react';
-import { Zap, Award, User as UserIcon } from 'lucide-react';
+import { Zap, Award, Boxes } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface StatCardProps {
   label: string;
   value: number;
   icon: React.ReactNode;
+  accent: string;
+  glyph: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (
-  <div className="bg-gray-50 dark:bg-black/20 p-8 rounded-[2rem] text-center border border-black/5 dark:border-white/5 shadow-inner">
-    <div className="w-12 h-12 bg-white dark:bg-[#0f0f1a] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md border border-black/5 dark:border-white/5">
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon, accent, glyph }) => (
+  <div className="group relative overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-6 transition-colors hover:border-[#F4F1E8]/25">
+    <span
+      className="font-manga pointer-events-none absolute -bottom-4 -right-2 text-6xl font-black italic leading-none opacity-[0.06] select-none"
+      style={{ color: accent }}
+      aria-hidden
+    >
+      {glyph}
+    </span>
+    <div
+      className="mb-4 grid h-11 w-11 place-items-center rounded-xl border border-[#F4F1E8]/10 bg-[#0F1016] transition-transform group-hover:scale-110"
+      style={{ color: accent }}
+    >
       {icon}
     </div>
-    <div className="text-3xl font-black text-blue-600 dark:text-blue-400 mb-1">{value}</div>
-    <div className="text-[10px] font-black uppercase opacity-40 tracking-widest text-black dark:text-white">
-      {label}
+    <div className="mb-1 text-3xl font-black italic tabular-nums" style={{ color: accent }}>
+      {value}
     </div>
+    <div className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">{label}</div>
   </div>
 );
 
@@ -34,21 +46,27 @@ export const ProfileStatsSection: React.FC<ProfileStatsSectionProps> = ({
   const { t } = useTranslation();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+    <div className="mb-12 grid grid-cols-1 gap-5 md:grid-cols-3">
       <StatCard
         label={t('social.profile.xp')}
         value={xp}
-        icon={<Zap className="text-orange-500" />}
+        icon={<Zap className="h-5 w-5 fill-current" />}
+        accent="#FDB913"
+        glyph="験"
       />
       <StatCard
         label={t('social.profile.achievements')}
         value={achievementsCount}
-        icon={<Award className="text-yellow-500" />}
+        icon={<Award className="h-5 w-5" />}
+        accent="#E8442B"
+        glyph="功"
       />
       <StatCard
         label={t('social.profile.collection')}
         value={collectionCount}
-        icon={<UserIcon className="text-blue-500" />}
+        icon={<Boxes className="h-5 w-5" />}
+        accent="#5D7FD3"
+        glyph="蔵"
       />
     </div>
   );

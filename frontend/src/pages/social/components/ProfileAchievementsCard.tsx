@@ -2,7 +2,6 @@ import React from 'react';
 import { Award, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Card } from '../../../components/ui/Card';
 import { ApiAchievement } from '../../../features/social/types/profileTypes';
 
 interface ProfileAchievementsCardProps {
@@ -15,41 +14,45 @@ export const ProfileAchievementsCard: React.FC<ProfileAchievementsCardProps> = (
   const { t } = useTranslation();
 
   return (
-    <Card padding="lg" className="bg-gray-50 dark:bg-black/20 border-none shadow-xl">
-      <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-        <Award className="w-4 h-4 text-yellow-500" />{' '}
+    <section className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-6 md:p-8">
+      <h3 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#8F94A5]">
+        <Award className="h-4 w-4 text-[#FDB913]" />
         {t('social.profile.recent_achievements', 'Succès Récents')}
       </h3>
-      <div className="space-y-4">
+      <div className="space-y-3">
         {recentAchievements?.map((ach: ApiAchievement, i: number) => (
           <div
             key={i}
-            className="flex items-center gap-4 p-4 bg-white dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5 group hover:border-yellow-400 transition-all shadow-sm"
+            className="group flex items-center gap-4 rounded-xl border border-[#F4F1E8]/10 bg-[#0F1016] p-4 transition-colors hover:border-[#FDB913]/40"
           >
-            <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-500 group-hover:scale-110 transition-transform">
-              <Award className="w-6 h-6" />
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#FDB913]/10 text-[#FDB913] transition-transform group-hover:scale-110">
+              <Award className="h-5 w-5" />
             </div>
-            <div>
-              <p className="text-sm font-black italic uppercase">{ach.name}</p>
-              <p className="text-[10px] opacity-40 uppercase font-bold">{ach.description}</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-black uppercase italic text-[#F4F1E8]">
+                {ach.name}
+              </p>
+              <p className="truncate text-[10px] font-bold uppercase text-[#8F94A5]">
+                {ach.description}
+              </p>
             </div>
           </div>
         ))}
         {(!recentAchievements || recentAchievements.length === 0) && (
-          <p className="text-center py-8 opacity-20 italic">
+          <p className="py-8 text-center italic text-[#8F94A5]/50">
             {t('social.profile.no_achievements', 'Aucun succès débloqué pour le moment.')}
           </p>
         )}
       </div>
-      <div className="mt-8 pt-8 border-t border-black/5 dark:border-white/5">
+      <div className="mt-6 border-t border-[#F4F1E8]/10 pt-6">
         <Link
           to="/achievements/"
-          className="text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 no-underline"
+          className="text-[10px] font-black uppercase tracking-widest text-[#FDB913] no-underline transition-colors hover:text-[#F4F1E8]"
         >
-          {t('social.profile.view_all_achievements', 'Voir tous les succès')}{' '}
-          <ArrowRight className="inline w-3 h-3 ml-1" />
+          {t('social.profile.view_all_achievements', 'Voir tous les succès')}
+          <ArrowRight className="ml-1 inline h-3 w-3" />
         </Link>
       </div>
-    </Card>
+    </section>
   );
 };
