@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:fresh": "node scripts/dev-fresh.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "format": "prettier --write .",
