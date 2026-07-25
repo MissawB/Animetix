@@ -471,6 +471,11 @@ GS_DEFAULT_KMS_KEY_NAME = env("GS_DEFAULT_KMS_KEY_NAME", default=None)
 GS_OBJECT_PARAMETERS = {}
 if GS_DEFAULT_KMS_KEY_NAME:
     GS_OBJECT_PARAMETERS["kms_key_name"] = GS_DEFAULT_KMS_KEY_NAME
+# Défense en profondeur : les objets uploadés (avatars, échantillons…) sont servis
+# en pièce jointe. Ignoré par les chargements <img>/<audio> (donc l'affichage
+# marche), mais force le téléchargement en navigation directe → un fichier ne peut
+# pas s'exécuter comme document dans l'origine.
+GS_OBJECT_PARAMETERS["content_disposition"] = "attachment"
 
 if IS_PRODUCTION or GS_BUCKET_NAME:
     STORAGES = {

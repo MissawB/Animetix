@@ -127,9 +127,26 @@ urlpatterns = [
 from django.conf import settings  # noqa: E402
 
 if settings.DEBUG:
-    from django.conf.urls.static import static  # noqa: E402
+    from django.urls import re_path  # noqa: E402
+    from django.views.static import serve as _static_serve  # noqa: E402
 
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    def _secure_media_serve(request, path, document_root=None):
+        """Défense en profondeur : un média uploadé ne doit jamais s'exécuter comme
+        document dans l'origine de l'app (pièce jointe + nosniff + CSP sandbox).
+        Sans effet sur l'affichage <img>, qui ignore Content-Disposition."""
+        response = _static_serve(request, path, document_root=document_root)
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Content-Disposition"] = "attachment"
+        response["Content-Security-Policy"] = "sandbox; default-src 'none'"
+        return response
+
+    urlpatterns += [
+        re_path(
+            r"^media/(?P<path>.*)$",
+            _secure_media_serve,
+            {"document_root": settings.MEDIA_ROOT},
+        ),
+    ]
 
 
 # URLs traduites
