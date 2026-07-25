@@ -2,21 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
-import {
-  Menu,
-  Shield,
-  Sparkles,
-  Sliders,
-  User,
-  LogOut,
-  LogIn,
-  UserPlus,
-  Bell,
-  HelpCircle,
-  Zap,
-  ChevronDown,
-  X,
-} from 'lucide-react';
+import { Menu, LogIn, UserPlus, Bell, HelpCircle, Zap, ChevronDown, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePersonalizationStore } from '../store/personalizationStore';
 import { useNotificationStore } from '../store/notificationStore';
@@ -148,7 +134,13 @@ const Navbar: React.FC = () => {
                       className={menuItem}
                       role="menuitem"
                     >
-                      <User className="h-4 w-4" /> {t('nav.my_profile', 'Mon profil')}
+                      <span
+                        className="w-4 text-center text-base font-black leading-none"
+                        aria-hidden
+                      >
+                        印
+                      </span>{' '}
+                      {t('nav.my_profile', 'Mon profil')}
                     </Link>
 
                     <button
@@ -157,9 +149,12 @@ const Navbar: React.FC = () => {
                       role="menuitemcheckbox"
                       aria-checked={isPersonalizationEnabled}
                     >
-                      <Sparkles
-                        className={`h-4 w-4 ${isPersonalizationEnabled ? 'text-[#FDB913]' : 'text-[#8F94A5]'}`}
-                      />
+                      <span
+                        className={`w-4 text-center text-base font-black leading-none ${isPersonalizationEnabled ? 'text-[#FDB913]' : ''}`}
+                        aria-hidden
+                      >
+                        彩
+                      </span>
                       <span className="flex-1">
                         {t('nav.hyper_perso', 'Hyper-personnalisation')}
                       </span>
@@ -182,7 +177,12 @@ const Navbar: React.FC = () => {
                       className={menuItem}
                       role="menuitem"
                     >
-                      <Sliders className="h-4 w-4" />{' '}
+                      <span
+                        className="w-4 text-center text-base font-black leading-none"
+                        aria-hidden
+                      >
+                        調
+                      </span>{' '}
                       {t('nav.perso_settings', 'Personnalisation avancée')}
                     </button>
 
@@ -197,7 +197,12 @@ const Navbar: React.FC = () => {
                         className={menuItem}
                         role="menuitem"
                       >
-                        <Shield className="h-4 w-4 text-[#E8442B]" />{' '}
+                        <span
+                          className="w-4 text-center text-base font-black leading-none text-[#E8442B]"
+                          aria-hidden
+                        >
+                          管
+                        </span>{' '}
                         {t('nav.admin', 'Administration')}
                       </Link>
                     )}
@@ -211,7 +216,13 @@ const Navbar: React.FC = () => {
                       className={`${menuItem} !text-[#E8442B] hover:!bg-[#E8442B]/10`}
                       role="menuitem"
                     >
-                      <LogOut className="h-4 w-4" /> {t('auth.logout', 'Déconnexion')}
+                      <span
+                        className="w-4 text-center text-base font-black leading-none"
+                        aria-hidden
+                      >
+                        出
+                      </span>{' '}
+                      {t('auth.logout', 'Déconnexion')}
                     </button>
                   </div>
                 </>
