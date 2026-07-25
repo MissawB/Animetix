@@ -9,9 +9,9 @@ export const SoloChallenges: React.FC = () => {
 
   return (
     <section className="py-16 text-left">
-      <h2 className="text-3xl font-black mb-12 flex items-baseline text-[#F4F1E8] uppercase italic font-manga">
+      <h2 className="text-3xl font-black mb-12 flex items-baseline text-black dark:text-white uppercase italic manga-font">
         {isEn ? 'Solo Challenges' : t('home.solo_challenges', 'Défis Solo')}
-        <span className="text-[#E8442B] text-4xl leading-none ml-1">.</span>
+        <span className="text-yellow-400 text-4xl leading-none ml-1">.</span>
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-12">
@@ -35,7 +35,7 @@ export const SoloChallenges: React.FC = () => {
 
               <div className="absolute top-[5%] -left-4 z-30 transition-transform duration-500 char-card-text pointer-events-none">
                 <h2
-                  className="font-manga text-[#F4F1E8] text-4xl leading-[0.7] -rotate-12 tracking-tighter uppercase whitespace-nowrap"
+                  className="manga-font text-white text-4xl leading-[0.7] -rotate-12 tracking-tighter uppercase whitespace-nowrap"
                   style={{
                     textShadow:
                       '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 4px 10px rgba(0,0,0,0.5)',
@@ -43,12 +43,12 @@ export const SoloChallenges: React.FC = () => {
                 >
                   {mode.titre_brush_1}
                   <br />
-                  <span className="text-[#FDB913] text-2xl ml-6 tracking-normal">
+                  <span className="text-yellow-400 text-2xl ml-6 tracking-normal">
                     {mode.titre_brush_2}
                   </span>
                 </h2>
                 <p
-                  className="font-manga text-[#F4F1E8] text-xs italic mt-16 ml-10 opacity-90 tracking-wider leading-relaxed max-w-[60%] line-clamp-3"
+                  className="manga-font text-white text-xs italic mt-16 ml-10 opacity-90 tracking-wider leading-relaxed max-w-[60%] line-clamp-3"
                   style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
                 >
                   {mode.description}

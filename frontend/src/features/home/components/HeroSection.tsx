@@ -51,8 +51,7 @@ export const HeroSection: React.FC = () => {
       </span>
 
       <div className="z-10 md:w-1/2 text-left">
-        <span className="explore-stamp mb-6">ANIMETIX · ÉDITION DE NUIT</span>
-        <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter mt-6 mb-8 uppercase text-[#F4F1E8] font-manga leading-none">
+        <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter mb-8 uppercase text-[#F4F1E8] font-manga leading-none">
           ANIME<span className="text-[#E8442B]">TIX</span>
         </h1>
         <p className="text-xl md:text-2xl mb-10 text-[#8F94A5] font-medium leading-relaxed max-w-lg">
