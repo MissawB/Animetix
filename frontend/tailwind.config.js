@@ -33,10 +33,13 @@ export default {
         
         // Legacy compat (if needed)
         'anime-accent': 'rgb(var(--color-accent) / <alpha-value>)',
+        'anime-accent-dark': '#e0a50f',
         'anime-success': 'rgb(var(--color-success) / <alpha-value>)',
         'anime-error': 'rgb(var(--color-danger) / <alpha-value>)',
         'anime-dark-bg': '#0a0a0f',
         'anime-dark-card': '#15151f',
+        'anime-light-text': '#0f0f1a',
+        'anime-dark-text': '#f4f1e8',
         
         // Navy Palette (Design System Core)
         navy: {

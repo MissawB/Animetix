@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig, PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -15,6 +16,7 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 export default defineConfig({
   base: '/static/',
   plugins: [
+    tailwindcss(),
     react(), 
     VitePWA({
       registerType: 'autoUpdate',

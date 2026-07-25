@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:ital,wght@0,400;0,700;0,900;1,900&family=Permanent+Marker&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@config "../tailwind.config.js";
 
 :root {
   /* Design Tokens - Colors */
@@ -286,11 +285,11 @@ body {
   }
 
   .btn-primary {
-    @apply bg-anime-accent text-black font-black italic manga-font px-6 py-3 rounded-xl transition-all duration-300 hover:bg-anime-accent-dark hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+    @apply bg-anime-accent text-black font-black italic font-manga px-6 py-3 rounded-xl transition-all duration-300 hover:bg-anime-accent-dark hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
   }
 
   .btn-secondary {
-    @apply bg-black/80 dark:bg-white/10 text-white font-black italic manga-font px-5 py-2.5 rounded-xl transition-all duration-300 hover:bg-black dark:hover:bg-white/20;
+    @apply bg-black/80 dark:bg-white/10 text-white font-black italic font-manga px-5 py-2.5 rounded-xl transition-all duration-300 hover:bg-black dark:hover:bg-white/20;
   }
 
   .input-field {
@@ -302,15 +301,15 @@ body {
   }
 
   .badge-correct {
-    @apply badge bg-anime-success/20 text-anime-success border border-anime-success/30;
+    @apply inline-flex items-center gap-1.5 text-xs font-black uppercase px-3 py-1 rounded-full bg-anime-success/20 text-anime-success border border-anime-success/30;
   }
 
   .badge-wrong {
-    @apply badge bg-anime-error/20 text-anime-error border border-anime-error/30;
+    @apply inline-flex items-center gap-1.5 text-xs font-black uppercase px-3 py-1 rounded-full bg-anime-error/20 text-anime-error border border-anime-error/30;
   }
 
   .badge-partial {
-    @apply badge bg-[#fdb913]/20 text-[#d97706] dark:text-[#fdb913] border border-[#fdb913]/30;
+    @apply inline-flex items-center gap-1.5 text-xs font-black uppercase px-3 py-1 rounded-full bg-[#fdb913]/20 text-[#d97706] dark:text-[#fdb913] border border-[#fdb913]/30;
   }
 }
 
