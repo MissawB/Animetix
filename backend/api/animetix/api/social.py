@@ -44,13 +44,26 @@ def _sniff_image_ext(head: bytes):
     return None
 
 
-class PersonalizationSchema(BaseModel):
-    """Schéma strict pour empêcher les XSS et les injections de JSON volumineux."""
+class PersonalizationFeaturesSchema(BaseModel):
+    """Bascules de features de l'hyper-personnalisation."""
 
-    theme: str = Field(default="auto", pattern="^(auto|dark|light)$")
-    accent_color: str = Field(default="blue", pattern="^[a-zA-Z0-9_-]{3,20}$")
-    animations_enabled: bool = Field(default=True)
-    sound_enabled: bool = Field(default=False)
+    aura: bool = True
+    font: bool = True
+    accent: bool = True
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class PersonalizationSchema(BaseModel):
+    """Schéma strict des réglages d'hyper-personnalisation (anti-XSS / JSON
+    volumineux). Doit refléter le shape envoyé par le store frontend."""
+
+    mode: str = Field(default="auto", pattern="^(auto|manual)$")
+    manual_archetype: str | None = Field(default=None, max_length=40)
+    intensity_multiplier: float = Field(default=1.0, ge=0, le=2)
+    features: PersonalizationFeaturesSchema = Field(
+        default_factory=PersonalizationFeaturesSchema
+    )
 
     model_config = ConfigDict(extra="forbid")
 

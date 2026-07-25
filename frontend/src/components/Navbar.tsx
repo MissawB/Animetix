@@ -251,20 +251,24 @@ const Navbar: React.FC = () => {
             tabIndex={-1}
             aria-label={t('nav.close_panel', 'Fermer le panneau')}
           />
-          <div className="fixed left-1/2 top-1/2 z-[1100] max-h-[85vh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto animate-in fade-in zoom-in-95 rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 shadow-2xl duration-200">
-            <div className="mb-6 flex items-center justify-between">
-              <h4 className="font-manga text-sm font-black uppercase italic tracking-widest text-[#F4F1E8]">
-                {t('personalization.title', 'Personnalisation')}
-              </h4>
-              <button
-                onClick={() => setShowPersonalizationPanel(false)}
-                className="grid h-8 w-8 place-items-center rounded-lg text-[#8F94A5] transition-colors hover:bg-[#F4F1E8]/10 hover:text-[#F4F1E8]"
-                aria-label={t('nav.close', 'Fermer')}
-              >
-                <X className="h-4 w-4" />
-              </button>
+          {/* Conteneur centré (flex) : évite le conflit transform/animation et
+              permet une entrée qui glisse depuis le haut de l'écran. */}
+          <div className="pointer-events-none fixed inset-0 z-[1100] flex items-center justify-center p-4">
+            <div className="pointer-events-auto max-h-[85vh] w-full max-w-md overflow-y-auto animate-in fade-in slide-in-from-top-16 rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 shadow-2xl duration-300 ease-out">
+              <div className="mb-6 flex items-center justify-between">
+                <h4 className="font-manga text-sm font-black uppercase italic tracking-widest text-[#F4F1E8]">
+                  {t('personalization.title', 'Personnalisation')}
+                </h4>
+                <button
+                  onClick={() => setShowPersonalizationPanel(false)}
+                  className="grid h-8 w-8 place-items-center rounded-lg text-[#8F94A5] transition-colors hover:bg-[#F4F1E8]/10 hover:text-[#F4F1E8]"
+                  aria-label={t('nav.close', 'Fermer')}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <PersonalizationPanel />
             </div>
-            <PersonalizationPanel />
           </div>
         </>
       )}
