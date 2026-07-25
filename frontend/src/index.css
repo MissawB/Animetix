@@ -233,7 +233,7 @@ body {
   [data-bs-theme='dark'] .home-bg,
   .dark .home-bg {
     background-image:
-      linear-gradient(rgba(15, 15, 26, 0.82), rgba(15, 15, 26, 0.82)),
+      linear-gradient(rgba(11, 12, 16, 0.82), rgba(11, 12, 16, 0.82)),
       url('/static/img/background.png');
   }
 
