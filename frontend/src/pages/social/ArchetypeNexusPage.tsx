@@ -8,7 +8,13 @@ import { apiClient } from '../../utils/apiClient';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { LabPage, LabHeader, LabPanel, LAB_BTN_GHOST } from '../labs/components/shared/LabKit';
+import {
+  LabPage,
+  LabHeader,
+  LabPanel,
+  LabGuide,
+  LAB_BTN_GHOST,
+} from '../labs/components/shared/LabKit';
 
 /** Encre du module (synapse 型 du noyau cognitif) — accents de données. */
 const NEXUS_INK = '#5D7FD3';
@@ -115,6 +121,7 @@ const ArchetypeNexusPage: React.FC = () => {
             mode: 'lines+markers',
             line: { color: '#FDB913', width: 3, shape: 'spline' },
             marker: { size: 8, color: '#FDB913' },
+            hovertemplate: 'Shonen : %{y:.0%}<extra></extra>',
           },
           {
             x: drift_history.map((h) => h.date),
@@ -124,6 +131,7 @@ const ArchetypeNexusPage: React.FC = () => {
             mode: 'lines+markers',
             line: { color: NEXUS_INK, width: 3, shape: 'spline' },
             marker: { size: 8, color: NEXUS_INK },
+            hovertemplate: 'Seinen : %{y:.0%}<extra></extra>',
           },
         ]
       : [];
@@ -132,7 +140,7 @@ const ArchetypeNexusPage: React.FC = () => {
     <LabPage>
       <LabHeader
         glyph="型"
-        code="Synapse · Archetype"
+        code={t('social.nexus.header_code', 'Votre profil de goûts')}
         title="Archetype"
         accent="Nexus"
         lede={t(
@@ -144,7 +152,13 @@ const ArchetypeNexusPage: React.FC = () => {
       <div className="mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12">
         {/* Colonne Gauche: Archétype Dominant & Aura */}
         <div className="space-y-8 lg:col-span-4">
-          <LabPanel title={t('social.nexus.master_archetype', 'Archétype Maître')}>
+          <LabPanel title={t('social.nexus.master_archetype', 'Votre profil dominant')}>
+            <p className="mb-6 text-xs leading-relaxed text-[#8F94A5]">
+              {t(
+                'social.nexus.master_archetype_desc',
+                'Le style qui vous décrit le mieux en ce moment.',
+              )}
+            </p>
             <div className="text-center">
               <div
                 className="mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-full border-2 bg-[#0B0C10] text-5xl font-bold leading-none"
@@ -174,44 +188,56 @@ const ArchetypeNexusPage: React.FC = () => {
                 >
                   92%
                 </p>
+                <p className="mt-1 text-[9px] leading-tight text-[#8F94A5]/70">
+                  {t('social.nexus.stability_hint', 'À quel point vos goûts restent constants.')}
+                </p>
               </div>
               <div className="border-l border-[#F4F1E8]/10 text-center">
                 <p className="text-[9px] font-black uppercase tracking-[0.25em] text-[#8F94A5]">
-                  {t('social.nexus.convergence', 'Convergence')}
+                  {t('social.nexus.convergence', 'Fiabilité')}
                 </p>
                 <p className="font-manga mt-1 text-xl font-black italic text-[#F4F1E8]">
                   {t('social.nexus.convergence_high', 'HAUTE')}
+                </p>
+                <p className="mt-1 text-[9px] leading-tight text-[#8F94A5]/70">
+                  {t('social.nexus.convergence_hint', 'À quel point ce portrait est sûr de lui.')}
                 </p>
               </div>
             </div>
           </LabPanel>
 
           <LabPanel
-            title={t('social.nexus.neural_profile', 'Profil Neuronal')}
+            title={t('social.nexus.neural_profile', 'Vos affinités')}
             corner={
               <span className="flex items-center gap-1.5">
                 <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" /> 4 axes
               </span>
             }
           >
+            <p className="mb-6 text-xs leading-relaxed text-[#8F94A5]">
+              {t(
+                'social.nexus.neural_profile_desc',
+                'À quel point chaque trait vous correspond, de 0 à 100 %.',
+              )}
+            </p>
             <div className="space-y-6">
               <StatBar
-                label={t('social.nexus.shonen_affinity', 'Affinité Shonen')}
+                label={t('social.nexus.shonen_affinity', 'Goût pour le Shonen')}
                 value={cognitive_stats.shonen_affinity}
                 color="bg-[#FDB913]"
               />
               <StatBar
-                label={t('social.nexus.seinen_affinity', 'Complexité Seinen')}
+                label={t('social.nexus.seinen_affinity', 'Goût pour le Seinen')}
                 value={cognitive_stats.seinen_affinity}
                 color="bg-[#5D7FD3]"
               />
               <StatBar
-                label={t('social.nexus.logic_consistency', 'Cohérence Logique')}
+                label={t('social.nexus.logic_consistency', 'Cohérence de vos choix')}
                 value={cognitive_stats.logic_consistency}
                 color="bg-[#5D7FD3]"
               />
               <StatBar
-                label={t('social.nexus.memory_depth', 'Profondeur Mémoire')}
+                label={t('social.nexus.memory_depth', "Profondeur d'historique")}
                 value={Math.min(cognitive_stats.memory_depth / 50, 1)}
                 color="bg-[#5D7FD3]"
               />
@@ -223,14 +249,21 @@ const ArchetypeNexusPage: React.FC = () => {
         <div className="flex flex-col space-y-8 lg:col-span-8">
           {/* Archetype Drift Evolution (Le Graphique) */}
           <LabPanel
-            title="Dérive d'archétype"
+            title={t('social.nexus.drift_title', 'Évolution de vos goûts')}
             corner={
               <span className="flex items-center gap-1.5">
-                <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" /> série temporelle · alpha
+                <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />{' '}
+                {t('social.nexus.drift_tag', 'évolution dans le temps')}
               </span>
             }
             className="flex flex-grow flex-col"
           >
+            <p className="mb-6 text-xs leading-relaxed text-[#8F94A5]">
+              {t(
+                'social.nexus.drift_desc',
+                'Comment votre attrait pour le Shonen (action, héros qui progressent) et le Seinen (récits plus adultes et nuancés) a évolué au fil du temps.',
+              )}
+            </p>
             <div className="relative min-h-[300px] flex-grow">
               {drift_history && drift_history.length > 0 ? (
                 <Plot
@@ -240,10 +273,21 @@ const ArchetypeNexusPage: React.FC = () => {
                     height: 300,
                     paper_bgcolor: 'rgba(0,0,0,0)',
                     plot_bgcolor: 'rgba(0,0,0,0)',
-                    margin: { l: 40, r: 20, b: 40, t: 10 },
+                    margin: { l: 48, r: 20, b: 40, t: 10 },
                     showlegend: true,
                     legend: { font: { color: '#8F94A5', size: 10 }, orientation: 'h', y: -0.2 },
+                    // Une seule infobulle propre par date (les deux séries d'un coup),
+                    // habillée aux couleurs de l'édition de nuit plutôt que le blanc par défaut.
+                    hovermode: 'x unified',
+                    hoverlabel: {
+                      bgcolor: '#0F1016',
+                      bordercolor: 'rgba(244,241,232,0.15)',
+                      font: { color: '#F4F1E8', family: 'Inter, system-ui, sans-serif', size: 12 },
+                      align: 'left',
+                    },
                     xaxis: {
+                      type: 'date',
+                      hoverformat: '%d/%m/%Y',
                       gridcolor: 'rgba(244,241,232,0.05)',
                       tickfont: { color: '#8F94A5', size: 8 },
                       showgrid: true,
@@ -251,6 +295,7 @@ const ArchetypeNexusPage: React.FC = () => {
                     yaxis: {
                       gridcolor: 'rgba(244,241,232,0.05)',
                       tickfont: { color: '#8F94A5', size: 8 },
+                      tickformat: '.0%',
                       range: [0, 1.1],
                       showgrid: true,
                     },
@@ -274,10 +319,11 @@ const ArchetypeNexusPage: React.FC = () => {
 
           {/* Z3 Deduced Rules */}
           <LabPanel
-            title="Modèle logique SAT (Z3)"
+            title={t('social.nexus.rules_title', "Ce que l'IA en déduit")}
             corner={
               <span className="flex items-center gap-1.5">
-                <Cpu className="h-3.5 w-3.5" aria-hidden="true" /> résolu
+                <Cpu className="h-3.5 w-3.5" aria-hidden="true" />{' '}
+                {t('social.nexus.rules_tag', 'moteur logique')}
               </span>
             }
           >
@@ -317,13 +363,19 @@ const ArchetypeNexusPage: React.FC = () => {
 
       {/* Bottom Section: Signals */}
       <LabPanel
-        title={t('social.nexus.episodic_memory', 'Signaux de Mémoire Épisodique')}
+        title={t('social.nexus.episodic_memory', 'Vos dernières interactions')}
         corner={
           <span className="flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" aria-hidden="true" /> {recent_signals.length} signaux
           </span>
         }
       >
+        <p className="mb-6 text-xs leading-relaxed text-[#8F94A5]">
+          {t(
+            'social.nexus.episodic_desc',
+            'Vos actions récentes qui ont fait bouger ce portrait, de la plus récente à la plus ancienne.',
+          )}
+        </p>
         <div className="relative space-y-6">
           <div className="absolute bottom-0 left-5 top-0 w-0.5 bg-[#F4F1E8]/10" aria-hidden />
 
@@ -350,8 +402,8 @@ const ArchetypeNexusPage: React.FC = () => {
                     }`}
                   >
                     {sig.is_positive
-                      ? t('social.nexus.positive_signal', 'SIGNAL POSITIF')
-                      : t('social.nexus.negative_signal', 'SIGNAL NÉGATIF')}
+                      ? t('social.nexus.positive_signal', 'A RENFORCÉ VOS GOÛTS')
+                      : t('social.nexus.negative_signal', 'A NUANCÉ VOS GOÛTS')}
                   </p>
                   <span className="font-mono text-[8px] text-[#8F94A5]">
                     STEP_0{recent_signals.length - i}
@@ -370,20 +422,43 @@ const ArchetypeNexusPage: React.FC = () => {
         </div>
       </LabPanel>
 
-      {/* Global Warning / Alpha Status */}
-      <div className="mt-24 rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8 text-center">
-        <p className="text-xs leading-relaxed text-[#8F94A5]">
-          {t(
-            'social.nexus.warning_1',
-            'Avertissement : Les déductions neuro-symboliques sont basées sur des modèles stochastiques résolus en temps réel.',
-          )}{' '}
-          <br />
-          {t(
-            'social.nexus.warning_2',
-            "Le drift d'archétype est recalculé après chaque session de forge ou de débat.",
-          )}
-        </p>
-      </div>
+      {/* Comment lire cette page — repères en clair pour un non-spécialiste. */}
+      <LabGuide
+        steps={[
+          {
+            title: t('social.nexus.guide_1_title', 'Votre profil dominant'),
+            body: t(
+              'social.nexus.guide_1_body',
+              'En haut à gauche : le style qui vous ressemble le plus en ce moment, et sa force.',
+            ),
+          },
+          {
+            title: t('social.nexus.guide_2_title', 'Vos affinités'),
+            body: t(
+              'social.nexus.guide_2_body',
+              'Des barres de 0 à 100 % : plus la barre est longue, plus le trait vous correspond.',
+            ),
+          },
+          {
+            title: t('social.nexus.guide_3_title', "L'évolution"),
+            body: t(
+              'social.nexus.guide_3_body',
+              'La courbe montre comment vos goûts ont bougé dans le temps. Survolez un point pour voir le détail d’une date.',
+            ),
+          },
+          {
+            title: t('social.nexus.guide_4_title', 'Les déductions'),
+            body: t(
+              'social.nexus.guide_4_body',
+              'En bas : les règles que l’IA en tire, et vos dernières actions qui ont fait bouger le portrait.',
+            ),
+          },
+        ]}
+        note={t(
+          'social.nexus.guide_note',
+          'Rien n’est figé : ce portrait s’ajuste tout seul à mesure que vous jouez, forgez et débattez.',
+        )}
+      />
     </LabPage>
   );
 };
