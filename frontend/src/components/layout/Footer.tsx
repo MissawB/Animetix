@@ -61,25 +61,40 @@ const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="relative mt-auto bg-[#fffcf0] dark:bg-[#13132a] border-t border-black/5 dark:border-white/5 transition-colors duration-500">
-      {/* Accent hairline — the brand's blue→yellow signature */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-blue-500/60 to-yellow-400/70" />
+    <footer className="relative mt-auto overflow-hidden border-t border-[#F4F1E8]/10 bg-[#0B0C10] text-[#F4F1E8]">
+      {/* Filet éditorial shu — la signature de l'édition de nuit */}
+      <div className="h-px w-full bg-gradient-to-r from-[#E8442B] via-[#E8442B]/30 to-transparent" />
+      {/* Trame halftone en tête de colophon */}
+      <div
+        className="explore-halftone pointer-events-none absolute inset-x-0 top-0 h-40"
+        aria-hidden
+      />
+      {/* Sceau « okuzuke » (colophon), en filigrane */}
+      <span
+        className="font-manga pointer-events-none absolute -bottom-16 right-2 select-none text-[13rem] font-black italic leading-none text-[#F4F1E8]/[0.03]"
+        aria-hidden
+      >
+        奥付
+      </span>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 pt-14 pb-8">
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-10 pt-14 pb-8">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-8 gap-y-10">
-          {/* Brand block */}
+          {/* Bloc marque */}
           <div className="col-span-2 lg:col-span-2 pr-4">
-            <Link to="/" className="inline-flex items-center gap-2.5 no-underline group">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+              Colophon · 奥付
+            </span>
+            <Link to="/" className="mt-4 inline-flex items-center gap-2.5 no-underline group">
               <img
                 src="/static/img/logo/white_logo.png"
                 alt="Animetix"
-                className="w-9 h-9 object-contain dark:invert transition-transform group-hover:rotate-6"
+                className="w-9 h-9 object-contain transition-transform group-hover:rotate-6"
               />
-              <span className="manga-font text-2xl tracking-tighter text-black dark:text-white">
-                ANIME<span className="text-yellow-700 dark:text-yellow-400">TIX</span>
+              <span className="font-manga text-2xl font-black italic uppercase tracking-tighter text-[#F4F1E8]">
+                ANIME<span className="text-[#E8442B]">TIX</span>
               </span>
             </Link>
-            <p className="mt-4 text-sm font-medium leading-relaxed text-gray-500 dark:text-gray-400 max-w-xs">
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#8F94A5]">
               {t(
                 'footer.tagline',
                 "Le terrain de jeu ultime pour fans d'anime & manga — quiz, déduction et création propulsés par l'IA.",
@@ -90,16 +105,17 @@ const Footer: React.FC = () => {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={t('footer.github_aria', 'Code source sur GitHub')}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl border border-black/10 dark:border-white/10 px-3.5 py-2 text-xs font-black uppercase tracking-wide text-gray-600 dark:text-gray-300 no-underline hover:border-yellow-400 hover:text-black dark:hover:text-white transition-colors"
+              className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#F4F1E8]/15 px-4 py-2 text-xs font-black uppercase tracking-widest text-[#8F94A5] no-underline transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8]"
             >
               <GithubIcon className="w-4 h-4" /> {t('footer.github', 'Code source')}
             </a>
           </div>
 
-          {/* Link columns */}
+          {/* Colonnes de liens */}
           {columns.map((col) => (
             <nav key={col.title} aria-label={col.title} className="min-w-0">
-              <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-gray-600 dark:text-gray-400 mb-4">
+              <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#8F94A5]">
+                <span className="h-3 w-0.5 flex-none bg-[#E8442B]" aria-hidden />
                 {col.title}
               </h3>
               <ul className="space-y-2.5">
@@ -107,9 +123,9 @@ const Footer: React.FC = () => {
                   <li key={link.to}>
                     <Link
                       to={link.to}
-                      className="group inline-flex items-center gap-1.5 text-sm font-bold text-gray-600 dark:text-gray-300 no-underline hover:text-black dark:hover:text-white transition-colors"
+                      className="group inline-flex items-center gap-2 text-sm font-medium text-[#8F94A5] no-underline transition-colors hover:text-[#F4F1E8]"
                     >
-                      <span className="h-1 w-1 rounded-full bg-yellow-400/0 group-hover:bg-yellow-400 transition-colors" />
+                      <span className="h-1 w-1 rounded-[1px] bg-[#E8442B] opacity-0 transition-opacity group-hover:opacity-100" />
                       {link.label}
                     </Link>
                   </li>
@@ -119,37 +135,37 @@ const Footer: React.FC = () => {
           ))}
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-14 pt-6 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs font-bold text-gray-500 dark:text-gray-400 order-3 sm:order-1">
+        {/* Barre de pied */}
+        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-[#F4F1E8]/10 pt-6 sm:flex-row">
+          <p className="order-3 text-xs font-medium text-[#8F94A5] sm:order-1">
             &copy; {year} Animetix Team. {t('footer.rights', 'Tous droits réservés.')}
           </p>
-          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 order-2 sm:order-2">
+          <nav className="order-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <Link
               to="/about/"
-              className="text-xs font-bold text-gray-500 dark:text-gray-400 no-underline hover:text-black dark:hover:text-white transition-colors"
+              className="text-xs font-medium text-[#8F94A5] no-underline transition-colors hover:text-[#F4F1E8]"
             >
               {t('nav.about', 'À propos')}
             </Link>
             <Link
               to="/privacy/"
-              className="text-xs font-bold text-gray-500 dark:text-gray-400 no-underline hover:text-black dark:hover:text-white transition-colors"
+              className="text-xs font-medium text-[#8F94A5] no-underline transition-colors hover:text-[#F4F1E8]"
             >
               {t('nav.privacy', 'Politique de confidentialité')}
             </Link>
             <Link
               to="/contact/"
-              className="text-xs font-bold text-gray-500 dark:text-gray-400 no-underline hover:text-black dark:hover:text-white transition-colors"
+              className="text-xs font-medium text-[#8F94A5] no-underline transition-colors hover:text-[#F4F1E8]"
             >
               {t('nav.contact', 'Contact')}
             </Link>
           </nav>
-          <div className="flex items-center gap-2 order-1 sm:order-3">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-60 animate-ping" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+          <div className="order-1 flex items-center gap-2 sm:order-3">
+            <span className="relative flex h-2 w-2" aria-hidden>
+              <span className="absolute inline-flex h-full w-full rounded-full bg-[#FDB913] opacity-60 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#FDB913]" />
             </span>
-            <p className="manga-font text-[10px] tracking-[0.28em] text-gray-500 dark:text-gray-400">
+            <p className="font-manga text-[10px] font-black uppercase tracking-[0.28em] text-[#8F94A5]">
               {t('footer.powered_by', 'Powered by Animetix IA & React 19')}
             </p>
           </div>
