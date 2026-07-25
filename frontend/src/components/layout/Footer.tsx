@@ -17,6 +17,7 @@ interface FooterLink {
 }
 interface FooterColumn {
   title: string;
+  glyph: string;
   links: FooterLink[];
 }
 
@@ -27,6 +28,7 @@ const Footer: React.FC = () => {
   const columns: FooterColumn[] = [
     {
       title: t('footer.col_play', 'Jouer'),
+      glyph: '遊',
       links: [
         { to: '/games/hub/', label: t('nav.games', 'Jeux') },
         { to: '/daily-challenge/', label: t('nav.daily', 'Défi Quotidien') },
@@ -35,6 +37,7 @@ const Footer: React.FC = () => {
     },
     {
       title: t('footer.col_explore', 'Explorer'),
+      glyph: '探',
       links: [
         { to: '/search/', label: t('nav.search', 'Recherche') },
         { to: '/explore/', label: t('nav.explore', 'Explorer') },
@@ -43,6 +46,7 @@ const Footer: React.FC = () => {
     },
     {
       title: t('footer.col_create', 'Créer'),
+      glyph: '創',
       links: [
         { to: '/lab/forge-hub/', label: t('nav.forge', 'Forge Créative') },
         { to: '/lab/', label: t('nav.labs_hub', 'Labs') },
@@ -51,6 +55,7 @@ const Footer: React.FC = () => {
     },
     {
       title: t('footer.col_community', 'Communauté'),
+      glyph: '会',
       links: [
         { to: '/social/dashboard/', label: t('nav.community', 'Communauté') },
         { to: '/social/nexus/', label: t('nav.nexus', 'Nexus Pro') },
@@ -81,10 +86,7 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-8 gap-y-10">
           {/* Bloc marque */}
           <div className="col-span-2 lg:col-span-2 pr-4">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
-              Colophon · 奥付
-            </span>
-            <Link to="/" className="mt-4 inline-flex items-center gap-2.5 no-underline group">
+            <Link to="/" className="inline-flex items-center gap-2.5 no-underline group">
               <img
                 src="/static/img/logo/white_logo.png"
                 alt="Animetix"
@@ -115,7 +117,12 @@ const Footer: React.FC = () => {
           {columns.map((col) => (
             <nav key={col.title} aria-label={col.title} className="min-w-0">
               <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#8F94A5]">
-                <span className="h-3 w-0.5 flex-none bg-[#E8442B]" aria-hidden />
+                <span
+                  className="text-base font-black not-italic leading-none text-[#E8442B]"
+                  aria-hidden
+                >
+                  {col.glyph}
+                </span>
                 {col.title}
               </h3>
               <ul className="space-y-2.5">
