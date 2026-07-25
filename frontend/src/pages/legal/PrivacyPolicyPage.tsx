@@ -2,7 +2,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck, Mail } from 'lucide-react';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
-import { Card } from '../../components/ui/Card';
 
 const CONTACT_EMAIL = 'missaw.redfox@gmail.com';
 
@@ -72,55 +71,62 @@ const PrivacyPolicyPage: React.FC = () => {
 
   return (
     <AnimatedPage>
-      <div className="max-w-3xl mx-auto px-6 py-16">
-        <header className="mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-black uppercase tracking-[0.25em] mb-5">
-            <ShieldCheck className="w-4 h-4" /> {t('legal.privacy.badge', 'Confidentialité')}
-          </div>
-          <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase mb-3">
-            {t('legal.privacy.title', 'Politique de confidentialité')}
-          </h1>
-          <p className="text-sm opacity-60 font-bold">
-            {t('legal.privacy.updated', 'Dernière mise à jour : juillet 2026')}
-          </p>
-        </header>
-
-        <Card padding="lg" className="space-y-8">
-          <p className="text-base leading-relaxed opacity-80">
-            {t(
-              'legal.privacy.intro',
-              "Cette politique explique quelles données personnelles Animetix collecte, pourquoi, et comment nous les protégeons — y compris l'usage des cookies publicitaires.",
-            )}
-          </p>
-
-          {sections.map((section) => (
-            <section key={section.title} className="space-y-3">
-              <h2 className="text-lg font-black uppercase tracking-wide text-brand-primary">
-                {section.title}
-              </h2>
-              {section.paragraphs.map((p, i) => (
-                <p key={i} className="text-sm leading-relaxed opacity-80">
-                  {p}
-                </p>
-              ))}
-            </section>
-          ))}
-
-          <section className="space-y-3 pt-2 border-t border-black/10 dark:border-white/10">
-            <h2 className="text-lg font-black uppercase tracking-wide text-brand-primary">
-              {t('legal.privacy.s_contact.title', 'Nous contacter')}
-            </h2>
-            <p className="text-sm leading-relaxed opacity-80 inline-flex items-center gap-2">
-              <Mail className="w-4 h-4 shrink-0" />
-              <a
-                href={`mailto:${CONTACT_EMAIL}`}
-                className="font-bold underline hover:text-brand-primary"
-              >
-                {CONTACT_EMAIL}
-              </a>
+      <div className="min-h-[calc(100vh-64px)] bg-[#0B0C10] text-[#F4F1E8]">
+        <div className="max-w-3xl mx-auto px-6 py-16">
+          <header className="mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#E8442B]/25 bg-[#E8442B]/10 text-[#E8442B] text-[10px] font-black uppercase tracking-[0.25em] mb-5">
+              <ShieldCheck className="w-4 h-4" /> {t('legal.privacy.badge', 'Confidentialité')}
+            </div>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="explore-stamp -rotate-2" aria-hidden>
+                密
+              </span>
+              <h1 className="text-4xl md:text-5xl font-black italic font-manga tracking-tighter uppercase text-[#F4F1E8]">
+                {t('legal.privacy.title', 'Politique de confidentialité')}
+              </h1>
+            </div>
+            <p className="text-sm text-[#8F94A5] font-bold">
+              {t('legal.privacy.updated', 'Dernière mise à jour : juillet 2026')}
             </p>
+          </header>
+
+          <section className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 sm:p-8 space-y-8">
+            <p className="text-base leading-relaxed text-[#F4F1E8]/80">
+              {t(
+                'legal.privacy.intro',
+                "Cette politique explique quelles données personnelles Animetix collecte, pourquoi, et comment nous les protégeons — y compris l'usage des cookies publicitaires.",
+              )}
+            </p>
+
+            {sections.map((section) => (
+              <section key={section.title} className="space-y-3">
+                <h2 className="text-lg font-black uppercase tracking-wide font-manga italic text-[#E8442B]">
+                  {section.title}
+                </h2>
+                {section.paragraphs.map((p, i) => (
+                  <p key={i} className="text-sm leading-relaxed text-[#8F94A5]">
+                    {p}
+                  </p>
+                ))}
+              </section>
+            ))}
+
+            <section className="space-y-3 pt-2 border-t border-[#F4F1E8]/10">
+              <h2 className="text-lg font-black uppercase tracking-wide font-manga italic text-[#E8442B]">
+                {t('legal.privacy.s_contact.title', 'Nous contacter')}
+              </h2>
+              <p className="text-sm leading-relaxed text-[#8F94A5] inline-flex items-center gap-2">
+                <Mail className="w-4 h-4 shrink-0" />
+                <a
+                  href={`mailto:${CONTACT_EMAIL}`}
+                  className="font-bold text-[#FDB913] underline hover:text-[#E8442B]"
+                >
+                  {CONTACT_EMAIL}
+                </a>
+              </p>
+            </section>
           </section>
-        </Card>
+        </div>
       </div>
     </AnimatedPage>
   );

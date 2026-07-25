@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { LogIn, ArrowLeft, Mail, Lock } from 'lucide-react';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { authErrorMessage } from '../../utils/authErrors';
+import { LAB_CTA } from '../labs/components/shared/LabKit';
 
 const LoginPage: React.FC = () => {
   const { t } = useTranslation();
@@ -78,38 +79,41 @@ const LoginPage: React.FC = () => {
   };
 
   const inputClass =
-    'w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-black/30 border-2 border-transparent focus:border-yellow-400 rounded-xl outline-none font-bold transition-all text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600';
+    'w-full pl-12 pr-4 py-3.5 rounded-xl border border-[#F4F1E8]/15 bg-[#0F1016] text-sm font-medium text-[#F4F1E8] outline-none transition-colors placeholder:text-[#8F94A5]/60 focus:border-[#FDB913]';
   const iconClass =
-    'absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 pointer-events-none';
+    'absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8F94A5] pointer-events-none';
+  const labelClass = 'block text-[10px] font-black uppercase tracking-[0.2em] text-[#8F94A5]';
   const socialBtn =
-    'flex items-center justify-center py-3.5 rounded-xl border-2 border-gray-200 dark:border-white/10 hover:border-yellow-400 hover:bg-yellow-400/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed';
+    'flex items-center justify-center py-3.5 rounded-xl border border-[#F4F1E8]/15 hover:border-[#FDB913] hover:bg-[#FDB913]/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
   // Discord/X/MAL OIDC providers aren't configured yet — keep them disabled.
   const socialBtnSoon =
-    'flex items-center justify-center py-3.5 rounded-xl border-2 border-gray-200 dark:border-white/10 opacity-40 grayscale cursor-not-allowed';
+    'flex items-center justify-center py-3.5 rounded-xl border border-[#F4F1E8]/10 opacity-40 grayscale cursor-not-allowed';
 
   return (
     <AnimatedPage>
-      <div className="min-h-[calc(100vh-64px)] flex bg-[#fffcf0] dark:bg-[#1a1a2e] transition-colors duration-500">
+      <div className="min-h-[calc(100vh-64px)] flex bg-[#0B0C10] text-[#F4F1E8]">
         {/* ── Brand panel ───────────────────────────────────────── */}
-        <aside className="hidden lg:flex lg:w-[45%] xl:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#0f0f1a] via-[#14142a] to-[#1a1a2e] flex-col items-center justify-center text-center p-12 xl:p-16">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] rounded-full bg-yellow-400/10 blur-[130px]" />
+        <aside className="hidden lg:flex lg:w-[45%] xl:w-1/2 relative overflow-hidden bg-[#0F1016] flex-col items-center justify-center text-center p-12 xl:p-16 border-r border-[#F4F1E8]/10">
+          <div className="explore-halftone pointer-events-none absolute inset-0" aria-hidden />
+          <span className="explore-stamp -rotate-2 absolute top-10 left-10" aria-hidden>
+            帰
+          </span>
 
           <div className="relative z-10 flex flex-col items-center w-full max-w-sm">
             <img
               src="/static/img/logo/white_logo.png"
               alt="Animetix"
-              className="w-40 xl:w-48 invert drop-shadow-[0_0_70px_rgba(253,185,19,0.35)] select-none"
+              className="w-40 xl:w-48 invert select-none"
               loading="lazy"
               decoding="async"
             />
-            <span className="manga-font text-white text-4xl tracking-tighter mt-6">
-              ANIME<span className="text-yellow-400">TIX</span>
+            <span className="font-manga text-[#F4F1E8] text-4xl tracking-tighter mt-6">
+              ANIME<span className="text-[#E8442B]">TIX</span>
             </span>
-            <p className="mt-2 text-sm font-bold uppercase tracking-[0.25em] text-white/40 italic">
+            <p className="mt-2 text-sm font-bold uppercase tracking-[0.25em] text-[#8F94A5] italic">
               {t('auth.brand_tagline', "L'IA au service de ta passion")}
             </p>
-            <p className="mt-8 text-white/50 text-base font-medium leading-snug">
+            <p className="mt-8 text-[#8F94A5] text-base font-medium leading-snug">
               {t(
                 'auth.login.brand_desc',
                 "Ton aventure reprend là où tu l'as laissée. Classements, défis et créations t'attendent.",
@@ -120,25 +124,25 @@ const LoginPage: React.FC = () => {
 
         {/* ── Form panel ────────────────────────────────────────── */}
         <main className="flex-1 flex items-center justify-center p-6 sm:p-10">
-          <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="w-full max-w-md">
             <Link
               to="/"
-              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-black dark:hover:text-white mb-10 no-underline transition-colors"
+              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#8F94A5] hover:text-[#F4F1E8] mb-10 no-underline transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> {t('auth.back_home', "Retour à l'accueil")}
             </Link>
 
-            <h1 className="text-4xl md:text-5xl font-black italic manga-font tracking-tighter uppercase text-black dark:text-white leading-none">
+            <h1 className="text-4xl md:text-5xl font-black italic font-manga tracking-tighter uppercase text-[#F4F1E8] leading-none">
               {t('auth.login.title_part1', 'CONTENT DE TE')}{' '}
-              <span className="text-yellow-400">{t('auth.login.title_part2', 'REVOIR')}</span>
+              <span className="text-[#E8442B]">{t('auth.login.title_part2', 'REVOIR')}</span>
             </h1>
-            <p className="mt-4 mb-10 text-base font-medium text-gray-500 dark:text-white/50">
+            <p className="mt-4 mb-10 text-base font-medium text-[#8F94A5]">
               {t('auth.login.subtitle', 'Connecte-toi pour reprendre la partie.')}
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
-                <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-xl text-sm font-bold text-center">
+                <div className="bg-[#E8442B]/10 border border-[#E8442B]/50 text-[#E8442B] p-4 rounded-xl text-sm font-bold text-center">
                   {error}
                 </div>
               )}
@@ -146,17 +150,14 @@ const LoginPage: React.FC = () => {
               {notice && (
                 <div
                   role="status"
-                  className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-600 dark:text-emerald-400 p-4 rounded-xl text-sm font-bold text-center"
+                  className="bg-[#FDB913]/10 border border-[#FDB913]/40 text-[#FDB913] p-4 rounded-xl text-sm font-bold text-center"
                 >
                   {notice}
                 </div>
               )}
 
               <div className="space-y-2">
-                <label
-                  htmlFor="email"
-                  className="block text-xs font-black uppercase opacity-60 tracking-widest text-black dark:text-white"
-                >
+                <label htmlFor="email" className={labelClass}>
                   {t('auth.email_address', 'Adresse email')}
                 </label>
                 <div className="relative">
@@ -176,16 +177,13 @@ const LoginPage: React.FC = () => {
 
               <div className="space-y-2">
                 <div className="flex items-baseline justify-between gap-3">
-                  <label
-                    htmlFor="password"
-                    className="block text-xs font-black uppercase opacity-60 tracking-widest text-black dark:text-white"
-                  >
+                  <label htmlFor="password" className={labelClass}>
                     {t('auth.password', 'Mot de passe')}
                   </label>
                   <button
                     type="button"
                     onClick={handlePasswordReset}
-                    className="text-xs font-black uppercase tracking-widest text-yellow-500 dark:text-yellow-400 hover:underline disabled:opacity-50"
+                    className="text-xs font-black uppercase tracking-widest text-[#FDB913] hover:underline disabled:opacity-50"
                   >
                     {t('auth.login.forgot_password', 'Mot de passe oublié ?')}
                   </button>
@@ -205,11 +203,7 @@ const LoginPage: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-black font-black italic manga-font tracking-widest py-4 rounded-xl border-2 border-black/10 shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 disabled:hover:scale-100 mt-2"
-              >
+              <button type="submit" disabled={isLoading} className={`${LAB_CTA} mt-2`}>
                 {isLoading ? (
                   t('common.loading', 'Chargement...')
                 ) : (
@@ -220,11 +214,11 @@ const LoginPage: React.FC = () => {
               </button>
 
               <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-gray-200 dark:border-white/10"></div>
-                <span className="flex-shrink mx-4 text-xs font-black uppercase opacity-50 tracking-widest text-black dark:text-white">
+                <div className="flex-grow border-t border-[#F4F1E8]/10"></div>
+                <span className="flex-shrink mx-4 text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
                   {t('auth.login.social_title', 'Connexions sociales')}
                 </span>
-                <div className="flex-grow border-t border-gray-200 dark:border-white/10"></div>
+                <div className="flex-grow border-t border-[#F4F1E8]/10"></div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -285,16 +279,16 @@ const LoginPage: React.FC = () => {
                   </svg>
                 </button>
               </div>
-              <p className="text-center text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mt-3">
+              <p className="text-center text-[10px] font-black uppercase tracking-widest text-[#8F94A5]/70 mt-3">
                 {t('auth.login.social_soon_note', 'Discord & MyAnimeList bientôt disponibles')}
               </p>
 
-              <div className="text-center pt-6 border-t border-gray-100 dark:border-white/5">
-                <p className="text-sm opacity-60 font-bold text-black dark:text-white">
+              <div className="text-center pt-6 border-t border-[#F4F1E8]/10">
+                <p className="text-sm font-bold text-[#8F94A5]">
                   {t('auth.login.no_account', 'Pas encore de compte ?')}{' '}
                   <Link
                     to="/auth/register/"
-                    className="text-yellow-500 dark:text-yellow-400 hover:underline uppercase tracking-wide"
+                    className="text-[#E8442B] hover:underline uppercase tracking-wide"
                   >
                     {t('auth.login.create_account', 'Créer un compte')}
                   </Link>

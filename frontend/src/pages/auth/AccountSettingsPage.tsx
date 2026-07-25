@@ -2,13 +2,19 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import { socialService } from '../../features/social/services/socialService';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
 import { Settings, Star, ChevronRight, Sparkles, BarChart3, Terminal } from 'lucide-react';
 import { useToastStore } from '../../store/toastStore';
 import { Link } from 'react-router-dom';
 
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { LAB_CTA } from '../labs/components/shared/LabKit';
+
+const PANEL = 'rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 sm:p-8';
+const FIELD_LABEL = 'text-[10px] font-black uppercase tracking-[0.2em] text-[#8F94A5] block mb-1';
+const FIELD_BOX =
+  'font-bold text-lg bg-[#0B0C10] px-4 py-2 rounded-xl border border-[#F4F1E8]/10 text-[#F4F1E8]';
+const H2 =
+  'text-sm font-black uppercase tracking-widest border-b border-[#F4F1E8]/10 pb-4 mb-4 flex items-center gap-2 font-manga italic text-[#F4F1E8]';
 
 const AccountSettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -28,7 +34,7 @@ const AccountSettingsPage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="p-20 text-center">
+      <div className="min-h-[calc(100vh-64px)] bg-[#0B0C10] p-20 text-center text-[#F4F1E8]">
         {t('auth.settings.must_be_logged_in', 'Vous devez être connecté.')}
       </div>
     );
@@ -52,62 +58,58 @@ const AccountSettingsPage: React.FC = () => {
 
   return (
     <AnimatedPage>
-      <div className="min-h-[calc(100vh-64px)] bg-[#fffcf0] dark:bg-[#1a1a2e] transition-colors duration-500 bg-manga-overlay">
-        <div className="max-w-4xl mx-auto px-6 py-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <h1 className="text-4xl md:text-5xl font-black italic manga-font mb-12 tracking-tighter uppercase flex items-center gap-3 text-black dark:text-white">
-            <Settings className="w-10 h-10 text-blue-500" />{' '}
+      <div className="min-h-[calc(100vh-64px)] bg-[#0B0C10] text-[#F4F1E8]">
+        <div className="max-w-4xl mx-auto px-6 py-16">
+          <div className="relative mb-10 flex items-center gap-3">
+            <span className="explore-stamp -rotate-2" aria-hidden>
+              設
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+              Compte · Réglages
+            </span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black italic font-manga mb-12 tracking-tighter uppercase flex items-center gap-3 text-[#F4F1E8]">
+            <Settings className="w-10 h-10 text-[#E8442B]" />{' '}
             {t('auth.settings.title_part1', 'GESTION DU')}{' '}
-            <span className="text-blue-500">{t('auth.settings.title_part2', 'COMPTE')}</span>
+            <span className="text-[#E8442B]">{t('auth.settings.title_part2', 'COMPTE')}</span>
           </h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Informations générales */}
-            <Card
-              padding="lg"
-              className="space-y-6 shadow-xl border-none bg-white dark:bg-[#0f0f1a]"
-            >
-              <h2 className="text-xl font-bold uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-4 mb-4 text-black dark:text-white">
-                {t('auth.settings.profile', 'Profil')}
-              </h2>
+            <section className={`${PANEL} space-y-6`}>
+              <h2 className={H2}>{t('auth.settings.profile', 'Profil')}</h2>
               <div>
-                <span className="text-[10px] font-black uppercase opacity-50 block mb-1 text-black dark:text-white">
+                <span className={FIELD_LABEL}>
                   {t('auth.settings.username_label', "Nom d'utilisateur")}
                 </span>
-                <div className="font-bold text-lg bg-gray-50 dark:bg-black/20 px-4 py-2 rounded-xl border border-gray-100 dark:border-white/5 text-black dark:text-white">
-                  {user.username}
-                </div>
+                <div className={FIELD_BOX}>{user.username}</div>
               </div>
               <div>
-                <span className="text-[10px] font-black uppercase opacity-50 block mb-1 text-black dark:text-white">
-                  {t('auth.settings.email_label', 'Email')}
-                </span>
-                <div className="font-bold text-lg bg-gray-50 dark:bg-black/20 px-4 py-2 rounded-xl border border-gray-100 dark:border-white/5 text-black dark:text-white">
+                <span className={FIELD_LABEL}>{t('auth.settings.email_label', 'Email')}</span>
+                <div className={FIELD_BOX}>
                   {user.email || t('auth.settings.not_provided', 'Non renseigné')}
                 </div>
               </div>
-            </Card>
+            </section>
 
             {/* Statut & Sponsors */}
-            <Card
-              padding="lg"
-              className="space-y-6 shadow-xl border-none bg-white dark:bg-[#0f0f1a]"
-            >
-              <h2 className="text-xl font-bold uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-4 mb-4 flex items-center gap-2 text-black dark:text-white">
-                <Star className="w-5 h-5 text-yellow-400" />{' '}
+            <section className={`${PANEL} space-y-6`}>
+              <h2 className={H2}>
+                <Star className="w-5 h-5 text-[#FDB913]" />{' '}
                 {t('auth.settings.account_status', 'Statut du Compte')}
               </h2>
               <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 space-y-2 text-black dark:text-white">
-                  <span className="text-[10px] font-black uppercase opacity-50 block">
+                <div className="p-4 rounded-xl bg-[#0B0C10] border border-[#F4F1E8]/10 space-y-2">
+                  <span className={FIELD_LABEL}>
                     {t('auth.settings.current_status', 'Votre Statut Actuel')}
                   </span>
-                  <span className="font-bold text-lg uppercase text-yellow-500">
+                  <span className="font-bold text-lg uppercase text-[#FDB913]">
                     {user.tier === 'premium'
                       ? t('auth.settings.status_boosted', 'Boosté (Sponsorisé)')
                       : t('auth.settings.status_standard', 'Standard (Financé par Pubs)')}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#8F94A5] leading-relaxed">
                   {user.tier === 'premium'
                     ? t(
                         'auth.settings.boost_active_desc',
@@ -118,29 +120,25 @@ const AccountSettingsPage: React.FC = () => {
                         "Votre compte est actuellement en mode standard. Pour supprimer les publicités et multiplier votre quota IA par 5, visitez l'Espace Sponsors.",
                       )}
                 </p>
-                <Link
-                  to="/power-station/"
-                  className="block text-center bg-yellow-500 hover:bg-yellow-600 text-black font-black italic manga-font text-xs py-4 px-6 rounded-xl shadow-lg transition-all no-underline"
-                >
+                <Link to="/power-station/" className={`${LAB_CTA} text-xs no-underline`}>
                   {t('auth.settings.go_sponsors', "ACCÉDER À L'ESPACE SPONSORS")}
                 </Link>
               </div>
-            </Card>
+            </section>
 
             {/* Personnalisation Cosmétique */}
-            <Card
-              padding="lg"
-              className="space-y-6 shadow-xl border-none bg-white dark:bg-[#0f0f1a] relative overflow-hidden flex flex-col justify-between"
+            <section
+              className={`${PANEL} space-y-6 relative overflow-hidden flex flex-col justify-between`}
             >
               <div>
-                <h2 className="text-xl font-bold uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-4 mb-4 flex items-center gap-2 text-black dark:text-white">
-                  <Sparkles className="w-5 h-5 text-yellow-500" />{' '}
+                <h2 className={H2}>
+                  <Sparkles className="w-5 h-5 text-[#FDB913]" />{' '}
                   {t('auth.settings.username_color', 'Couleur du Pseudo')}
                 </h2>
 
                 {user.unlocked_badges?.includes('Sponsor Or') ? (
                   <div className="space-y-6">
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[#8F94A5]">
                       {t(
                         'auth.settings.color_desc',
                         "Personnalisez l'affichage de votre pseudo sur votre profil public.",
@@ -148,12 +146,12 @@ const AccountSettingsPage: React.FC = () => {
                     </p>
 
                     {/* Preview */}
-                    <div className="p-4 rounded-2xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 text-center">
-                      <span className="text-[10px] font-black uppercase opacity-40 block mb-2 text-black dark:text-white">
+                    <div className="p-4 rounded-2xl bg-[#0B0C10] border border-[#F4F1E8]/10 text-center">
+                      <span className={FIELD_LABEL}>
                         {t('auth.settings.profile_preview', 'Aperçu du Profil')}
                       </span>
                       <span
-                        className="text-2xl font-black italic manga-font uppercase tracking-tighter"
+                        className="text-2xl font-black italic font-manga uppercase tracking-tighter"
                         style={{ color: customColor || undefined }}
                       >
                         {user.username}
@@ -162,7 +160,7 @@ const AccountSettingsPage: React.FC = () => {
 
                     {/* Presets */}
                     <div className="space-y-2">
-                      <span className="text-[10px] font-black uppercase opacity-50 block text-black dark:text-white">
+                      <span className={FIELD_LABEL}>
                         {t('auth.settings.preset_colors', 'Couleurs Prédéfinies')}
                       </span>
                       <div className="flex flex-wrap gap-3">
@@ -177,7 +175,7 @@ const AccountSettingsPage: React.FC = () => {
                             })}
                             className={`w-8 h-8 rounded-full border-2 transition-all ${
                               customColor === preset.hex
-                                ? 'border-black dark:border-white scale-110 shadow-lg'
+                                ? 'border-[#F4F1E8] scale-110'
                                 : 'border-transparent hover:scale-105'
                             }`}
                             style={{ backgroundColor: preset.hex }}
@@ -189,7 +187,7 @@ const AccountSettingsPage: React.FC = () => {
                     {/* Custom Color Picker */}
                     <div className="flex items-center gap-4">
                       <div className="space-y-1">
-                        <span className="text-[10px] font-black uppercase opacity-50 block text-black dark:text-white">
+                        <span className={FIELD_LABEL}>
                           {t('auth.settings.custom_color', 'Couleur Personnalisée')}
                         </span>
                         <input
@@ -197,11 +195,11 @@ const AccountSettingsPage: React.FC = () => {
                           aria-label={t('auth.settings.custom_color_aria', 'Couleur personnalisée')}
                           value={customColor || '#FFD700'}
                           onChange={(e) => setCustomColor(e.target.value)}
-                          className="w-12 h-10 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer bg-transparent"
+                          className="w-12 h-10 rounded-xl border border-[#F4F1E8]/15 cursor-pointer bg-transparent"
                         />
                       </div>
                       <div className="flex-1 space-y-1">
-                        <span className="text-[10px] font-black uppercase opacity-50 block text-black dark:text-white">
+                        <span className={FIELD_LABEL}>
                           {t('auth.settings.hex_code', 'Code Hex')}
                         </span>
                         <input
@@ -215,21 +213,21 @@ const AccountSettingsPage: React.FC = () => {
                             }
                           }}
                           placeholder="#FFD700"
-                          className="w-full bg-gray-50 dark:bg-black/20 px-3 py-2 rounded-xl border border-gray-100 dark:border-white/5 text-sm font-mono text-black dark:text-white"
+                          className="w-full bg-[#0B0C10] px-3 py-2 rounded-xl border border-[#F4F1E8]/10 text-sm font-mono text-[#F4F1E8] outline-none focus:border-[#FDB913] transition-colors"
                         />
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="relative py-12 text-center space-y-4">
-                    <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-white/5 rounded-2xl flex items-center justify-center text-gray-400 dark:text-gray-600">
+                    <div className="mx-auto w-12 h-12 bg-[#0B0C10] border border-[#F4F1E8]/10 rounded-2xl flex items-center justify-center text-[#8F94A5]">
                       🔒
                     </div>
                     <div className="space-y-1">
-                      <p className="font-bold text-sm text-black dark:text-white">
+                      <p className="font-bold text-sm text-[#F4F1E8]">
                         {t('auth.settings.locked_feature', 'Fonctionnalité Verrouillée')}
                       </p>
-                      <p className="text-xs text-gray-500 max-w-xs mx-auto">
+                      <p className="text-xs text-[#8F94A5] max-w-xs mx-auto">
                         {t(
                           'auth.settings.locked_desc',
                           "Soutenez Animetix dans l'Espace Sponsors pour débloquer le badge exclusif et la couleur de pseudo personnalisée !",
@@ -238,7 +236,7 @@ const AccountSettingsPage: React.FC = () => {
                     </div>
                     <Link
                       to="/power-station/"
-                      className="inline-block text-xs font-black uppercase tracking-wider text-yellow-500 hover:text-yellow-600 no-underline"
+                      className="inline-block text-xs font-black uppercase tracking-wider text-[#E8442B] hover:underline no-underline"
                     >
                       {t('auth.settings.become_sponsor', 'Devenir Sponsor →')}
                     </Link>
@@ -247,22 +245,20 @@ const AccountSettingsPage: React.FC = () => {
               </div>
 
               {user.unlocked_badges?.includes('Sponsor Or') && (
-                <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-white/5">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="flex-1 font-black italic manga-font text-xs"
+                <div className="flex gap-3 pt-4 border-t border-[#F4F1E8]/10">
+                  <button
+                    type="button"
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#E8442B] px-6 py-2.5 font-manga text-xs font-black uppercase italic text-[#F4F1E8] transition-colors hover:bg-[#c93a24] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913]"
                     onClick={() => handleSaveColor(customColor)}
                     disabled={isSavingColor}
                   >
                     {isSavingColor
                       ? t('auth.settings.saving', 'Enregistrement...')
                       : t('auth.settings.save', 'Enregistrer')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="font-black italic manga-font text-xs text-red-500 hover:bg-red-500 hover:text-white border-red-500/10"
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-xl border border-[#E8442B]/40 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-[#E8442B] transition-colors hover:bg-[#E8442B] hover:text-[#F4F1E8] disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => {
                       setCustomColor('');
                       handleSaveColor('').then();
@@ -270,21 +266,18 @@ const AccountSettingsPage: React.FC = () => {
                     disabled={isSavingColor}
                   >
                     {t('auth.settings.reset', 'Réinitialiser')}
-                  </Button>
+                  </button>
                 </div>
               )}
-            </Card>
+            </section>
 
             {/* Historique IA */}
-            <Card
-              padding="lg"
-              className="space-y-6 shadow-xl border-none bg-white dark:bg-[#0f0f1a]"
-            >
-              <h2 className="text-xl font-bold uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-4 mb-4 flex items-center gap-2 text-black dark:text-white">
-                <BarChart3 className="w-5 h-5 text-blue-500" />{' '}
+            <section className={`${PANEL} space-y-6`}>
+              <h2 className={H2}>
+                <BarChart3 className="w-5 h-5 text-[#FDB913]" />{' '}
                 {t('auth.settings.quotas_title', 'Quotas & Consommation')}
               </h2>
-              <p className="text-sm opacity-60 text-black dark:text-white">
+              <p className="text-sm text-[#8F94A5]">
                 {t(
                   'auth.settings.quotas_desc',
                   'Suivez votre utilisation des Berrix et vérifiez votre limite quotidienne.',
@@ -293,40 +286,37 @@ const AccountSettingsPage: React.FC = () => {
               <div className="space-y-3">
                 <Link
                   to="/auth/usage/"
-                  className="flex items-center justify-between bg-blue-500/5 dark:bg-blue-500/10 p-4 rounded-xl border border-blue-500/10 hover:border-blue-500 transition-all no-underline text-black dark:text-white group"
+                  className="flex items-center justify-between bg-[#0B0C10] p-4 rounded-xl border border-[#F4F1E8]/10 hover:border-[#FDB913] transition-colors no-underline group"
                 >
-                  <span className="font-bold uppercase tracking-widest text-xs text-blue-600 dark:text-blue-400">
+                  <span className="font-black uppercase tracking-widest text-xs text-[#FDB913]">
                     {t('auth.settings.view_stats', 'Voir mes statistiques')}
                   </span>
-                  <ChevronRight className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-all" />
+                  <ChevronRight className="w-5 h-5 text-[#FDB913] group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
                   to="/social/ai-feedback-history/"
-                  className="flex items-center justify-between bg-purple-500/5 dark:bg-purple-500/10 p-4 rounded-xl border border-purple-500/10 hover:border-purple-500 transition-all no-underline text-black dark:text-white group"
+                  className="flex items-center justify-between bg-[#0B0C10] p-4 rounded-xl border border-[#F4F1E8]/10 hover:border-[#E8442B] transition-colors no-underline group"
                 >
-                  <span className="font-bold uppercase tracking-widest text-xs text-purple-600 dark:text-purple-400">
+                  <span className="font-black uppercase tracking-widest text-xs text-[#E8442B]">
                     {t('auth.settings.ai_feedback_history', 'Historique des Feedbacks IA')}
                   </span>
-                  <ChevronRight className="w-5 h-5 text-purple-400 group-hover:translate-x-1 transition-all" />
+                  <ChevronRight className="w-5 h-5 text-[#E8442B] group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
-            </Card>
+            </section>
 
             {/* Portail Développeur */}
-            <Card
-              padding="lg"
-              className="md:col-span-2 space-y-6 border-2 border-blue-500/20 bg-white dark:bg-[#0f0f1a] shadow-xl"
-            >
+            <section className={`${PANEL} md:col-span-2 space-y-6`}>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-6">
-                  <div className="p-4 bg-blue-500/10 rounded-2xl text-blue-500">
+                  <div className="p-4 bg-[#0B0C10] border border-[#F4F1E8]/10 rounded-2xl text-[#E8442B]">
                     <Terminal className="w-8 h-8" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold uppercase tracking-widest text-black dark:text-white mb-1">
+                    <h2 className="text-lg font-bold uppercase tracking-widest text-[#F4F1E8] mb-1">
                       {t('auth.settings.dev_access', 'Accès Développeur (API)')}
                     </h2>
-                    <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">
+                    <p className="text-sm text-[#8F94A5] font-bold uppercase tracking-widest">
                       {t(
                         'auth.settings.dev_desc',
                         'Gérez vos clés API et accédez à la documentation technique.',
@@ -334,17 +324,15 @@ const AccountSettingsPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <Button
-                  as={Link}
+                <Link
                   to="/developer/"
-                  variant="outline"
-                  className="border-blue-500/20 text-blue-500 hover:bg-blue-500/10 px-8 font-black italic manga-font text-xs"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#F4F1E8]/15 px-8 py-3 font-manga text-xs font-black uppercase italic text-[#F4F1E8] transition-colors hover:border-[#FDB913] no-underline whitespace-nowrap"
                 >
                   {t('auth.settings.dev_terminal', 'TERMINAL DÉVELOPPEUR')}{' '}
-                  <ChevronRight className="w-4 h-4 ml-2" />
-                </Button>
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
               </div>
-            </Card>
+            </section>
           </div>
         </div>
       </div>

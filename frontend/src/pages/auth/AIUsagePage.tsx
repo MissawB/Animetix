@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
-import { Card } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
 import {
   Zap,
   History,
@@ -16,6 +14,7 @@ import {
 import { Link } from 'react-router-dom';
 import { socialService } from '../../features/social/services/socialService';
 import { AIUsageData } from '../../types';
+import { LAB_CTA } from '../labs/components/shared/LabKit';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -30,15 +29,17 @@ import {
 // The two charts here are simple 2D line/bar plots, so they use recharts
 // (~100 KB) rather than plotly.js (~4.6 MB), which this account page would
 // otherwise pull in just to draw a 7-day history.
-const AXIS_TICK = { fill: '#888', fontSize: 10 } as const;
+const AXIS_TICK = { fill: '#8F94A5', fontSize: 10 } as const;
 const CHART_MARGIN = { top: 10, right: 10, left: 10, bottom: 0 } as const;
 const TOOLTIP_STYLE = {
-  background: 'rgba(20,20,30,0.92)',
-  border: 'none',
+  background: '#0B0C10',
+  border: '1px solid rgba(244,241,232,0.15)',
   borderRadius: 8,
   fontSize: 12,
-  color: '#fff',
+  color: '#F4F1E8',
 } as const;
+
+const PANEL = 'rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016]';
 
 const fmtDate = (val: string) => val.split('-').slice(1).reverse().join('/');
 
@@ -63,16 +64,16 @@ const AIUsagePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fffcf0] dark:bg-[#0f0f1a]">
-        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#0B0C10]">
+        <div className="w-16 h-16 border-4 border-[#F4F1E8]/10 border-t-[#E8442B] rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!usageData) {
     return (
-      <div className="p-20 text-center">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+      <div className="min-h-screen bg-[#0B0C10] p-20 text-center text-[#F4F1E8]">
+        <AlertCircle className="w-12 h-12 text-[#E8442B] mx-auto mb-4" />
         <p className="font-bold">
           {t('auth.usage.load_error', "Impossible de charger les données d'utilisation.")}
         </p>
@@ -90,131 +91,127 @@ const AIUsagePage: React.FC = () => {
 
   return (
     <AnimatedPage>
-      <div className="min-h-screen bg-[#fffcf0] dark:bg-[#0f0f1a] transition-colors duration-500 bg-manga-overlay pb-20">
+      <div className="min-h-screen bg-[#0B0C10] text-[#F4F1E8] pb-20">
         <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
             <div>
-              <h1 className="text-4xl md:text-5xl font-black italic manga-font tracking-tighter uppercase flex items-center gap-3 text-black dark:text-white">
-                <LayoutDashboard className="w-10 h-10 text-blue-500" />{' '}
+              <div className="relative mb-4 flex items-center gap-3">
+                <span className="explore-stamp -rotate-2" aria-hidden>
+                  量
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+                  Mesure · Consommation
+                </span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black italic font-manga tracking-tighter uppercase flex items-center gap-3 text-[#F4F1E8]">
+                <LayoutDashboard className="w-10 h-10 text-[#E8442B]" />{' '}
                 {t('auth.usage.title_part1', 'QUOTAS')}{' '}
-                <span className="text-blue-500">{t('auth.usage.title_part2', 'IA')}</span>
+                <span className="text-[#E8442B]">{t('auth.usage.title_part2', 'IA')}</span>
               </h1>
-              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-2">
+              <p className="text-xs text-[#8F94A5] font-bold uppercase tracking-widest mt-2">
                 {t(
                   'auth.usage.subtitle',
                   'Suivi en temps réel de votre consommation neuronale et budget sémantique.',
                 )}
               </p>
             </div>
-            <Badge
-              variant="primary"
-              className="py-2 px-6 text-sm font-black italic manga-font uppercase shadow-lg"
-            >
+            <span className="rounded-xl border border-[#FDB913]/40 bg-[#FDB913]/10 py-2 px-6 text-sm font-black italic font-manga uppercase text-[#FDB913]">
               {t('auth.usage.status', { defaultValue: 'Statut: {{tier}}', tier })}
-            </Badge>
+            </span>
           </div>
 
           {/* Today's Overview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <Card
-              padding="lg"
-              className="bg-white dark:bg-[#161625] border-none shadow-xl relative overflow-hidden group"
-            >
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Zap className="w-20 h-20 text-blue-500" />
+            <div className={`${PANEL} p-6 sm:p-8 relative overflow-hidden group`}>
+              <div className="absolute top-0 right-0 p-4 opacity-[0.06]">
+                <Zap className="w-20 h-20 text-[#FDB913]" />
               </div>
               <div className="relative z-10">
-                <span className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] block mb-4">
+                <span className="text-[10px] font-black uppercase text-[#8F94A5] tracking-[0.2em] block mb-4">
                   {t('auth.usage.berrix_consumption', 'Consommation Berrix (Bx)')}
                 </span>
                 <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-4xl font-black italic manga-font text-black dark:text-white">
+                  <span className="text-4xl font-black italic font-manga text-[#FDB913]">
                     {usage_today.tokens.toLocaleString()}
                   </span>
-                  <span className="text-xs font-bold text-gray-400">
+                  <span className="text-xs font-bold text-[#8F94A5]">
                     / {limits.daily_tokens.toLocaleString()}
                   </span>
                 </div>
-                <div className="w-full h-2 bg-gray-100 dark:bg-black/40 rounded-full overflow-hidden mb-4">
+                <div className="w-full h-2 bg-[#0B0C10] rounded-full overflow-hidden mb-4">
                   <div
-                    className="h-full bg-blue-500 transition-all duration-1000"
+                    className="h-full bg-[#FDB913] transition-all duration-1000"
                     style={{ width: `${usage_today.tokens_percent}%` }}
                   />
                 </div>
-                <span className="text-[10px] font-bold text-blue-500 uppercase">
+                <span className="text-[10px] font-bold text-[#FDB913] uppercase">
                   {t('auth.usage.percent_used_today', {
                     defaultValue: "{{percent}}% utilisé aujourd'hui",
                     percent: usage_today.tokens_percent,
                   })}
                 </span>
               </div>
-            </Card>
+            </div>
 
-            <Card
-              padding="lg"
-              className="bg-white dark:bg-[#161625] border-none shadow-xl relative overflow-hidden group"
-            >
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <TrendingUp className="w-20 h-20 text-emerald-500" />
+            <div className={`${PANEL} p-6 sm:p-8 relative overflow-hidden group`}>
+              <div className="absolute top-0 right-0 p-4 opacity-[0.06]">
+                <TrendingUp className="w-20 h-20 text-[#F4F1E8]" />
               </div>
               <div className="relative z-10">
-                <span className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] block mb-4">
+                <span className="text-[10px] font-black uppercase text-[#8F94A5] tracking-[0.2em] block mb-4">
                   {t('auth.usage.api_requests', 'Requêtes API')}
                 </span>
                 <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-4xl font-black italic manga-font text-black dark:text-white">
+                  <span className="text-4xl font-black italic font-manga text-[#F4F1E8]">
                     {usage_today.requests.toLocaleString()}
                   </span>
-                  <span className="text-xs font-bold text-gray-400">
+                  <span className="text-xs font-bold text-[#8F94A5]">
                     / {limits.daily_requests.toLocaleString()}
                   </span>
                 </div>
-                <div className="w-full h-2 bg-gray-100 dark:bg-black/40 rounded-full overflow-hidden mb-4">
+                <div className="w-full h-2 bg-[#0B0C10] rounded-full overflow-hidden mb-4">
                   <div
-                    className="h-full bg-emerald-500 transition-all duration-1000"
+                    className="h-full bg-[#8F94A5] transition-all duration-1000"
                     style={{ width: `${usage_today.requests_percent}%` }}
                   />
                 </div>
-                <span className="text-[10px] font-bold text-emerald-500 uppercase">
+                <span className="text-[10px] font-bold text-[#8F94A5] uppercase">
                   {t('auth.usage.percent_calls_used', {
                     defaultValue: '{{percent}}% des appels consommés',
                     percent: usage_today.requests_percent,
                   })}
                 </span>
               </div>
-            </Card>
+            </div>
 
-            <Card
-              padding="lg"
-              className="bg-white dark:bg-[#161625] border-none shadow-xl relative overflow-hidden group"
-            >
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <DollarSign className="w-20 h-20 text-yellow-500" />
+            <div className={`${PANEL} p-6 sm:p-8 relative overflow-hidden group`}>
+              <div className="absolute top-0 right-0 p-4 opacity-[0.06]">
+                <DollarSign className="w-20 h-20 text-[#FDB913]" />
               </div>
               <div className="relative z-10">
-                <span className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] block mb-4">
+                <span className="text-[10px] font-black uppercase text-[#8F94A5] tracking-[0.2em] block mb-4">
                   {t('auth.usage.estimated_cost', 'Coût Estimé (Valeur)')}
                 </span>
                 <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-4xl font-black italic manga-font text-black dark:text-white">
+                  <span className="text-4xl font-black italic font-manga text-[#FDB913]">
                     ${usage_today.estimated_cost_usd.toFixed(4)}
                   </span>
                 </div>
-                <p className="text-[10px] font-bold text-gray-400 leading-relaxed uppercase">
+                <p className="text-[10px] font-bold text-[#8F94A5] leading-relaxed uppercase">
                   {t(
                     'auth.usage.cost_note',
                     'Estimation basée sur les tarifs H100 Cluster & VRAM. Entièrement couvert par votre attention publicitaire.',
                   )}
                 </p>
               </div>
-            </Card>
+            </div>
           </div>
 
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card padding="lg" className="bg-white dark:bg-[#161625] border-none shadow-xl">
-              <h3 className="text-sm font-black uppercase tracking-widest mb-8 flex items-center gap-2 text-black dark:text-white">
-                <History className="w-4 h-4 text-blue-500" />{' '}
+            <div className={`${PANEL} p-6 sm:p-8`}>
+              <h3 className="text-sm font-black uppercase tracking-widest mb-8 flex items-center gap-2 text-[#F4F1E8]">
+                <History className="w-4 h-4 text-[#FDB913]" />{' '}
                 {t('auth.usage.berrix_history', 'Historique des Berrix (7j)')}
               </h3>
               <div className="h-64 w-full">
@@ -224,26 +221,26 @@ const AIUsagePage: React.FC = () => {
                     <YAxis hide />
                     <Tooltip
                       contentStyle={TOOLTIP_STYLE}
-                      labelStyle={{ color: '#aaa' }}
-                      cursor={{ stroke: '#3b82f6', strokeOpacity: 0.25 }}
+                      labelStyle={{ color: '#8F94A5' }}
+                      cursor={{ stroke: '#FDB913', strokeOpacity: 0.25 }}
                       formatter={(value) => [`${Number(value).toLocaleString()} Bx`, '']}
                     />
                     <Area
                       type="monotone"
                       dataKey="tokens"
-                      stroke="#3b82f6"
+                      stroke="#FDB913"
                       strokeWidth={3}
-                      fill="#3b82f6"
-                      fillOpacity={0.18}
+                      fill="#FDB913"
+                      fillOpacity={0.15}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-            </Card>
+            </div>
 
-            <Card padding="lg" className="bg-white dark:bg-[#161625] border-none shadow-xl">
-              <h3 className="text-sm font-black uppercase tracking-widest mb-8 flex items-center gap-2 text-black dark:text-white">
-                <Database className="w-4 h-4 text-emerald-500" />{' '}
+            <div className={`${PANEL} p-6 sm:p-8`}>
+              <h3 className="text-sm font-black uppercase tracking-widest mb-8 flex items-center gap-2 text-[#F4F1E8]">
+                <Database className="w-4 h-4 text-[#8F94A5]" />{' '}
                 {t('auth.usage.api_calls_per_day', 'Appels API par Jour')}
               </h3>
               <div className="h-64 w-full">
@@ -253,30 +250,30 @@ const AIUsagePage: React.FC = () => {
                     <YAxis hide />
                     <Tooltip
                       contentStyle={TOOLTIP_STYLE}
-                      labelStyle={{ color: '#aaa' }}
-                      cursor={{ fill: 'rgba(16,185,129,0.1)' }}
+                      labelStyle={{ color: '#8F94A5' }}
+                      cursor={{ fill: 'rgba(143,148,165,0.1)' }}
                       formatter={(value) => [
                         `${value} ${t('auth.usage.calls_unit', 'appels')}`,
                         '',
                       ]}
                     />
-                    <Bar dataKey="requests" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="requests" fill="#8F94A5" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </Card>
+            </div>
           </div>
 
           {/* Footer Info */}
-          <div className="mt-12 p-8 rounded-[2rem] bg-blue-500/5 border border-blue-500/10 flex flex-col md:flex-row items-center gap-8">
-            <div className="w-16 h-16 bg-blue-500/20 rounded-3xl flex items-center justify-center shrink-0">
-              <Calendar className="w-8 h-8 text-blue-500" />
+          <div className="mt-12 p-8 rounded-2xl border border-[#E8442B]/25 bg-[#E8442B]/[0.05] flex flex-col md:flex-row items-center gap-8">
+            <div className="w-16 h-16 bg-[#E8442B]/15 border border-[#E8442B]/25 rounded-2xl flex items-center justify-center shrink-0">
+              <Calendar className="w-8 h-8 text-[#E8442B]" />
             </div>
             <div>
-              <h4 className="text-lg font-black italic manga-font uppercase mb-1 text-black dark:text-white">
+              <h4 className="text-lg font-black italic font-manga uppercase mb-1 text-[#F4F1E8]">
                 {t('auth.usage.quota_reset_title', 'Réinitialisation des Quotas')}
               </h4>
-              <p className="text-xs text-gray-500 leading-relaxed uppercase font-bold">
+              <p className="text-xs text-[#8F94A5] leading-relaxed uppercase font-bold">
                 {t(
                   'auth.usage.quota_reset_desc',
                   "Vos quotas sont réinitialisés chaque jour à **minuit (UTC)**. En cas de dépassement, l'accès aux fonctionnalités IA (RAG, Génération, Forge) sera restreint jusqu'au prochain cycle ou recharge dans la Power Station.",
@@ -286,7 +283,7 @@ const AIUsagePage: React.FC = () => {
             <div className="flex-grow" />
             <Link
               to="/power-station/"
-              className="bg-blue-500 hover:bg-blue-600 text-white font-black italic manga-font px-8 py-4 rounded-xl shadow-lg transition-all no-underline whitespace-nowrap"
+              className={`${LAB_CTA} md:w-auto px-8 whitespace-nowrap no-underline`}
             >
               {t('auth.usage.recharge_cta', 'RECHARGER MON ÉNERGIE')}
             </Link>

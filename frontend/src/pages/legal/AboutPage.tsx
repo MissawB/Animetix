@@ -2,7 +2,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Cpu, Users } from 'lucide-react';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
-import { Card } from '../../components/ui/Card';
 
 /**
  * Page "À propos" — page publique requise (AdSense : transparence & confiance).
@@ -40,31 +39,46 @@ const AboutPage: React.FC = () => {
 
   return (
     <AnimatedPage>
-      <div className="max-w-3xl mx-auto px-6 py-16">
-        <header className="mb-10 text-center">
-          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase mb-4">
-            {t('legal.about.title', 'À propos d’Animetix')}
-          </h1>
-          <p className="text-base opacity-70 font-bold max-w-2xl mx-auto leading-relaxed">
-            {t(
-              'legal.about.intro',
-              "Animetix (Anime Archetype Engine) est une plateforme interactive où l'IA rencontre la culture anime : jeux, laboratoires créatifs et exploration de connaissances.",
-            )}
-          </p>
-        </header>
+      <div className="min-h-[calc(100vh-64px)] bg-[#0B0C10] text-[#F4F1E8]">
+        <div className="max-w-3xl mx-auto px-6 py-16">
+          <header className="mb-10 text-center">
+            <div className="mb-5 flex items-center justify-center gap-3">
+              <span className="explore-stamp -rotate-2" aria-hidden>
+                誌
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+                À propos
+              </span>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black italic font-manga tracking-tighter uppercase mb-4 text-[#F4F1E8]">
+              {t('legal.about.title', 'À propos d’Animetix')}
+            </h1>
+            <p className="text-base text-[#8F94A5] font-bold max-w-2xl mx-auto leading-relaxed">
+              {t(
+                'legal.about.intro',
+                "Animetix (Anime Archetype Engine) est une plateforme interactive où l'IA rencontre la culture anime : jeux, laboratoires créatifs et exploration de connaissances.",
+              )}
+            </p>
+          </header>
 
-        <div className="space-y-6">
-          {blocks.map((block) => (
-            <Card key={block.title} padding="lg" className="flex gap-4">
-              <div className="shrink-0 w-11 h-11 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
-                {block.icon}
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-lg font-black uppercase tracking-wide">{block.title}</h2>
-                <p className="text-sm leading-relaxed opacity-80">{block.body}</p>
-              </div>
-            </Card>
-          ))}
+          <div className="space-y-6">
+            {blocks.map((block) => (
+              <section
+                key={block.title}
+                className="flex gap-4 rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 sm:p-8"
+              >
+                <div className="shrink-0 w-11 h-11 rounded-xl bg-[#E8442B]/10 text-[#E8442B] flex items-center justify-center">
+                  {block.icon}
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-lg font-black uppercase tracking-wide font-manga italic text-[#F4F1E8]">
+                    {block.title}
+                  </h2>
+                  <p className="text-sm leading-relaxed text-[#8F94A5]">{block.body}</p>
+                </div>
+              </section>
+            ))}
+          </div>
         </div>
       </div>
     </AnimatedPage>
