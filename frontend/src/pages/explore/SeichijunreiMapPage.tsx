@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Plot from '../../components/LazyPlot';
 import type * as Plotly from 'plotly.js';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../utils/apiClient';
+import { exploreService } from '../../features/explore/services/exploreService';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { Card } from '../../components/ui/Card';
 import { MapPin, ArrowLeft, Camera, Navigation, Globe } from 'lucide-react';
@@ -28,7 +28,7 @@ const SeichijunreiMapPage: React.FC = () => {
 
   const { data: locations, isLoading } = useQuery<PilgrimageLocation[]>({
     queryKey: ['seichijunrei-locations'],
-    queryFn: () => apiClient('/api/v1/explore/seichijunrei/'),
+    queryFn: () => exploreService.getSeichijunreiMap(),
   });
 
   const handlePointClick = (event: PlotlyEvent) => {

@@ -1,6 +1,22 @@
-﻿# Animetix - History of Refactorings & Achievements
+# Animetix - History of Refactorings & Achievements
 
 This document archives the major milestones of the project's technical evolution.
+
+## [2026-07-24] Completed Audit & Debt Cleanup Items (2026-07-23 to 2026-07-24)
+
+- **Frontend — Modales accessibles & composant Modal.tsx** : Composant partagé `<Modal>` (`frontend/src/components/ui/Modal.tsx`) respectant WCAG (`role="dialog"`, `aria-modal="true"`, focus trap, `Escape`, scroll lock) + suite de tests unitaires (5/5 passés). Refactorisation des modales overlays (`LabListOverlay`, `ToTNodeInspectionModal`, `UniverseDetailPanel`, `ClubDiscoveryPage`, `ClubDashboard`, `TrackerSyncPanel`).
+- **Frontend — Service layer & types modulaires par domaine** : Éclatement de `types/index.ts` (703 l.) en 8 modules de domaine (`common`, `user`, `media`, `games`, `social`, `admin`, `labs`, `graph`) avec ré-export dans `index.ts` pour rétro-compatibilité. Création des services par feature (`exploreService`, `supportService`, `mlopsService`) et extension des services existants (`adminService`, `graphService`, `billingService`, `socialService`, `labService`). Routage de 100% des appels `apiClient` inline vers leurs services respectifs.
+- **Frontend — Zero pages > 500 lignes & eslint max-lines** : Décomposition de `CovertestPage.tsx` et `ClassicLobbyPage.tsx` avec extraction de composants. Règle `max-lines: 500` posée dans `eslint.config.js` sans aucune exemption.
+- **Frontend — Data-fetching react-query** : Migration de `FinancialDashboardPage`, `AkinetixRLPage`, `OfflineSyncPage`, `MangaLabPage`, `PricingPage` vers `useQuery`/`useMutation`.
+- **Frontend — Couverture de tests des grandes pages** : Création de 7 suites de tests unitaires (`ExpertNexusPage`, `ArchetypeNexusPage`, `ForgePage`, `ClubDashboard`, `StrategyLabPage`, `LatentSpacePage`, `AccountSettingsPage`). Ratchet de couverture rehaussé à 45% stmts.
+- **Backend — Galerie VN publique** : Cap `GALLERY_MAX_ITEMS=50`, `select_related`/`prefetch_related` (35->2 requêtes), whitelist de champs et propagation context.
+- **Backend — `brain_service.py` error handling** : Décorateur `@handle_brain_errors` remplaçant 28 requêtes `except Exception as e` avec masquage de fuites `str(e)`.
+- **Backend — Adaptateur Google GenAI** : Levée d'exceptions `InferenceError` au lieu de sentinelles neutres silencieuses.
+- **Backend — Separation ISP `InferencePort`** : Découpage de l'interface `InferencePort` en 4 sub-ports spécialisés par modalité.
+- **Backend — God modules models/serializers/urls** : Modularisation par domaine des packages `models/`, `serializers/`, et `urls/domains/`.
+- **Infra & Docker** : Stage builder non-root pour Brain (`appuser`), `HEALTHCHECK` dans Dockerfile web, digest SHA immuable pour base Dataflow, CSP prod sans `'unsafe-inline'`.
+- **CI & DB** : Garde-fou de dérive des migrations Django (`makemigrations --check`), durcissement des timeouts, permissions et SHA pinning.
+- **Vrac audit & Moshi/Kyutai** : Test placebo corrigé, `.gitignore` dédupliqué, `knip` frontend, cascade STT Kyutai + XTTS pour S2S local.
 
 ## [2026-07-22] `test-windows` required-check: deliberately NOT registered (workflow mismatch)
 

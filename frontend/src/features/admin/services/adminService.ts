@@ -10,4 +10,6 @@ export const adminService = {
     apiClient(`/api/v1/admin/users/${userId}/toggle-staff/`, { method: 'POST' }),
   toggleActive: async (userId: number) =>
     apiClient(`/api/v1/admin/users/${userId}/toggle-active/`, { method: 'POST' }),
+  getEconomics: async () => apiClient('/api/v1/admin/economics/'),
+  getTTCMonitoring: async () => apiClient('/api/v1/admin/ttc-monitoring/'),
 };

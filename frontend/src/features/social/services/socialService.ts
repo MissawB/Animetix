@@ -108,4 +108,12 @@ export const socialService = {
       body: JSON.stringify({ tracker }),
     });
   },
+
+  getAchievements: async () => {
+    return apiClient('/api/v1/achievements/');
+  },
+
+  getGameplayHistory: async (limit: number = 10) => {
+    return apiClient(`/api/v1/social/gameplay-history/?limit=${limit}`);
+  },
 };

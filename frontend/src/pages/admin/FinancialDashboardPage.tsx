@@ -13,7 +13,7 @@ import {
 import { Card } from '../../components/ui/Card';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { useTranslation } from 'react-i18next';
-import { apiClient } from '../../utils/apiClient';
+import { billingService } from '../../features/billing/services/billingService';
 
 interface FinancialData {
   total_ai_cost: number;
@@ -38,7 +38,7 @@ const FinancialDashboardPage: React.FC = () => {
 
   const { data, isLoading, error, refetch } = useQuery<FinancialData, Error>({
     queryKey: ['financial-summary'],
-    queryFn: () => apiClient('/api/v1/billing/admin/financial-summary/', { skipToast: true }),
+    queryFn: () => billingService.getFinancialSummary(),
   });
 
   // Sliders simulation values

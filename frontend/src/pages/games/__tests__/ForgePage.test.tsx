@@ -38,6 +38,6 @@ describe('ForgePage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/LA FORGE/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /FORGE/i })).toBeInTheDocument();
   });
 });

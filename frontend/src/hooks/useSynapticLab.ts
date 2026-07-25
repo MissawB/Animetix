@@ -1,13 +1,18 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiClient } from '../utils/apiClient';
+import { labService } from '../features/labs/services/labService';
 import { UnifiedPlasticityState, PersonalizationFeatures, PlasticityResult } from '../types';
 
 export function useSynapticLab() {
   // React Query Fetch Unified State
-  const { data: state, isLoading, isError, refetch } = useQuery<UnifiedPlasticityState>({
+  const {
+    data: state,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery<UnifiedPlasticityState>({
     queryKey: ['singularity-lab-state'],
-    queryFn: () => apiClient('/api/v1/singularity-lab/'),
+    queryFn: () => labService.getSingularityLab(),
   });
 
   // Local Form Config state
@@ -45,35 +50,35 @@ export function useSynapticLab() {
   }
 
   // Mutations
-  const configMutation = useMutation<UnifiedPlasticityState, Error, {
-    action: string;
-    tau_plus: number;
-    tau_minus: number;
-    mode: 'auto' | 'manual';
-    manual_archetype: string;
-    intensity_multiplier: number;
-    features: PersonalizationFeatures;
-  }>({
-    mutationFn: (body) => 
-      apiClient('/api/v1/singularity-lab/', { 
-        method: 'POST', 
-        body: JSON.stringify(body) 
-      }),
+  const configMutation = useMutation<
+    UnifiedPlasticityState,
+    Error,
+    {
+      action: string;
+      tau_plus: number;
+      tau_minus: number;
+      mode: 'auto' | 'manual';
+      manual_archetype: string;
+      intensity_multiplier: number;
+      features: PersonalizationFeatures;
+    }
+  >({
+    mutationFn: (body) => labService.postSingularityLab(body),
     onSuccess: () => {
       refetch();
-    }
+    },
   });
 
-  const plasticityMutation = useMutation<PlasticityResult, Error, { action: string; learning_rate: number; trigger_spikes: number[] }>({
-    mutationFn: (body) => 
-      apiClient('/api/v1/singularity-lab/', { 
-        method: 'POST', 
-        body: JSON.stringify(body) 
-      }),
+  const plasticityMutation = useMutation<
+    PlasticityResult,
+    Error,
+    { action: string; learning_rate: number; trigger_spikes: number[] }
+  >({
+    mutationFn: (body) => labService.postSingularityLab(body),
     onSuccess: (data) => {
       setPlasticityResult(data);
       refetch();
-    }
+    },
   });
 
   const handleApplyConfig = () => {
@@ -84,7 +89,7 @@ export function useSynapticLab() {
       mode,
       manual_archetype: manualArchetype,
       intensity_multiplier: intensityMult,
-      features
+      features,
     });
   };
 
@@ -92,13 +97,13 @@ export function useSynapticLab() {
     plasticityMutation.mutate({
       action: 'plasticity',
       learning_rate: lr,
-      trigger_spikes: selectedSpikes
+      trigger_spikes: selectedSpikes,
     });
   };
 
   const toggleSpike = (idx: number) => {
     if (selectedSpikes.includes(idx)) {
-      setSelectedSpikes(selectedSpikes.filter(i => i !== idx));
+      setSelectedSpikes(selectedSpikes.filter((i) => i !== idx));
     } else {
       setSelectedSpikes([...selectedSpikes, idx]);
     }
@@ -109,20 +114,29 @@ export function useSynapticLab() {
     isLoading,
     isError,
     refetch,
-    tauPlus, setTauPlus,
-    tauMinus, setTauMinus,
-    mode, setMode,
-    manualArchetype, setManualArchetype,
-    intensityMult, setIntensityMult,
-    features, setFeatures,
-    selectedSpikes, setSelectedSpikes,
-    lr, setLr,
-    plasticityResult, setPlasticityResult,
+    tauPlus,
+    setTauPlus,
+    tauMinus,
+    setTauMinus,
+    mode,
+    setMode,
+    manualArchetype,
+    setManualArchetype,
+    intensityMult,
+    setIntensityMult,
+    features,
+    setFeatures,
+    selectedSpikes,
+    setSelectedSpikes,
+    lr,
+    setLr,
+    plasticityResult,
+    setPlasticityResult,
     configMutation,
     plasticityMutation,
     handleApplyConfig,
     handleSimulate,
-    toggleSpike
+    toggleSpike,
   };
 }
 export type UseSynapticLabReturn = ReturnType<typeof useSynapticLab>;

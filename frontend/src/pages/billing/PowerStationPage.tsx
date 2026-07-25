@@ -4,6 +4,7 @@ import { CreditCard } from 'lucide-react';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../utils/apiClient';
+import { billingService } from '../../features/billing/services/billingService';
 import { useToastStore } from '../../store/toastStore';
 import { usePassiveMiningStore } from '../../store/passiveMiningStore';
 import { PassiveAdMiner } from '../../features/billing/components/PassiveAdMiner';
@@ -101,7 +102,7 @@ const PowerStationPage: React.FC = () => {
   const completeAd = async () => {
     setIsCrediting(true);
     try {
-      const res = await apiClient('/api/v1/billing/wallet/watch-ad/', { method: 'POST' });
+      const res = await billingService.watchAd();
       addToast(
         t('billing.power_station.energy_injected', {
           defaultValue: 'Énergie injectée : +{{earned}} Bx !',

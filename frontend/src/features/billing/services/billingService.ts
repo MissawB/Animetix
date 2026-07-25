@@ -15,3 +15,9 @@ export const logAdEvent = (eventType: AdEventType, adType: AdType): void => {
     /* analytics is best-effort */
   });
 };
+
+export const billingService = {
+  getFinancialSummary: async () =>
+    apiClient('/api/v1/billing/admin/financial-summary/', { skipToast: true }),
+  watchAd: async () => apiClient('/api/v1/billing/wallet/watch-ad/', { method: 'POST' }),
+};

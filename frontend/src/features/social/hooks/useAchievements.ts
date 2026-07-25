@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
+import { socialService } from '../services/socialService';
 
 export const useAchievements = () => {
   return useQuery({
     queryKey: ['achievements'],
     queryFn: async () => {
-      const data = await apiClient('/api/v1/achievements/');
+      const data = await socialService.getAchievements();
       return data.results || data;
     },
   });

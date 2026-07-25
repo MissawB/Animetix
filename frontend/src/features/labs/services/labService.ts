@@ -55,4 +55,15 @@ export const labService = {
   getAIFeedbackHistory: async (): Promise<AIFeedback[]> => {
     return apiClient('/api/v1/mlops/feedback/submit/');
   },
+
+  getSingularityLab: async () => {
+    return apiClient('/api/v1/singularity-lab/');
+  },
+
+  postSingularityLab: async (data: Record<string, unknown>) => {
+    return apiClient('/api/v1/singularity-lab/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
 };

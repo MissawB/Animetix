@@ -2,11 +2,15 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { apiClient } from '../../../../utils/apiClient';
+import { socialService } from '../../services/socialService';
 import { useAchievements } from '../useAchievements';
 
-vi.mock('../../../../utils/apiClient', () => ({ apiClient: vi.fn() }));
-const mocked = vi.mocked(apiClient);
+vi.mock('../../services/socialService', () => ({
+  socialService: {
+    getAchievements: vi.fn(),
+  },
+}));
+const mocked = vi.mocked(socialService.getAchievements);
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -22,7 +26,7 @@ describe('useAchievements', () => {
     mocked.mockResolvedValue({ results: [{ id: 1 }] });
     const { result } = renderHook(() => useAchievements(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mocked).toHaveBeenCalledWith('/api/v1/achievements/');
+    expect(mocked).toHaveBeenCalled();
     expect(result.current.data).toEqual([{ id: 1 }]);
   });
 
