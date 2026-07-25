@@ -8,9 +8,7 @@
   background: linear-gradient(105deg, #fff9e6 40%, #fffcf0 40.1%);
 }
 [data-bs-theme='dark'] .hero-bg {
-  /* Dégradé encre semi-transparent : rend au héros sa diagonale tout en laissant
-     transparaître l'image de fond. */
-  background: linear-gradient(105deg, rgba(11, 12, 16, 0.72) 40%, rgba(15, 16, 22, 0.5) 40.1%);
+  background: #0b0c10; /* encre pleine */
 }
 
 /* Character Card Floating Animation */

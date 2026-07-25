@@ -14,7 +14,7 @@ export const SingularityLab: React.FC = () => {
         <span className="text-[#E8442B] text-3xl leading-none ml-1">.</span>
       </h2>
       <Link to="/lab/" className="block no-underline group">
-        <div className="relative w-full h-[280px] bg-[#0B0C10] rounded-2xl overflow-hidden shadow-2xl border border-[#F4F1E8]/10 group-hover:border-[#5D7FD3]/50 transition-all duration-500 flex items-center p-8 md:p-16">
+        <div className="relative w-full h-[280px] bg-[#14161D] rounded-2xl overflow-hidden shadow-2xl border border-[#F4F1E8]/10 group-hover:border-[#5D7FD3]/50 transition-all duration-500 flex items-center p-8 md:p-16">
           {/* Latent-space coordinate grid — drifts continuously (signature motion) */}
           <div
             className="absolute inset-0 opacity-[0.14] animate-grid-pan motion-reduce:animate-none"
