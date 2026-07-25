@@ -2,7 +2,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
-import { Menu, LogIn, UserPlus, Bell, HelpCircle, Zap, ChevronDown, X } from 'lucide-react';
+import {
+  Menu,
+  Shield,
+  Sparkles,
+  Sliders,
+  User,
+  LogOut,
+  LogIn,
+  UserPlus,
+  Bell,
+  HelpCircle,
+  Zap,
+  ChevronDown,
+  X,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePersonalizationStore } from '../store/personalizationStore';
 import { useNotificationStore } from '../store/notificationStore';
@@ -134,13 +148,7 @@ const Navbar: React.FC = () => {
                       className={menuItem}
                       role="menuitem"
                     >
-                      <span
-                        className="w-4 text-center text-base font-black leading-none"
-                        aria-hidden
-                      >
-                        印
-                      </span>{' '}
-                      {t('nav.my_profile', 'Mon profil')}
+                      <User className="h-4 w-4" /> {t('nav.my_profile', 'Mon profil')}
                     </Link>
 
                     <button
@@ -149,12 +157,9 @@ const Navbar: React.FC = () => {
                       role="menuitemcheckbox"
                       aria-checked={isPersonalizationEnabled}
                     >
-                      <span
-                        className={`w-4 text-center text-base font-black leading-none ${isPersonalizationEnabled ? 'text-[#FDB913]' : ''}`}
-                        aria-hidden
-                      >
-                        彩
-                      </span>
+                      <Sparkles
+                        className={`h-4 w-4 ${isPersonalizationEnabled ? 'text-[#FDB913]' : 'text-[#8F94A5]'}`}
+                      />
                       <span className="flex-1">
                         {t('nav.hyper_perso', 'Hyper-personnalisation')}
                       </span>
@@ -177,12 +182,7 @@ const Navbar: React.FC = () => {
                       className={menuItem}
                       role="menuitem"
                     >
-                      <span
-                        className="w-4 text-center text-base font-black leading-none"
-                        aria-hidden
-                      >
-                        調
-                      </span>{' '}
+                      <Sliders className="h-4 w-4" />{' '}
                       {t('nav.perso_settings', 'Personnalisation avancée')}
                     </button>
 
@@ -197,12 +197,7 @@ const Navbar: React.FC = () => {
                         className={menuItem}
                         role="menuitem"
                       >
-                        <span
-                          className="w-4 text-center text-base font-black leading-none text-[#E8442B]"
-                          aria-hidden
-                        >
-                          管
-                        </span>{' '}
+                        <Shield className="h-4 w-4 text-[#E8442B]" />{' '}
                         {t('nav.admin', 'Administration')}
                       </Link>
                     )}
@@ -216,13 +211,7 @@ const Navbar: React.FC = () => {
                       className={`${menuItem} !text-[#E8442B] hover:!bg-[#E8442B]/10`}
                       role="menuitem"
                     >
-                      <span
-                        className="w-4 text-center text-base font-black leading-none"
-                        aria-hidden
-                      >
-                        出
-                      </span>{' '}
-                      {t('auth.logout', 'Déconnexion')}
+                      <LogOut className="h-4 w-4" /> {t('auth.logout', 'Déconnexion')}
                     </button>
                   </div>
                 </>
@@ -262,7 +251,7 @@ const Navbar: React.FC = () => {
             tabIndex={-1}
             aria-label={t('nav.close_panel', 'Fermer le panneau')}
           />
-          <div className="fixed left-1/2 top-1/2 z-[1100] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 animate-in fade-in zoom-in-95 rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 shadow-2xl duration-200">
+          <div className="fixed left-1/2 top-1/2 z-[1100] max-h-[85vh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto animate-in fade-in zoom-in-95 rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-6 shadow-2xl duration-200">
             <div className="mb-6 flex items-center justify-between">
               <h4 className="font-manga text-sm font-black uppercase italic tracking-widest text-[#F4F1E8]">
                 {t('personalization.title', 'Personnalisation')}
