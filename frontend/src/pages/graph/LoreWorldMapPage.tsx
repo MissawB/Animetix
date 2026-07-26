@@ -46,6 +46,7 @@ const LoreWorldMapPage: React.FC = () => {
   const entityCount = communities.reduce((n, c) => n + (c.entities?.length ?? 0), 0);
 
   const selected = territories.find((t) => String(t.community.id) === selectedId) ?? territories[0];
+  const selectedIndex = selected ? territories.indexOf(selected) : -1;
 
   if (isLoading) {
     return (
@@ -283,60 +284,113 @@ const LoreWorldMapPage: React.FC = () => {
 
             {/* ── Dossier : ce que contient le territoire sélectionné ── */}
             <div className="lg:col-span-4">
-              <div className="sticky top-24 rounded-[2rem] border border-[#F4F1E8]/10 bg-[#0F1016] p-8">
-                {selected ? (
-                  <motion.div
-                    key={String(selected.community.id)}
-                    initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35 }}
-                  >
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#FDB913]">
-                      Territoire
-                    </p>
-                    <h2 className="font-manga mt-2 text-2xl font-black uppercase italic leading-tight text-[#F4F1E8]">
-                      {selected.community.name}
-                    </h2>
+              <div className="sticky top-24 overflow-hidden rounded-[2rem] border border-[#F4F1E8]/10 bg-[#0F1016]">
+                {/* Habillage « fiche de relevé » : filet shu, trame, sceau or. */}
+                <span
+                  className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-[#E8442B] via-[#E8442B]/20 to-transparent"
+                  aria-hidden
+                />
+                <div
+                  className="explore-halftone pointer-events-none absolute inset-0 opacity-[0.04]"
+                  aria-hidden
+                />
+                <div
+                  className="pointer-events-none absolute -bottom-16 -right-16 h-56 w-56 rounded-full bg-[#FDB913]/[0.06] blur-[80px]"
+                  aria-hidden
+                />
 
-                    <p className="mt-5 text-sm leading-relaxed text-[#8F94A5]">
-                      {selected.community.summary}
-                    </p>
-
-                    <div className="mt-8">
-                      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#8F94A5]">
-                        Œuvres de ce territoire ({selected.community.entities?.length ?? 0})
-                      </p>
-                      <ul className="mt-3 flex flex-wrap gap-2">
-                        {(selected.community.entities ?? []).slice(0, 12).map((entity) => (
-                          <li
-                            key={entity}
-                            className="rounded-full border border-[#FDB913]/20 bg-[#FDB913]/[0.06] px-3 py-1 text-[11px] font-bold text-[#FDB913]/90"
+                <div className="relative p-8">
+                  {selected ? (
+                    <motion.div
+                      key={String(selected.community.id)}
+                      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.35 }}
+                    >
+                      {/* En-tête de fiche : sceau + libellé + numéro de dossier. */}
+                      <div className="mb-5 flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="font-manga grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#FDB913]/30 bg-[#0B0C10] text-xl font-black text-[#FDB913]"
+                            aria-hidden
                           >
-                            {entity}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                            領
+                          </span>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+                              Territoire
+                            </p>
+                            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#8F94A5]">
+                              Dossier · {communities.length} au total
+                            </p>
+                          </div>
+                        </div>
+                        {selectedIndex >= 0 && (
+                          <span className="font-mono text-[10px] font-black tracking-widest text-[#8F94A5]">
+                            N° {String(selectedIndex + 1).padStart(2, '0')}
+                          </span>
+                        )}
+                      </div>
 
-                    <p className="mt-8 border-t border-[#F4F1E8]/10 pt-5 text-xs leading-relaxed text-[#8F94A5]/70">
-                      Cliquez un autre territoire sur la carte pour ouvrir son dossier.
-                    </p>
-                  </motion.div>
-                ) : (
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#FDB913]">
-                      {generating ? 'Relevé en cours' : 'Carte vierge'}
-                    </p>
-                    <h2 className="font-manga mt-2 text-2xl font-black uppercase italic leading-tight text-[#F4F1E8]">
-                      {generating ? 'La carte se prépare' : 'Aucun territoire relevé'}
-                    </h2>
-                    <p className="mt-5 text-sm leading-relaxed text-[#8F94A5]">
-                      {generating
-                        ? "Les territoires s'afficheront ici dès que la carte est prête. Cette page se met à jour toute seule."
-                        : 'La carte est reconstruite chaque nuit : les œuvres sont regroupées et chaque territoire reçoit un résumé.'}
-                    </p>
-                  </div>
-                )}
+                      <h2 className="font-manga text-2xl font-black uppercase italic leading-tight text-[#F4F1E8]">
+                        {selected.community.name}
+                      </h2>
+
+                      {/* Chiffre-clé : le poids du territoire, voix données (or). */}
+                      <div className="mt-5 flex items-baseline gap-2">
+                        <span className="font-manga text-4xl font-black italic tabular-nums leading-none text-[#FDB913]">
+                          {selected.community.entities?.length ?? 0}
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#8F94A5]">
+                          œuvres regroupées
+                        </span>
+                      </div>
+
+                      <p className="mt-5 border-l-2 border-[#FDB913]/40 pl-4 text-sm leading-relaxed text-[#8F94A5]">
+                        {selected.community.summary}
+                      </p>
+
+                      <div className="mt-7">
+                        <p className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#8F94A5]">
+                          <span className="h-3 w-0.5 bg-[#FDB913]" aria-hidden /> Œuvres clés
+                        </p>
+                        <ul className="flex flex-wrap gap-2">
+                          {(selected.community.entities ?? []).slice(0, 12).map((entity) => (
+                            <li
+                              key={entity}
+                              className="rounded-full border border-[#FDB913]/20 bg-[#FDB913]/[0.06] px-3 py-1 text-[11px] font-bold text-[#FDB913]/90 transition-colors hover:border-[#FDB913]/50"
+                            >
+                              {entity}
+                            </li>
+                          ))}
+                          {(selected.community.entities?.length ?? 0) > 12 && (
+                            <li className="rounded-full border border-[#F4F1E8]/10 px-3 py-1 text-[11px] font-bold text-[#8F94A5]">
+                              +{(selected.community.entities?.length ?? 0) - 12} autres
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+
+                      <p className="mt-8 border-t border-[#F4F1E8]/10 pt-5 text-xs leading-relaxed text-[#8F94A5]/70">
+                        Cliquez un autre territoire sur la carte pour ouvrir son dossier.
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
+                        {generating ? 'Relevé en cours' : 'Carte vierge'}
+                      </p>
+                      <h2 className="font-manga mt-2 text-2xl font-black uppercase italic leading-tight text-[#F4F1E8]">
+                        {generating ? 'La carte se prépare' : 'Aucun territoire relevé'}
+                      </h2>
+                      <p className="mt-5 text-sm leading-relaxed text-[#8F94A5]">
+                        {generating
+                          ? "Les territoires s'afficheront ici dès que la carte est prête. Cette page se met à jour toute seule."
+                          : 'La carte est reconstruite chaque nuit : les œuvres sont regroupées et chaque territoire reçoit un résumé.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
