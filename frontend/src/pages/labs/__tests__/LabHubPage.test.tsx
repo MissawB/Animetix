@@ -17,20 +17,18 @@ const renderPage = () => {
 };
 
 describe('LabHubPage', () => {
-  it('renders the header and section titles', () => {
+  it('renders the header', () => {
     renderPage();
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/SINGULARITY/i);
-    const sectionHeadings = screen.getAllByRole('heading', { level: 2 });
-    const headingText = sectionHeadings.map((h) => h.textContent).join(' ');
-    expect(headingText).toMatch(/FORGE/i);
-    expect(headingText).toMatch(/COGNITION/i);
   });
 
-  it('renders lab cards from every section', () => {
+  it('renders the main lab cards', () => {
     renderPage();
     expect(screen.getByText('Quantum Cognition')).toBeInTheDocument();
-    expect(screen.getByText('Manga Lab')).toBeInTheDocument();
-    expect(screen.getByText('Archetype Nexus')).toBeInTheDocument();
+    // The Forge Créative and Cognition Core sections have been removed, so their
+    // cards (e.g. Manga Lab, Archetype Nexus) are intentionally no longer shown.
+    expect(screen.queryByText('Manga Lab')).not.toBeInTheDocument();
+    expect(screen.queryByText('Archetype Nexus')).not.toBeInTheDocument();
   });
 
   it('renders links pointing to lab routes', () => {
@@ -46,9 +44,9 @@ describe('LabHubPage', () => {
     expect(catalogue).toHaveTextContent(/Catalogue/i);
   });
 
-  it('renders the hub navigation links', () => {
+  it('no longer links to the removed forge/cognition hubs', () => {
     const { container } = renderPage();
-    expect(container.querySelector('a[href="/lab/forge-hub/"]')).toBeInTheDocument();
-    expect(container.querySelector('a[href="/lab/cognition-hub/"]')).toBeInTheDocument();
+    expect(container.querySelector('a[href="/lab/forge-hub/"]')).not.toBeInTheDocument();
+    expect(container.querySelector('a[href="/lab/cognition-hub/"]')).not.toBeInTheDocument();
   });
 });

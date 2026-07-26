@@ -1,10 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LabPage, LabHeader } from './components/shared/LabKit';
-import { labs, creativeLabs, cognitionLabs, type LabEntry } from './labHubData';
+import { labs, type LabEntry } from './labHubData';
 import { LabHubCard } from './components/LabHubCard';
-import { LabHubCompactCard } from './components/LabHubCompactCard';
-import { LabHubSectionHeader } from './components/LabHubSectionHeader';
 
 /** Overrides each entry's title/desc with its i18n translation (falling back to
  *  the bundled French copy), memoised against the active language. */
@@ -21,13 +19,6 @@ const useTranslatedLabs = (entries: LabEntry[]): LabEntry[] => {
   );
 };
 
-/** Les clés i18n de section portent le nom complet ("FORGE CRÉATIVE") ;
- *  on encre le premier mot en papier et le reste en vermillon. */
-const splitSectionTitle = (full: string): [string, string] => {
-  const [first, ...rest] = full.split(' ');
-  return [first, rest.join(' ')];
-};
-
 /** Indices des « unes » (col-span-2) choisis pour que la grille 3 colonnes
  *  tuile sans trou : (2+1) / (1+2) / (1+1+1) / (2+1). */
 const FEATURED_INDICES = new Set([0, 3, 7]);
@@ -35,14 +26,6 @@ const FEATURED_INDICES = new Set([0, 3, 7]);
 const LabHubPage: React.FC = () => {
   const { t } = useTranslation();
   const translatedLabs = useTranslatedLabs(labs);
-  const translatedCreativeLabs = useTranslatedLabs(creativeLabs);
-  const translatedCognitionLabs = useTranslatedLabs(cognitionLabs);
-  const [creativeTitle, creativeAccent] = splitSectionTitle(
-    t('lab_hub.section_creative', 'FORGE CRÉATIVE'),
-  );
-  const [cognitionTitle, cognitionAccent] = splitSectionTitle(
-    t('lab_hub.section_cognition', 'COGNITION CORE'),
-  );
 
   return (
     <LabPage>
@@ -56,39 +39,9 @@ const LabHubPage: React.FC = () => {
         )}
       />
 
-      <div className="mb-24 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {translatedLabs.map((lab, idx) => (
           <LabHubCard key={lab.id} lab={lab} featured={FEATURED_INDICES.has(idx)} />
-        ))}
-      </div>
-
-      {/* Section Forge créative */}
-      <LabHubSectionHeader
-        title={creativeTitle}
-        accent={creativeAccent}
-        hubUrl="/lab/forge-hub/"
-        hubLabel={t('lab_hub.btn_creative_hub', 'ACCÉDER AU HUB COMPLET')}
-        ink="kin"
-      />
-
-      <div className="mb-24 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-        {translatedCreativeLabs.map((lab) => (
-          <LabHubCompactCard key={lab.id} lab={lab} ink="kin" />
-        ))}
-      </div>
-
-      {/* Section Cognition core */}
-      <LabHubSectionHeader
-        title={cognitionTitle}
-        accent={cognitionAccent}
-        hubUrl="/lab/cognition-hub/"
-        hubLabel={t('lab_hub.btn_cognition_hub', 'ACCÉDER AU HUB COMPLET')}
-        ink="ai"
-      />
-
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-        {translatedCognitionLabs.map((lab) => (
-          <LabHubCompactCard key={lab.id} lab={lab} ink="ai" />
         ))}
       </div>
 
