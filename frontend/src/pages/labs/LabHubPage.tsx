@@ -66,8 +66,6 @@ const LabHubPage: React.FC = () => {
     [],
   );
 
-  const operational = labs.filter((l) => /oper/i.test(l.status ?? '')).length;
-
   return (
     <AnimatedPage>
       <div className="relative min-h-screen overflow-hidden bg-[#020202] px-6 py-20 text-[#F4F1E8]">
@@ -111,15 +109,6 @@ const LabHubPage: React.FC = () => {
                 "Explorez la frontière entre l'IA générative et la cognition pure.",
               )}
             </p>
-            <div className="mt-6 flex items-center gap-6 font-mono text-[10px] uppercase tracking-[0.25em] text-white/40">
-              <span>
-                <span className="font-black text-[#FDB913]">{labs.length}</span> protocoles
-              </span>
-              <span className="h-3 w-px bg-white/15" aria-hidden />
-              <span>
-                <span className="font-black text-[#34D399]">{operational}</span> opérationnels
-              </span>
-            </div>
           </header>
 
           {/* Les protocoles, en cartes vitrées sur le vide. */}
