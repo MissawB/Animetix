@@ -281,6 +281,54 @@ class UnifiedInferenceAdapter(
             f"Le service d'inférence ({self.model_name}) est indisponible. Dernier essai: {last_error}"
         )
 
+    @staticmethod
+    def _extract_json_object(text: str) -> Dict[str, Any]:
+        """Extrait le premier objet JSON d'une sortie LLM (tolère les ``` et le
+        texte parasite autour)."""
+        cleaned = text.strip()
+        if cleaned.startswith("```"):
+            fence = cleaned.split("```")
+            if len(fence) >= 2:
+                cleaned = fence[1]
+            if cleaned.lstrip().lower().startswith("json"):
+                cleaned = cleaned.lstrip()[4:]
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start == -1 or end == -1 or end < start:
+            raise InferenceError("Réponse LLM non-JSON")
+        return json.loads(cleaned[start : end + 1])
+
+    def generate_structured(
+        self,
+        prompt: str,
+        response_model: type,
+        system_prompt: str = "Tu réponds uniquement par un objet JSON valide.",
+        max_retries: int = 3,
+        **kwargs,
+    ) -> Any:
+        """Sortie structurée via le mode JSON d'Ollama.
+
+        Sans cette méthode, l'adaptateur Ollama n'était pas retenu pour les appels
+        structurés (JSON typé) : ceux-ci sautaient Ollama et tombaient sur le Brain
+        API (souvent injoignable en local), d'où l'absence de score LLM. On demande
+        ici un JSON conforme au schéma Pydantic, puis on le valide.
+        """
+        try:
+            schema = response_model.model_json_schema()
+        except Exception:  # noqa: BLE001 - schéma optionnel (mock/legacy)
+            schema = {}
+        guided_prompt = (
+            f"{prompt}\n\n"
+            "Réponds UNIQUEMENT par un objet JSON valide, sans texte ni balises "
+            f"autour, respectant ce schéma :\n{json.dumps(schema, ensure_ascii=False)}"
+        )
+        res = self.generate(
+            guided_prompt, system_prompt=system_prompt, json_mode=True, **kwargs
+        )
+        text = res.text if hasattr(res, "text") else str(res)
+        data = self._extract_json_object(text)
+        return response_model.model_validate(data)
+
     def stream_generate(
         self,
         prompt: str,
