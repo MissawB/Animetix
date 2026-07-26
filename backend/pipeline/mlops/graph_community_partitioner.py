@@ -152,6 +152,7 @@ class GraphCommunityPartitioner:
         parts = parts[:MAX_COMMUNITIES]
 
         communities: List[Dict[str, Any]] = []
+        used_names: set[str] = set()
         for i, members in enumerate(parts):
             titles = sorted(members)
             theme_counts: Counter = Counter()
@@ -159,8 +160,14 @@ class GraphCommunityPartitioner:
                 for attr in media_attrs.get(title, []):
                     if attr.startswith("theme:"):
                         theme_counts[attr[len("theme:") :]] += 1
-            top_theme = theme_counts.most_common(1)[0][0] if theme_counts else None
-            name = f"Communauté {top_theme}" if top_theme else f"Communauté {i + 1}"
+            # Nom = deux thèmes dominants (plus distinctif qu'un seul, qui se
+            # répète entre clusters partageant le même genre principal).
+            top_two = [t for t, _ in theme_counts.most_common(2)]
+            base = " & ".join(top_two) if top_two else str(i + 1)
+            name = f"Communauté {base}"
+            if name in used_names:  # dédup : deux clusters au même duo de thèmes
+                name = f"{name} #{i + 1}"
+            used_names.add(name)
             entities = titles[:MAX_ENTITIES_PER_COMMUNITY]
             communities.append(
                 {
