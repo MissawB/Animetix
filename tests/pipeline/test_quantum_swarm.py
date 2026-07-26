@@ -60,11 +60,13 @@ def test_swarm_consensus_paxos():
         SwarmConsensusOrchestrator,
     )
 
-    orchestrator = SwarmConsensusOrchestrator()
+    orchestrator = SwarmConsensusOrchestrator(
+        agent_names=["Expert Visuel", "Expert Sonore", "Expert Lore"]
+    )
 
     fact_visuel = "L'animation de Demon Slayer par Ufotable présente des graphismes et des couleurs époustouflantes, soutenue par un scénario et un lore d'exception."
     success, score = orchestrator.propose_fact(
-        proposer="VisualExpert", fact=fact_visuel, media_title="Demon Slayer"
+        proposer="Expert Visuel", fact=fact_visuel, media_title="Demon Slayer"
     )
 
     assert success is True
@@ -73,7 +75,7 @@ def test_swarm_consensus_paxos():
     fact_inconnu = "Ce manga s'est bien vendu en boutique en 2012."
 
     success_fail, score_fail = orchestrator.propose_fact(
-        proposer="AcousticExpert", fact=fact_inconnu, media_title="Unknown Media"
+        proposer="Expert Sonore", fact=fact_inconnu, media_title="Unknown Media"
     )
 
     assert success_fail is False
@@ -122,14 +124,17 @@ def test_swarm_consensus_llm_success():
 
     mock_engine = MagicMock()
     mock_votes = SwarmConsensusVotes(
-        votes={"VisualExpert": 0.85, "AcousticExpert": 0.35, "LoreExpert": 0.90}
+        votes={"Expert Visuel": 0.85, "Expert Sonore": 0.35, "Expert Lore": 0.90}
     )
     mock_engine.generate_structured.return_value = mock_votes
 
-    orchestrator = SwarmConsensusOrchestrator(inference_engine=mock_engine)
+    orchestrator = SwarmConsensusOrchestrator(
+        inference_engine=mock_engine,
+        agent_names=["Expert Visuel", "Expert Sonore", "Expert Lore"],
+    )
 
     success, score = orchestrator.propose_fact(
-        proposer="VisualExpert",
+        proposer="Expert Visuel",
         fact="L'animation est magnifique.",
         media_title="Bleach",
     )
@@ -147,10 +152,13 @@ def test_swarm_consensus_llm_failure_fallback():
     mock_engine = MagicMock()
     mock_engine.generate_structured.side_effect = Exception("LLM connection timed out")
 
-    orchestrator = SwarmConsensusOrchestrator(inference_engine=mock_engine)
+    orchestrator = SwarmConsensusOrchestrator(
+        inference_engine=mock_engine,
+        agent_names=["Expert Visuel", "Expert Sonore", "Expert Lore"],
+    )
 
     success, score = orchestrator.propose_fact(
-        proposer="VisualExpert",
+        proposer="Expert Visuel",
         fact="La musique de cet anime est magique.",
         media_title="Bleach",
     )

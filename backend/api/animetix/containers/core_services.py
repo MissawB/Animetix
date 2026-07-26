@@ -380,7 +380,15 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     swarm_consensus_orchestrator = providers.Singleton(
         LazyClass("core.domain.services.swarm_consensus", "SwarmConsensusOrchestrator"),
-        agent_names=["VisualExpert", "AcousticExpert", "LoreExpert"],
+        agent_names=[
+            "Expert Visuel",
+            "Expert Sonore",
+            "Expert Lore",
+            "Expert Combat",
+            "Expert Émotion",
+            "Historien Otaku",
+            "Avocat du Diable",
+        ],
         inference_engine=inference.inference_engine,
     )
 

@@ -137,7 +137,10 @@ const SwarmLabPage: React.FC = () => {
                     value={swarmResult.is_recorded ? 'Fait accepté' : 'Fait rejeté'}
                     tone={swarmResult.is_recorded ? 'paper' : 'shu'}
                   />
-                  <LabStat label="Agents votants" value="7" />
+                  <LabStat
+                    label="Experts votants"
+                    value={Object.keys(swarmResult.votes || {}).length || '—'}
+                  />
                 </div>
 
                 <LabPanel
@@ -182,7 +185,7 @@ const SwarmLabPage: React.FC = () => {
 
                 {swarmResult.phases && (
                   <LabPanel
-                    title="Diagnostics Paxos-sémantique"
+                    title="Comment la décision est prise"
                     corner={
                       <span className="flex items-center gap-1.5">
                         <Activity className="h-3.5 w-3.5" aria-hidden="true" />{' '}
@@ -190,24 +193,33 @@ const SwarmLabPage: React.FC = () => {
                       </span>
                     }
                   >
+                    <p className="mb-6 text-sm leading-relaxed text-[#8F94A5]">
+                      Pour éviter qu&apos;un seul expert impose son avis, la décision suit un vote
+                      en 3 étapes (protocole inspiré de « Paxos ») : on ouvre un tour, on vérifie
+                      qu&apos;assez d&apos;experts sont d&apos;accord, puis on scelle le résultat.
+                    </p>
                     <ol className="grid grid-cols-1 gap-6 md:grid-cols-3">
                       {[
                         {
-                          name: 'Prepare',
-                          detail: `Proposition n°${swarmResult.phases?.prepare?.proposal_id ?? '—'}`,
-                          body: `Promesses reçues : ${
+                          name: 'Ouverture du tour',
+                          detail: `réf. ${swarmResult.phases?.prepare?.proposal_id ?? '—'}`,
+                          body: `Chaque vote reçoit une référence unique. Les experts disponibles acceptent d'y participer : ${
                             swarmResult.phases?.prepare?.promises_received?.join(', ') || '—'
+                          }.`,
+                        },
+                        {
+                          name: 'Vérification',
+                          detail: `Quorum ${swarmResult.phases?.accept?.quorum_required ?? '—'} / ${
+                            Object.keys(swarmResult.votes || {}).length || '—'
                           }`,
-                        },
-                        {
-                          name: 'Accept',
-                          detail: `Quorum ${swarmResult.phases?.accept?.quorum_required ?? '—'}`,
-                          body: `Cohérence sémantique vérifiée contre le seuil de ${
+                          body: `Il faut au moins ${
+                            swarmResult.phases?.accept?.quorum_required ?? '—'
+                          } experts convaincus (score ≥ ${
                             (swarmResult.phases?.accept?.threshold || 0.7) * 100
-                          } %.`,
+                          } %) pour valider — c'est le « quorum ».`,
                         },
                         {
-                          name: 'Learn',
+                          name: 'Décision',
                           detail: swarmResult.phases?.learn?.paxos_state ?? '—',
                           body: swarmResult.phases?.learn?.message ?? '—',
                         },

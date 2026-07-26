@@ -22,12 +22,105 @@ class SwarmConsensusVotes(BaseModel):
 
 
 class SwarmConsensusOrchestrator:
+    # Panel d'experts de l'essaim : chacun juge un fait sous un angle propre.
+    # `keywords` déclenche un vote favorable (hit), sinon on retombe sur `miss`.
+    # L'« Avocat du Diable » est volontairement sceptique (base basse) pour forcer
+    # le débat. Ce profil ne sert qu'au repli hors-LLM ; avec LLM, les votes sont
+    # demandés au modèle par nom d'expert.
+    AGENT_PROFILES: Dict[str, Dict[str, Any]] = {
+        "Expert Visuel": {
+            "keywords": [
+                "couleur",
+                "visuel",
+                "animation",
+                "paysage",
+                "dessin",
+                "graphisme",
+                "studio",
+                "réalisation",
+            ],
+            "hit": 0.85,
+            "miss": 0.5,
+        },
+        "Expert Sonore": {
+            "keywords": [
+                "ost",
+                "musique",
+                "thème",
+                "voix",
+                "seiyuu",
+                "doublage",
+                "opening",
+                "ending",
+                "son",
+            ],
+            "hit": 0.9,
+            "miss": 0.45,
+        },
+        "Expert Lore": {
+            "keywords": [
+                "scénario",
+                "lore",
+                "arc",
+                "canon",
+                "histoire",
+                "personnage",
+                "intrigue",
+                "mythe",
+            ],
+            "hit": 0.88,
+            "miss": 0.52,
+        },
+        "Expert Combat": {
+            "keywords": [
+                "combat",
+                "pouvoir",
+                "force",
+                "fort",
+                "technique",
+                "puissance",
+                "bataille",
+                "duel",
+            ],
+            "hit": 0.86,
+            "miss": 0.5,
+        },
+        "Expert Émotion": {
+            "keywords": [
+                "émotion",
+                "drame",
+                "romance",
+                "tragédie",
+                "amour",
+                "relation",
+                "larmes",
+            ],
+            "hit": 0.84,
+            "miss": 0.48,
+        },
+        "Historien Otaku": {
+            "keywords": [
+                "époque",
+                "historique",
+                "auteur",
+                "production",
+                "année",
+                "adaptation",
+                "manga",
+                "origine",
+            ],
+            "hit": 0.82,
+            "miss": 0.5,
+        },
+        "Avocat du Diable": {"keywords": [], "hit": 0.4, "miss": 0.35},
+    }
+
     def __init__(
         self,
         agent_names: Optional[List[str]] = None,
         inference_engine: Optional[Any] = None,
     ):
-        self.agents = agent_names or ["VisualExpert", "AcousticExpert", "LoreExpert"]
+        self.agents = agent_names or list(self.AGENT_PROFILES.keys())
         self.consensus_log: List[Dict[str, Any]] = []
         self.inference_engine = inference_engine
 
@@ -186,57 +279,13 @@ class SwarmConsensusOrchestrator:
 
     def _simulate_agent_vote(self, agent: str, fact: str, media: str) -> float:
         """
-        Simule le vote sémantique d'un micro-agent.
+        Simule le vote sémantique d'un expert d'après son profil (repli hors-LLM).
         """
+        profile = self.AGENT_PROFILES.get(agent)
+        if not profile:
+            return 0.55
         f_lower = fact.lower()
-        if agent == "VisualExpert":
-            # Très sensible au style, animation, paysages, couleurs
-            if any(
-                w in f_lower
-                for w in [
-                    "couleur",
-                    "visuel",
-                    "animation",
-                    "paysage",
-                    "dessin",
-                    "graphisme",
-                    "studio",
-                ]
-            ):
-                return 0.85
-            return 0.50
-        elif agent == "AcousticExpert":
-            # Très sensible à la musique, seiyuu, OST, sons, voix
-            if any(
-                w in f_lower
-                for w in [
-                    "ost",
-                    "musique",
-                    "theme",
-                    "voix",
-                    "seiyuu",
-                    "opening",
-                    "ending",
-                    "son",
-                ]
-            ):
-                return 0.90
-            return 0.45
-        elif agent == "LoreExpert":
-            # Très sensible au scénario, arcs, fillers, mythes, tropes
-            if any(
-                w in f_lower
-                for w in [
-                    "scénario",
-                    "lore",
-                    "arc",
-                    "filler",
-                    "trope",
-                    "histoire",
-                    "personnage",
-                ]
-            ):
-                return 0.88
-            return 0.52
-
-        return 0.55
+        keywords = profile.get("keywords", [])
+        if keywords and any(w in f_lower for w in keywords):
+            return float(profile["hit"])
+        return float(profile["miss"])
