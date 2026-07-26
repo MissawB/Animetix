@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Compass, Layers, MapPin, Radar } from 'lucide-react';
+import { Compass, ImageOff, Layers, MapPin, Radar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useReducedMotion } from 'framer-motion';
 import { apiClient } from '../../utils/apiClient';
@@ -8,6 +8,7 @@ import {
   LANDSCAPE,
   PORTRAIT,
   entityEnglish,
+  entityImage,
   entityNative,
   entityTitle,
   isGenerating,
@@ -22,7 +23,7 @@ import { MapGuide } from './components/MapGuide';
 import { Modal } from '../../components/ui/Modal';
 
 /** Nombre d'œuvres montrées directement dans le dossier ; le reste ouvre la popup. */
-const DOSSIER_WORKS = 8;
+const DOSSIER_WORKS = 3;
 
 /** Label court pour la planche : on retire le préfixe « Communauté » (redondant,
  *  chaque territoire en est une) et on tronque les noms longs — le nom complet
@@ -32,17 +33,36 @@ const mapLabel = (name: string): string => {
   return short.length > 22 ? `${short.slice(0, 21).trimEnd()}…` : short;
 };
 
-/** Une œuvre : titre principal (romaji) + titres alternatifs (anglais · original). */
+/** Une œuvre : affiche (jaquette) + titre principal (romaji) + titres
+ *  alternatifs (anglais · original). */
 const WorkRow: React.FC<{ entity: LoreEntity }> = ({ entity }) => {
   const title = entityTitle(entity);
   const english = entityEnglish(entity);
+  const image = entityImage(entity);
   const alt = [english && english !== title ? english : null, entityNative(entity)]
     .filter(Boolean)
     .join(' · ');
   return (
-    <li className="rounded-xl border border-[#FDB913]/15 bg-[#FDB913]/[0.04] px-3 py-2">
-      <p className="text-[13px] font-bold leading-tight text-[#F4F1E8]">{title}</p>
-      {alt && <p className="mt-0.5 truncate text-[11px] leading-tight text-[#8F94A5]">{alt}</p>}
+    <li className="flex items-center gap-3 rounded-xl border border-[#FDB913]/15 bg-[#FDB913]/[0.04] p-2">
+      <div className="h-14 w-10 shrink-0 overflow-hidden rounded-md border border-[#F4F1E8]/10 bg-[#0B0C10]">
+        {image ? (
+          <img
+            src={image}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span className="grid h-full w-full place-items-center text-[#8F94A5]/40" aria-hidden>
+            <ImageOff className="h-4 w-4" />
+          </span>
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-[13px] font-bold leading-tight text-[#F4F1E8]">{title}</p>
+        {alt && <p className="mt-0.5 truncate text-[11px] leading-tight text-[#8F94A5]">{alt}</p>}
+      </div>
     </li>
   );
 };
@@ -370,10 +390,6 @@ const LoreWorldMapPage: React.FC = () => {
                           œuvres regroupées
                         </span>
                       </div>
-
-                      <p className="mt-5 border-l-2 border-[#FDB913]/40 pl-4 text-sm leading-relaxed text-[#8F94A5]">
-                        {selected.community.summary}
-                      </p>
 
                       {/* Tags/genres qui définissent le cluster — mis en avant (encre shu). */}
                       {(selected.community.themes?.length ?? 0) > 0 && (

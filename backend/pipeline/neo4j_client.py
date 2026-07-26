@@ -205,7 +205,8 @@ class Neo4jManager(GraphDatabasePort):
         query = (
             f"MERGE (m:{safe_media_label} {{id: $id, type: $type}}) "
             "SET m.title = $title, m.year = $year, m.popularity = $popularity, "
-            "m.title_english = $title_english, m.title_native = $title_native RETURN m"
+            "m.title_english = $title_english, m.title_native = $title_native, "
+            "m.image_url = $image_url RETURN m"
         )
         tx.run(
             query,
@@ -216,6 +217,7 @@ class Neo4jManager(GraphDatabasePort):
             popularity=clean_item.get("popularity"),
             title_english=clean_item.get("title_english"),
             title_native=clean_item.get("title_native"),
+            image_url=clean_item.get("image_url"),
         )
         for studio_name in clean_item.get("studios", []):
             tx.run(

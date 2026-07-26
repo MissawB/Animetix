@@ -7,7 +7,12 @@ import React, { useState } from 'react';
  *  sont acceptées pour rester rétro-compatible (anciens payloads / tests). */
 export type LoreEntity =
   | string
-  | { title: string; title_english?: string | null; title_native?: string | null };
+  | {
+      title: string;
+      title_english?: string | null;
+      title_native?: string | null;
+      image_url?: string | null;
+    };
 
 /** Titre d'affichage principal d'une œuvre (romaji). */
 export const entityTitle = (e: LoreEntity): string => (typeof e === 'string' ? e : e.title);
@@ -17,6 +22,9 @@ export const entityEnglish = (e: LoreEntity): string | undefined =>
 /** Titre original (japonais), si présent. */
 export const entityNative = (e: LoreEntity): string | undefined =>
   typeof e === 'string' ? undefined : e.title_native || undefined;
+/** Affiche (jaquette) de l'œuvre, si présente. */
+export const entityImage = (e: LoreEntity): string | undefined =>
+  typeof e === 'string' ? undefined : e.image_url || undefined;
 
 export interface LoreCommunity {
   id: string | number;

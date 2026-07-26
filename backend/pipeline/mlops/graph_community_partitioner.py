@@ -100,7 +100,7 @@ class GraphCommunityPartitioner:
              collect(DISTINCT sg.name) AS sagas
         RETURN m.title AS title, m.popularity AS popularity,
                m.title_english AS title_english, m.title_native AS title_native,
-               studios, themes, people, sagas
+               m.image_url AS image_url, studios, themes, people, sagas
         LIMIT {MAX_MEDIA}
         """
         rows = [r for r in self.neo4j_manager.execute_query(cypher) if r.get("title")]
@@ -120,6 +120,7 @@ class GraphCommunityPartitioner:
                 "title": title,
                 "title_english": row.get("title_english"),
                 "title_native": row.get("title_native"),
+                "image_url": row.get("image_url"),
             }
             attrs: list[str] = []
             for key, prefix in (

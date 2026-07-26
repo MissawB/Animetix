@@ -29,9 +29,9 @@ describe('LoreWorldMapPage', () => {
 
     renderPage();
 
-    // The territory is labelled on the plate, and its dossier opens by default.
+    // The territory is labelled on the plate, and its dossier opens by default,
+    // listing its works (the summary is intentionally not shown in the dossier).
     expect(await screen.findAllByText('Communauté Anime')).not.toHaveLength(0);
-    expect(screen.getByText('Un résumé.')).toBeInTheDocument();
     expect(screen.getByText('Naruto')).toBeInTheDocument();
   });
 
