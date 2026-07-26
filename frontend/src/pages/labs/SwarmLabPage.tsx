@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, BarChart3, Loader2, Activity } from 'lucide-react';
+import { Users, BarChart3, Loader2, Activity, ChevronDown } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../../utils/apiClient';
@@ -41,6 +41,7 @@ const SwarmLabPage: React.FC = () => {
   const [swarmFact, setSwarmFact] = useState('Luffy est plus fort que Naruto.');
   const [swarmMedia, setSwarmMedia] = useState('One Piece');
   const [swarmResult, setSwarmResult] = useState<SwarmResult | null>(null);
+  const [showPaxos, setShowPaxos] = useState(false);
 
   const swarmMutation = useMutation<
     SwarmResult,
@@ -184,66 +185,86 @@ const SwarmLabPage: React.FC = () => {
                 </LabPanel>
 
                 {swarmResult.phases && (
-                  <LabPanel
-                    title="Comment la décision est prise"
-                    corner={
-                      <span className="flex items-center gap-1.5">
-                        <Activity className="h-3.5 w-3.5" aria-hidden="true" />{' '}
-                        {swarmResult.phases?.learn?.paxos_state}
+                  <div className="overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016]">
+                    <button
+                      type="button"
+                      onClick={() => setShowPaxos((v) => !v)}
+                      aria-expanded={showPaxos}
+                      className="flex w-full items-center gap-3 p-6 text-left transition-colors hover:bg-[#F4F1E8]/[0.02] sm:p-8"
+                    >
+                      <span className="h-4 w-1 flex-none bg-[#E8442B]" aria-hidden />
+                      <h3 className="font-manga text-sm font-black uppercase italic tracking-wide text-[#F4F1E8]">
+                        Comment la décision est prise
+                      </h3>
+                      <span className="ml-auto flex items-center gap-3">
+                        <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#FDB913]">
+                          <Activity className="h-3.5 w-3.5" aria-hidden="true" />{' '}
+                          {swarmResult.phases?.learn?.paxos_state}
+                        </span>
+                        <ChevronDown
+                          className={`h-4 w-4 text-[#8F94A5] transition-transform ${showPaxos ? 'rotate-180' : ''}`}
+                          aria-hidden="true"
+                        />
                       </span>
-                    }
-                  >
-                    <p className="mb-6 text-sm leading-relaxed text-[#8F94A5]">
-                      Pour éviter qu&apos;un seul expert impose son avis, la décision suit un vote
-                      en 3 étapes (protocole inspiré de « Paxos ») : on ouvre un tour, on vérifie
-                      qu&apos;assez d&apos;experts sont d&apos;accord, puis on scelle le résultat.
-                    </p>
-                    <ol className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                      {[
-                        {
-                          name: 'Ouverture du tour',
-                          detail: `réf. ${swarmResult.phases?.prepare?.proposal_id ?? '—'}`,
-                          body: `Chaque vote reçoit une référence unique. Les experts disponibles acceptent d'y participer : ${
-                            swarmResult.phases?.prepare?.promises_received?.join(', ') || '—'
-                          }.`,
-                        },
-                        {
-                          name: 'Vérification',
-                          detail: `Quorum ${swarmResult.phases?.accept?.quorum_required ?? '—'} / ${
-                            Object.keys(swarmResult.votes || {}).length || '—'
-                          }`,
-                          body: `Il faut au moins ${
-                            swarmResult.phases?.accept?.quorum_required ?? '—'
-                          } experts convaincus (score ≥ ${
-                            (swarmResult.phases?.accept?.threshold || 0.7) * 100
-                          } %) pour valider — c'est le « quorum ».`,
-                        },
-                        {
-                          name: 'Décision',
-                          detail: swarmResult.phases?.learn?.paxos_state ?? '—',
-                          body: swarmResult.phases?.learn?.message ?? '—',
-                        },
-                      ].map((phase, i) => (
-                        <li key={phase.name} className="flex gap-4">
-                          <span
-                            className={`font-manga flex-none text-xl font-black italic leading-none ${PHASE_TONES[i]}`}
-                            aria-hidden
-                          >
-                            {String(i + 1).padStart(2, '0')}
-                          </span>
-                          <div>
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-[#F4F1E8]">
-                              {phase.name}
-                              <span className="ml-2 font-bold text-[#8F94A5]">{phase.detail}</span>
-                            </h4>
-                            <p className="mt-1.5 text-xs leading-relaxed text-[#8F94A5]">
-                              {phase.body}
-                            </p>
-                          </div>
-                        </li>
-                      ))}
-                    </ol>
-                  </LabPanel>
+                    </button>
+                    {showPaxos && (
+                      <div className="px-6 pb-8 sm:px-8">
+                        <p className="mb-6 text-sm leading-relaxed text-[#8F94A5]">
+                          Pour éviter qu&apos;un seul expert impose son avis, la décision suit un
+                          vote en 3 étapes (protocole inspiré de « Paxos ») : on ouvre un tour, on
+                          vérifie qu&apos;assez d&apos;experts sont d&apos;accord, puis on scelle le
+                          résultat.
+                        </p>
+                        <ol className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                          {[
+                            {
+                              name: 'Ouverture du tour',
+                              detail: `réf. ${swarmResult.phases?.prepare?.proposal_id ?? '—'}`,
+                              body: `Chaque vote reçoit une référence unique. Les experts disponibles acceptent d'y participer : ${
+                                swarmResult.phases?.prepare?.promises_received?.join(', ') || '—'
+                              }.`,
+                            },
+                            {
+                              name: 'Vérification',
+                              detail: `Quorum ${swarmResult.phases?.accept?.quorum_required ?? '—'} / ${
+                                Object.keys(swarmResult.votes || {}).length || '—'
+                              }`,
+                              body: `Il faut au moins ${
+                                swarmResult.phases?.accept?.quorum_required ?? '—'
+                              } experts convaincus (score ≥ ${
+                                (swarmResult.phases?.accept?.threshold || 0.7) * 100
+                              } %) pour valider — c'est le « quorum ».`,
+                            },
+                            {
+                              name: 'Décision',
+                              detail: swarmResult.phases?.learn?.paxos_state ?? '—',
+                              body: swarmResult.phases?.learn?.message ?? '—',
+                            },
+                          ].map((phase, i) => (
+                            <li key={phase.name} className="flex gap-4">
+                              <span
+                                className={`font-manga flex-none text-xl font-black italic leading-none ${PHASE_TONES[i]}`}
+                                aria-hidden
+                              >
+                                {String(i + 1).padStart(2, '0')}
+                              </span>
+                              <div>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-[#F4F1E8]">
+                                  {phase.name}
+                                  <span className="ml-2 font-bold text-[#8F94A5]">
+                                    {phase.detail}
+                                  </span>
+                                </h4>
+                                <p className="mt-1.5 text-xs leading-relaxed text-[#8F94A5]">
+                                  {phase.body}
+                                </p>
+                              </div>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+                  </div>
                 )}
               </motion.div>
             ) : (
