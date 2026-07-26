@@ -15,6 +15,7 @@ import {
   LAB_LABEL,
   LAB_CTA,
 } from './components/shared/LabKit';
+import { ThemeCombobox } from './components/ThemeCombobox';
 
 interface QuantumResult {
   probability: number;
@@ -32,9 +33,28 @@ interface QuantumMutationBody {
 const THEME_OPTIONS = [
   { value: 'shonen', label: 'Shōnen' },
   { value: 'seinen', label: 'Seinen' },
-  { value: 'ghibli', label: 'Ghibli' },
-  { value: 'comedy', label: 'Comédie' },
+  { value: 'shojo', label: 'Shōjo' },
+  { value: 'josei', label: 'Josei' },
+  { value: 'isekai', label: 'Isekai' },
+  { value: 'mecha', label: 'Mecha' },
+  { value: 'fantasy', label: 'Fantasy' },
+  { value: 'dark_fantasy', label: 'Dark Fantasy' },
+  { value: 'sci-fi', label: 'Science-fiction' },
   { value: 'cyberpunk', label: 'Cyberpunk' },
+  { value: 'slice_of_life', label: 'Tranche de vie' },
+  { value: 'comedy', label: 'Comédie' },
+  { value: 'romance', label: 'Romance' },
+  { value: 'drama', label: 'Drame' },
+  { value: 'horror', label: 'Horreur' },
+  { value: 'psychological', label: 'Psychologique' },
+  { value: 'thriller', label: 'Thriller' },
+  { value: 'mystery', label: 'Mystère' },
+  { value: 'sports', label: 'Sport' },
+  { value: 'mahou_shoujo', label: 'Magical Girl' },
+  { value: 'supernatural', label: 'Surnaturel' },
+  { value: 'historical', label: 'Historique' },
+  { value: 'post_apocalyptic', label: 'Post-apocalyptique' },
+  { value: 'ghibli', label: 'Ghibli' },
 ];
 
 const JIT_OPTIONS = [
@@ -82,21 +102,15 @@ const QuantumLabPage: React.FC = () => {
           <LabPanel title="Mesure">
             <div className="space-y-6">
               <div className="space-y-2">
-                <label htmlFor="theme" className={LAB_LABEL}>
+                <span id="theme-label" className={`${LAB_LABEL} block`}>
                   Thème à tester
-                </label>
-                <select
-                  id="theme"
+                </span>
+                <ThemeCombobox
                   value={quantumTheme}
-                  onChange={(e) => setQuantumTheme(e.target.value)}
-                  className={LAB_INPUT}
-                >
-                  {THEME_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setQuantumTheme}
+                  options={THEME_OPTIONS}
+                  labelId="theme-label"
+                />
               </div>
 
               <div className="space-y-2">

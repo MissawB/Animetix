@@ -4,6 +4,7 @@ Quantum-Cognitive Preference Service for Animetix.
 Models user decisions using non-commutative Quantum Probability Theory and Born's rule.
 """
 
+import hashlib  # noqa: E402
 import logging  # noqa: E402
 from typing import Any, Dict, Tuple  # noqa: E402
 
@@ -49,6 +50,22 @@ class QuantumCognitiveService:
 
         return projectors
 
+    def _deterministic_projector(self, theme: str) -> np.ndarray:
+        """Projecteur rang-1 stable dérivé du nom du thème.
+
+        Le modèle ne définit que 4 projecteurs canoniques ; tout autre thème
+        renvoyait un 50 % plat, ce qui rendait insipide l'ajout de thèmes. On
+        dérive ici un vecteur d'état complexe reproductible du nom du thème :
+        chaque thème obtient une probabilité distincte et stable.
+        """
+        digest = hashlib.md5(theme.encode("utf-8"), usedforsecurity=False).hexdigest()
+        rng = np.random.default_rng(int(digest, 16) % (2**32))
+        v = rng.standard_normal(self.dimension) + 1j * rng.standard_normal(
+            self.dimension
+        )
+        v = v / np.linalg.norm(v)
+        return np.outer(v, np.conj(v))
+
     def measure_preference(self, theme: str) -> Tuple[float, bool]:
         """
         Calcule la probabilité de réponse "Oui" à un thème et effondre l'état |psi>.
@@ -57,7 +74,7 @@ class QuantumCognitiveService:
         P = self.projectors.get(theme.lower())
 
         if P is None:
-            return 0.5, False
+            P = self._deterministic_projector(theme.lower())
 
         prob = float(np.real(np.dot(np.conj(self.state), np.dot(P, self.state))))
         outcome = np.random.rand() < prob
