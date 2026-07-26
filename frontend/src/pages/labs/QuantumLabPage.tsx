@@ -11,7 +11,6 @@ import {
   LabStat,
   LabEmpty,
   LabGuide,
-  LAB_INPUT,
   LAB_LABEL,
   LAB_CTA,
 } from './components/shared/LabKit';
@@ -70,6 +69,49 @@ const PLASTICITY_OPTIONS = [
   { value: 'dynamic', label: 'Dynamique' },
 ];
 
+/** Curseur à paliers : la valeur reste une chaîne (none/basic/…) mais se règle
+ *  au curseur, avec les paliers légendés dessous et une explication en clair. */
+const LevelSlider: React.FC<{
+  id: string;
+  label: string;
+  hint: string;
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (value: string) => void;
+}> = ({ id, label, hint, options, value, onChange }) => {
+  const idx = Math.max(
+    0,
+    options.findIndex((o) => o.value === value),
+  );
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label htmlFor={id} className={LAB_LABEL}>
+          {label}
+        </label>
+        <span className="text-sm font-black text-[#FDB913]">{options[idx].label}</span>
+      </div>
+      <input
+        id={id}
+        type="range"
+        min={0}
+        max={options.length - 1}
+        step={1}
+        value={idx}
+        aria-label={label}
+        onChange={(e) => onChange(options[Number(e.target.value)].value)}
+        className="h-1 w-full appearance-none rounded-full bg-[#F4F1E8]/10 accent-[#E8442B]"
+      />
+      <div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-[#8F94A5]/60">
+        {options.map((o) => (
+          <span key={o.value}>{o.label}</span>
+        ))}
+      </div>
+      <p className="text-[11px] leading-relaxed text-[#8F94A5]/70">{hint}</p>
+    </div>
+  );
+};
+
 const QuantumLabPage: React.FC = () => {
   const { t } = useTranslation();
   const [quantumTheme, setQuantumTheme] = useState('shonen');
@@ -113,41 +155,23 @@ const QuantumLabPage: React.FC = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="jit-level" className={LAB_LABEL}>
-                  Niveau d&apos;optimisation
-                </label>
-                <select
-                  id="jit-level"
-                  value={jitLevel}
-                  onChange={(e) => setJitLevel(e.target.value)}
-                  className={LAB_INPUT}
-                >
-                  {JIT_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <LevelSlider
+                id="jit-level"
+                label="Niveau d'optimisation"
+                options={JIT_OPTIONS}
+                value={jitLevel}
+                onChange={setJitLevel}
+                hint="Effort de calcul du moteur. Plus il est agressif, plus la mesure est affinée (au prix d'un calcul plus lourd)."
+              />
 
-              <div className="space-y-2">
-                <label htmlFor="plasticity" className={LAB_LABEL}>
-                  Souplesse du modèle
-                </label>
-                <select
-                  id="plasticity"
-                  value={plasticity}
-                  onChange={(e) => setPlasticity(e.target.value)}
-                  className={LAB_INPUT}
-                >
-                  {PLASTICITY_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <LevelSlider
+                id="plasticity"
+                label="Souplesse du modèle"
+                options={PLASTICITY_OPTIONS}
+                value={plasticity}
+                onChange={setPlasticity}
+                hint="À quel point le modèle se laisse influencer. Plus elle est forte, plus il s'adapte aux nuances de tes goûts plutôt que de rester sur ses acquis."
+              />
 
               <button
                 type="button"
