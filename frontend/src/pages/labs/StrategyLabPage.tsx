@@ -84,27 +84,27 @@ const StrategyLabPage: React.FC = () => {
   return (
     <LabPage>
       <LabHeader
-        code="Protocole · CFR"
+        code="Le meilleur coup"
         title="Stratégie"
-        accent="de Nash"
-        lede="L'algorithme Counterfactual Regret Minimization cherche la meilleure question à poser dans un jeu de devinettes. Itération après itération, il mesure le regret de ne pas avoir choisi autrement et fait converger sa stratégie vers un équilibre de Nash."
+        accent="gagnante"
+        lede="Comme à Akinator, l'IA cherche la meilleure question à poser pour deviner le plus vite possible. Elle rejoue des milliers de parties contre elle-même : à chaque essai, elle retient ce qu'elle « regrette » de ne pas avoir demandé, jusqu'à trouver le meilleur dosage de questions."
       />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         {/* Paramètres */}
         <div className="space-y-8 lg:col-span-4">
-          <LabPanel title="Paramètres du solveur">
+          <LabPanel title="Réglages">
             <div className="space-y-8">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <label htmlFor="iter-slider" className={LAB_LABEL}>
-                    Itérations de convergence
+                    Nombre de parties d'entraînement
                   </label>
                   <span className="text-sm font-black text-[#FDB913]">{iterations}</span>
                 </div>
                 <input
                   id="iter-slider"
-                  aria-label="Itérations de convergence"
+                  aria-label="Nombre de parties d'entraînement"
                   type="range"
                   min="50"
                   max="500"
@@ -113,10 +113,13 @@ const StrategyLabPage: React.FC = () => {
                   onChange={(e) => setIterations(parseInt(e.target.value))}
                   className="h-1 w-full appearance-none rounded-full bg-[#F4F1E8]/10 accent-[#E8442B]"
                 />
+                <p className="text-[11px] leading-relaxed text-[#8F94A5]/70">
+                  Plus l'IA s'entraîne, plus sa stratégie se précise.
+                </p>
               </div>
 
               <div className="rounded-xl border border-[#F4F1E8]/10 bg-[#0B0C10] p-5">
-                <h4 className={`${LAB_LABEL} mb-3 block`}>Algorithme</h4>
+                <h4 className={`${LAB_LABEL} mb-3 block`}>Sous le capot</h4>
                 <div className="flex items-center gap-3">
                   <span className="rounded-full border border-[#E8442B]/40 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-[#E8442B]">
                     CFR+
@@ -136,17 +139,18 @@ const StrategyLabPage: React.FC = () => {
                 {mutation.isPending ? (
                   <RefreshCw className="h-6 w-6 animate-spin" />
                 ) : (
-                  'Lancer la résolution'
+                  "Lancer l'entraînement"
                 )}
               </button>
             </div>
           </LabPanel>
 
-          <LabPanel title="Qu'est-ce que le CFR ?">
+          <LabPanel title="Comment ça marche ?">
             <p className="text-sm leading-relaxed text-[#8F94A5]">
-              Le Counterfactual Regret Minimization est l'algorithme de référence pour résoudre les
-              jeux à information incomplète. Il permet à l'IA d'apprendre de ses erreurs passées en
-              calculant le « regret » de ne pas avoir posé une meilleure question.
+              L'IA joue un jeu de devinettes contre elle-même, encore et encore. Après chaque
+              partie, elle se demande : « quelle question aurait mieux marché ? » — c'est son «
+              regret ». En réduisant ce regret à chaque fois, elle finit par savoir quelles
+              questions poser, et à quelle fréquence, pour gagner le plus souvent.
             </p>
           </LabPanel>
         </div>
@@ -163,8 +167,8 @@ const StrategyLabPage: React.FC = () => {
               >
                 <LabEmpty
                   icon={<Target className="h-20 w-20" aria-hidden="true" />}
-                  title="Solveur en veille"
-                  hint="Règle le nombre d'itérations puis lance la résolution : les courbes de convergence de la stratégie s'afficheront ici."
+                  title="Prêt à s'entraîner"
+                  hint="Choisis le nombre de parties d'entraînement puis lance-le : les courbes montrant comment l'IA affine sa stratégie s'afficheront ici."
                 />
               </motion.div>
             )}
@@ -178,7 +182,7 @@ const StrategyLabPage: React.FC = () => {
               >
                 <div className="h-24 w-24 animate-spin rounded-full border-4 border-[#E8442B]/20 border-t-[#E8442B]" />
                 <p className="text-xs font-black uppercase tracking-[0.3em] text-[#8F94A5]">
-                  Minimisation du regret en cours…
+                  Entraînement en cours…
                 </p>
               </motion.div>
             )}
@@ -192,13 +196,17 @@ const StrategyLabPage: React.FC = () => {
                 className="space-y-8"
               >
                 <LabPanel
-                  title="Convergence de Nash"
+                  title="Quelle question l'IA choisit"
                   corner={
                     <span className="flex items-center gap-1.5">
-                      <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" /> probabilité d'action
+                      <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" /> chances de la poser
                     </span>
                   }
                 >
+                  <p className="mb-4 text-xs leading-relaxed text-[#8F94A5]">
+                    Chaque courbe est une question. Sa hauteur = la probabilité que l'IA la pose. Au
+                    fil de l'entraînement, les courbes se stabilisent : l'IA a trouvé son dosage.
+                  </p>
                   <Plot
                     data={getStrategyPlotData() as Plotly.Data[]}
                     layout={{
@@ -209,19 +217,25 @@ const StrategyLabPage: React.FC = () => {
                       margin: { l: 40, r: 20, b: 40, t: 10 },
                       showlegend: true,
                       legend: {
-                        font: { color: '#64748b', size: 10 },
+                        font: { color: '#8F94A5', size: 10 },
                         orientation: 'h',
                         y: -0.2,
                       },
+                      hoverlabel: {
+                        bgcolor: '#0F1016',
+                        bordercolor: 'rgba(244,241,232,0.15)',
+                        font: { color: '#F4F1E8', size: 12 },
+                      },
                       xaxis: {
-                        title: 'Itérations',
+                        title: "Parties d'entraînement",
                         gridcolor: 'rgba(255,255,255,0.05)',
-                        tickfont: { color: '#475569', size: 10 },
+                        tickfont: { color: '#8F94A5', size: 10 },
                       },
                       yaxis: {
-                        title: 'Probabilité',
+                        title: 'Chances de la poser',
+                        tickformat: '.0%',
                         gridcolor: 'rgba(255,255,255,0.05)',
-                        tickfont: { color: '#475569', size: 10 },
+                        tickfont: { color: '#8F94A5', size: 10 },
                         range: [0, 1],
                       },
                     }}
@@ -231,14 +245,17 @@ const StrategyLabPage: React.FC = () => {
                 </LabPanel>
 
                 <LabPanel
-                  title="Regret matching"
+                  title="Ses regrets diminuent"
                   corner={
                     <span className="flex items-center gap-1.5">
-                      <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" /> évolution du
-                      regret
+                      <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" /> moins d'erreurs
                     </span>
                   }
                 >
+                  <p className="mb-4 text-xs leading-relaxed text-[#8F94A5]">
+                    Le « regret » mesure à quel point l'IA aurait pu mieux jouer. Plus il descend,
+                    plus sa stratégie est bonne.
+                  </p>
                   <Plot
                     data={getRegretPlotData() as Plotly.Data[]}
                     layout={{
@@ -248,15 +265,20 @@ const StrategyLabPage: React.FC = () => {
                       plot_bgcolor: 'rgba(0,0,0,0)',
                       margin: { l: 40, r: 20, b: 40, t: 10 },
                       showlegend: false,
+                      hoverlabel: {
+                        bgcolor: '#0F1016',
+                        bordercolor: 'rgba(244,241,232,0.15)',
+                        font: { color: '#F4F1E8', size: 12 },
+                      },
                       xaxis: {
-                        title: 'Itérations',
+                        title: "Parties d'entraînement",
                         gridcolor: 'rgba(255,255,255,0.05)',
-                        tickfont: { color: '#475569', size: 10 },
+                        tickfont: { color: '#8F94A5', size: 10 },
                       },
                       yaxis: {
-                        title: 'Regret',
+                        title: 'Regret (erreur)',
                         gridcolor: 'rgba(255,255,255,0.05)',
-                        tickfont: { color: '#475569', size: 10 },
+                        tickfont: { color: '#8F94A5', size: 10 },
                       },
                     }}
                     config={{ responsive: true, displayModeBar: false }}
@@ -265,7 +287,10 @@ const StrategyLabPage: React.FC = () => {
                 </LabPanel>
 
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                  <LabPanel title="Meilleur chemin décidé">
+                  <LabPanel title="Les questions retenues">
+                    <p className="mb-4 text-xs leading-relaxed text-[#8F94A5]">
+                      À quelle fréquence l'IA choisit de poser chaque question.
+                    </p>
                     <div className="space-y-3">
                       {result.questions.map((q: string, i: number) => (
                         <div
@@ -285,7 +310,7 @@ const StrategyLabPage: React.FC = () => {
 
                   <div className="flex flex-col gap-6">
                     <LabStat
-                      label="Solution optimale"
+                      label="Meilleure question"
                       value={
                         result.questions[
                           result.final_strategy.indexOf(Math.max(...result.final_strategy))
@@ -295,7 +320,7 @@ const StrategyLabPage: React.FC = () => {
                       className="flex-1"
                     />
                     <LabStat
-                      label="Confiance"
+                      label="Fréquence de choix"
                       value={`${(Math.max(...result.final_strategy) * 100).toFixed(2)}%`}
                       tone="gold"
                     />
@@ -310,19 +335,19 @@ const StrategyLabPage: React.FC = () => {
       <LabGuide
         steps={[
           {
-            title: 'Règle le solveur',
-            body: "L'IA cherche la meilleure question à poser dans un jeu de devinettes. Choisis le nombre d'itérations avec le curseur, puis lance la résolution.",
+            title: "Choisis l'entraînement",
+            body: "L'IA cherche la meilleure question à poser dans un jeu de devinettes (façon Akinator). Règle le nombre de parties d'entraînement, puis lance-le.",
           },
           {
-            title: 'Le regret guide',
-            body: "À chaque itération, l'algorithme mesure le regret de ne pas avoir choisi une autre option, puis ajuste sa stratégie pour le réduire.",
+            title: 'Le regret la guide',
+            body: "Après chaque partie, l'IA regarde quelle question aurait mieux marché — son « regret » — et ajuste sa stratégie pour se tromper moins la fois suivante.",
           },
           {
-            title: 'La convergence tranche',
-            body: "Quand les courbes se stabilisent, la stratégie n'évolue plus : l'IA a trouvé le meilleur dosage de probabilités entre les questions possibles.",
+            title: 'La stratégie se fige',
+            body: "Quand les courbes se stabilisent, la stratégie n'évolue plus : l'IA a trouvé le meilleur dosage entre les questions à poser.",
           },
         ]}
-        note="Simulation de Counterfactual Regret Minimization (CFR+ avec regret matching) exécutée côté serveur : la stratégie moyenne converge vers un équilibre de Nash approché. Les graphiques tracent la probabilité de chaque action et l'évolution du regret au fil des itérations — une visualisation pédagogique de théorie des jeux."
+        note="Sous le capot : un algorithme de théorie des jeux (Counterfactual Regret Minimization, CFR+) tourné côté serveur. La stratégie apprise s'approche d'un « équilibre de Nash » — le point où aucune autre façon de jouer ne ferait mieux. Les graphiques montrent, essai après essai, quelles questions l'IA privilégie et comment ses erreurs diminuent."
       />
     </LabPage>
   );

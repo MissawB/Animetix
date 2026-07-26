@@ -26,14 +26,14 @@ const renderPage = () => {
 };
 
 describe('StrategyLabPage', () => {
-  it('renders title and run resolution button', () => {
+  it('renders title and run training button', () => {
     renderPage();
-    // Titre du redesign édition de nuit : "Stratégie de Nash"
+    // Titre du redesign édition de nuit : "Stratégie gagnante"
     expect(screen.getByRole('heading', { level: 1, name: /Stratégie/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /LANCER LA RÉSOLUTION/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /entraînement/i })).toBeInTheDocument();
   });
 
-  it('runs resolution and renders result on success', async () => {
+  it('runs training and renders result on success', async () => {
     vi.mocked(apiClient).mockResolvedValue({
       history: [{ iteration: 1, avg_strategy: [0.5], regrets: [0.1] }],
       questions: ['Is character strong?'],
@@ -41,11 +41,11 @@ describe('StrategyLabPage', () => {
     });
 
     renderPage();
-    const button = screen.getByRole('button', { name: /LANCER LA RÉSOLUTION/i });
+    const button = screen.getByRole('button', { name: /entraînement/i });
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(screen.getByText(/Convergence de Nash/i)).toBeInTheDocument();
+      expect(screen.getByText(/Ses regrets diminuent/i)).toBeInTheDocument();
     });
   });
 });
