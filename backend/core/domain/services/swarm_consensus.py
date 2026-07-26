@@ -4,6 +4,7 @@ Swarm Consensus Orchestrator for Animetix Multi-Agent Swarms.
 Applies a Paxos-style semantic voting consensus protocol to validate sémantiques facts.
 """
 
+import hashlib  # noqa: E402
 import logging  # noqa: E402
 import time  # noqa: E402
 from typing import Any, Dict, List, Optional, Tuple  # noqa: E402
@@ -278,14 +279,24 @@ class SwarmConsensusOrchestrator:
         return majority_achieved, consensus_score
 
     def _simulate_agent_vote(self, agent: str, fact: str, media: str) -> float:
+        """Vote de repli (hors-LLM), déterministe et reproductible.
+
+        Ce n'est PAS une compréhension sémantique — celle-ci vient du LLM. Mais
+        plutôt qu'un 50 % plat identique pour tous (qui rendait le consensus
+        insipide et presque toujours rejeté), on dérive un score varié et stable
+        par couple (expert, fait), relevé quand le domaine de l'expert est touché.
+        L'« Avocat du Diable » reste sceptique par principe.
         """
-        Simule le vote sémantique d'un expert d'après son profil (repli hors-LLM).
-        """
-        profile = self.AGENT_PROFILES.get(agent)
-        if not profile:
-            return 0.55
-        f_lower = fact.lower()
+        profile = self.AGENT_PROFILES.get(agent, {})
+        text = fact.lower()
+        digest = hashlib.md5(
+            f"{agent}::{text}".encode("utf-8"), usedforsecurity=False
+        ).hexdigest()
+        # Base stable dans [0.45, 0.85] : chaque expert a un avis propre sur chaque fait.
+        base = 0.45 + (int(digest[:8], 16) % 1000) / 1000.0 * 0.4
         keywords = profile.get("keywords", [])
-        if keywords and any(w in f_lower for w in keywords):
-            return float(profile["hit"])
-        return float(profile["miss"])
+        if keywords and any(w in text for w in keywords):
+            base += 0.18  # le fait touche le domaine de cet expert
+        if agent == "Avocat du Diable":
+            base -= 0.3  # doute méthodique
+        return round(min(1.0, max(0.05, base)), 2)
