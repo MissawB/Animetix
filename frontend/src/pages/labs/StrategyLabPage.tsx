@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Target, RefreshCw, BarChart3, TrendingDown } from 'lucide-react';
+import { Target, RefreshCw, BarChart3, TrendingDown, TriangleAlert } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -158,7 +158,7 @@ const StrategyLabPage: React.FC = () => {
         {/* Visualisation */}
         <div className="lg:col-span-8">
           <AnimatePresence mode="wait">
-            {!result && !mutation.isPending && (
+            {!result && !mutation.isPending && !mutation.isError && (
               <motion.div
                 key="empty"
                 initial={{ opacity: 0 }}
@@ -170,6 +170,28 @@ const StrategyLabPage: React.FC = () => {
                   title="Prêt à s'entraîner"
                   hint="Choisis le nombre de parties d'entraînement puis lance-le : les courbes montrant comment l'IA affine sa stratégie s'afficheront ici."
                 />
+              </motion.div>
+            )}
+
+            {mutation.isError && !mutation.isPending && (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex h-full min-h-[420px] flex-col items-center justify-center gap-5 rounded-2xl border border-dashed border-[#E8442B]/30 px-8 text-center"
+              >
+                <TriangleAlert className="h-14 w-14 text-[#E8442B]/70" aria-hidden="true" />
+                <div>
+                  <h3 className="font-manga text-2xl font-black uppercase italic text-[#F4F1E8]">
+                    L'entraînement a échoué
+                  </h3>
+                  <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-[#8F94A5]">
+                    Le serveur n'a pas pu lancer la simulation. Réessaie dans un instant.
+                  </p>
+                </div>
+                <button type="button" onClick={runSimulation} className={LAB_CTA}>
+                  Réessayer
+                </button>
               </motion.div>
             )}
 

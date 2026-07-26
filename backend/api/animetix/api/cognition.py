@@ -342,9 +342,14 @@ class CFRStrategyLabView(APIView):
     """
     Interface pour visualiser la convergence du solveur CFR (Counterfactual Regret Minimization).
     Simule la résolution de dilemmes stratégiques pour Akinetix.
+
+    Lab pédagogique CPU pur (aucun LLM/GPU, aucun coût en Bx, itérations bornées
+    à 1000 côté serializer) : ouvert à tous comme les autres labs de démonstration.
+    Le throttle anonyme est désactivé pour ne pas 429 le bouton en pleine session.
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
+    throttle_classes: list = []
 
     @inject
     def __init__(
@@ -355,15 +360,28 @@ class CFRStrategyLabView(APIView):
         super().__init__(**kwargs)
         self.cfr_solver = cfr_solver
 
+    # Jeu de devinettes par défaut (façon Akinetix) : le solveur a besoin d'un
+    # jeu de questions, que le frontend n'envoie pas — sans lui, solve_with_history
+    # lançait un 500 (« missing argument 'questions' ») à chaque clic.
+    DEFAULT_QUESTIONS = [
+        "Le personnage est-il un homme ?",
+        "Vient-il d'un shonen ?",
+        "A-t-il des pouvoirs surnaturels ?",
+        "Est-il le protagoniste principal ?",
+    ]
+
     def post(self, request):
         serializer = CFRStrategySerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        cfr_solver = self.cfr_solver
+        data = serializer.validated_data
+        questions = data.get("questions") or self.DEFAULT_QUESTIONS
 
         try:
-            result = cfr_solver.solve_with_history(**serializer.validated_data)
+            result = self.cfr_solver.solve_with_history(
+                questions=questions, iterations=data.get("iterations", 100)
+            )
             return Response(result)
         except Exception:
             logger.exception("CFR Simulation Error")
