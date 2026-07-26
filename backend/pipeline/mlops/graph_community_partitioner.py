@@ -99,6 +99,7 @@ class GraphCommunityPartitioner:
              collect(DISTINCT p.name) AS people,
              collect(DISTINCT sg.name) AS sagas
         RETURN m.title AS title, m.popularity AS popularity,
+               m.title_english AS title_english, m.title_native AS title_native,
                studios, themes, people, sagas
         LIMIT {MAX_MEDIA}
         """
@@ -106,14 +107,20 @@ class GraphCommunityPartitioner:
         if len(rows) < MIN_COMMUNITY_SIZE:
             return []
 
-        # Index attribut -> œuvres, œuvre -> attributs, et popularité par œuvre
-        # (pour classer les œuvres d'un territoire par popularité décroissante).
+        # Index attribut -> œuvres, œuvre -> attributs, popularité et titres
+        # alternatifs par œuvre (tri par popularité + affichage multi-titres).
         attr_index: dict[str, list[str]] = defaultdict(list)
         media_attrs: dict[str, list[str]] = {}
         media_pop: dict[str, float] = {}
+        media_meta: dict[str, dict[str, Any]] = {}
         for row in rows:
             title = row["title"]
             media_pop[title] = row.get("popularity") or 0
+            media_meta[title] = {
+                "title": title,
+                "title_english": row.get("title_english"),
+                "title_native": row.get("title_native"),
+            }
             attrs: list[str] = []
             for key, prefix in (
                 ("studios", "studio"),
@@ -175,15 +182,17 @@ class GraphCommunityPartitioner:
             # Œuvres triées par popularité décroissante, dédupliquées par titre.
             ordered = sorted(
                 dict.fromkeys(members), key=lambda t: (-(media_pop.get(t) or 0), t)
-            )
-            entities = ordered[:MAX_ENTITIES_PER_COMMUNITY]
+            )[:MAX_ENTITIES_PER_COMMUNITY]
+            # Chaque œuvre porte ses titres alternatifs (original + anglais) pour
+            # un affichage enrichi côté UI ; le résumé n'a besoin que des titres.
+            entities = [media_meta.get(t, {"title": t}) for t in ordered]
             communities.append(
                 {
                     "id": f"community_{i}",
                     "name": name,
                     # Les tags/genres qui définissent le regroupement (mis en avant côté UI).
                     "themes": top_themes,
-                    "summary": self._summarize(name, entities, theme_counts),
+                    "summary": self._summarize(name, ordered, theme_counts),
                     "entities": entities,
                 }
             )

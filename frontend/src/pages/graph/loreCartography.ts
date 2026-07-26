@@ -2,11 +2,27 @@ import React, { useState } from 'react';
 
 // ── Domain ───────────────────────────────────────────────────────────────────
 
+/** Une œuvre d'un territoire : soit un simple titre, soit un objet portant ses
+ *  titres alternatifs (romaji + anglais + original japonais). Les deux formes
+ *  sont acceptées pour rester rétro-compatible (anciens payloads / tests). */
+export type LoreEntity =
+  | string
+  | { title: string; title_english?: string | null; title_native?: string | null };
+
+/** Titre d'affichage principal d'une œuvre (romaji). */
+export const entityTitle = (e: LoreEntity): string => (typeof e === 'string' ? e : e.title);
+/** Titre anglais, si présent et différent du principal. */
+export const entityEnglish = (e: LoreEntity): string | undefined =>
+  typeof e === 'string' ? undefined : e.title_english || undefined;
+/** Titre original (japonais), si présent. */
+export const entityNative = (e: LoreEntity): string | undefined =>
+  typeof e === 'string' ? undefined : e.title_native || undefined;
+
 export interface LoreCommunity {
   id: string | number;
   name: string;
   summary: string;
-  entities?: string[];
+  entities?: LoreEntity[];
   /** Tags/genres partagés qui définissent le regroupement (mis en avant côté UI). */
   themes?: string[];
 }
@@ -192,10 +208,10 @@ export const surveyMap = (communities: LoreCommunity[], VIEW: PlateSize): Territ
     const rand = seededRandom(String(community.id) + community.name);
     const entities = community.entities ?? [];
 
-    const landmarks = entities.slice(0, 7).map((label) => {
+    const landmarks = entities.slice(0, 7).map((e) => {
       const a = rand() * Math.PI * 2;
       const d = Math.sqrt(rand()) * r * 0.5;
-      return { x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d * 0.8, label };
+      return { x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d * 0.8, label: entityTitle(e) };
     });
 
     return { community, cx, cy, r, path: coastline(cx, cy, r, rand), landmarks };

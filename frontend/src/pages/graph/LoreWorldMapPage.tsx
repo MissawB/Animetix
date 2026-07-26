@@ -7,13 +7,22 @@ import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import {
   LANDSCAPE,
   PORTRAIT,
+  entityEnglish,
+  entityNative,
+  entityTitle,
   isGenerating,
   surveyMap,
   useNarrow,
   type LoreCommunity,
+  type LoreEntity,
   type WorldMapResponse,
 } from './loreCartography';
 import { Graticule, Plate } from './components/MapPlate';
+import { MapGuide } from './components/MapGuide';
+import { Modal } from '../../components/ui/Modal';
+
+/** Nombre d'œuvres montrées directement dans le dossier ; le reste ouvre la popup. */
+const DOSSIER_WORKS = 8;
 
 /** Label court pour la planche : on retire le préfixe « Communauté » (redondant,
  *  chaque territoire en est une) et on tronque les noms longs — le nom complet
@@ -23,12 +32,28 @@ const mapLabel = (name: string): string => {
   return short.length > 22 ? `${short.slice(0, 21).trimEnd()}…` : short;
 };
 
+/** Une œuvre : titre principal (romaji) + titres alternatifs (anglais · original). */
+const WorkRow: React.FC<{ entity: LoreEntity }> = ({ entity }) => {
+  const title = entityTitle(entity);
+  const english = entityEnglish(entity);
+  const alt = [english && english !== title ? english : null, entityNative(entity)]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <li className="rounded-xl border border-[#FDB913]/15 bg-[#FDB913]/[0.04] px-3 py-2">
+      <p className="text-[13px] font-bold leading-tight text-[#F4F1E8]">{title}</p>
+      {alt && <p className="mt-0.5 truncate text-[11px] leading-tight text-[#8F94A5]">{alt}</p>}
+    </li>
+  );
+};
+
 const LoreWorldMapPage: React.FC = () => {
   const reduceMotion = useReducedMotion();
   const narrow = useNarrow();
   const VIEW = narrow ? PORTRAIT : LANDSCAPE;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [worksOpen, setWorksOpen] = useState(false);
 
   const { data, isLoading, isError } = useQuery<WorldMapResponse>({
     queryKey: ['graph-world-map'],
@@ -374,26 +399,47 @@ const LoreWorldMapPage: React.FC = () => {
                         <p className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#8F94A5]">
                           <span className="h-3 w-0.5 bg-[#FDB913]" aria-hidden /> Œuvres clés
                         </p>
-                        <ul className="flex flex-wrap gap-2">
-                          {(selected.community.entities ?? []).slice(0, 12).map((entity) => (
-                            <li
-                              key={entity}
-                              className="rounded-full border border-[#FDB913]/20 bg-[#FDB913]/[0.06] px-3 py-1 text-[11px] font-bold text-[#FDB913]/90 transition-colors hover:border-[#FDB913]/50"
-                            >
-                              {entity}
-                            </li>
-                          ))}
-                          {(selected.community.entities?.length ?? 0) > 12 && (
-                            <li className="rounded-full border border-[#F4F1E8]/10 px-3 py-1 text-[11px] font-bold text-[#8F94A5]">
-                              +{(selected.community.entities?.length ?? 0) - 12} autres
-                            </li>
-                          )}
+                        <ul className="space-y-2">
+                          {(selected.community.entities ?? [])
+                            .slice(0, DOSSIER_WORKS)
+                            .map((entity) => (
+                              <WorkRow key={entityTitle(entity)} entity={entity} />
+                            ))}
                         </ul>
+                        {(selected.community.entities?.length ?? 0) > DOSSIER_WORKS && (
+                          <button
+                            type="button"
+                            onClick={() => setWorksOpen(true)}
+                            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[#FDB913]/25 bg-[#FDB913]/[0.06] px-4 py-2 text-[11px] font-black uppercase tracking-widest text-[#FDB913] transition-colors hover:border-[#FDB913]/60 hover:bg-[#FDB913]/10"
+                          >
+                            + {(selected.community.entities?.length ?? 0) - DOSSIER_WORKS} autres
+                            œuvres
+                          </button>
+                        )}
                       </div>
 
                       <p className="mt-8 border-t border-[#F4F1E8]/10 pt-5 text-xs leading-relaxed text-[#8F94A5]/70">
                         Cliquez un autre territoire sur la carte pour ouvrir son dossier.
                       </p>
+
+                      {/* Popup : toutes les œuvres du territoire (triées par popularité). */}
+                      <Modal
+                        isOpen={worksOpen}
+                        onClose={() => setWorksOpen(false)}
+                        title={selected.community.name}
+                        size="lg"
+                        contentClassName="!bg-[#0F1016] !border-[#F4F1E8]/10"
+                        closeButtonAriaLabel="Fermer la liste des œuvres"
+                      >
+                        <p className="mb-4 text-[10px] font-black uppercase tracking-[0.25em] text-[#8F94A5]">
+                          {selected.community.entities?.length ?? 0} œuvres · triées par popularité
+                        </p>
+                        <ul className="grid max-h-[60vh] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                          {(selected.community.entities ?? []).map((entity) => (
+                            <WorkRow key={entityTitle(entity)} entity={entity} />
+                          ))}
+                        </ul>
+                      </Modal>
                     </motion.div>
                   ) : (
                     <div>
@@ -416,55 +462,7 @@ const LoreWorldMapPage: React.FC = () => {
           </div>
 
           {/* ── Deux repères en clair : lire la carte, et d'où elle vient ── */}
-          <div className="mt-20 grid grid-cols-1 gap-6 md:grid-cols-2">
-            <section className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8">
-              <h3 className="font-manga mb-5 flex items-center gap-3 text-lg font-black uppercase italic text-[#F4F1E8]">
-                <Compass className="h-5 w-5 text-[#FDB913]" aria-hidden="true" /> Comment lire la
-                carte
-              </h3>
-              <div className="space-y-4 text-sm leading-relaxed text-[#8F94A5]">
-                <p>
-                  <span className="font-bold text-[#F4F1E8]">Les territoires.</span> Chaque masse
-                  regroupe des œuvres qui se ressemblent. Plus un territoire contient d&apos;œuvres,
-                  plus il est grand.
-                </p>
-                <p>
-                  <span className="font-bold text-[#F4F1E8]">Les points.</span> Ce sont les œuvres
-                  du territoire. On ne trace aucun trait entre elles : la carte montre les
-                  regroupements, elle n&apos;invente pas de liens.
-                </p>
-                <p>
-                  <span className="font-bold text-[#F4F1E8]">La lecture.</span> Cliquez un
-                  territoire (ou tabulez jusqu&apos;à lui) pour ouvrir son dossier : un résumé et
-                  ses œuvres clés.
-                </p>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] p-8">
-              <h3 className="font-manga mb-5 flex items-center gap-3 text-lg font-black uppercase italic text-[#F4F1E8]">
-                <Radar className="h-5 w-5 text-[#FDB913]" aria-hidden="true" /> D&apos;où vient
-                cette carte
-              </h3>
-              <div className="space-y-4 text-sm leading-relaxed text-[#8F94A5]">
-                <p>
-                  <span className="font-bold text-[#F4F1E8]">Le regroupement.</span> Les œuvres sont
-                  rassemblées non par titre, mais par ce qu&apos;elles ont en commun : thèmes,
-                  auteurs, studios, inspirations (méthode dite « Leiden »).
-                </p>
-                <p>
-                  <span className="font-bold text-[#F4F1E8]">La fabrication.</span> La carte est
-                  préparée à l&apos;avance, la nuit. Elle n&apos;est jamais calculée pendant votre
-                  visite — résumer chaque territoire coûte un appel à l&apos;IA.
-                </p>
-                <p>
-                  <span className="font-bold text-[#F4F1E8]">À quoi ça sert.</span> Ces
-                  regroupements aident l&apos;IA à saisir le contexte d&apos;une saga entière avant
-                  d&apos;affiner une recherche.
-                </p>
-              </div>
-            </section>
-          </div>
+          <MapGuide />
         </div>
       </div>
     </AnimatedPage>
