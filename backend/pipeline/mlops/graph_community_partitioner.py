@@ -1,4 +1,5 @@
 import logging
+import re
 from collections import Counter, defaultdict
 from typing import Any, Dict, List, Optional
 
@@ -97,18 +98,22 @@ class GraphCommunityPartitioner:
              collect(DISTINCT t.name) AS themes,
              collect(DISTINCT p.name) AS people,
              collect(DISTINCT sg.name) AS sagas
-        RETURN m.title AS title, studios, themes, people, sagas
+        RETURN m.title AS title, m.popularity AS popularity,
+               studios, themes, people, sagas
         LIMIT {MAX_MEDIA}
         """
         rows = [r for r in self.neo4j_manager.execute_query(cypher) if r.get("title")]
         if len(rows) < MIN_COMMUNITY_SIZE:
             return []
 
-        # Index attribut -> œuvres, et œuvre -> attributs.
+        # Index attribut -> œuvres, œuvre -> attributs, et popularité par œuvre
+        # (pour classer les œuvres d'un territoire par popularité décroissante).
         attr_index: dict[str, list[str]] = defaultdict(list)
         media_attrs: dict[str, list[str]] = {}
+        media_pop: dict[str, float] = {}
         for row in rows:
             title = row["title"]
+            media_pop[title] = row.get("popularity") or 0
             attrs: list[str] = []
             for key, prefix in (
                 ("studios", "studio"),
@@ -154,25 +159,30 @@ class GraphCommunityPartitioner:
         communities: List[Dict[str, Any]] = []
         used_names: set[str] = set()
         for i, members in enumerate(parts):
-            titles = sorted(members)
             theme_counts: Counter = Counter()
-            for title in titles:
+            for title in members:
                 for attr in media_attrs.get(title, []):
                     if attr.startswith("theme:"):
                         theme_counts[attr[len("theme:") :]] += 1
             # Nom = deux thèmes dominants (plus distinctif qu'un seul, qui se
             # répète entre clusters partageant le même genre principal).
-            top_two = [t for t, _ in theme_counts.most_common(2)]
-            base = " & ".join(top_two) if top_two else str(i + 1)
+            top_themes = [t for t, _ in theme_counts.most_common(8)]
+            base = " & ".join(top_themes[:2]) if top_themes else str(i + 1)
             name = f"Communauté {base}"
             if name in used_names:  # dédup : deux clusters au même duo de thèmes
                 name = f"{name} #{i + 1}"
             used_names.add(name)
-            entities = titles[:MAX_ENTITIES_PER_COMMUNITY]
+            # Œuvres triées par popularité décroissante, dédupliquées par titre.
+            ordered = sorted(
+                dict.fromkeys(members), key=lambda t: (-(media_pop.get(t) or 0), t)
+            )
+            entities = ordered[:MAX_ENTITIES_PER_COMMUNITY]
             communities.append(
                 {
                     "id": f"community_{i}",
                     "name": name,
+                    # Les tags/genres qui définissent le regroupement (mis en avant côté UI).
+                    "themes": top_themes,
                     "summary": self._summarize(name, entities, theme_counts),
                     "entities": entities,
                 }
@@ -206,6 +216,7 @@ class GraphCommunityPartitioner:
                 {
                     "id": f"community_{i}",
                     "name": name,
+                    "themes": [label],
                     "summary": self._summarize(name, entities, Counter()),
                     "entities": entities,
                 }
@@ -218,10 +229,10 @@ class GraphCommunityPartitioner:
     ) -> str:
         top_themes = [t for t, _ in theme_counts.most_common(6)]
         works = ", ".join(entities[:20])
-        deterministic = (
-            f"{name} regroupe {len(entities)} œuvres proches"
-            + (f" autour de : {', '.join(top_themes)}." if top_themes else ".")
-            + (f" Notamment : {works}." if works else "")
+        # Les œuvres sont affichées en chips et les thèmes mis en avant à part :
+        # le résumé de repli ne les répète pas, il ne dit que ce qui les relie.
+        deterministic = f"{name} regroupe {len(entities)} œuvres proches" + (
+            f" autour de : {', '.join(top_themes)}." if top_themes else "."
         )
         try:
             prompt = (
@@ -238,11 +249,21 @@ class GraphCommunityPartitioner:
                 "Tu es un guide d'anime et de manga clair et accessible. "
                 "Évite le jargon technique."
             )
-            summary = self.llm_service.generate(prompt, system_prompt, use_slm=True)
-            summary = (
-                (summary or "").strip() if isinstance(summary, str) else str(summary)
+            raw = self.llm_service.generate(prompt, system_prompt, use_slm=True)
+            summary = raw if isinstance(raw, str) else str(raw or "")
+            # Le SLM local fuit parfois des balises de raisonnement (<think>…</think>),
+            # parfois tronquées. On les retire et on rejette une sortie trop courte
+            # (« Heter, </think> ») au profit du résumé déterministe.
+            summary = re.sub(r"(?is)<think>.*?</think>", " ", summary)
+            summary = re.sub(r"</?think>", " ", summary, flags=re.IGNORECASE)
+            summary = re.sub(r"\s+", " ", summary).strip()
+            # Rejette aussi les sorties dégénérées (« Magic Magic Magic… ») : un
+            # texte sain a un ratio de mots uniques élevé.
+            words = summary.split()
+            degenerate = (
+                bool(words) and len({w.lower() for w in words}) / len(words) < 0.4
             )
-            return summary or deterministic
+            return deterministic if (len(summary) < 25 or degenerate) else summary
         except Exception as e:
             logger.warning("Résumé LLM indisponible pour %s (%s).", name, e)
             return deterministic
@@ -362,4 +383,9 @@ class GraphCommunityPartitioner:
                 ],
             },
         ]
+        # Thèmes du regroupement, dérivés du nom (mis en avant côté UI).
+        for community in self.communities:
+            community.setdefault(
+                "themes", community["name"].replace("Communauté ", "").split(" & ")
+            )
         return self.communities

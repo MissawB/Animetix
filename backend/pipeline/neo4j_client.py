@@ -202,13 +202,17 @@ class Neo4jManager(GraphDatabasePort):
     def _sync_tx(tx, item, media_type):
         clean_item = sanitize_for_prompt(item)
         safe_media_label = "Media"
-        query = f"MERGE (m:{safe_media_label} {{id: $id, type: $type}}) SET m.title = $title, m.year = $year RETURN m"
+        query = (
+            f"MERGE (m:{safe_media_label} {{id: $id, type: $type}}) "
+            "SET m.title = $title, m.year = $year, m.popularity = $popularity RETURN m"
+        )
         tx.run(
             query,
             id=str(clean_item["id"]),
             type=media_type,
             title=clean_item["title"],
             year=clean_item.get("year"),
+            popularity=clean_item.get("popularity"),
         )
         for studio_name in clean_item.get("studios", []):
             tx.run(

@@ -350,6 +350,26 @@ const LoreWorldMapPage: React.FC = () => {
                         {selected.community.summary}
                       </p>
 
+                      {/* Tags/genres qui définissent le cluster — mis en avant (encre shu). */}
+                      {(selected.community.themes?.length ?? 0) > 0 && (
+                        <div className="mt-7">
+                          <p className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#8F94A5]">
+                            <span className="h-3 w-0.5 bg-[#E8442B]" aria-hidden /> Thèmes du
+                            regroupement
+                          </p>
+                          <ul className="flex flex-wrap gap-2">
+                            {(selected.community.themes ?? []).slice(0, 8).map((theme) => (
+                              <li
+                                key={theme}
+                                className="rounded-md border border-[#E8442B]/30 bg-[#E8442B]/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#E8442B]"
+                              >
+                                {theme}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
                       <div className="mt-7">
                         <p className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#8F94A5]">
                           <span className="h-3 w-0.5 bg-[#FDB913]" aria-hidden /> Œuvres clés

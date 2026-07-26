@@ -7,6 +7,8 @@ export interface LoreCommunity {
   name: string;
   summary: string;
   entities?: string[];
+  /** Tags/genres partagés qui définissent le regroupement (mis en avant côté UI). */
+  themes?: string[];
 }
 
 // The endpoint answers with EITHER the community list OR, while the map is being
