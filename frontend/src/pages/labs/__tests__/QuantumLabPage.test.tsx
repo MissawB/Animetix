@@ -16,9 +16,24 @@ vi.mock('@tanstack/react-query', () => ({
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) => <div {...props}>{children}</div>,
-    h1: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLHeadingElement>>) => <h1 {...props}>{children}</h1>,
-    p: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLParagraphElement>>) => <p {...props}>{children}</p>,
+    div: ({
+      children,
+      ...props
+    }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) => (
+      <div {...props}>{children}</div>
+    ),
+    h1: ({
+      children,
+      ...props
+    }: React.PropsWithChildren<React.HTMLAttributes<HTMLHeadingElement>>) => (
+      <h1 {...props}>{children}</h1>
+    ),
+    p: ({
+      children,
+      ...props
+    }: React.PropsWithChildren<React.HTMLAttributes<HTMLParagraphElement>>) => (
+      <p {...props}>{children}</p>
+    ),
   },
   AnimatePresence: ({ children }: React.PropsWithChildren<unknown>) => <>{children}</>,
 }));
@@ -30,19 +45,19 @@ describe('QuantumLabPage', () => {
 
   it('should have jitLevel and plasticity controls', () => {
     render(<QuantumLabPage />);
-    expect(screen.getByLabelText(/JIT Level/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Plasticity/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/optimisation/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/souplesse/i)).toBeInTheDocument();
   });
 
   it('should call mutation with correct payload', () => {
     render(<QuantumLabPage />);
-    fireEvent.click(screen.getByText(/EFFECTUER MESURE/i));
-    
+    fireEvent.click(screen.getByText(/Lancer la mesure/i));
+
     expect(mockMutate).toHaveBeenCalledWith({
-        action: 'quantum',
-        theme: 'shonen',
-        jitLevel: 'basic',
-        plasticity: 'medium'
+      action: 'quantum',
+      theme: 'shonen',
+      jitLevel: 'basic',
+      plasticity: 'medium',
     });
   });
 });

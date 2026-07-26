@@ -56,6 +56,7 @@ const QuantumLabPage: React.FC = () => {
   const [jitLevel, setJitLevel] = useState('basic');
   const [plasticity, setPlasticity] = useState('medium');
   const [quantumResult, setQuantumResult] = useState<QuantumResult | null>(null);
+  const themeLabel = THEME_OPTIONS.find((o) => o.value === quantumTheme)?.label ?? quantumTheme;
 
   const quantumMutation = useMutation({
     mutationFn: (body: QuantumMutationBody) =>
@@ -69,10 +70,10 @@ const QuantumLabPage: React.FC = () => {
   return (
     <LabPage>
       <LabHeader
-        code="Protocole · Quantum"
+        code="Le goût, version quantique"
         title="Cognition"
         accent="quantique"
-        lede="Le moteur modélise tes préférences comme des états en superposition. Choisis un thème, lance une mesure : la fonction d'onde s'effondre sur un verdict, positif ou négatif."
+        lede="À la manière de la physique quantique, le moteur estime la probabilité que tu aimes un thème donné. Choisis un thème et lance une mesure : tu obtiens un pourcentage de « chances d'aimer » et un verdict oui / non."
       />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
@@ -82,7 +83,7 @@ const QuantumLabPage: React.FC = () => {
             <div className="space-y-6">
               <div className="space-y-2">
                 <label htmlFor="theme" className={LAB_LABEL}>
-                  Thème observé
+                  Thème à tester
                 </label>
                 <select
                   id="theme"
@@ -100,7 +101,7 @@ const QuantumLabPage: React.FC = () => {
 
               <div className="space-y-2">
                 <label htmlFor="jit-level" className={LAB_LABEL}>
-                  JIT Level
+                  Niveau d&apos;optimisation
                 </label>
                 <select
                   id="jit-level"
@@ -118,7 +119,7 @@ const QuantumLabPage: React.FC = () => {
 
               <div className="space-y-2">
                 <label htmlFor="plasticity" className={LAB_LABEL}>
-                  Plasticity
+                  Souplesse du modèle
                 </label>
                 <select
                   id="plasticity"
@@ -150,7 +151,7 @@ const QuantumLabPage: React.FC = () => {
                 {quantumMutation.isPending ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
-                  t('labs.quantum.run_measure', 'EFFECTUER MESURE')
+                  t('labs.quantum.run_measure', 'Lancer la mesure')
                 )}
               </button>
             </div>
@@ -170,19 +171,48 @@ const QuantumLabPage: React.FC = () => {
               >
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <LabStat
-                    label="Probabilité mesurée"
+                    label={`Chances d'aimer « ${themeLabel} »`}
                     value={`${Math.round(quantumResult.probability * 100)}%`}
                     tone="gold"
                   />
                   <LabStat
-                    label="Effondrement"
-                    value={quantumResult.outcome ? 'Verdict positif' : 'Verdict négatif'}
+                    label="Verdict"
+                    value={quantumResult.outcome ? 'Plutôt oui' : 'Plutôt non'}
                     tone={quantumResult.outcome ? 'paper' : 'shu'}
                   />
                 </div>
 
+                {/* Jauge de probabilité : la même info, en un coup d'œil. */}
+                <div>
+                  <div className="mb-2 flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-[#8F94A5]">
+                    <span>Peu probable</span>
+                    <span>Très probable</span>
+                  </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#F4F1E8]/10">
+                    <div
+                      className="h-full rounded-full bg-[#FDB913] transition-all duration-500"
+                      style={{ width: `${Math.round(quantumResult.probability * 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                <LabPanel title="Ce que ça veut dire">
+                  <p className="text-sm leading-relaxed text-[#8F94A5]">
+                    L&apos;IA estime{' '}
+                    <span className="font-black text-[#F4F1E8]">
+                      {Math.round(quantumResult.probability * 100)}%
+                    </span>{' '}
+                    de chances que le thème «{' '}
+                    <span className="font-black uppercase text-[#F4F1E8]">{themeLabel}</span> » te
+                    plaise. Plutôt que de trancher tout de suite, elle traite tes goûts comme
+                    incertains — comme une pièce encore en l&apos;air — jusqu&apos;à ce que la «
+                    mesure » les fixe sur un oui ou un non. Les thèmes proches peuvent aussi être
+                    influencés par ce choix.
+                  </p>
+                </LabPanel>
+
                 <LabPanel
-                  title="Vecteur d'état"
+                  title="Sous le capot · le détail quantique"
                   corner={
                     <span className="flex items-center gap-1.5">
                       <Activity className="h-3.5 w-3.5" aria-hidden="true" />{' '}
@@ -190,6 +220,11 @@ const QuantumLabPage: React.FC = () => {
                     </span>
                   }
                 >
+                  <p className="mb-5 text-xs leading-relaxed text-[#8F94A5]/70">
+                    Le détail mathématique de la mesure (le « vecteur d&apos;état »). Tu peux
+                    l&apos;ignorer sans souci : c&apos;est la mécanique interne qui produit le
+                    pourcentage ci-dessus.
+                  </p>
                   <div className="grid grid-cols-1 gap-4">
                     {quantumResult.state_vector.map((val: string, i: number) => (
                       <div
@@ -206,21 +241,12 @@ const QuantumLabPage: React.FC = () => {
                     ))}
                   </div>
                 </LabPanel>
-
-                <LabPanel title="Interprétation de Born">
-                  <p className="text-sm leading-relaxed text-[#8F94A5]">
-                    La mesure a forcé le système à sortir de sa superposition pour valider (ou
-                    rejeter) l'observable «{' '}
-                    <span className="font-black uppercase text-[#F4F1E8]">{quantumTheme}</span> ».
-                    Les thèmes intriqués restent influencés par cet effondrement.
-                  </p>
-                </LabPanel>
               </motion.div>
             ) : (
               <LabEmpty
                 icon={<Atom className="h-20 w-20" aria-hidden="true" />}
-                title="Système en superposition"
-                hint="Choisis un thème et lance une mesure : le verdict et le vecteur d'état s'afficheront ici."
+                title="En attente de mesure"
+                hint="Choisis un thème et lance une mesure : ton pourcentage de « chances d'aimer » et le verdict s'afficheront ici."
               />
             )}
           </AnimatePresence>
@@ -239,10 +265,10 @@ const QuantumLabPage: React.FC = () => {
           },
           {
             title: 'La lecture',
-            body: "Le backend calcule une probabilité pour le thème choisi, en déduit un verdict binaire et renvoie le vecteur d'amplitudes affiché. Les réglages JIT et Plasticity modulent ce calcul.",
+            body: "Tu obtiens un pourcentage de « chances d'aimer » et un verdict oui / non. Les deux réglages (optimisation, souplesse) ne font qu'ajuster finement le calcul — inutile d'y toucher pour comprendre le résultat.",
           },
         ]}
-        note="Simulation de préférence inspirée du formalisme quantique : elle modélise l'incertitude humaine et révèle des liens invisibles entre genres sans rapport apparent. C'est une modélisation probabiliste des goûts, pas un ordinateur quantique."
+        note="Simulation de préférence inspirée du formalisme quantique : elle modélise l'incertitude de nos goûts et révèle des liens inattendus entre genres. C'est une modélisation probabiliste des goûts, pas un vrai ordinateur quantique."
       />
     </LabPage>
   );
