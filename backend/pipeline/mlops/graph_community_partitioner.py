@@ -24,6 +24,43 @@ MIN_COMMUNITY_SIZE = 2
 # blow up the edge count. Skipping it sharpens the communities.
 GENERIC_ATTR_THRESHOLD = 80
 
+# Genres AniList (vocabulaire contrôlé) : base des noms de communautés, bien plus
+# lisibles que les tags bruts.
+GENRE_VOCAB = {
+    "Action",
+    "Adventure",
+    "Comedy",
+    "Drama",
+    "Ecchi",
+    "Fantasy",
+    "Horror",
+    "Mahou Shoujo",
+    "Mecha",
+    "Music",
+    "Mystery",
+    "Psychological",
+    "Romance",
+    "Sci-Fi",
+    "Slice of Life",
+    "Sports",
+    "Supernatural",
+    "Thriller",
+}
+# Tags démographiques / de casting / de format : peu descriptifs, ils font de
+# mauvais noms de cluster — écartés du nom ET des puces de thèmes.
+THEME_NOISE = {
+    "Male Protagonist",
+    "Female Protagonist",
+    "Primarily Male Cast",
+    "Primarily Female Cast",
+    "Primarily Teen Cast",
+    "Primarily Adult Cast",
+    "Primarily Child Cast",
+    "Ensemble Cast",
+    "Heterosexual",
+    "Nudity",
+}
+
 
 class GraphCommunityPartitioner:
     """
@@ -172,13 +209,36 @@ class GraphCommunityPartitioner:
                 for attr in media_attrs.get(title, []):
                     if attr.startswith("theme:"):
                         theme_counts[attr[len("theme:") :]] += 1
-            # Nom = deux thèmes dominants (plus distinctif qu'un seul, qui se
-            # répète entre clusters partageant le même genre principal).
-            top_themes = [t for t, _ in theme_counts.most_common(8)]
-            base = " & ".join(top_themes[:2]) if top_themes else str(i + 1)
-            name = f"Communauté {base}"
-            if name in used_names:  # dédup : deux clusters au même duo de thèmes
-                name = f"{name} #{i + 1}"
+            # On classe les thèmes en écartant les tags démographiques peu parlants,
+            # et en plaçant les GENRES d'abord : un nom « Action & Aventure » est
+            # bien plus lisible que « Male Protagonist & Heterosexual ».
+            ranked = [t for t, _ in theme_counts.most_common() if t not in THEME_NOISE]
+            ranked = [t for t in ranked if t in GENRE_VOCAB] + [
+                t for t in ranked if t not in GENRE_VOCAB
+            ]
+            top_themes = ranked[:8]
+            # Nom = 2 genres dominants, étendu à un 3e en cas de collision (plutôt
+            # qu'un « #5 » opaque).
+            name = None
+            for k in (2, 3):
+                candidate = (
+                    "Communauté " + " & ".join(ranked[:k])
+                    if ranked
+                    else f"Communauté {i + 1}"
+                )
+                if candidate not in used_names:
+                    name = candidate
+                    break
+            if name is None:
+                base = (
+                    "Communauté " + " & ".join(ranked[:2])
+                    if ranked
+                    else f"Communauté {i + 1}"
+                )
+                suffix = 2
+                while f"{base} ({suffix})" in used_names:
+                    suffix += 1
+                name = f"{base} ({suffix})"
             used_names.add(name)
             # Œuvres triées par popularité décroissante, dédupliquées par titre.
             ordered = sorted(
