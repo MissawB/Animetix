@@ -117,12 +117,24 @@ export const surveyMap = (communities: LoreCommunity[], VIEW: PlateSize): Territ
   const GOLDEN = Math.PI * (3 - Math.sqrt(5));
   const count = communities.length;
   const spread = Math.min(VIEW.w, VIEW.h) * 0.34;
-  const MARGIN = 26; // clear water + room for the label under each coast
+  const MARGIN = 30; // clear water + room for the label under each coast
+
+  // Area-budget the islands so N of them ALWAYS fit the plate. The old formula
+  // (40 + √n·20) gave every 40-work territory r≈166 — nine of those can't fit a
+  // 1000×620 plate, so the relaxation couldn't separate them and they overlapped.
+  // Here the total island area is capped at a fraction of the plate and split by
+  // entity count (area ∝ works), so bigger communities read bigger and they all
+  // still fit.
+  const weights = communities.map((c) => Math.max(1, c.entities?.length ?? 0));
+  const weightSum = weights.reduce((a, b) => a + b, 0) || 1;
+  const areaBudget = VIEW.w * VIEW.h * 0.2;
+  const MIN_R = 38;
+  const MAX_R = Math.min(VIEW.w, VIEW.h) * 0.26;
+  const radiusFor = (w: number) =>
+    Math.max(MIN_R, Math.min(MAX_R, Math.sqrt((areaBudget * (w / weightSum)) / Math.PI)));
 
   const nodes = communities.map((community, i) => {
-    const entities = community.entities ?? [];
-    // Area encodes the entity count -> the radius scales with its square root.
-    const r = 40 + Math.sqrt(entities.length) * 20;
+    const r = radiusFor(Math.max(1, community.entities?.length ?? 0));
     const step = count === 1 ? 0 : Math.sqrt(i / Math.max(count - 1, 1));
     const angle = i * GOLDEN;
     return {

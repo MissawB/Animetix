@@ -15,6 +15,14 @@ import {
 } from './loreCartography';
 import { Graticule, Plate } from './components/MapPlate';
 
+/** Label court pour la planche : on retire le préfixe « Communauté » (redondant,
+ *  chaque territoire en est une) et on tronque les noms longs — le nom complet
+ *  reste dans le dossier et dans l'aria-label. Évite le télescopage des labels. */
+const mapLabel = (name: string): string => {
+  const short = name.replace(/^Communaut[ée]s?\s+/i, '').trim();
+  return short.length > 22 ? `${short.slice(0, 21).trimEnd()}…` : short;
+};
+
 const LoreWorldMapPage: React.FC = () => {
   const reduceMotion = useReducedMotion();
   const narrow = useNarrow();
@@ -176,15 +184,15 @@ const LoreWorldMapPage: React.FC = () => {
 
                         <text
                           x={t.cx}
-                          y={t.cy + t.r + 18}
+                          y={t.cy + t.r + 16}
                           textAnchor="middle"
                           className="pointer-events-none select-none font-mono uppercase"
-                          fontSize={11}
-                          letterSpacing={2}
+                          fontSize={10.5}
+                          letterSpacing={1.5}
                           fill="#f1f2f6"
-                          fillOpacity={isActive ? 0.95 : 0.4}
+                          fillOpacity={isActive ? 0.95 : 0.45}
                         >
-                          {t.community.name}
+                          {mapLabel(t.community.name)}
                         </text>
                       </motion.g>
                     );
