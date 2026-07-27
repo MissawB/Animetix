@@ -43,15 +43,18 @@ def test_suwayomi_sources_view(api_client, mock_suwayomi_adapter):
 
 @pytest.mark.django_db
 def test_suwayomi_search_view(api_client, mock_suwayomi_adapter):
-    mock_suwayomi_adapter.search_manga.return_value = [
-        {"id": "123", "title": "One Piece", "thumbnailUrl": "thumb"}
-    ]
+    mock_suwayomi_adapter.search_manga.return_value = {
+        "mangas": [{"id": "123", "title": "One Piece", "thumbnailUrl": "thumb"}],
+        "hasNextPage": True,
+    }
     url = reverse("api_suwayomi_search")
     response = api_client.get(url, {"source_id": "1", "q": "One Piece"})
     assert response.status_code == 200
-    assert len(response.data) == 1
-    assert response.data[0]["title"] == "One Piece"
-    mock_suwayomi_adapter.search_manga.assert_called_once_with("1", "One Piece")
+    assert len(response.data["mangas"]) == 1
+    assert response.data["mangas"][0]["title"] == "One Piece"
+    assert response.data["hasNextPage"] is True
+    # page par défaut = 1
+    mock_suwayomi_adapter.search_manga.assert_called_once_with("1", "One Piece", 1)
 
 
 @pytest.mark.django_db
@@ -99,9 +102,14 @@ def test_suwayomi_image_proxy(mock_safe_req, api_client):
     assert response.status_code == 200
     assert response.content == b"fake_image_bytes"
     assert response["Content-Type"] == "image/png"
-    # Ensure safe_http_request was called with correct target URL
+    # Ensure safe_http_request was called with correct target URL. allow_internal=True
+    # est requis : Suwayomi tourne en local, sinon le garde-fou SSRF bloque (500).
     mock_safe_req.assert_called_once_with(
-        "GET", "http://127.0.0.1:4567/thumb.png", headers={}, timeout=15
+        "GET",
+        "http://127.0.0.1:4567/thumb.png",
+        headers={},
+        timeout=15,
+        allow_internal=True,
     )
 
 

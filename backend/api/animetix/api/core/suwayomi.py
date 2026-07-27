@@ -2,9 +2,11 @@
 
 import base64
 
+from adapters.persistence.suwayomi_adapter import SuwayomiUnavailableError
 from animetix_project.logging_config import get_logger
 from core.utils.security import safe_http_request
 from dependency_injector.wiring import Provide, inject
+from django.core.cache import cache  # noqa: E402
 from django.http import HttpResponse  # noqa: E402
 from django_ratelimit.decorators import ratelimit  # noqa: E402
 from rest_framework import permissions, status
@@ -14,6 +16,20 @@ from rest_framework.views import APIView
 from ...containers import Container
 
 logger = get_logger("animetix.api")
+
+SUWAYOMI_UNREACHABLE_MSG = (
+    "Serveur Suwayomi injoignable. Démarre Suwayomi-Server sur "
+    "http://127.0.0.1:4567 (valeur de SUWAYOMI_URL), puis réessaie."
+)
+
+
+def _suwayomi_unreachable_response():
+    """Réponse 503 explicite : le serveur Suwayomi n'est pas joignable (au lieu
+    d'une liste vide muette qui laisse croire qu'il n'y a rien à afficher)."""
+    return Response(
+        {"error": "suwayomi_unreachable", "message": SUWAYOMI_UNREACHABLE_MSG},
+        status=status.HTTP_503_SERVICE_UNAVAILABLE,
+    )
 
 
 @ratelimit(key="ip", rate="120/m", method="GET", block=True)
@@ -50,7 +66,12 @@ def suwayomi_image_proxy(request):
         headers["Authorization"] = f"Bearer {settings.SUWAYOMI_PASSWORD}"
 
     try:
-        response = safe_http_request("GET", url, headers=headers, timeout=15)
+        # allow_internal=True : Suwayomi tourne en local (127.0.0.1:4567) ; sans ça
+        # le garde-fou SSRF bloque l'URL et le proxy renvoie 500 -> aucune image.
+        # L'URL est déjà validée ci-dessus comme pointant vers l'instance Suwayomi.
+        response = safe_http_request(
+            "GET", url, headers=headers, timeout=15, allow_internal=True
+        )
         if response.status_code == 200:
             content_type = response.headers.get("Content-Type", "image/jpeg")
             return HttpResponse(response.content, content_type=content_type)
@@ -81,7 +102,10 @@ class SuwayomiSourcesView(APIView):
             return Response(
                 {"error": "Suwayomi integration not configured"}, status=500
             )
-        sources = self.suwayomi_adapter.get_sources()
+        try:
+            sources = self.suwayomi_adapter.get_sources()
+        except SuwayomiUnavailableError:
+            return _suwayomi_unreachable_response()
         return Response(sources)
 
 
@@ -100,14 +124,142 @@ class SuwayomiSearchView(APIView):
     def get(self, request):
         source_id = request.query_params.get("source_id")
         query = request.query_params.get("q", "")
+        try:
+            page = max(1, int(request.query_params.get("page", 1)))
+        except (TypeError, ValueError):
+            page = 1
         if not source_id:
             return Response({"error": "Missing source_id parameter"}, status=400)
         if not self.suwayomi_adapter:
             return Response(
                 {"error": "Suwayomi integration not configured"}, status=500
             )
-        results = self.suwayomi_adapter.search_manga(source_id, query)
+        try:
+            results = self.suwayomi_adapter.search_manga(source_id, query, page)
+        except SuwayomiUnavailableError:
+            return _suwayomi_unreachable_response()
+        # {"mangas": [...], "hasNextPage": bool} — le front pagine dessus.
         return Response(results)
+
+
+def _cached_last_page(adapter, source_id, query):
+    """Numéro de dernière page (mis en cache 10 min : le seek coûte ~10 requêtes,
+    et le catalogue « populaire » d'une source ne bouge que lentement)."""
+    cache_key = f"suwayomi:lastpage:{source_id}:{query}"
+    last_page = cache.get(cache_key)
+    if last_page is None:
+        last_page = adapter.find_last_page(source_id, query)
+        cache.set(cache_key, last_page, 600)
+    return last_page
+
+
+class SuwayomiLastPageView(APIView):
+    """Numéro de la dernière page du catalogue d'une source (permet « aller à la
+    fin » et de borner le saut de page côté UI)."""
+
+    permission_classes = [permissions.AllowAny]
+
+    @inject
+    def __init__(
+        self, suwayomi_adapter=Provide[Container.persistence.suwayomi_adapter], **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.suwayomi_adapter = suwayomi_adapter
+
+    def get(self, request):
+        source_id = request.query_params.get("source_id")
+        query = request.query_params.get("q", "")
+        if not source_id:
+            return Response({"error": "Missing source_id parameter"}, status=400)
+        try:
+            last_page = _cached_last_page(self.suwayomi_adapter, source_id, query)
+        except SuwayomiUnavailableError:
+            return _suwayomi_unreachable_response()
+        return Response({"lastPage": last_page})
+
+
+class SuwayomiSeekLetterView(APIView):
+    """Page où commence une lettre donnée (le catalogue Suwayomi est trié
+    alphabétiquement) — pour naviguer par ordre alphabétique."""
+
+    permission_classes = [permissions.AllowAny]
+
+    @inject
+    def __init__(
+        self, suwayomi_adapter=Provide[Container.persistence.suwayomi_adapter], **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.suwayomi_adapter = suwayomi_adapter
+
+    def get(self, request):
+        source_id = request.query_params.get("source_id")
+        query = request.query_params.get("q", "")
+        letter = request.query_params.get("letter", "")
+        if not source_id or not letter:
+            return Response(
+                {"error": "Missing source_id or letter parameter"}, status=400
+            )
+        try:
+            last_page = _cached_last_page(self.suwayomi_adapter, source_id, query)
+            page = self.suwayomi_adapter.find_page_for_letter(
+                source_id, query, letter, last_page
+            )
+        except SuwayomiUnavailableError:
+            return _suwayomi_unreachable_response()
+        return Response({"page": page, "lastPage": last_page})
+
+
+class SuwayomiMangaDetailsView(APIView):
+    """Fiche complète d'un manga source (titre, description, auteur, genres,
+    statut) — pour la popup de détail. Lecture seule, publique."""
+
+    permission_classes = [permissions.AllowAny]
+
+    @inject
+    def __init__(
+        self, suwayomi_adapter=Provide[Container.persistence.suwayomi_adapter], **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.suwayomi_adapter = suwayomi_adapter
+
+    def get(self, request):
+        manga_id = request.query_params.get("suwayomi_manga_id")
+        if not manga_id:
+            return Response(
+                {"error": "Missing suwayomi_manga_id parameter"}, status=400
+            )
+        try:
+            details = self.suwayomi_adapter.fetch_manga_details(manga_id)
+        except SuwayomiUnavailableError:
+            return _suwayomi_unreachable_response()
+        return Response(details)
+
+
+class SuwayomiMangaChaptersView(APIView):
+    """Chapitres d'un manga source, lus DIRECTEMENT depuis Suwayomi (pour la
+    popup). Découplé de l'import : on n'importe le manga dans le catalogue local
+    qu'au moment de la lecture. Lecture seule, publique."""
+
+    permission_classes = [permissions.AllowAny]
+
+    @inject
+    def __init__(
+        self, suwayomi_adapter=Provide[Container.persistence.suwayomi_adapter], **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.suwayomi_adapter = suwayomi_adapter
+
+    def get(self, request):
+        manga_id = request.query_params.get("suwayomi_manga_id")
+        if not manga_id:
+            return Response(
+                {"error": "Missing suwayomi_manga_id parameter"}, status=400
+            )
+        try:
+            chapters = self.suwayomi_adapter.get_chapters(manga_id)
+        except SuwayomiUnavailableError:
+            return _suwayomi_unreachable_response()
+        return Response(chapters)
 
 
 class SuwayomiImportView(APIView):
@@ -216,6 +368,8 @@ class SuwayomiExtensionsListView(APIView):
         try:
             extensions = self.suwayomi_adapter.get_extensions()
             return Response(extensions)
+        except SuwayomiUnavailableError:
+            return _suwayomi_unreachable_response()
         except Exception:
             logger.exception("Failed to fetch Suwayomi extensions")
             return Response({"error": "Internal server error"}, status=500)

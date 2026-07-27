@@ -53,9 +53,11 @@ def test_suwayomi_adapter_search_manga():
     }
 
     with patch("httpx.Client.post", return_value=mock_response) as mock_post:
-        mangas = adapter.search_manga("1", "One Piece")
-        assert len(mangas) == 1
-        assert mangas[0]["title"] == "One Piece"
+        result = adapter.search_manga("1", "One Piece")
+        # Nouveau format paginé : {"mangas": [...], "hasNextPage": bool}
+        assert result["hasNextPage"] is False
+        assert len(result["mangas"]) == 1
+        assert result["mangas"][0]["title"] == "One Piece"
         mock_post.assert_called_once()
 
 

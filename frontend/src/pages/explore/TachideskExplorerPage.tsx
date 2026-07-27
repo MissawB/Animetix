@@ -1,12 +1,12 @@
 import React, { useCallback } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { useTachideskExplorer } from './tachidesk/hooks/useTachideskExplorer';
 import { ExplorerHeader } from './tachidesk/components/ExplorerHeader';
 import { ErrorPanel } from './tachidesk/components/ErrorPanel';
 import { CatalogToolbar } from './tachidesk/components/CatalogToolbar';
 import { MangaGrid } from './tachidesk/components/MangaGrid';
-import { MangaDetailDrawer } from './tachidesk/components/MangaDetailDrawer';
+import { CatalogPagination } from './tachidesk/components/CatalogPagination';
+import { MangaDetailModal } from './tachidesk/components/MangaDetailModal';
 import { ExtensionsTab } from './tachidesk/components/ExtensionsTab';
 
 const TachideskExplorerPage: React.FC = () => {
@@ -19,8 +19,14 @@ const TachideskExplorerPage: React.FC = () => {
     searchQuery,
     setSearchQuery,
     mangas,
+    page,
+    hasNextPage,
+    lastPage,
+    goToPage,
+    seekLetter,
     selectedManga,
     setSelectedManga,
+    mangaDetails,
     chapters,
     extensions,
     extensionSearchQuery,
@@ -79,7 +85,7 @@ const TachideskExplorerPage: React.FC = () => {
 
   return (
     <AnimatedPage>
-      <div className="min-h-screen bg-[#05050a] text-white flex flex-col">
+      <div className="flex min-h-screen flex-col bg-[#0B0C10] text-[#F4F1E8]">
         {/* Header navigation bar */}
         <ExplorerHeader
           activeTab={activeTab}
@@ -119,28 +125,37 @@ const TachideskExplorerPage: React.FC = () => {
                   onSelectManga={selectManga}
                   getProxiedImageUrl={getProxiedImageUrl}
                 />
-              </main>
 
-              {/* Right panel: Sidebar Details */}
-              <AnimatePresence>
-                {selectedManga && (
-                  <MangaDetailDrawer
-                    selectedManga={selectedManga}
-                    chapters={chapters}
-                    loadingDetails={loadingDetails}
-                    importStatus={importStatus}
-                    importingChapter={importingChapter}
-                    onClose={handleCloseDrawer}
-                    onReadChapter={handleReadChapter}
-                    getProxiedImageUrl={getProxiedImageUrl}
-                    isFavorited={isFavorited}
-                    favoriteStatus={favoriteStatus}
-                    togglingFavorite={togglingFavorite}
-                    onToggleFavorite={toggleFavorite}
-                    onUpdateFavoriteStatus={updateFavoriteStatus}
+                {/* Pagination + navigation alphabétique */}
+                {!loadingMangas && (mangas.length > 0 || page > 1) && (
+                  <CatalogPagination
+                    page={page}
+                    hasNextPage={hasNextPage}
+                    lastPage={lastPage}
+                    onGoToPage={goToPage}
+                    onSeekLetter={seekLetter}
                   />
                 )}
-              </AnimatePresence>
+              </main>
+
+              {/* Popup de détail de l'œuvre */}
+              <MangaDetailModal
+                isOpen={!!selectedManga}
+                selectedManga={selectedManga}
+                mangaDetails={mangaDetails}
+                chapters={chapters}
+                loadingDetails={loadingDetails}
+                importStatus={importStatus}
+                importingChapter={importingChapter}
+                onClose={handleCloseDrawer}
+                onReadChapter={handleReadChapter}
+                getProxiedImageUrl={getProxiedImageUrl}
+                isFavorited={isFavorited}
+                favoriteStatus={favoriteStatus}
+                togglingFavorite={togglingFavorite}
+                onToggleFavorite={toggleFavorite}
+                onUpdateFavoriteStatus={updateFavoriteStatus}
+              />
             </>
           ) : (
             /* EXTENSIONS TAB VIEW */

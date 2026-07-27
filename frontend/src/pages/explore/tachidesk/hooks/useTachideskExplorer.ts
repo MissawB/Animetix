@@ -1,9 +1,20 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Source, Manga, Chapter, Extension, ExtensionAction } from '../types';
+import type { Source, Manga, Chapter, Extension, ExtensionAction, MangaDetails } from '../types';
 import { apiClient } from '../../../../utils/apiClient';
 import { useAuthStore } from '../../../../store/authStore';
 import { exploreService } from '../../../../features/explore/services/exploreService';
+
+/**
+ * Message d'erreur clair pour l'explorateur Suwayomi. Quand le backend renvoie
+ * un 503 « suwayomi_unreachable » (serveur non démarré), on affiche son message
+ * actionnable ; sinon on retombe sur un libellé générique.
+ */
+const suwayomiErrorMessage = (err: unknown, fallback: string): string => {
+  const e = err as { status?: number; message?: string } | null;
+  if (e?.status === 503 && e.message) return e.message;
+  return fallback;
+};
 
 export const useTachideskExplorer = () => {
   const navigate = useNavigate();
@@ -16,6 +27,11 @@ export const useTachideskExplorer = () => {
   const [mangas, setMangas] = useState<Manga[]>([]);
   const [loadingSources, setLoadingSources] = useState<boolean>(false);
   const [loadingMangas, setLoadingMangas] = useState<boolean>(false);
+  // Pagination du catalogue (fetchSourceManga est paginé côté Suwayomi).
+  const [page, setPage] = useState<number>(1);
+  const [hasNextPage, setHasNextPage] = useState<boolean>(false);
+  // Dernière page (calculée en fond) : permet « aller à la fin » et de borner.
+  const [lastPage, setLastPage] = useState<number | null>(null);
 
   // Extensions States
   const [extensions, setExtensions] = useState<Extension[]>([]);
@@ -25,6 +41,7 @@ export const useTachideskExplorer = () => {
 
   // Details Modal States
   const [selectedManga, setSelectedManga] = useState<Manga | null>(null);
+  const [mangaDetails, setMangaDetails] = useState<MangaDetails | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loadingDetails, setLoadingDetails] = useState<boolean>(false);
   const [isFavorited, setIsFavorited] = useState<boolean>(false);
@@ -47,8 +64,8 @@ export const useTachideskExplorer = () => {
       if (data.length > 0 && !selectedSource) {
         setSelectedSource(data[0].id);
       }
-    } catch {
-      setError('Impossible de charger les sources Suwayomi');
+    } catch (err) {
+      setError(suwayomiErrorMessage(err, 'Impossible de charger les sources Suwayomi'));
     } finally {
       setLoadingSources(false);
     }
@@ -60,8 +77,8 @@ export const useTachideskExplorer = () => {
     try {
       const data = await exploreService.getSuwayomiExtensions();
       setExtensions(data as unknown as Extension[]);
-    } catch {
-      setError('Impossible de charger les extensions Suwayomi');
+    } catch (err) {
+      setError(suwayomiErrorMessage(err, 'Impossible de charger les extensions Suwayomi'));
     } finally {
       setLoadingExtensions(false);
     }
@@ -84,22 +101,24 @@ export const useTachideskExplorer = () => {
     }
   }, [activeTab, fetchExtensions]);
 
-  const handleSearch = useCallback(
-    async (e?: React.FormEvent) => {
-      if (e) e.preventDefault();
+  const fetchMangas = useCallback(
+    async (pageNum: number) => {
       if (!selectedSource) return;
-
       setLoadingMangas(true);
       setError(null);
-      setMangas([]);
       try {
-        const data: Manga[] = await apiClient(
-          `/api/v1/explore/suwayomi/search/?source_id=${selectedSource}&q=${encodeURIComponent(searchQuery)}`,
+        const data: { mangas?: Manga[]; hasNextPage?: boolean } = await apiClient(
+          `/api/v1/explore/suwayomi/search/?source_id=${selectedSource}&q=${encodeURIComponent(
+            searchQuery,
+          )}&page=${pageNum}`,
           { skipToast: true },
         );
-        setMangas(data);
-      } catch {
-        setError('La recherche a échoué');
+        setMangas(data?.mangas ?? []);
+        setHasNextPage(!!data?.hasNextPage);
+      } catch (err) {
+        setMangas([]);
+        setHasNextPage(false);
+        setError(suwayomiErrorMessage(err, 'La recherche a échoué'));
       } finally {
         setLoadingMangas(false);
       }
@@ -107,23 +126,101 @@ export const useTachideskExplorer = () => {
     [selectedSource, searchQuery],
   );
 
-  // Trigger search on source change
+  // Dernière page, calculée en fond (le seek coûte quelques requêtes, mis en
+  // cache côté backend). Débloque « aller à la fin » + affiche « / N ».
+  const fetchLastPage = useCallback(async () => {
+    if (!selectedSource) return;
+    try {
+      const d: { lastPage?: number } = await apiClient(
+        `/api/v1/explore/suwayomi/last-page/?source_id=${selectedSource}&q=${encodeURIComponent(
+          searchQuery,
+        )}`,
+        { skipToast: true },
+      );
+      setLastPage(typeof d?.lastPage === 'number' ? d.lastPage : null);
+    } catch {
+      setLastPage(null);
+    }
+  }, [selectedSource, searchQuery]);
+
+  // Nouvelle recherche (submit ou changement de source) : on repart page 1
+  // et on recalcule la dernière page pour la nouvelle requête.
+  const handleSearch = useCallback(
+    async (e?: React.FormEvent) => {
+      if (e) e.preventDefault();
+      setPage(1);
+      setLastPage(null);
+      await fetchMangas(1);
+      void fetchLastPage();
+    },
+    [fetchMangas, fetchLastPage],
+  );
+
+  // Navigation de page (précédent / suivant / n° / première / dernière).
+  const goToPage = useCallback(
+    (pageNum: number) => {
+      const target = Math.max(1, pageNum);
+      setPage(target);
+      void fetchMangas(target);
+    },
+    [fetchMangas],
+  );
+
+  // Saut alphabétique : va à la page où commence une lettre (catalogue trié).
+  const seekLetter = useCallback(
+    async (letter: string) => {
+      if (!selectedSource) return;
+      setLoadingMangas(true);
+      try {
+        const d: { page?: number; lastPage?: number } = await apiClient(
+          `/api/v1/explore/suwayomi/seek-letter/?source_id=${selectedSource}&q=${encodeURIComponent(
+            searchQuery,
+          )}&letter=${encodeURIComponent(letter)}`,
+          { skipToast: true },
+        );
+        if (typeof d?.lastPage === 'number') setLastPage(d.lastPage);
+        const target = Math.max(1, d?.page ?? 1);
+        setPage(target);
+        await fetchMangas(target);
+      } catch (err) {
+        setError(suwayomiErrorMessage(err, 'Saut alphabétique impossible'));
+        setLoadingMangas(false);
+      }
+    },
+    [selectedSource, searchQuery, fetchMangas],
+  );
+
+  // Recharge la page 1 quand la source (ou l'onglet) change, et (re)calcule la
+  // dernière page en tâche de fond.
   useEffect(() => {
     if (selectedSource && activeTab === 'catalog') {
       queueMicrotask(() => {
-        void handleSearch();
+        setPage(1);
+        setLastPage(null);
+        void fetchMangas(1);
+        void fetchLastPage();
       });
     }
-  }, [selectedSource, activeTab, handleSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSource, activeTab]);
 
   const selectManga = useCallback(
     async (manga: Manga) => {
       setSelectedManga(manga);
       setChapters([]);
+      setMangaDetails(null);
       setLoadingDetails(true);
       setError(null);
       setIsFavorited(false);
       setFavoriteStatus(null);
+
+      // Fiche complète (description, titre, auteur, genres) en parallèle,
+      // non bloquant : la popup s'ouvre tout de suite avec ce qu'on a.
+      void apiClient(`/api/v1/explore/suwayomi/manga-details/?suwayomi_manga_id=${manga.id}`, {
+        skipToast: true,
+      })
+        .then((data: MangaDetails) => setMangaDetails(data || null))
+        .catch(() => setMangaDetails(null));
 
       try {
         const extId = `suwayomi:${selectedSource}:${manga.id}`;
@@ -141,23 +238,13 @@ export const useTachideskExplorer = () => {
             setIsFavorited(false);
             setFavoriteStatus(null);
           });
-        try {
-          const data: Chapter[] = await apiClient(`/api/v1/media/Manga/${extId}/chapters/`, {
-            skipToast: true,
-          });
-          setChapters(data);
-        } catch {
-          // Not imported yet — import from Suwayomi, then retry fetching chapters.
-          await apiClient('/api/v1/explore/suwayomi/import/', {
-            method: 'POST',
-            body: JSON.stringify({ source_id: selectedSource, suwayomi_manga_id: manga.id }),
-            skipToast: true,
-          });
-          const data: Chapter[] = await apiClient(`/api/v1/media/Manga/${extId}/chapters/`, {
-            skipToast: true,
-          });
-          setChapters(data);
-        }
+        // Chapitres lus DIRECTEMENT depuis Suwayomi (public, pas d'import :
+        // l'import dans le catalogue local n'a lieu qu'à la lecture d'un chapitre).
+        const chData: Chapter[] = await apiClient(
+          `/api/v1/explore/suwayomi/manga-chapters/?suwayomi_manga_id=${manga.id}`,
+          { skipToast: true },
+        );
+        setChapters(Array.isArray(chData) ? chData : []);
       } catch {
         // best-effort: the details panel simply stays empty on failure
       } finally {
@@ -276,7 +363,10 @@ export const useTachideskExplorer = () => {
 
   const getProxiedImageUrl = useCallback((url: string) => {
     if (!url) return 'https://via.placeholder.com/300x450';
-    if (url.startsWith('/api/')) return url;
+    // Ne PAS re-proxifier une URL déjà servie par l'app (manga importé). En
+    // revanche, les vignettes Suwayomi (`/api/v1/manga/{id}/thumbnail`) et icônes
+    // d'extensions commencent aussi par `/api/` : elles DOIVENT passer par le proxy.
+    if (url.startsWith('/api/v1/media/')) return url;
     try {
       const utf8Bytes = new TextEncoder().encode(url);
       const binaryString = Array.from(utf8Bytes, (byte) => String.fromCharCode(byte)).join('');
@@ -321,8 +411,14 @@ export const useTachideskExplorer = () => {
     searchQuery,
     setSearchQuery,
     mangas,
+    page,
+    hasNextPage,
+    lastPage,
+    goToPage,
+    seekLetter,
     selectedManga,
     setSelectedManga,
+    mangaDetails,
     chapters,
     extensions,
     extensionSearchQuery,

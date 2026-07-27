@@ -46,21 +46,18 @@ const MangaDetailDrawerComponent: React.FC<MangaDetailDrawerProps> = ({
         <h3 className="text-sm font-black uppercase tracking-widest text-blue-500 flex items-center gap-2">
           <BookOpen className="w-4 h-4" /> Détails de l'œuvre
         </h3>
-        <button
-          onClick={onClose}
-          className="p-1.5 hover:bg-white/5 rounded-full transition-colors"
-        >
+        <button onClick={onClose} className="p-1.5 hover:bg-white/5 rounded-full transition-colors">
           <X className="w-5 h-5 text-gray-400 hover:text-white" />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-6 pr-2 -mr-2">
         <div className="flex gap-4">
-          <div className="w-28 aspect-[2/3] rounded-xl overflow-hidden flex-shrink-0 bg-white/5 border border-white/10">
+          <div className="w-28 aspect-[2/3] rounded-xl overflow-hidden flex-shrink-0 bg-black/40 border border-white/10">
             <img
               src={getProxiedImageUrl(selectedManga.thumbnailUrl)}
               alt={selectedManga.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               loading="lazy"
               decoding="async"
             />
@@ -83,7 +80,9 @@ const MangaDetailDrawerComponent: React.FC<MangaDetailDrawerProps> = ({
                   {togglingFavorite ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
-                    <Heart className={`w-3 h-3 ${isFavorited ? 'fill-current text-blue-400' : ''}`} />
+                    <Heart
+                      className={`w-3 h-3 ${isFavorited ? 'fill-current text-blue-400' : ''}`}
+                    />
                   )}
                   {isFavorited ? 'Suivi' : 'Suivre'}
                 </button>
@@ -94,12 +93,22 @@ const MangaDetailDrawerComponent: React.FC<MangaDetailDrawerProps> = ({
                   <select
                     value={favoriteStatus || 'plan_to_read'}
                     disabled={togglingFavorite}
-                    onChange={e => onUpdateFavoriteStatus(e.target.value as 'reading' | 'completed' | 'plan_to_read')}
+                    onChange={(e) =>
+                      onUpdateFavoriteStatus(
+                        e.target.value as 'reading' | 'completed' | 'plan_to_read',
+                      )
+                    }
                     className="pl-3 pr-8 py-1.5 bg-white/5 hover:bg-white/10 text-white/80 text-[10px] font-black uppercase tracking-wider rounded-xl border border-white/5 outline-none cursor-pointer appearance-none transition-colors"
                   >
-                    <option value="reading" className="bg-[#080811] text-white">En cours</option>
-                    <option value="plan_to_read" className="bg-[#080811] text-white">À lire</option>
-                    <option value="completed" className="bg-[#080811] text-white">Terminé</option>
+                    <option value="reading" className="bg-[#080811] text-white">
+                      En cours
+                    </option>
+                    <option value="plan_to_read" className="bg-[#080811] text-white">
+                      À lire
+                    </option>
+                    <option value="completed" className="bg-[#080811] text-white">
+                      Terminé
+                    </option>
                   </select>
                   <ChevronDown className="w-3 h-3 text-white/40 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>

@@ -8,6 +8,14 @@ from core.ports.suwayomi_port import SuwayomiPort
 logger = logging.getLogger("animetix.suwayomi")
 
 
+class SuwayomiUnavailableError(Exception):
+    """Le serveur Suwayomi/Tachidesk est injoignable (non démarré ou mauvaise URL).
+
+    Distinct d'une réponse vide (serveur joignable, sans sources/extensions) : les
+    vues peuvent ainsi renvoyer un 503 explicite au lieu d'une liste vide muette.
+    """
+
+
 class SuwayomiAdapter(SuwayomiPort):
 
     def __init__(self):
@@ -32,6 +40,11 @@ class SuwayomiAdapter(SuwayomiPort):
                     logger.error(f"GraphQL Errors: {data['errors']}")
                     return {}
                 return data.get("data", {})
+        except httpx.RequestError as e:
+            # Erreur de transport (connexion refusée / timeout) : le serveur
+            # Suwayomi n'est pas joignable (non démarré ou mauvaise URL).
+            logger.warning(f"Suwayomi unreachable at {self.url}: {e}")
+            raise SuwayomiUnavailableError(str(e)) from e
         except Exception as e:
             logger.error(f"Failed to query Suwayomi at {self.url}: {e}")
             return {}
@@ -51,10 +64,18 @@ class SuwayomiAdapter(SuwayomiPort):
         data = self._query(q)
         return data.get("sources", {}).get("nodes", [])
 
-    def search_manga(self, source_id: str, query: str = "") -> List[Dict[str, Any]]:
+    def search_manga(
+        self, source_id: str, query: str = "", page: int = 1
+    ) -> Dict[str, Any]:
+        # Suwayomi ≥ v1.x : `fetchSourceManga` est une MUTATION à `input:{}` (et le
+        # type enum est `FetchSourceMangaType`). L'ancienne forme
+        # `query { fetchSourceManga(source: ...) }` renvoie "Field undefined" ->
+        # aucun manga affiché dans l'onglet Catalog.
+        # Retourne {mangas, hasNextPage} pour permettre la pagination du catalogue.
         q = """
-        query Search($source: LongString!, $query: String, $type: SourceMangaType!) {
-          fetchSourceManga(source: $source, query: $query, type: $type, page: 1) {
+        mutation Search($source: LongString!, $query: String, $type: FetchSourceMangaType!, $page: Int!) {
+          fetchSourceManga(input: { source: $source, query: $query, type: $type, page: $page }) {
+            hasNextPage
             mangas {
               id
               title
@@ -67,9 +88,66 @@ class SuwayomiAdapter(SuwayomiPort):
             "source": source_id,
             "query": query,
             "type": "SEARCH" if query else "POPULAR",
+            "page": max(1, int(page)),
         }
         data = self._query(q, vars)
-        return data.get("fetchSourceManga", {}).get("mangas", [])
+        fsm = data.get("fetchSourceManga") or {}
+        return {
+            "mangas": fsm.get("mangas", []),
+            "hasNextPage": bool(fsm.get("hasNextPage")),
+        }
+
+    _MAX_PAGE = 100000  # garde-fou anti-boucle infinie
+
+    def find_last_page(self, source_id: str, query: str = "") -> int:
+        """Trouve le numéro de la dernière page (recherche exponentielle puis
+        binaire sur `hasNextPage`). Les jeux de résultats Suwayomi n'exposent pas
+        de total ; on le déduit en ~O(log N) requêtes (rapides car la source
+        pagine en mémoire). La source clampe les pages au-delà de la fin, donc la
+        1re page avec `hasNextPage=False` EST la dernière page réelle."""
+        # Exponentiel : 1, 2, 4, 8, … jusqu'à une page sans page suivante.
+        lo, hi = 1, 1
+        while self.search_manga(source_id, query, hi).get("hasNextPage"):
+            lo = hi
+            hi *= 2
+            if hi >= self._MAX_PAGE:
+                return self._MAX_PAGE
+        # Binaire : plus petite page (lo, hi] avec hasNextPage=False.
+        while lo + 1 < hi:
+            mid = (lo + hi) // 2
+            if self.search_manga(source_id, query, mid).get("hasNextPage"):
+                lo = mid
+            else:
+                hi = mid
+        return hi
+
+    @staticmethod
+    def _title_initial(title: str) -> str:
+        """Initiale normalisée d'un titre pour le tri alphabétique. Les titres qui
+        ne commencent pas par une lettre (#, chiffres…) trient AVANT 'A'."""
+        t = (title or "").strip().upper()
+        c = t[0] if t else "#"
+        return c if c.isalpha() else "#"  # '#' (ASCII 35) < 'A' (65)
+
+    def find_page_for_letter(
+        self, source_id: str, query: str, letter: str, last_page: int
+    ) -> int:
+        """Page où commence une lettre donnée, par recherche binaire sur l'initiale
+        du 1er titre de chaque page (le catalogue Suwayomi est trié alphabétiquement
+        pour la plupart des sources). '#' -> page 1."""
+        letter = (letter or "").strip().upper()
+        if not letter or letter == "#" or not letter.isalpha():
+            return 1
+        lo, hi = 1, max(1, int(last_page))
+        while lo < hi:
+            mid = (lo + hi) // 2
+            mangas = self.search_manga(source_id, query, mid).get("mangas") or []
+            initial = self._title_initial(mangas[0]["title"]) if mangas else "Z"
+            if initial < letter:
+                lo = mid + 1
+            else:
+                hi = mid
+        return lo
 
     def get_manga_details(self, suwayomi_manga_id: str) -> Dict[str, Any]:
         q = """
@@ -89,23 +167,58 @@ class SuwayomiAdapter(SuwayomiPort):
         data = self._query(q, vars)
         return data.get("manga", {}) or {}
 
+    def fetch_manga_details(self, suwayomi_manga_id: str) -> Dict[str, Any]:
+        """Détails COMPLETS depuis la source (description, auteur, genres, statut).
+
+        `manga(id:)` ne renvoie que les données minimales du listing (titre +
+        vignette) ; la description n'est peuplée qu'après un fetch source. La
+        mutation `fetchManga` déclenche ce fetch et renvoie la fiche complète."""
+        q = """
+        mutation FetchManga($id: Int!) {
+          fetchManga(input: { id: $id }) {
+            manga {
+              id
+              title
+              description
+              thumbnailUrl
+              author
+              artist
+              status
+              genre
+              realUrl
+            }
+          }
+        }
+        """
+        data = self._query(q, {"id": int(suwayomi_manga_id)})
+        manga = (data.get("fetchManga") or {}).get("manga") or {}
+        if not manga:
+            # Repli : au moins les données en cache si le fetch source a échoué.
+            manga = self.get_manga_details(suwayomi_manga_id)
+        return manga
+
     def get_chapters(self, suwayomi_manga_id: str) -> List[Dict[str, Any]]:
+        # Suwayomi v2.x : `manga.chapters` est un ChapterNodeList (connection),
+        # donc il faut passer par `nodes` — sinon "Field 'id' in type
+        # 'ChapterNodeList' is undefined" -> la requête échoue et on re-scrape la
+        # source à chaque ouverture (lent). On lit d'abord le cache via `nodes`.
         q = """
         query GetChapters($id: Int!) {
           manga(id: $id) {
             chapters {
-              id
-              name
-              chapterNumber
+              nodes {
+                id
+                name
+                chapterNumber
+              }
             }
           }
         }
         """
         vars = {"id": int(suwayomi_manga_id)}
         data = self._query(q, vars)
-        chapters = (
-            data.get("manga", {}).get("chapters", []) if data.get("manga") else []
-        )
+        manga = data.get("manga") or {}
+        chapters = (manga.get("chapters") or {}).get("nodes") or []
         if not chapters:
             mut = """
             mutation FetchChapters($id: Int!) {

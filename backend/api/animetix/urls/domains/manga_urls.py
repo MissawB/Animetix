@@ -65,6 +65,26 @@ urlpatterns = [
         name="api_suwayomi_search",
     ),
     path(
+        "explore/suwayomi/last-page/",
+        api_views.SuwayomiLastPageView.as_view(),
+        name="api_suwayomi_last_page",
+    ),
+    path(
+        "explore/suwayomi/seek-letter/",
+        api_views.SuwayomiSeekLetterView.as_view(),
+        name="api_suwayomi_seek_letter",
+    ),
+    path(
+        "explore/suwayomi/manga-details/",
+        api_views.SuwayomiMangaDetailsView.as_view(),
+        name="api_suwayomi_manga_details",
+    ),
+    path(
+        "explore/suwayomi/manga-chapters/",
+        api_views.SuwayomiMangaChaptersView.as_view(),
+        name="api_suwayomi_manga_chapters",
+    ),
+    path(
         "explore/suwayomi/import/",
         api_views.SuwayomiImportView.as_view(),
         name="api_suwayomi_import",

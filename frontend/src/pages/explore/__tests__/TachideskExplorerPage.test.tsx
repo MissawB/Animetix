@@ -93,12 +93,12 @@ describe('TachideskExplorerPage', () => {
         <MemoryRouter>
           <TachideskExplorerPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
-    expect(screen.getByText(/Tachidesk Explorer/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Catalogue/i })).toHaveClass('bg-blue-600');
-    expect(screen.getByRole('button', { name: /Extensions/i })).not.toHaveClass('bg-blue-600');
+    expect(screen.getByRole('heading', { name: /Explorateur/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Catalogue/i })).toHaveClass('bg-[#E8442B]');
+    expect(screen.getByRole('button', { name: /Extensions/i })).not.toHaveClass('bg-[#E8442B]');
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Source Suwayomi/i)).toBeInTheDocument();
@@ -130,7 +130,7 @@ describe('TachideskExplorerPage', () => {
         <MemoryRouter>
           <TachideskExplorerPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Switch to extensions tab
@@ -182,7 +182,7 @@ describe('TachideskExplorerPage', () => {
         <MemoryRouter>
           <TachideskExplorerPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Extensions/i }));
@@ -239,7 +239,7 @@ describe('TachideskExplorerPage', () => {
         <MemoryRouter>
           <TachideskExplorerPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Extensions/i }));
@@ -286,7 +286,7 @@ describe('TachideskExplorerPage', () => {
         <MemoryRouter>
           <TachideskExplorerPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Wait for sources to load first to avoid race conditions with tab switching state updates
@@ -297,13 +297,17 @@ describe('TachideskExplorerPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /Extensions/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Impossible de charger|Erreur lors du chargement/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Impossible de charger|Erreur lors du chargement/i),
+      ).toBeInTheDocument();
     });
 
     // Close/dismiss the error
-    const dismissBtn = screen.getByRole('button', { name: /×/i });
+    const dismissBtn = screen.getByRole('button', { name: /Fermer/i });
     fireEvent.click(dismissBtn);
 
-    expect(screen.queryByText(/Impossible de charger|Erreur lors du chargement/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Impossible de charger|Erreur lors du chargement/i),
+    ).not.toBeInTheDocument();
   });
 });

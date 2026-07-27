@@ -16,6 +16,17 @@ export interface Chapter {
   chapterNumber: number;
 }
 
+export interface MangaDetails {
+  title?: string;
+  description?: string;
+  author?: string | null;
+  artist?: string | null;
+  status?: string | null;
+  genre?: string[];
+  thumbnailUrl?: string | null;
+  realUrl?: string | null;
+}
+
 export interface Extension {
   pkgName: string;
   name: string;

@@ -10,13 +10,23 @@ class SuwayomiPort(ABC):
         pass
 
     @abstractmethod
-    def search_manga(self, source_id: str, query: str = "") -> List[Dict[str, Any]]:
-        """Search manga or retrieve popular manga from a source on Suwayomi."""
+    def search_manga(
+        self, source_id: str, query: str = "", page: int = 1
+    ) -> Dict[str, Any]:
+        """Search / list popular manga from a source (paginé).
+
+        Retourne ``{"mangas": [...], "hasNextPage": bool}``.
+        """
         pass
 
     @abstractmethod
     def get_manga_details(self, suwayomi_manga_id: str) -> Dict[str, Any]:
         """Fetch details of a manga by its ID from Suwayomi."""
+        pass
+
+    @abstractmethod
+    def fetch_manga_details(self, suwayomi_manga_id: str) -> Dict[str, Any]:
+        """Fetch the FULL manga fiche from the source (description, author, genres…)."""
         pass
 
     @abstractmethod
