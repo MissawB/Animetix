@@ -17,10 +17,22 @@ _Aucun item ouvert._
 
 ## 🟡 Moyens
 
-- [x] **Deps — Tailwind un major de retard (v3 → v4) — fait (2026-07-24)** _(audit dette 2026-07-22)_
-  - Preuve : `frontend/package.json:93` `tailwindcss ^3.4.19` — migration de config/moteur non triviale à planifier.
-  - **Fait (2026-07-24)** : Migration vers `tailwindcss` v4.0.0 avec le plugin officiel `@tailwindcss/vite`. Directives CSS `@import "tailwindcss";` et `@config "../tailwind.config.js";` configurées. Suppression d'`autoprefixer` et de `postcss.config.js`. Build production Vite et 805/805 tests unitaires validés.
+### Manga / Suwayomi _(analyse 2026-07-27)_
+
+> Le backend manga d'Animetix **EST Suwayomi** (même écosystème Tachiyomi/Mihon) : la plomberie GraphQL de ces features existe déjà côté serveur, il s'agit surtout de l'exposer (adaptateur + endpoint + UI). Vérifié sur le serveur local.
+
+- [ ] **Lecture : état lu/non-lu + « Reprendre la lecture »** — Suwayomi expose par chapitre `isRead`, `lastPageRead`, `lastReadAt`, `pageCount`. Afficher pastille lu/non-lu + progression dans la popup de détail, bouton « Marquer comme lu » (`updateChapters`) et **« Reprendre au chapitre X »** ; faire remonter la progression depuis le lecteur (`updateChapter{isRead,lastPageRead}`). *(le manque le plus visible pour un lecteur — meilleur rapport valeur/effort)*
+- [ ] **Trackers AniList / MAL / … (sync de progression)** — Suwayomi expose 6 trackers (MyAnimeList, AniList, Kitsu, MangaUpdates, Shikimori, Bangumi) + `bindTrack` / `trackProgress` / `updateTrack` / `loginTrackerOAuth`. Lier une œuvre à AniList/MAL et synchroniser la progression ; relier fiche Suwayomi ↔ catalogue Animetix (déjà AniList). *(feature phare de Mihon)*
+- [ ] **Catégories de bibliothèque personnalisées** — au-delà des 3 statuts (reading/completed/plan_to_read). CRUD complet côté Suwayomi (`createCategory`, `updateMangaCategories`, `updateCategoryOrder`).
+- [ ] **Filtres de source (genre / statut / tri)** — `source.filters` renvoie des `GroupFilter` acceptés par `fetchSourceManga(filters:…)`. Navigation par genre/statut au lieu de populaire/recherche uniquement.
 
 ## 🟢 Faibles
 
-_Aucun item ouvert._
+### Manga / Suwayomi — inspiré de Mihon _(analyse 2026-07-27, Tier 2/3)_
+
+- [ ] **Téléchargement hors-ligne côté serveur** — file d'attente Suwayomi (`enqueueChapterDownload`, `startDownloader`, `downloadStatus`, `deleteDownloadedChapter`), à combiner avec la bibliothèque offline PWA existante.
+- [ ] **Recherche multi-sources (global search)** — chercher un titre dans **toutes** les sources installées d'un coup (aujourd'hui : une source à la fois).
+- [ ] **Signets de chapitres** — `isBookmarked` par chapitre.
+- [ ] **Backup / restore de la bibliothèque Suwayomi** — `createBackup` / `restoreBackup`.
+- [ ] **Migration entre sources** — déplacer une œuvre d'une source morte vers une autre.
+- [ ] **Modes de lecture** — directions RTL/LTR, webtoon/vertical, filtre couleur (polissage du lecteur).
