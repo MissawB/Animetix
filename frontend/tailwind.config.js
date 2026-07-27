@@ -4,6 +4,17 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  // Classes fournies par l'API (donc absentes des sources -> sinon purgées).
+  // Dégradés des cards « Défi quotidien » (backend api/labs/dashboards.py) :
+  // sans ce safelist, les cards perdent leur fond dégradé et s'affichent vides.
+  safelist: [
+    'from-blue-600',
+    'to-indigo-900',
+    'from-rose-500',
+    'to-red-900',
+    'from-purple-600',
+    'to-fuchsia-900',
+  ],
   darkMode: ['class', '[data-bs-theme="dark"]'],
   theme: {
     extend: {
