@@ -316,18 +316,85 @@ class UnifiedInferenceAdapter(
         try:
             schema = response_model.model_json_schema()
         except Exception:  # noqa: BLE001 - schéma optionnel (mock/legacy)
-            schema = {}
+            schema = None
+
+        # 1) Sortie structurée NATIVE d'Ollama : le schéma est passé dans `format`,
+        # ce qui contraint le décodage (grammaire) -> le JSON respecte forcément le
+        # schéma. On NE dump PAS le schéma dans le prompt : un petit modèle a tendance
+        # à recopier la structure du schéma ({"properties": {...}, "title": ...}) au
+        # lieu de renvoyer les données, ce qui faisait échouer la validation Pydantic.
+        if schema is not None:
+            try:
+                native_url = f"{self.api_base.replace('/v1', '')}/api/chat"
+                payload = {
+                    "model": self.model_name,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "format": schema,
+                    "stream": False,
+                    "options": {"temperature": 0.2},
+                    "keep_alive": os.getenv("OLLAMA_KEEP_ALIVE", "1h"),
+                }
+                res = safe_http_request(
+                    "POST",
+                    native_url,
+                    json=payload,
+                    headers=self._get_headers(),
+                    timeout=self.timeout,
+                    allow_internal=True,
+                )
+                if res.status_code == 200:
+                    content = res.json().get("message", {}).get("content", "")
+                    data = self._extract_json_object(content)
+                    return response_model.model_validate(data)
+                logger.warning(
+                    "Ollama native structured output HTTP %s, falling back to JSON prompt mode.",
+                    res.status_code,
+                )
+            except (
+                Exception
+            ) as e:  # noqa: BLE001 - endpoint non-Ollama ou schéma refusé
+                logger.warning(
+                    "Ollama native structured output failed (%s), falling back to JSON prompt mode.",
+                    e,
+                )
+
+        # 2) Repli (endpoints OpenAI-compat non-Ollama, ou natif indisponible) :
+        # mode JSON + instruction explicite, SANS dumper le schéma brut (cf.
+        # commentaire ci-dessus), avec quelques tentatives car un modèle peut
+        # renvoyer un JSON invalide sur un essai isolé.
         guided_prompt = (
             f"{prompt}\n\n"
-            "Réponds UNIQUEMENT par un objet JSON valide, sans texte ni balises "
-            f"autour, respectant ce schéma :\n{json.dumps(schema, ensure_ascii=False)}"
+            "Réponds UNIQUEMENT par un objet JSON valide (sans texte ni balises "
+            "autour). Ne recopie pas la structure d'un schéma : renvoie directement "
+            "les données demandées."
         )
-        res = self.generate(
-            guided_prompt, system_prompt=system_prompt, json_mode=True, **kwargs
+        last_error: Optional[Exception] = None
+        for _ in range(max(1, max_retries)):
+            try:
+                res = self.generate(
+                    guided_prompt,
+                    system_prompt=system_prompt,
+                    json_mode=True,
+                    **kwargs,
+                )
+                text = res.text if hasattr(res, "text") else str(res)
+                data = self._extract_json_object(text)
+                # Filet de sécurité : certains modèles enveloppent la sortie dans
+                # "properties" en recopiant le schéma -> on déballe avant validation.
+                if isinstance(data, dict) and "properties" in data and len(data) <= 2:
+                    inner = data.get("properties")
+                    if isinstance(inner, dict):
+                        data = inner
+                return response_model.model_validate(data)
+            except Exception as e:  # noqa: BLE001 - on retente puis on abandonne
+                last_error = e
+        raise InferenceError(
+            f"UnifiedInferenceAdapter.generate_structured failed after "
+            f"{max_retries} attempts: {last_error}"
         )
-        text = res.text if hasattr(res, "text") else str(res)
-        data = self._extract_json_object(text)
-        return response_model.model_validate(data)
 
     def stream_generate(
         self,

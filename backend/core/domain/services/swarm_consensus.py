@@ -22,6 +22,20 @@ class SwarmConsensusVotes(BaseModel):
     )
 
 
+class SwarmConsensusEvaluation(BaseModel):
+    """Sortie combinée d'un unique appel LLM (MoE) : le routeur (weights) et les
+    votes des experts en une seule passe -> moitié moins de latence."""
+
+    weights: Dict[str, float] = Field(
+        ...,
+        description="Pertinence (0.0-1.0) du domaine de chaque expert pour CE fait (indépendant de la véracité).",
+    )
+    votes: Dict[str, float] = Field(
+        ...,
+        description="Confiance (0.0-1.0) de chaque expert que le fait soit VRAI, jugée sous son angle.",
+    )
+
+
 class SwarmConsensusOrchestrator:
     # Panel d'experts de l'essaim : chacun juge un fait sous un angle propre.
     # `keywords` déclenche un vote favorable (hit), sinon on retombe sur `miss`.
@@ -116,6 +130,18 @@ class SwarmConsensusOrchestrator:
         "Avocat du Diable": {"keywords": [], "hit": 0.4, "miss": 0.35},
     }
 
+    # Rôle de chaque expert, injecté dans le prompt LLM pour que le modèle juge la
+    # VÉRACITÉ du fait sous le bon angle (et non la simple relevance à sa spécialité).
+    AGENT_ROLES: Dict[str, str] = {
+        "Expert Visuel": "cohérence artistique et visuelle (studio, animation, direction)",
+        "Expert Sonore": "aspect sonore et musical (OST, doublage, thèmes)",
+        "Expert Lore": "véracité du scénario, du lore et du canon",
+        "Expert Combat": "systèmes de pouvoir, combats et capacités",
+        "Expert Émotion": "dynamiques émotionnelles et relationnelles",
+        "Historien Otaku": "exactitude historique, production et origines de l'œuvre",
+        "Avocat du Diable": "recherche active des failles et contradictions (sceptique par principe)",
+    }
+
     def __init__(
         self,
         agent_names: Optional[List[str]] = None,
@@ -130,14 +156,30 @@ class SwarmConsensusOrchestrator:
         Interroge le moteur d'inférence pour obtenir les votes (scores de confiance)
         des différents agents de l'essaim pour un fait donné sur un média.
         """
-        agents_desc = "\n".join([f"- {name}" for name in self.agents])
+        agents_desc = "\n".join(
+            [
+                f"- {name} : {self.AGENT_ROLES.get(name, 'expert généraliste')}"
+                for name in self.agents
+            ]
+        )
         prompt = (
-            f"Tu es l'arbitre d'un essaim d'agents d'IA analysant des faits sur des animés ou mangas.\n"
-            f"Analyse le fait suivant concernant l'œuvre '{media}':\n"
-            f'Fait : "{fact}"\n\n'
-            f"Évalue le niveau de confiance de chacun des experts suivants sous la forme d'un score entre 0.0 et 1.0 :\n"
+            f"Tu es l'arbitre d'un essaim d'experts qui valident des faits de lore "
+            f"avant leur entrée dans un Knowledge Graph d'animés/mangas.\n\n"
+            f"Œuvre : '{media}'\n"
+            f'Fait proposé : "{fact}"\n\n'
+            f"Chaque expert estime la probabilité que ce fait soit VRAI, jugée sous "
+            f"son propre angle (score entre 0.0 et 1.0) :\n"
             f"{agents_desc}\n\n"
-            f"Retourne un objet JSON contenant les scores pour chaque agent dans le champ 'votes'."
+            f"Règles de vote :\n"
+            f"- S'il reconnaît ou confirme le fait dans son domaine, il vote haut (> 0.8).\n"
+            f"- S'il détecte une erreur, une invraisemblance ou une contradiction, il "
+            f"vote bas (< 0.3).\n"
+            f"- Hors de son expertise, il donne sa meilleure estimation de véracité "
+            f"(~0.5 s'il n'a aucun élément). Un routeur pondère séparément sa "
+            f"pertinence, il n'a donc pas à compenser.\n"
+            f"- L'Avocat du Diable est exigeant : il ne vote haut que si le fait est "
+            f"solidement établi et sans faille ; au moindre doute, il vote bas.\n\n"
+            f"Retourne un objet JSON contenant le score de chaque expert dans le champ 'votes'."
         )
         if self.inference_engine is None:
             return {}
@@ -158,6 +200,96 @@ class SwarmConsensusOrchestrator:
             )
             return {}
 
+    def _evaluate_swarm_via_llm(
+        self, fact: str, media: str
+    ) -> Tuple[Dict[str, float], Dict[str, float]]:
+        """Un SEUL appel LLM (Mixture-of-Experts) qui renvoie à la fois :
+        - le ROUTEUR (weights) : pertinence du domaine de chaque expert pour ce fait ;
+        - les VOTES : la confiance de chaque expert que le fait soit vrai.
+        Combiner les deux en une passe divise la latence par deux vs deux appels.
+        Le consensus final est la moyenne des votes PONDÉRÉE par les poids -> un expert
+        hors sujet ne fait plus dérailler la décision, sans truquer son vote."""
+        agents_desc = "\n".join(
+            [
+                f"- {name} : {self.AGENT_ROLES.get(name, 'expert généraliste')}"
+                for name in self.agents
+            ]
+        )
+        prompt = (
+            f"Tu es l'arbitre d'un essaim d'experts de type Mixture-of-Experts qui "
+            f"valide des faits de lore avant leur entrée dans un Knowledge Graph "
+            f"d'animés/mangas.\n\n"
+            f"Œuvre : '{media}'\n"
+            f'Fait : "{fact}"\n\n'
+            f"Experts :\n{agents_desc}\n\n"
+            f"Pour CHAQUE expert, produis DEUX nombres entre 0.0 et 1.0 :\n\n"
+            f"1. 'weights' = PERTINENCE de son domaine pour juger ce fait précis. "
+            f"Sois SÉLECTIF comme un vrai routeur : attribue 0.8-1.0 aux 1 à 3 experts "
+            f"dont le domaine est réellement central, et proche de 0.0 aux autres. "
+            f"N'étale PAS les poids sur tout le monde. Ne juge pas ici la véracité, "
+            f"seulement quels domaines sont concernés.\n\n"
+            f"2. 'votes' = sa confiance que le fait soit VRAI POUR '{media}', jugée "
+            f"sous son angle :\n"
+            f"   - Vérifie d'abord la cohérence : si le fait attribue un personnage, un "
+            f"pouvoir ou un élément à la MAUVAISE œuvre, il est FAUX -> vote < 0.2.\n"
+            f"   - S'il reconnaît/confirme le fait dans son domaine -> vote haut (0.85-1.0).\n"
+            f"   - S'il détecte une erreur ou une contradiction -> vote bas (< 0.3).\n"
+            f"   - Si le fait est hors de sa spécialité mais qu'il n'a AUCUNE raison "
+            f"d'en douter -> vote favorable (~0.75) : on ne pénalise jamais un fait "
+            f"simplement parce qu'il sort de son domaine (sa faible pertinence est déjà "
+            f"gérée par le poids).\n\n"
+            f"L'Avocat du Diable est exigeant sur son vote (il ne valide qu'un fait "
+            f"solidement établi) ; sa pertinence est gérée séparément.\n\n"
+            f'Retourne un objet JSON de la forme {{"weights": {{...}}, "votes": {{...}}}}, '
+            f"chaque expert apparaissant dans les deux dictionnaires."
+        )
+        if self.inference_engine is None:
+            return {}, {}
+        try:
+            result = self.inference_engine.generate_structured(
+                prompt=prompt,
+                response_model=SwarmConsensusEvaluation,
+                system_prompt="Tu es l'arbitre d'un essaim d'experts de type Mixture-of-Experts.",
+            )
+            if isinstance(result, dict):
+                return result.get("weights", {}) or {}, result.get("votes", {}) or {}
+            return (
+                getattr(result, "weights", {}) or {},
+                getattr(result, "votes", {}) or {},
+            )
+        except Exception as e:
+            logger.warning(
+                f"Failed to evaluate swarm via LLM: {e}. Falling back to simulations."
+            )
+            return {}, {}
+
+    def _fallback_agent_weight(self, agent: str, fact: str) -> float:
+        """Poids de pertinence hors-LLM : basé sur la présence des mots-clés du profil
+        de l'expert dans le fait. L'Avocat du Diable garde une voix modérée (rôle
+        transverse), les autres experts hors sujet gardent une petite voix."""
+        if agent == "Avocat du Diable":
+            return 0.5
+        profile = self.AGENT_PROFILES.get(agent, {})
+        keywords = profile.get("keywords", [])
+        fact_lower = fact.lower()
+        if any(kw in fact_lower for kw in keywords):
+            return 1.0
+        return 0.25
+
+    @staticmethod
+    def _weighted_consensus(
+        votes: Dict[str, float], weights: Dict[str, float]
+    ) -> float:
+        """Moyenne des votes pondérée par la pertinence (gating MoE). Se rabat sur la
+        moyenne simple si les poids sont tous nuls/absents."""
+        total_weight = sum(max(0.0, w) for w in weights.values())
+        if total_weight <= 0:
+            return sum(votes.values()) / len(votes) if votes else 0.0
+        weighted = sum(
+            votes.get(agent, 0.0) * max(0.0, weights.get(agent, 0.0)) for agent in votes
+        )
+        return weighted / total_weight
+
     def get_paxos_diagnostics(
         self, fact: str, media_title: str, proposer: str = "ClientAPI"
     ) -> Dict[str, Any]:
@@ -176,29 +308,45 @@ class SwarmConsensusOrchestrator:
             ],  # 90% availability
         }
 
-        # Phase 2: Propose/Accept (The actual voting)
+        # Phase 2 (MoE, un seul appel) : le routeur (weights) ET les votes en une passe.
+        llm_weights = {}
         llm_votes = {}
         if self.inference_engine is not None:
-            llm_votes = self._get_swarm_votes_via_llm(fact, media_title)
+            llm_weights, llm_votes = self._evaluate_swarm_via_llm(fact, media_title)
 
+        # Gating DOUX : on ne réduit jamais un expert métier à zéro (plancher), sinon
+        # une erreur de routage laisserait un seul vote bruité décider -> on perdrait
+        # la robustesse de la moyenne de l'essaim. L'Avocat du Diable est un méta-rôle
+        # sceptique (pas un domaine) : poids fixe faible, jamais routé ni dominant.
+        weight_floor = 0.2
+        avocat_weight = 0.15
         votes = {}
+        weights = {}
         for agent in self.agents:
             if agent in llm_votes:
                 votes[agent] = llm_votes[agent]
             else:
                 votes[agent] = self._simulate_agent_vote(agent, fact, media_title)
 
+            if agent == "Avocat du Diable":
+                weights[agent] = avocat_weight
+            elif agent in llm_weights:
+                raw = max(0.0, min(1.0, llm_weights[agent]))
+                weights[agent] = round(weight_floor + (1.0 - weight_floor) * raw, 3)
+            else:
+                weights[agent] = self._fallback_agent_weight(agent, fact)
+
         quorum_required = len(self.agents) // 2 + 1
         accept_phase = {
             "votes": votes,
+            "weights": weights,
             "threshold": 0.6,
             "quorum_required": quorum_required,
         }
 
-        # Phase 3: Learn (Outcome)
-        positive_votes = sum(1 for score in votes.values() if score >= 0.6)
-        consensus_achieved = positive_votes >= quorum_required
-        consensus_score = sum(votes.values()) / len(self.agents)
+        # Phase 3: Learn (Outcome) — consensus PONDÉRÉ par le routeur (MoE).
+        consensus_score = self._weighted_consensus(votes, weights)
+        consensus_achieved = consensus_score >= 0.70
 
         outcome = {
             "consensus_achieved": consensus_achieved,
@@ -222,6 +370,7 @@ class SwarmConsensusOrchestrator:
             "is_recorded": consensus_achieved,
             "consensus_score": consensus_score,
             "votes": votes,
+            "weights": weights,
         }
 
     def propose_fact(
