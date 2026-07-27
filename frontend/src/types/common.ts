@@ -24,9 +24,13 @@ export interface ApiResponse<T> {
 export interface SearchItem {
   id?: number | string;
   title?: string;
+  title_english?: string | null;
+  title_native?: string | null;
   name?: string;
   image_url?: string;
   type?: string;
+  year?: number | null;
+  rating?: number | null;
 }
 
 export interface PlotlyEvent {

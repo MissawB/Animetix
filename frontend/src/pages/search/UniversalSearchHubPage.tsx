@@ -8,11 +8,11 @@ import {
   Grid,
   Layers,
   Film,
-  Terminal,
   Play,
   Clock,
   Video,
   Brain,
+  Star,
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';
@@ -22,8 +22,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
 import { SearchItem, VideoSegment } from '../../types';
+import ExpertNexusPanel from './components/ExpertNexusPanel';
 
-type SearchMode = 'global' | 'visual';
+type SearchMode = 'global' | 'visual' | 'expert';
 
 const UniversalSearchHubPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,13 +35,22 @@ const UniversalSearchHubPage: React.FC = () => {
   const [query, setQuery] = useState(initialQuery);
   const [mode, setMode] = useState<SearchMode>(initialMode);
   const [activeTab, setActiveTab] = useState<string>('all');
+
+  // On débounce la requête : sans cela, useQuery se relançait à CHAQUE frappe
+  // (une requête réseau par caractère). On n'interroge qu'après une pause de 400 ms.
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery.trim());
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedQuery(query.trim()), 400);
+    return () => clearTimeout(id);
+  }, [query]);
+
   // Global Search Query
   const { data: globalData, isLoading: isGlobalLoading } = useQuery<
     SearchItem[] | { results: SearchItem[] }
   >({
-    queryKey: ['global-search', query],
-    queryFn: () => apiClient(`/api/v1/search/?q=${encodeURIComponent(query)}`),
-    enabled: mode === 'global' && !!query,
+    queryKey: ['global-search', debouncedQuery],
+    queryFn: () => apiClient(`/api/v1/search/?q=${encodeURIComponent(debouncedQuery)}`),
+    enabled: mode === 'global' && !!debouncedQuery,
   });
 
   // Visual Search Mutation
@@ -50,8 +60,29 @@ const UniversalSearchHubPage: React.FC = () => {
 
   const visualResults: VideoSegment[] = visualMutation.data?.results || [];
 
+  // Disponibilité de la recherche vidéo (Video-RAG). La collection n'est peuplée
+  // que par un endpoint admin masqué : pour la plupart des utilisateurs elle est
+  // vide et une recherche visuelle ne peut jamais aboutir. On lit ce flag pour
+  // présenter honnêtement le mode plutôt que de laisser croire qu'il est prêt.
+  const { data: videoLab } = useQuery<{ video_rag_available?: boolean }>({
+    queryKey: ['video-rag-availability'],
+    queryFn: () => apiClient('/api/v1/labs/video/'),
+    staleTime: 5 * 60 * 1000,
+  });
+  const visualUnavailable = videoLab?.video_rag_available === false;
+
+  // Expert Nexus (RAG agentique) intégré comme 3e mode, piloté par la même barre
+  // de recherche. runId démarre à 1 si on arrive déjà en mode expert avec ?q=.
+  const [expertQuery, setExpertQuery] = useState(
+    initialMode === 'expert' ? initialQuery.trim() : '',
+  );
+  const [expertRunId, setExpertRunId] = useState(
+    initialMode === 'expert' && initialQuery.trim() ? 1 : 0,
+  );
+  const [expertStreaming, setExpertStreaming] = useState(false);
+
   useEffect(() => {
-    if (initialQuery && initialMode === 'visual') {
+    if (initialQuery && initialMode === 'visual' && !visualUnavailable) {
       visualMutation.mutate(initialQuery);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,8 +92,12 @@ const UniversalSearchHubPage: React.FC = () => {
     e.preventDefault();
     if (query.trim()) {
       setSearchParams({ q: query.trim(), mode });
-      if (mode === 'visual') {
+      setDebouncedQuery(query.trim()); // recherche immédiate (on court-circuite le debounce)
+      if (mode === 'visual' && !visualUnavailable) {
         visualMutation.mutate(query.trim());
+      } else if (mode === 'expert') {
+        setExpertQuery(query.trim());
+        setExpertRunId((n) => n + 1);
       }
     }
   };
@@ -82,9 +117,9 @@ const UniversalSearchHubPage: React.FC = () => {
     { id: 'Actor', label: t('search.hub.tab_seiyuu', 'SEIYUU'), icon: Tv },
   ];
 
-  // Encre d'accent du mode actif : shu pour la méta-recherche (voix éditoriale),
-  // or pour la recherche visuelle (voix données).
-  const accentInk = mode === 'global' ? '#E8442B' : '#FDB913';
+  // Encre d'accent du mode actif : or pour la recherche visuelle (voix données),
+  // shu pour la méta-recherche et l'Expert Nexus (voix éditoriale).
+  const accentInk = mode === 'visual' ? '#FDB913' : '#E8442B';
 
   return (
     <AnimatedPage>
@@ -100,7 +135,7 @@ const UniversalSearchHubPage: React.FC = () => {
                 探
               </span>
               <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#E8442B]">
-                <Terminal className="h-3 w-3" /> Protocole de recherche unifiée · v3.0
+                <Search className="h-3 w-3" /> Moteur de recherche unifié
               </span>
             </div>
             <h1 className="font-manga relative text-5xl font-black uppercase italic leading-none tracking-tighter text-[#F4F1E8] md:text-8xl">
@@ -128,19 +163,28 @@ const UniversalSearchHubPage: React.FC = () => {
                 }`}
               >
                 <Eye className="h-5 w-5" /> Nexus visuel
+                {visualUnavailable && (
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[8px] font-black not-italic tracking-widest ${
+                      mode === 'visual'
+                        ? 'bg-[#0B0C10]/20 text-[#0B0C10]'
+                        : 'bg-[#F4F1E8]/10 text-[#8F94A5]'
+                    }`}
+                  >
+                    Bientôt
+                  </span>
+                )}
               </button>
-              {/* Expert Nexus is a separate streaming page (agentic RAG), so this
-                    navigates rather than toggling a local mode. */}
-              <Link
-                to={
-                  query.trim()
-                    ? `/search/expert-nexus/?q=${encodeURIComponent(query.trim())}`
-                    : '/search/expert-nexus/'
-                }
-                className="flex items-center gap-3 rounded-xl border border-[#F4F1E8]/15 bg-transparent px-7 py-3.5 text-xs font-black uppercase italic tracking-[0.2em] text-[#8F94A5] no-underline transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8]"
+              <button
+                onClick={() => setMode('expert')}
+                className={`flex items-center gap-3 rounded-xl border px-7 py-3.5 text-xs font-black uppercase italic tracking-[0.2em] transition-colors ${
+                  mode === 'expert'
+                    ? 'border-[#E8442B] bg-[#E8442B] text-[#F4F1E8]'
+                    : 'border-[#F4F1E8]/15 bg-transparent text-[#8F94A5] hover:border-[#FDB913] hover:text-[#F4F1E8]'
+                }`}
               >
                 <Brain className="h-5 w-5" /> Expert Nexus
-              </Link>
+              </button>
             </div>
 
             <form onSubmit={handleSearch} className="mx-auto mt-10 flex max-w-3xl gap-3">
@@ -154,19 +198,25 @@ const UniversalSearchHubPage: React.FC = () => {
                   placeholder={
                     mode === 'global'
                       ? t('search.hub.global_placeholder', 'Rechercher un anime, manga, seiyuu...')
-                      : t(
-                          'search.hub.visual_placeholder',
-                          'Décrivez une scène visuelle ou un moment précis...',
-                        )
+                      : mode === 'visual'
+                        ? t(
+                            'search.hub.visual_placeholder',
+                            'Décrivez une scène visuelle ou un moment précis...',
+                          )
+                        : t(
+                            'search.expert.placeholder',
+                            'Posez une question profonde sur un univers, une relation ou un arc narratif...',
+                          )
                   }
                   className="w-full rounded-2xl border border-[#F4F1E8]/15 bg-[#0F1016] py-5 pl-14 pr-6 text-lg font-medium text-[#F4F1E8] outline-none transition-colors placeholder:text-[#8F94A5]/60 focus:border-[#FDB913]"
                 />
               </div>
               <button
                 type="submit"
-                className="rounded-2xl border-none bg-[#E8442B] px-8 font-manga text-xl font-black uppercase italic text-[#F4F1E8] transition-colors hover:bg-[#c93a24] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913] cursor-pointer"
+                disabled={mode === 'expert' && expertStreaming}
+                className="rounded-2xl border-none bg-[#E8442B] px-8 font-manga text-xl font-black uppercase italic text-[#F4F1E8] transition-colors hover:bg-[#c93a24] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               >
-                SCANNER
+                {mode === 'expert' && expertStreaming ? 'ANALYSE…' : 'SCANNER'}
               </button>
             </form>
           </header>
@@ -238,12 +288,35 @@ const UniversalSearchHubPage: React.FC = () => {
                             <span className="absolute right-3 top-3 rounded-[2px] border border-[#E8442B]/60 bg-[#0B0C10]/80 px-2 py-1 text-[8px] font-black uppercase italic tracking-widest text-[#E8442B] backdrop-blur-md">
                               {item.type}
                             </span>
+
+                            {item.rating != null && (
+                              <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-[2px] border border-[#FDB913]/50 bg-[#0B0C10]/80 px-2 py-1 text-[9px] font-black tabular-nums text-[#FDB913] backdrop-blur-md">
+                                <Star
+                                  className="h-2.5 w-2.5"
+                                  fill="currentColor"
+                                  aria-hidden="true"
+                                />
+                                {item.rating.toFixed(0)}
+                              </span>
+                            )}
                           </div>
 
                           <div className="p-5">
                             <h3 className="font-manga line-clamp-2 text-lg font-black uppercase italic leading-tight text-[#F4F1E8] transition-colors group-hover:text-[#FDB913]">
                               {item.title || item.name}
                             </h3>
+                            {item.title_english &&
+                              item.title_english.trim().toLowerCase() !==
+                                (item.title || '').trim().toLowerCase() && (
+                                <p className="mt-1 line-clamp-1 text-xs font-medium text-[#8F94A5]">
+                                  {item.title_english}
+                                </p>
+                              )}
+                            {item.year && (
+                              <p className="mt-2.5 text-[10px] font-bold uppercase tracking-widest tabular-nums text-[#8F94A5]">
+                                {item.year}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </Link>
@@ -251,88 +324,125 @@ const UniversalSearchHubPage: React.FC = () => {
                   </div>
                 )}
               </motion.div>
-            ) : (
+            ) : mode === 'visual' ? (
               <motion.div
                 key="visual"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <div className="space-y-10">
-                  <div className="flex items-center justify-between px-1">
-                    <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#8F94A5]">
-                      <Layers className="h-4 w-4 text-[#FDB913]" />{' '}
-                      {t('search.hub.temporal_segments', 'Segments Temporels Identifiés')}
+                {visualUnavailable ? (
+                  <div className="rounded-2xl border border-dashed border-[#FDB913]/25 bg-[#FDB913]/[0.04] px-6 py-28 text-center">
+                    <Video
+                      className="mx-auto mb-8 h-24 w-24 text-[#FDB913]/30"
+                      aria-hidden="true"
+                    />
+                    <h3 className="font-manga mb-4 text-3xl font-black uppercase italic text-[#F4F1E8]/70 md:text-4xl">
+                      Nexus visuel — bientôt
                     </h3>
-                    {visualResults.length > 0 && (
-                      <span className="rounded-full border border-[#FDB913]/40 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-[#FDB913]">
-                        {t('search.hub.moments_found', '{{count}} MOMENTS TROUVÉS', {
-                          count: visualResults.length,
-                        })}
-                      </span>
-                    )}
+                    <p className="mx-auto mb-8 max-w-md text-sm leading-relaxed text-[#8F94A5]">
+                      La recherche par scène s'appuie sur un index vidéo qui n'est pas encore
+                      constitué. Elle s'activera dès que des vidéos seront indexées — en attendant,
+                      la méta-recherche couvre animes, mangas et personnages.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setMode('global')}
+                      className="inline-flex items-center gap-2 rounded-xl border border-[#F4F1E8]/15 px-6 py-3 text-xs font-black uppercase italic tracking-[0.2em] text-[#8F94A5] transition-colors hover:border-[#FDB913] hover:text-[#F4F1E8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDB913]"
+                    >
+                      <Search className="h-4 w-4" /> Passer à la méta-recherche
+                    </button>
                   </div>
-
-                  {visualMutation.isPending ? (
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                      {[1, 2, 3].map((i) => (
-                        <div
-                          key={i}
-                          className="aspect-video animate-pulse rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016]"
-                        />
-                      ))}
+                ) : (
+                  <div className="space-y-10">
+                    <div className="flex items-center justify-between px-1">
+                      <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#8F94A5]">
+                        <Layers className="h-4 w-4 text-[#FDB913]" />{' '}
+                        {t('search.hub.temporal_segments', 'Segments Temporels Identifiés')}
+                      </h3>
+                      {visualResults.length > 0 && (
+                        <span className="rounded-full border border-[#FDB913]/40 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-[#FDB913]">
+                          {t('search.hub.moments_found', '{{count}} MOMENTS TROUVÉS', {
+                            count: visualResults.length,
+                          })}
+                        </span>
+                      )}
                     </div>
-                  ) : visualResults.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                      {visualResults.map((segment, idx) => (
-                        <div
-                          key={idx}
-                          className="group relative overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] transition-colors duration-300 hover:border-[#FDB913]/40"
-                        >
-                          <div className="relative aspect-video bg-[#0B0C10]">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Film className="h-12 w-12 text-[#F4F1E8]/10 transition-transform duration-500 group-hover:scale-110" />
-                            </div>
-                            <div className="absolute inset-0 flex items-center justify-center bg-[#0B0C10]/40 opacity-0 transition-opacity group-hover:opacity-100">
-                              <div className="flex h-16 w-16 scale-75 items-center justify-center rounded-full bg-[#E8442B] transition-transform duration-300 group-hover:scale-100">
-                                <Play className="h-8 w-8 fill-current text-[#F4F1E8]" />
+
+                    {visualMutation.isPending ? (
+                      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                        {[1, 2, 3].map((i) => (
+                          <div
+                            key={i}
+                            className="aspect-video animate-pulse rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016]"
+                          />
+                        ))}
+                      </div>
+                    ) : visualResults.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                        {visualResults.map((segment, idx) => (
+                          <div
+                            key={idx}
+                            className="group relative overflow-hidden rounded-2xl border border-[#F4F1E8]/10 bg-[#0F1016] transition-colors duration-300 hover:border-[#FDB913]/40"
+                          >
+                            <div className="relative aspect-video bg-[#0B0C10]">
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <Film className="h-12 w-12 text-[#F4F1E8]/10 transition-transform duration-500 group-hover:scale-110" />
+                              </div>
+                              <div className="absolute inset-0 flex items-center justify-center bg-[#0B0C10]/40 opacity-0 transition-opacity group-hover:opacity-100">
+                                <div className="flex h-16 w-16 scale-75 items-center justify-center rounded-full bg-[#E8442B] transition-transform duration-300 group-hover:scale-100">
+                                  <Play className="h-8 w-8 fill-current text-[#F4F1E8]" />
+                                </div>
+                              </div>
+                              <div className="absolute bottom-3 right-3 flex items-center gap-2 rounded-lg bg-[#0B0C10]/80 px-3 py-1 font-mono text-[10px] font-bold text-[#F4F1E8] backdrop-blur-md">
+                                <Clock className="h-3 w-3 text-[#FDB913]" />
+                                {Math.floor(segment.start_time / 60)}:
+                                {(segment.start_time % 60).toString().padStart(2, '0')}
                               </div>
                             </div>
-                            <div className="absolute bottom-3 right-3 flex items-center gap-2 rounded-lg bg-[#0B0C10]/80 px-3 py-1 font-mono text-[10px] font-bold text-[#F4F1E8] backdrop-blur-md">
-                              <Clock className="h-3 w-3 text-[#FDB913]" />
-                              {Math.floor(segment.start_time / 60)}:
-                              {(segment.start_time % 60).toString().padStart(2, '0')}
+                            <div className="p-5">
+                              <h4 className="font-manga mb-2 truncate text-lg font-black uppercase italic text-[#F4F1E8] transition-colors group-hover:text-[#FDB913]">
+                                {segment.media_title ||
+                                  t('search.hub.video_fallback', 'Vidéo #{{id}}', {
+                                    id: segment.video_id,
+                                  })}
+                              </h4>
+                              <p className="line-clamp-2 text-[10px] font-bold uppercase italic leading-relaxed text-[#8F94A5]">
+                                "{segment.description}"
+                              </p>
                             </div>
                           </div>
-                          <div className="p-5">
-                            <h4 className="font-manga mb-2 truncate text-lg font-black uppercase italic text-[#F4F1E8] transition-colors group-hover:text-[#FDB913]">
-                              {segment.media_title ||
-                                t('search.hub.video_fallback', 'Vidéo #{{id}}', {
-                                  id: segment.video_id,
-                                })}
-                            </h4>
-                            <p className="line-clamp-2 text-[10px] font-bold uppercase italic leading-relaxed text-[#8F94A5]">
-                              "{segment.description}"
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl border border-dashed border-[#F4F1E8]/15 py-40 text-center text-[#8F94A5]">
-                      <Video className="mx-auto mb-8 h-28 w-28 text-[#8F94A5]/40" />
-                      <h3 className="font-manga mb-4 text-4xl font-black uppercase italic text-[#F4F1E8]/50">
-                        {t('search.hub.engine_ready', 'Moteur Optique Prêt')}
-                      </h3>
-                      <p className="text-sm font-bold uppercase tracking-[0.3em]">
-                        {t(
-                          'search.hub.engine_desc',
-                          'Entrez une description pour scanner la base de clips.',
-                        )}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-dashed border-[#F4F1E8]/15 py-40 text-center text-[#8F94A5]">
+                        <Video className="mx-auto mb-8 h-28 w-28 text-[#8F94A5]/40" />
+                        <h3 className="font-manga mb-4 text-4xl font-black uppercase italic text-[#F4F1E8]/50">
+                          {t('search.hub.engine_ready', 'Moteur Optique Prêt')}
+                        </h3>
+                        <p className="text-sm font-bold uppercase tracking-[0.3em]">
+                          {t(
+                            'search.hub.engine_desc',
+                            'Entrez une description pour scanner la base de clips.',
+                          )}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="expert"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+              >
+                <ExpertNexusPanel
+                  key={expertRunId}
+                  query={expertQuery}
+                  onStreamingChange={setExpertStreaming}
+                />
               </motion.div>
             )}
           </AnimatePresence>

@@ -130,11 +130,11 @@ class MediaSearchView(APIView):
         if not query and not media_type:
             return Response([])
 
-        # Input Guardrail (Anti-Jailbreak, Injection)
+        # Input Guardrail LÉGER (anti-injection heuristique, sans LLM) : une
+        # recherche est un lookup SQL, aucun texte n'est renvoyé à un modèle, donc
+        # inutile de payer une modération LLM (qui rendait la recherche très lente).
         if query:
-            guard_input = self.guardrail_service.validate_input(
-                query, allow_llm=request.user.is_authenticated
-            )
+            guard_input = self.guardrail_service.validate_search_query(query)
             if not guard_input.get("is_safe", True):
                 return Response(
                     {"error": guard_input.get("reason", "Inappropriate search query.")},
@@ -264,12 +264,10 @@ class MediaDetailView(APIView):
     def __init__(
         self,
         catalog_service=Provide[Container.core.catalog_service],
-        synopsis_translator=Provide[Container.core.synopsis_translator],
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.catalog_service = catalog_service
-        self.synopsis_translator = synopsis_translator
 
     def get(self, request, media_type, item_id):
         from ...models import MediaItem  # noqa: E402
@@ -278,13 +276,9 @@ class MediaDetailView(APIView):
         # 1. Tentative via SQL direct (Source of Truth)
         try:
             item_obj = MediaItem.objects.get(media_type=media_type, external_id=item_id)
-            if not item_obj.synopsis_fr and item_obj.description:
-                fr = self.synopsis_translator.translate_to_fr(
-                    item_obj.title, item_obj.description
-                )
-                if fr:
-                    item_obj.synopsis_fr = fr
-                    item_obj.save(update_fields=["synopsis_fr"])
+            # On sert directement le synopsis existant : anglais par défaut, ou FR
+            # si déjà présent en base. Aucune traduction à la volée (l'appel Gemini
+            # rendait la première ouverture de chaque fiche lente et peu fiable).
             serializer = MediaItemSerializer(item_obj)
             return Response(serializer.data)
         except MediaItem.DoesNotExist:

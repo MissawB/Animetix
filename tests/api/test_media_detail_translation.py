@@ -7,62 +7,45 @@ from django.urls import reverse
 from rest_framework import status
 
 
-@pytest.fixture
-def mock_translator():
-    m = MagicMock()
-    m.translate_to_fr.return_value = "Synopsis en français."
-    container.core.synopsis_translator.override(m)
-    yield m
-    container.core.synopsis_translator.reset_last_overriding()
-
-
 @pytest.mark.django_db
-def test_detail_translates_and_caches_on_first_view(api_client, mock_translator):
-    MediaItem.objects.create(
-        external_id="38000",
-        media_type="Anime",
-        title="Kimetsu no Yaiba",
-        description="It is the Taisho era.",
-    )
-    url = reverse(
-        "api_media_detail", kwargs={"media_type": "Anime", "item_id": "38000"}
-    )
-
-    r1 = api_client.get(url)
-    assert r1.status_code == status.HTTP_200_OK
-    assert r1.data["description"] == "Synopsis en français."
-    mock_translator.translate_to_fr.assert_called_once_with(
-        "Kimetsu no Yaiba", "It is the Taisho era."
-    )
-    # persisted
-    assert (
-        MediaItem.objects.get(external_id="38000").synopsis_fr
-        == "Synopsis en français."
-    )
-
-    # second view: cache hit, no re-translation
-    r2 = api_client.get(url)
-    assert r2.data["description"] == "Synopsis en français."
-    mock_translator.translate_to_fr.assert_called_once()  # still one call total
-
-
-@pytest.mark.django_db
-def test_detail_keeps_english_when_translation_fails(api_client):
-    m = MagicMock()
-    m.translate_to_fr.return_value = ""  # failure / no key
-    container.core.synopsis_translator.override(m)
+def test_detail_serves_english_without_translation(api_client):
+    """La fiche sert le synopsis anglais tel quel : aucune traduction à la volée
+    (l'appel Gemini rendait la première ouverture lente et peu fiable)."""
+    translator = MagicMock()
+    container.core.synopsis_translator.override(translator)
     try:
         MediaItem.objects.create(
-            external_id="55",
+            external_id="38000",
             media_type="Anime",
-            title="Show",
-            description="English only.",
+            title="Kimetsu no Yaiba",
+            description="It is the Taisho era.",
         )
         url = reverse(
-            "api_media_detail", kwargs={"media_type": "Anime", "item_id": "55"}
+            "api_media_detail", kwargs={"media_type": "Anime", "item_id": "38000"}
         )
+
         r = api_client.get(url)
-        assert r.data["description"] == "English only."
-        assert MediaItem.objects.get(external_id="55").synopsis_fr in (None, "")
+        assert r.status_code == status.HTTP_200_OK
+        assert r.data["description"] == "It is the Taisho era."
+        # Aucun appel de traduction, et rien n'est écrit en base.
+        translator.translate_to_fr.assert_not_called()
+        assert MediaItem.objects.get(external_id="38000").synopsis_fr in (None, "")
     finally:
         container.core.synopsis_translator.reset_last_overriding()
+
+
+@pytest.mark.django_db
+def test_detail_prefers_existing_french_synopsis(api_client):
+    """Les fiches déjà traduites en base restent affichées en FR (le serializer
+    préfère synopsis_fr quand il est présent)."""
+    MediaItem.objects.create(
+        external_id="55",
+        media_type="Anime",
+        title="Show",
+        description="English only.",
+        synopsis_fr="Synopsis en français.",
+    )
+    url = reverse("api_media_detail", kwargs={"media_type": "Anime", "item_id": "55"})
+    r = api_client.get(url)
+    assert r.status_code == status.HTTP_200_OK
+    assert r.data["description"] == "Synopsis en français."

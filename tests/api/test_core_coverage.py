@@ -183,7 +183,7 @@ def test_media_search_success(factory):
     try:
         view = MediaSearchView()
         view.guardrail_service = MagicMock()
-        view.guardrail_service.validate_input.return_value = {"is_safe": True}
+        view.guardrail_service.validate_search_query.return_value = {"is_safe": True}
         view.usage_port = MagicMock()
         # call the bound get directly to control injected services
         from rest_framework.parsers import JSONParser
@@ -220,7 +220,7 @@ def test_media_search_unsafe_query(factory):
     request = factory.get("/search/", {"q": "evil"})
     view = MediaSearchView()
     view.guardrail_service = MagicMock()
-    view.guardrail_service.validate_input.return_value = {
+    view.guardrail_service.validate_search_query.return_value = {
         "is_safe": False,
         "reason": "blocked",
     }

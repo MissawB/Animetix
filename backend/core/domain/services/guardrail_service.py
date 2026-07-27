@@ -162,6 +162,29 @@ class GuardrailService:
         except Exception as e:
             return self._engine_failure_response("input", e)
 
+    def validate_search_query(self, text: str) -> Dict[str, Any]:
+        """Garde-fou LÉGER pour une recherche catalogue (lookup SQL).
+
+        Contrairement à `validate_input`, on n'appelle AUCUN LLM : une recherche
+        renvoie des lignes de catalogue, jamais du texte généré par un modèle, donc
+        la modération sémantique (coûteuse : 1-2 appels LLM par requête) est inutile
+        ici et rendait la « recherche universelle » extrêmement lente. On se limite
+        aux heuristiques rapides : passerelle d'agents + détection d'injection.
+        """
+        gateway_res = self._check_agent_gateway(text, mode="input")
+        if gateway_res and not gateway_res.get("is_safe", True):
+            return gateway_res
+
+        if self._is_potential_jailbreak(text):
+            return {
+                "is_safe": False,
+                "detected_categories": ["JAILBREAK_ATTEMPT"],
+                "reason": "Suspicion de tentative d'injection de prompt ou de contournement des règles.",
+                "action": "block",
+            }
+
+        return {"is_safe": True, "detected_categories": []}
+
     def validate_output(
         self, response_text: str, context: Optional[str] = None, query: str = ""
     ) -> Dict[str, Any]:

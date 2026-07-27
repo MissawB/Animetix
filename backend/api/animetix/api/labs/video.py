@@ -162,10 +162,29 @@ class VideoLabDataView(APIView):
 
     permission_classes = [permissions.AllowAny]
 
+    @inject
+    def __init__(
+        self,
+        video_rag_service=Provide[Container.agentic.video_rag_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.video_rag_service = video_rag_service
+
     def get(self, request):
+        # La recherche Video-RAG n'a de sens que si des vidéos ont été indexées.
+        # On expose ce flag pour que l'UI puisse présenter honnêtement le mode
+        # (indisponible/bientôt) plutôt que de laisser croire qu'il est prêt.
+        try:
+            video_rag_available = self.video_rag_service.is_available()
+        except Exception:
+            logger.exception("VideoLabDataView: is_available check failed")
+            video_rag_available = False
+
         return Response(
             {
                 "status": "active",
+                "video_rag_available": video_rag_available,
                 "tools": [
                     {
                         "id": "fatezero",
@@ -179,6 +198,7 @@ class VideoLabDataView(APIView):
                         "name": "Video-RAG Search",
                         "description": "Semantic search for precise moments in anime videos.",
                         "endpoint": "/api/v1/labs/video/search/",
+                        "available": video_rag_available,
                     },
                 ],
             }

@@ -4,7 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import UniversalSearchHubPage from '../UniversalSearchHubPage';
 
-vi.mock('../../../utils/apiClient', () => ({ apiClient: vi.fn().mockResolvedValue({ results: [] }) }));
+vi.mock('../../../utils/apiClient', () => ({
+  apiClient: vi.fn().mockResolvedValue({ results: [] }),
+}));
 
 const renderAt = (path: string) => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -13,24 +15,19 @@ const renderAt = (path: string) => {
       <MemoryRouter initialEntries={[path]}>
         <UniversalSearchHubPage />
       </MemoryRouter>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 };
 
 describe('UniversalSearchHubPage', () => {
-  it('exposes a reachable Expert Nexus entry point carrying the query', () => {
-    // Régression : Expert Nexus n'avait aucun point d'entrée depuis le hub
-    // (le seul lien vivait sur une page orpheline et pointait vers une route
-    // inexistante /search/expert/). Le mode expert était donc inaccessible.
+  it('exposes Expert Nexus as an in-page mode, not a navigation link', () => {
+    // Régression UX : Expert Nexus renvoyait vers une AUTRE page (mauvaise UX,
+    // incohérent avec les autres modes qui basculent sur place). C'est désormais
+    // un 3e mode intégré, piloté par la même barre de recherche.
     renderAt('/search/?q=berserk');
 
-    const link = screen.getByRole('link', { name: /Expert Nexus/i });
-    expect(link).toHaveAttribute('href', '/search/expert-nexus/?q=berserk');
-  });
-
-  it('links to Expert Nexus without a query param when the box is empty', () => {
-    renderAt('/search/');
-    const link = screen.getByRole('link', { name: /Expert Nexus/i });
-    expect(link).toHaveAttribute('href', '/search/expert-nexus/');
+    // Point d'entrée présent, et c'est un bouton (bascule de mode) — plus un lien.
+    expect(screen.getByRole('button', { name: /Expert Nexus/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Expert Nexus/i })).toBeNull();
   });
 });
