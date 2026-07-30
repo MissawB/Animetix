@@ -299,6 +299,14 @@ class UnifiedInferenceAdapter(
             raise InferenceError("Réponse LLM non-JSON")
         return json.loads(cleaned[start : end + 1])
 
+    @staticmethod
+    def _coerce_structured(response_model: type, data: Any) -> Any:
+        """Valide `data` via le modèle Pydantic si possible, sinon renvoie le
+        dict brut. Le port autorise un response_model non-Pydantic (ex. `dict`),
+        pour lequel model_validate n'existe pas — on ne doit pas planter."""
+        validate = getattr(response_model, "model_validate", None)
+        return validate(data) if callable(validate) else data
+
     def generate_structured(
         self,
         prompt: str,
@@ -353,7 +361,7 @@ class UnifiedInferenceAdapter(
                 if res.status_code == 200:
                     content = res.json().get("message", {}).get("content", "")
                     data = self._extract_json_object(content)
-                    return response_cls.model_validate(data)
+                    return self._coerce_structured(response_cls, data)
                 logger.warning(
                     "Ollama native structured output HTTP %s, falling back to JSON prompt mode.",
                     res.status_code,
@@ -393,7 +401,7 @@ class UnifiedInferenceAdapter(
                     inner = data.get("properties")
                     if isinstance(inner, dict):
                         data = inner
-                return response_cls.model_validate(data)
+                return self._coerce_structured(response_cls, data)
             except Exception as e:  # noqa: BLE001 - on retente puis on abandonne
                 last_error = e
         raise InferenceError(

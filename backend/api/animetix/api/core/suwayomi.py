@@ -328,7 +328,16 @@ class SuwayomiImportView(APIView):
             },
         )
 
-        self.manga_service.get_chapters(external_id)
+        # Pré-synchro des chapitres : best-effort. Si Suwayomi est injoignable,
+        # l'import du manga reste valide (les chapitres se resynchronisent à la
+        # lecture) plutôt que de faire échouer tout l'import.
+        try:
+            self.manga_service.get_chapters(external_id)
+        except SuwayomiUnavailableError:
+            logger.warning(
+                "Pré-synchro des chapitres ignorée pour %s : Suwayomi injoignable.",
+                external_id,
+            )
 
         return Response(
             {

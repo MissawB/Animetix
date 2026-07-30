@@ -207,17 +207,22 @@ def test_profile_me(auth_client, user):
 def test_profile_update_personalization_valid(auth_client, user):
     resp = auth_client.post(
         "/api/v1/profiles/update_personalization/",
-        {"theme": "dark", "accent_color": "purple"},
+        # Shape courant (hyper-personnalisation par archétype), cf. PersonalizationSchema.
+        {
+            "mode": "manual",
+            "manual_archetype": "strategist",
+            "intensity_multiplier": 1.5,
+        },
         format="json",
     )
     assert resp.status_code == 200
-    assert resp.data["settings"]["theme"] == "dark"
+    assert resp.data["settings"]["mode"] == "manual"
 
 
 def test_profile_update_personalization_invalid(auth_client):
     resp = auth_client.post(
         "/api/v1/profiles/update_personalization/",
-        {"theme": "rainbow"},  # fails regex pattern
+        {"mode": "rainbow"},  # échoue le pattern ^(auto|manual)$
         format="json",
     )
     assert resp.status_code == 400

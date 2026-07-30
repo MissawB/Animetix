@@ -155,11 +155,18 @@ def test_sync_media_builds_media_studio_theme_author_cypher():
     queries = [c.args[0] for c in tx.run.call_args_list]
     # Root MERGE on Media with id/type and SET title/year.
     assert "MERGE (m:Media {id: $id, type: $type})" in queries[0]
+    # Le root MERGE SET pousse aussi les champs d'enrichissement (carte du monde /
+    # ratings) : image_url, popularity, title_english, title_native — None ici car
+    # non fournis par l'item.
     assert tx.run.call_args_list[0].kwargs == {
         "id": "7",
         "type": "Anime",
         "title": "Naruto",
         "year": 2002,
+        "image_url": None,
+        "popularity": None,
+        "title_english": None,
+        "title_native": None,
     }
     # Studio, theme and author relationships each issue their own tx.run.
     assert any("PRODUCED_BY" in q for q in queries)
