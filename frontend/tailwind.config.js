@@ -35,6 +35,16 @@ export default {
         'surface-text': 'rgb(var(--color-text) / <alpha-value>)',
         'surface-card': 'rgb(var(--color-card) / <alpha-value>)',
         
+        // Accent SHU (édition de nuit). Un seul rouge ne peut pas atteindre 4.5:1
+        // à la fois en TEXTE sur fond sombre (doit être clair) et en FOND sous
+        // texte crème (doit être foncé). D'où deux tokens accessibles :
+        //  - `shu`        : le rouge de marque pour les FONDS, à associer à un
+        //                   texte ink (#0B0C10) -> 4.86:1.
+        //  - `shu-bright` : rouge plus clair pour le TEXTE sur fond sombre
+        //                   (logo, accents) -> ~5.5:1 sur l'ink.
+        shu: '#E8442B',
+        'shu-bright': '#FF6A4D',
+
         // Cyberpunk
         'cyberpunk-bg': '#050505',
         'cyberpunk-panel': 'rgba(255, 255, 255, 0.05)',

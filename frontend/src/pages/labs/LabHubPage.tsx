@@ -94,7 +94,7 @@ const LabHubPage: React.FC = () => {
           {/* Hero : la singularité, puis le titre. */}
           <header className="mb-20 flex flex-col items-center text-center">
             <SingularityCore />
-            <p className="mt-8 text-[10px] font-black uppercase tracking-[0.4em] text-[#E8442B]">
+            <p className="mt-8 text-[10px] font-black uppercase tracking-[0.4em] text-[#FDB913]">
               {t('lab_hub.eyebrow', 'Annuaire · Protocoles')}
             </p>
             <h1 className="manga-font mt-3 text-6xl font-black uppercase italic tracking-tighter text-white md:text-7xl">
@@ -125,7 +125,7 @@ const LabHubPage: React.FC = () => {
           </div>
 
           <footer className="mt-24 border-t border-white/10 pt-12 text-center">
-            <p className="mx-auto max-w-3xl text-sm leading-relaxed text-white/40">
+            <p className="mx-auto max-w-3xl text-sm leading-relaxed text-white/55">
               {t(
                 'lab_hub.footer_1',
                 "Les Singularity Labs regroupent les fonctionnalités expérimentales d'Animetix : des outils d'IA générative et cognitive appliqués à l'univers anime & manga.",

@@ -38,7 +38,7 @@ export const HeroSection: React.FC = () => {
 
       <div className="z-10 md:w-1/2 text-left">
         <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter mb-8 uppercase text-[#F4F1E8] font-manga leading-none">
-          ANIME<span className="text-[#E8442B]">TIX</span>
+          ANIME<span className="text-shu-bright">TIX</span>
         </h1>
         <p className="text-xl md:text-2xl mb-10 text-[#8F94A5] font-medium leading-relaxed max-w-lg">
           {isEn
@@ -48,7 +48,7 @@ export const HeroSection: React.FC = () => {
         <div className="flex flex-wrap gap-6">
           <Link
             to="/daily-challenge/"
-            className="bg-[#E8442B] hover:bg-[#c9391f] text-[#F4F1E8] font-manga font-black italic uppercase text-sm py-4 px-10 rounded-2xl hover:scale-105 active:scale-95 transition-all no-underline inline-block border border-[#E8442B]"
+            className="bg-[#E8442B] hover:bg-[#c9391f] text-[#0B0C10] font-manga font-black italic uppercase text-sm py-4 px-10 rounded-2xl hover:scale-105 active:scale-95 transition-all no-underline inline-block border border-[#E8442B]"
           >
             {t('nav.daily', 'Défi Quotidien')}
           </Link>

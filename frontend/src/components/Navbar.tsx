@@ -57,7 +57,7 @@ const Navbar: React.FC = () => {
         <Link to="/" className="group flex items-center gap-2.5 no-underline">
           <img src="/static/img/logo/white_logo.png" alt="" className="h-7" />
           <span className="font-manga hidden text-lg font-black uppercase italic tracking-tighter text-[#F4F1E8] sm:block">
-            ANIME<span className="text-[#E8442B]">TIX</span>
+            ANIME<span className="text-shu-bright">TIX</span>
           </span>
         </Link>
       </div>
@@ -86,7 +86,7 @@ const Navbar: React.FC = () => {
             >
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#E8442B] text-[9px] font-black text-[#F4F1E8]">
+                <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#E8442B] text-[9px] font-black text-[#0B0C10]">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
@@ -229,7 +229,7 @@ const Navbar: React.FC = () => {
             </Link>
             <Link
               to="/auth/register/"
-              className="flex items-center gap-2 rounded-xl border-none bg-[#E8442B] px-4 py-2.5 text-xs font-black uppercase italic tracking-widest text-[#F4F1E8] no-underline transition-all hover:scale-105 hover:bg-[#c93a24] active:scale-95"
+              className="flex items-center gap-2 rounded-xl border-none bg-[#E8442B] px-4 py-2.5 text-xs font-black uppercase italic tracking-widest text-[#0B0C10] no-underline transition-all hover:scale-105 hover:bg-[#c93a24] active:scale-95"
             >
               <UserPlus className="h-4 w-4" />{' '}
               <span className="hidden sm:inline">{t('auth.register.link', "S'inscrire")}</span>
