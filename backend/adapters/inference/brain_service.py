@@ -379,7 +379,9 @@ def vision_depth(req: Base64ImageRequest):
 @app.post("/vision/rerank", dependencies=[Depends(verify_api_key)])
 @handle_brain_errors
 def vision_rerank(req: RerankRequest):
-    items = brain_engine.visual_rerank(req.query, req.image_urls, req.system_prompt)
+    items = brain_engine.visual_rerank(
+        req.query, req.image_urls, req.system_prompt or ""
+    )
     return {"reranked_items": items}
 
 
@@ -411,7 +413,9 @@ def video_localize(req: VideoLocalizeRequest):
 @handle_brain_errors
 def transform_image_anime(req: TransformRequest):
     img_bytes = base64.b64decode(req.image)
-    res = brain_engine.transform_image_to_anime(img_bytes, req.studio_style, req.prompt)
+    res = brain_engine.transform_image_to_anime(
+        img_bytes, req.studio_style, req.prompt or ""
+    )
     return {"image_url_or_b64": res}
 
 
@@ -419,7 +423,9 @@ def transform_image_anime(req: TransformRequest):
 @handle_brain_errors
 def transform_video_anime(req: VideoTransformRequest):
     vid_bytes = base64.b64decode(req.video)
-    res = brain_engine.transform_video_to_anime(vid_bytes, req.studio_style, req.prompt)
+    res = brain_engine.transform_video_to_anime(
+        vid_bytes, req.studio_style, req.prompt or ""
+    )
     return {"video_url_or_b64": res}
 
 
@@ -443,7 +449,7 @@ def clone_voice(req: CloneVoiceRequest):
 @handle_brain_errors
 def speech_to_speech(req: SpeechToSpeechRequest):
     aud_bytes = base64.b64decode(req.audio)
-    audio_bytes = brain_engine.speech_to_speech(aud_bytes, req.system_prompt)
+    audio_bytes = brain_engine.speech_to_speech(aud_bytes, req.system_prompt or "")
     audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
     return {"audio_b64": audio_b64}
 
@@ -498,7 +504,7 @@ def generate_3d(req: Generate3DRequest):
 @app.post("/moderate", dependencies=[Depends(verify_api_key)])
 @handle_brain_errors
 def moderate(req: ModerateRequest):
-    res = brain_engine.moderate_content(req.text, req.categories)
+    res = brain_engine.moderate_content(req.text, req.categories or [])
     return {"moderation": res}
 
 
@@ -513,7 +519,7 @@ def vision_late_interaction(req: Base64ImageRequest):
 @app.post("/vision/generate", dependencies=[Depends(verify_api_key)])
 @handle_brain_errors
 def vision_generate(req: ImageGenerateRequest):
-    res = brain_engine.generate_image(req.prompt, req.style)
+    res = brain_engine.generate_image(req.prompt, req.style or "")
     return {"image_url_or_b64": res}
 
 

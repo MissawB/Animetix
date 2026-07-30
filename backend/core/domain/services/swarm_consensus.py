@@ -309,8 +309,8 @@ class SwarmConsensusOrchestrator:
         }
 
         # Phase 2 (MoE, un seul appel) : le routeur (weights) ET les votes en une passe.
-        llm_weights = {}
-        llm_votes = {}
+        llm_weights: Dict[str, float] = {}
+        llm_votes: Dict[str, float] = {}
         if self.inference_engine is not None:
             llm_weights, llm_votes = self._evaluate_swarm_via_llm(fact, media_title)
 

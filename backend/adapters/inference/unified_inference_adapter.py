@@ -29,6 +29,7 @@ from core.ports.inference_port import InferencePort
 from core.utils.inference_config import check_unified_config
 from core.utils.local_models import LLM_OLLAMA_MODEL
 from core.utils.security import is_safe_url, safe_http_request
+from pydantic import BaseModel
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -313,8 +314,12 @@ class UnifiedInferenceAdapter(
         API (souvent injoignable en local), d'où l'absence de score LLM. On demande
         ici un JSON conforme au schéma Pydantic, puis on le valide.
         """
+        # response_model est un modèle Pydantic ; le port le type `type` (générique)
+        # pour les impls non-Pydantic, donc on rebinde ici sur type[BaseModel] afin
+        # d'exposer model_json_schema()/model_validate() sans casser la signature.
+        response_cls: type[BaseModel] = response_model
         try:
-            schema = response_model.model_json_schema()
+            schema = response_cls.model_json_schema()
         except Exception:  # noqa: BLE001 - schéma optionnel (mock/legacy)
             schema = None
 
@@ -348,7 +353,7 @@ class UnifiedInferenceAdapter(
                 if res.status_code == 200:
                     content = res.json().get("message", {}).get("content", "")
                     data = self._extract_json_object(content)
-                    return response_model.model_validate(data)
+                    return response_cls.model_validate(data)
                 logger.warning(
                     "Ollama native structured output HTTP %s, falling back to JSON prompt mode.",
                     res.status_code,
@@ -388,7 +393,7 @@ class UnifiedInferenceAdapter(
                     inner = data.get("properties")
                     if isinstance(inner, dict):
                         data = inner
-                return response_model.model_validate(data)
+                return response_cls.model_validate(data)
             except Exception as e:  # noqa: BLE001 - on retente puis on abandonne
                 last_error = e
         raise InferenceError(

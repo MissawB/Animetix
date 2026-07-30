@@ -140,6 +140,9 @@ class GraphCommunityPartitioner:
                m.image_url AS image_url, studios, themes, people, sagas
         LIMIT {MAX_MEDIA}
         """
+        # Garanti non-None : run_partitioning() court-circuite vers les communautés
+        # d'exemple quand neo4j_manager est absent avant d'appeler cette méthode.
+        assert self.neo4j_manager is not None
         rows = [r for r in self.neo4j_manager.execute_query(cypher) if r.get("title")]
         if len(rows) < MIN_COMMUNITY_SIZE:
             return []
@@ -268,6 +271,8 @@ class GraphCommunityPartitioner:
                m.name AS connected_entity, type(r) AS relationship
         LIMIT {MAX_MEDIA}
         """
+        # Garanti non-None : cf. la garde dans run_partitioning().
+        assert self.neo4j_manager is not None
         nodes = self.neo4j_manager.execute_query(cypher)
         if not nodes:
             return []
