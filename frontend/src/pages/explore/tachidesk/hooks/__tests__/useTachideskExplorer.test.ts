@@ -20,16 +20,41 @@ vi.mock('../../../../../store/authStore', () => ({
 const mockApiClient = vi.mocked(apiClient);
 
 const mockSources = [
-  { id: 'src-1', name: 'Source 1', lang: 'fr', iconUrl: '', supportsLatest: true, isConfigured: true },
-  { id: 'src-2', name: 'Source 2', lang: 'en', iconUrl: '', supportsLatest: true, isConfigured: true },
+  {
+    id: 'src-1',
+    name: 'Source 1',
+    lang: 'fr',
+    iconUrl: '',
+    supportsLatest: true,
+    isConfigured: true,
+  },
+  {
+    id: 'src-2',
+    name: 'Source 2',
+    lang: 'en',
+    iconUrl: '',
+    supportsLatest: true,
+    isConfigured: true,
+  },
 ];
 
 const mockMangas = [
-  { id: 'manga-1', title: 'One Piece', thumbnailUrl: '', url: '', status: 'ongoing', artist: '', author: '', description: '', genre: [], inLibrary: false }
+  {
+    id: 'manga-1',
+    title: 'One Piece',
+    thumbnailUrl: '',
+    url: '',
+    status: 'ongoing',
+    artist: '',
+    author: '',
+    description: '',
+    genre: [],
+    inLibrary: false,
+  },
 ];
 
 const mockChapters = [
-  { id: 'chap-1', name: 'Chapter 1', chapterNumber: 1, read: false, scanlator: '', dateUpload: '' }
+  { id: 'chap-1', name: 'Chapter 1', chapterNumber: 1, read: false, scanlator: '', dateUpload: '' },
 ];
 
 describe('useTachideskExplorer', () => {
@@ -40,9 +65,11 @@ describe('useTachideskExplorer', () => {
     mockApiClient.mockImplementation(async (url) => {
       if (url.includes('/sources/')) return mockSources;
       if (url.includes('/extensions/')) return [];
-      if (url.includes('/search/')) return mockMangas;
+      // La recherche paginée renvoie { mangas, hasNextPage } (fetchSourceManga).
+      if (url.includes('/search/')) return { mangas: mockMangas, hasNextPage: false };
       if (url.includes('/favorite/')) return { is_favorite: false, status: null };
-      if (url.includes('/chapters/')) return mockChapters;
+      // Chapitres lus directement depuis Suwayomi via /manga-chapters/.
+      if (url.includes('/manga-chapters/')) return mockChapters;
       return [];
     });
   });
@@ -70,7 +97,9 @@ describe('useTachideskExplorer', () => {
     });
 
     expect(result.current.selectedSource).toBe('src-1');
-    expect(mockApiClient).toHaveBeenCalledWith('/api/v1/explore/suwayomi/sources/', { skipToast: true });
+    expect(mockApiClient).toHaveBeenCalledWith('/api/v1/explore/suwayomi/sources/', {
+      skipToast: true,
+    });
   });
 
   it('handles fetch sources failure', async () => {
@@ -91,15 +120,17 @@ describe('useTachideskExplorer', () => {
     });
 
     expect(result.current.activeTab).toBe('extensions');
-    
+
     await waitFor(() => {
-      expect(mockApiClient).toHaveBeenCalledWith('/api/v1/explore/suwayomi/extensions/', { skipToast: true });
+      expect(mockApiClient).toHaveBeenCalledWith('/api/v1/explore/suwayomi/extensions/', {
+        skipToast: true,
+      });
     });
   });
 
   it('performs catalog search successfully', async () => {
     const { result } = renderHook(() => useTachideskExplorer());
-    
+
     await waitFor(() => {
       expect(result.current.sources).toEqual(mockSources);
     });
@@ -114,8 +145,8 @@ describe('useTachideskExplorer', () => {
 
     expect(result.current.mangas).toEqual(mockMangas);
     expect(mockApiClient).toHaveBeenCalledWith(
-      '/api/v1/explore/suwayomi/search/?source_id=src-1&q=One%20Piece',
-      { skipToast: true }
+      '/api/v1/explore/suwayomi/search/?source_id=src-1&q=One%20Piece&page=1',
+      { skipToast: true },
     );
   });
 
@@ -125,9 +156,9 @@ describe('useTachideskExplorer', () => {
 
     mockApiClient.mockImplementation(async (url) => {
       if (url.includes('/favorite/')) return { is_favorite: true, status: 'reading' };
-      if (url.includes('/chapters/')) return mockChapters;
+      if (url.includes('/manga-chapters/')) return mockChapters;
       if (url.includes('/sources/')) return mockSources;
-      if (url.includes('/search/')) return mockMangas;
+      if (url.includes('/search/')) return { mangas: mockMangas, hasNextPage: false };
       return [];
     });
 
@@ -141,21 +172,15 @@ describe('useTachideskExplorer', () => {
     expect(result.current.chapters).toEqual(mockChapters);
   });
 
-  it('selects a manga, fails to load chapters, triggers import, and retries chapter load', async () => {
+  it('leaves chapters empty when the Suwayomi chapters endpoint fails (no auto-import)', async () => {
     const { result } = renderHook(() => useTachideskExplorer());
     await waitFor(() => expect(result.current.sources).toEqual(mockSources));
 
-    let chaptersCalled = 0;
     mockApiClient.mockImplementation(async (url) => {
       if (url.includes('/favorite/')) return { is_favorite: false, status: null };
-      if (url.includes('/chapters/')) {
-        chaptersCalled++;
-        if (chaptersCalled === 1) throw new Error('Not imported yet');
-        return mockChapters;
-      }
-      if (url.includes('/import/')) return {};
+      if (url.includes('/manga-chapters/')) throw new Error('Suwayomi unreachable');
       if (url.includes('/sources/')) return mockSources;
-      if (url.includes('/search/')) return mockMangas;
+      if (url.includes('/search/')) return { mangas: mockMangas, hasNextPage: false };
       return [];
     });
 
@@ -163,12 +188,14 @@ describe('useTachideskExplorer', () => {
       await result.current.selectManga(mockMangas[0]);
     });
 
-    expect(result.current.chapters).toEqual(mockChapters);
-    expect(mockApiClient).toHaveBeenCalledWith('/api/v1/explore/suwayomi/import/', {
-      method: 'POST',
-      body: JSON.stringify({ source_id: 'src-1', suwayomi_manga_id: 'manga-1' }),
-      skipToast: true,
-    });
+    // Les chapitres sont lus directement depuis Suwayomi : un échec les laisse
+    // vides et ne déclenche JAMAIS d'import (l'import n'a lieu qu'à l'ouverture
+    // d'un chapitre, dans handleReadChapter).
+    expect(result.current.chapters).toEqual([]);
+    expect(mockApiClient).not.toHaveBeenCalledWith(
+      '/api/v1/explore/suwayomi/import/',
+      expect.anything(),
+    );
   });
 
   it('toggles favorite status successfully', async () => {
@@ -261,8 +288,19 @@ describe('useTachideskExplorer', () => {
   it('computes correct proxied image URL', async () => {
     const { result } = renderHook(() => useTachideskExplorer());
 
+    // URL vide -> placeholder.
     expect(result.current.getProxiedImageUrl('')).toBe('https://via.placeholder.com/300x450');
-    expect(result.current.getProxiedImageUrl('/api/v1/test')).toBe('/api/v1/test');
-    expect(result.current.getProxiedImageUrl('https://example.com/cover.jpg')).toContain('/api/v1/media/Manga/suwayomi-image/?page_url=');
+    // Une image déjà servie par l'app (manga importé) n'est PAS re-proxifiée.
+    expect(result.current.getProxiedImageUrl('/api/v1/media/Manga/foo.png')).toBe(
+      '/api/v1/media/Manga/foo.png',
+    );
+    // Vignettes Suwayomi (`/api/v1/manga/...`) et URLs distantes DOIVENT passer
+    // par le proxy image (sinon fuite d'origine / SSRF côté navigateur).
+    expect(result.current.getProxiedImageUrl('/api/v1/manga/1/thumbnail')).toContain(
+      '/api/v1/media/Manga/suwayomi-image/?page_url=',
+    );
+    expect(result.current.getProxiedImageUrl('https://example.com/cover.jpg')).toContain(
+      '/api/v1/media/Manga/suwayomi-image/?page_url=',
+    );
   });
 });
