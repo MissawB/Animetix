@@ -74,6 +74,17 @@ export default defineConfig([
     ],
     rules: { 'max-lines': 'off' },
   },
+  {
+    // Node tooling scripts (e.g. scripts/dev-fresh.mjs) run under Node, not the
+    // browser: give them the Node globals so `process`/`console` aren't flagged
+    // no-undef. They're plain .mjs, so the '**/*.{ts,tsx}' block above skips them.
+    files: ['scripts/**/*.{js,mjs,cjs}'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
   ...storybook.configs["flat/recommended"],
   // Must stay LAST: turns off ESLint rules that would conflict with Prettier
   // formatting (we run Prettier for style, ESLint for correctness).
