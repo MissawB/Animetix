@@ -44,7 +44,8 @@ export const HolographicWalletCard: React.FC<HolographicWalletCardProps> = ({ us
             Total Balance
           </span>
           <span className="text-4xl font-black italic manga-font text-white">
-            {user?.wallet_balance?.toLocaleString() || 0} <span className="text-cyan-400">Bx</span>
+            {user?.wallet_balance?.toLocaleString('fr-FR') || 0}{' '}
+            <span className="text-cyan-400">Bx</span>
           </span>
         </div>
 

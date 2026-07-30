@@ -173,13 +173,13 @@ export const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
             <div>
               <p className="text-[9px] font-black uppercase opacity-25 mb-1">Nœuds</p>
               <p className="text-2xl font-black italic manga-font text-purple-400">
-                {(node.details.node_count || 0).toLocaleString()}
+                {(node.details.node_count || 0).toLocaleString('fr-FR')}
               </p>
             </div>
             <div>
               <p className="text-[9px] font-black uppercase opacity-25 mb-1">Relations</p>
               <p className="text-2xl font-black italic manga-font text-purple-300">
-                {(node.details.relationship_count || 0).toLocaleString()}
+                {(node.details.relationship_count || 0).toLocaleString('fr-FR')}
               </p>
             </div>
           </div>
