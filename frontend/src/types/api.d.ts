@@ -329,7 +329,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Returns a list of all public fusions that have a generated Visual Novel script. */
+        /** @description Returns the latest public fusions that have a generated Visual Novel script. */
         get: operations["api_v1_archetypist_theater_retrieve"];
         put?: never;
         post?: never;
@@ -636,6 +636,10 @@ export interface paths {
         /**
          * @description Interface pour visualiser la convergence du solveur CFR (Counterfactual Regret Minimization).
          *     Simule la résolution de dilemmes stratégiques pour Akinetix.
+         *
+         *     Lab pédagogique CPU pur (aucun LLM/GPU, aucun coût en Bx, itérations bornées
+         *     à 1000 côté serializer) : ouvert à tous comme les autres labs de démonstration.
+         *     Le throttle anonyme est désactivé pour ne pas 429 le bouton en pleine session.
          */
         post: operations["api_v1_cognition_cfr_strategy_lab_create"];
         delete?: never;
@@ -1054,6 +1058,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/explore/suwayomi/last-page/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Numéro de la dernière page du catalogue d'une source (permet « aller à la
+         *     fin » et de borner le saut de page côté UI).
+         */
+        get: operations["api_v1_explore_suwayomi_last_page_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/suwayomi/manga-chapters/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Chapitres d'un manga source, lus DIRECTEMENT depuis Suwayomi (pour la
+         *     popup). Découplé de l'import : on n'importe le manga dans le catalogue local
+         *     qu'au moment de la lecture. Lecture seule, publique.
+         */
+        get: operations["api_v1_explore_suwayomi_manga_chapters_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/suwayomi/manga-details/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Fiche complète d'un manga source (titre, description, auteur, genres,
+         *     statut) — pour la popup de détail. Lecture seule, publique.
+         */
+        get: operations["api_v1_explore_suwayomi_manga_details_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/explore/suwayomi/search/": {
         parameters: {
             query?: never;
@@ -1063,6 +1128,26 @@ export interface paths {
         };
         /** @description Recherche des mangas dans une source spécifique Suwayomi. */
         get: operations["api_v1_explore_suwayomi_search_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/suwayomi/seek-letter/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Page où commence une lettre donnée (le catalogue Suwayomi est trié
+         *     alphabétiquement) — pour naviguer par ordre alphabétique.
+         */
+        get: operations["api_v1_explore_suwayomi_seek_letter_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2523,6 +2608,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/media/{media_type}/{item_id}/characters/graph/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Graphe des personnages d'une œuvre.
+         *
+         *     Nœuds : les personnages (mêmes règles de rattachement que
+         *     MediaCharactersView). Arêtes : metadata.entities.related_characters,
+         *     résolues par mots entiers contre les titres des autres personnages —
+         *     "Gon" relie Killua à "Gon Freecss", mais "his father" ne matche rien.
+         */
+        get: operations["api_v1_media_characters_graph_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/media/Manga/{media_id}/chapters/": {
         parameters: {
             query?: never;
@@ -3062,6 +3171,23 @@ export interface paths {
         head?: never;
         /** @description API endpoint pour visualiser et modifier les profils utilisateurs. */
         patch: operations["api_v1_profiles_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/profiles/avatar/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Téléverse la photo de profil de l'utilisateur connecté. */
+        post: operations["api_v1_profiles_avatar_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/profiles/claim_donation/": {
@@ -3656,20 +3782,20 @@ export interface components {
         };
         AISafetyEvent: {
             readonly id: number;
-            /**
-             * Nom d’utilisateur
-             * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
-             */
-            readonly username: string;
             event_type: components["schemas"]["EventTypeEnum"];
             action: components["schemas"]["ActionEnum"];
             detected_categories?: unknown;
             input_text?: string | null;
             output_text?: string | null;
             reasoning?: string | null;
+            user?: number | null;
+            /**
+             * Nom d’utilisateur
+             * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
+             */
+            readonly username: string;
             /** Format: date-time */
             readonly created_at: string;
-            user?: number | null;
         };
         Achievement: {
             readonly id: number;
@@ -3723,13 +3849,6 @@ export interface components {
         };
         CreativeFusion: {
             readonly id: number;
-            /**
-             * Nom d’utilisateur
-             * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
-             */
-            readonly creator_name: string;
-            readonly likes_count: number;
-            readonly is_liked: string;
             title_a: string;
             title_b: string;
             media_type_a: string;
@@ -3742,13 +3861,19 @@ export interface components {
             /** Format: int64 */
             universe_balance?: number;
             art_style?: string;
+            creator?: number | null;
+            /**
+             * Nom d’utilisateur
+             * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
+             */
+            readonly creator_name: string;
+            parent?: number | null;
             vn_script?: unknown;
             is_public?: boolean;
             /** Format: date-time */
             readonly created_at: string;
-            creator?: number | null;
-            parent?: number | null;
-            likes?: number[];
+            readonly likes_count: number;
+            readonly is_liked: string;
         };
         DailyChallenge: {
             readonly id: number;
@@ -4023,13 +4148,6 @@ export interface components {
         };
         PatchedCreativeFusion: {
             readonly id?: number;
-            /**
-             * Nom d’utilisateur
-             * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
-             */
-            readonly creator_name?: string;
-            readonly likes_count?: number;
-            readonly is_liked?: string;
             title_a?: string;
             title_b?: string;
             media_type_a?: string;
@@ -4042,13 +4160,19 @@ export interface components {
             /** Format: int64 */
             universe_balance?: number;
             art_style?: string;
+            creator?: number | null;
+            /**
+             * Nom d’utilisateur
+             * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
+             */
+            readonly creator_name?: string;
+            parent?: number | null;
             vn_script?: unknown;
             is_public?: boolean;
             /** Format: date-time */
             readonly created_at?: string;
-            creator?: number | null;
-            parent?: number | null;
-            likes?: number[];
+            readonly likes_count?: number;
+            readonly is_liked?: string;
         };
         PatchedDataCurationTicket: {
             readonly id?: number;
@@ -4121,6 +4245,7 @@ export interface components {
             readonly rank?: string;
             unlocked_badges?: unknown;
             custom_username_color?: string | null;
+            readonly avatar?: string;
             tier?: components["schemas"]["TierEnum"];
             /** Format: int64 */
             wallet_balance?: number;
@@ -4149,6 +4274,7 @@ export interface components {
             readonly rank: string;
             unlocked_badges?: unknown;
             custom_username_color?: string | null;
+            readonly avatar: string;
             tier?: components["schemas"]["TierEnum"];
             /** Format: int64 */
             wallet_balance?: number;
@@ -5808,7 +5934,79 @@ export interface operations {
             };
         };
     };
+    api_v1_explore_suwayomi_last_page_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_explore_suwayomi_manga_chapters_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_explore_suwayomi_manga_details_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_explore_suwayomi_search_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_explore_suwayomi_seek_letter_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -7495,6 +7693,27 @@ export interface operations {
             };
         };
     };
+    api_v1_media_characters_graph_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+                media_type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_media_Manga_chapters_retrieve: {
         parameters: {
             query?: never;
@@ -8363,6 +8582,30 @@ export interface operations {
                 "application/json": components["schemas"]["PatchedProfile"];
                 "application/x-www-form-urlencoded": components["schemas"]["PatchedProfile"];
                 "multipart/form-data": components["schemas"]["PatchedProfile"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+        };
+    };
+    api_v1_profiles_avatar_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Profile"];
+                "application/x-www-form-urlencoded": components["schemas"]["Profile"];
             };
         };
         responses: {

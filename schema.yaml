@@ -303,7 +303,7 @@ paths:
   /api/v1/archetypist/theater/:
     get:
       operationId: api_v1_archetypist_theater_retrieve
-      description: Returns a list of all public fusions that have a generated Visual
+      description: Returns the latest public fusions that have a generated Visual
         Novel script.
       tags:
       - api
@@ -781,8 +781,14 @@ paths:
       description: |-
         Interface pour visualiser la convergence du solveur CFR (Counterfactual Regret Minimization).
         Simule la résolution de dilemmes stratégiques pour Akinetix.
+
+        Lab pédagogique CPU pur (aucun LLM/GPU, aucun coût en Bx, itérations bornées
+        à 1000 côté serializer) : ouvert à tous comme les autres labs de démonstration.
+        Le throttle anonyme est désactivé pour ne pas 429 le bouton en pleine session.
       tags:
       - api
+      security:
+      - {}
       responses:
         '200':
           description: No response body
@@ -1215,10 +1221,63 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/explore/suwayomi/last-page/:
+    get:
+      operationId: api_v1_explore_suwayomi_last_page_retrieve
+      description: |-
+        Numéro de la dernière page du catalogue d'une source (permet « aller à la
+        fin » et de borner le saut de page côté UI).
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/explore/suwayomi/manga-chapters/:
+    get:
+      operationId: api_v1_explore_suwayomi_manga_chapters_retrieve
+      description: |-
+        Chapitres d'un manga source, lus DIRECTEMENT depuis Suwayomi (pour la
+        popup). Découplé de l'import : on n'importe le manga dans le catalogue local
+        qu'au moment de la lecture. Lecture seule, publique.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/explore/suwayomi/manga-details/:
+    get:
+      operationId: api_v1_explore_suwayomi_manga_details_retrieve
+      description: |-
+        Fiche complète d'un manga source (titre, description, auteur, genres,
+        statut) — pour la popup de détail. Lecture seule, publique.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
   /api/v1/explore/suwayomi/search/:
     get:
       operationId: api_v1_explore_suwayomi_search_retrieve
       description: Recherche des mangas dans une source spécifique Suwayomi.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/explore/suwayomi/seek-letter/:
+    get:
+      operationId: api_v1_explore_suwayomi_seek_letter_retrieve
+      description: |-
+        Page où commence une lettre donnée (le catalogue Suwayomi est trié
+        alphabétiquement) — pour naviguer par ordre alphabétique.
       tags:
       - api
       security:
@@ -2312,6 +2371,34 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/media/{media_type}/{item_id}/characters/graph/:
+    get:
+      operationId: api_v1_media_characters_graph_retrieve
+      description: |-
+        Graphe des personnages d'une œuvre.
+
+        Nœuds : les personnages (mêmes règles de rattachement que
+        MediaCharactersView). Arêtes : metadata.entities.related_characters,
+        résolues par mots entiers contre les titres des autres personnages —
+        "Gon" relie Killua à "Gon Freecss", mais "his father" ne matche rien.
+      parameters:
+      - in: path
+        name: item_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: media_type
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
   /api/v1/media/Manga/{media_id}/chapters/:
     get:
       operationId: api_v1_media_Manga_chapters_retrieve
@@ -3034,6 +3121,27 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/profiles/avatar/:
+    post:
+      operationId: api_v1_profiles_avatar_create
+      description: Téléverse la photo de profil de l'utilisateur connecté.
+      tags:
+      - api
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
   /api/v1/profiles/claim_donation/:
     post:
       operationId: api_v1_profiles_claim_donation_create
@@ -3748,12 +3856,6 @@ components:
         id:
           type: integer
           readOnly: true
-        username:
-          type: string
-          title: Nom d’utilisateur
-          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
-            et les caractères « @ », « . », « + », « - » et « _ ».
-          readOnly: true
         event_type:
           $ref: '#/components/schemas/EventTypeEnum'
         action:
@@ -3768,13 +3870,19 @@ components:
         reasoning:
           type: string
           nullable: true
+        user:
+          type: integer
+          nullable: true
+        username:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          readOnly: true
         created_at:
           type: string
           format: date-time
           readOnly: true
-        user:
-          type: integer
-          nullable: true
       required:
       - action
       - created_at
@@ -3919,18 +4027,6 @@ components:
         id:
           type: integer
           readOnly: true
-        creator_name:
-          type: string
-          title: Nom d’utilisateur
-          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
-            et les caractères « @ », « . », « + », « - » et « _ ».
-          readOnly: true
-        likes_count:
-          type: integer
-          readOnly: true
-        is_liked:
-          type: string
-          readOnly: true
         title_a:
           type: string
           maxLength: 255
@@ -3963,6 +4059,18 @@ components:
         art_style:
           type: string
           maxLength: 100
+        creator:
+          type: integer
+          nullable: true
+        creator_name:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          readOnly: true
+        parent:
+          type: integer
+          nullable: true
         vn_script:
           nullable: true
         is_public:
@@ -3971,16 +4079,12 @@ components:
           type: string
           format: date-time
           readOnly: true
-        creator:
+        likes_count:
           type: integer
-          nullable: true
-        parent:
-          type: integer
-          nullable: true
-        likes:
-          type: array
-          items:
-            type: integer
+          readOnly: true
+        is_liked:
+          type: string
+          readOnly: true
       required:
       - created_at
       - creator_name
@@ -4509,18 +4613,6 @@ components:
         id:
           type: integer
           readOnly: true
-        creator_name:
-          type: string
-          title: Nom d’utilisateur
-          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
-            et les caractères « @ », « . », « + », « - » et « _ ».
-          readOnly: true
-        likes_count:
-          type: integer
-          readOnly: true
-        is_liked:
-          type: string
-          readOnly: true
         title_a:
           type: string
           maxLength: 255
@@ -4553,6 +4645,18 @@ components:
         art_style:
           type: string
           maxLength: 100
+        creator:
+          type: integer
+          nullable: true
+        creator_name:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          readOnly: true
+        parent:
+          type: integer
+          nullable: true
         vn_script:
           nullable: true
         is_public:
@@ -4561,16 +4665,12 @@ components:
           type: string
           format: date-time
           readOnly: true
-        creator:
+        likes_count:
           type: integer
-          nullable: true
-        parent:
-          type: integer
-          nullable: true
-        likes:
-          type: array
-          items:
-            type: integer
+          readOnly: true
+        is_liked:
+          type: string
+          readOnly: true
     PatchedDataCurationTicket:
       type: object
       properties:
@@ -4728,6 +4828,9 @@ components:
           type: string
           nullable: true
           maxLength: 20
+        avatar:
+          type: string
+          readOnly: true
         tier:
           $ref: '#/components/schemas/TierEnum'
         wallet_balance:
@@ -4796,6 +4899,9 @@ components:
           type: string
           nullable: true
           maxLength: 20
+        avatar:
+          type: string
+          readOnly: true
         tier:
           $ref: '#/components/schemas/TierEnum'
         wallet_balance:
@@ -4808,6 +4914,7 @@ components:
           type: string
           readOnly: true
       required:
+      - avatar
       - has_api_key
       - id
       - rank
