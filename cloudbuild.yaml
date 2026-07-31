@@ -3,6 +3,12 @@
 substitutions:
   _TAG: latest
   _BUILD_TARGET: all
+  # Bucket GCS miroir des assets binaires lourds du build web (data/processed,
+  # data/artifacts, favicons). Ils étaient tirés via `checkout lfs:true`, ce qui
+  # épuisait le budget bande passante Git LFS et bloquait tout déploiement. Ils
+  # sont désormais hydratés depuis ce bucket (cf. étape hydrate-web-assets +
+  # scripts/deploy/sync_web_assets_to_gcs.sh), et le deploy n'utilise plus LFS.
+  _ASSETS_BUCKET: animetix-deploy-assets
   # Config web Firebase — PUBLIQUE par design (elle est servie dans le bundle JS
   # à chaque visiteur ; la sécurité repose sur les domaines autorisés et les
   # règles Firebase, pas sur son secret). Elle vivait dans frontend/.env, exclu
@@ -30,6 +36,30 @@ options:
 timeout: 7200s
 
 steps:
+  # --- Hydratation des assets binaires depuis GCS (build sans Git LFS) ---
+  # Les étapes Cloud Build s'exécutent en séquence : celle-ci copie les fichiers
+  # lourds (jadis en LFS) dans le contexte de build AVANT que build-web ne fasse
+  # `COPY . .`. Cela remplace les pointeurs LFS présents dans le contexte (le
+  # deploy checkout n'utilise plus `lfs:true`) par les vrais fichiers. Web only.
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: 'hydrate-web-assets'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ "${_BUILD_TARGET}" = "all" ] || [ "${_BUILD_TARGET}" = "web" ]; then
+          echo "Hydrating build context from gs://${_ASSETS_BUCKET} ..."
+          mkdir -p data/processed data/artifacts frontend/public
+          # -d : miroir exact (remplace les pointeurs, supprime les orphelins).
+          gsutil -m rsync -r -d "gs://${_ASSETS_BUCKET}/data/processed" data/processed
+          gsutil -m rsync -r -d "gs://${_ASSETS_BUCKET}/data/artifacts" data/artifacts
+          # Favicons uniquement (cp, sans -d : on préserve les autres fichiers de public/).
+          gsutil -m cp "gs://${_ASSETS_BUCKET}/frontend/public/*.png" frontend/public/
+          echo "Hydraté : $(ls data/processed | wc -l) processed, $(ls data/artifacts | wc -l) artifacts."
+        else
+          echo "Skipping asset hydration (target=${_BUILD_TARGET})"
+        fi
+
   # --- Web Image Build & Push ---
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-web'
