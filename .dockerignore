@@ -45,7 +45,12 @@ data/audio/
 # des types front. Les garder ne ferait que gonfler le contexte et l'image.
 tests/
 docs/
-dev/
+# ANCRÉ à la racine (`/dev/`) : sans le slash de tête, `.gcloudignore` (qui
+# `#!include` ce fichier avec la sémantique gitignore) exclurait TOUT dossier
+# `dev/` à n'importe quelle profondeur — dont `frontend/src/pages/dev/`, qui EST
+# importé par l'app (lazy routes). Le contexte perdait ces pages → `vite build`
+# échouait « Could not resolve .../pages/dev/... » et cassait le déploiement.
+/dev/
 .github/
 coverage.xml
 schema.yaml
