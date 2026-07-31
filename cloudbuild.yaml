@@ -47,8 +47,17 @@ steps:
     args:
       - '-c'
       - |
+        # set -e : un rsync/cp en échec (bucket absent, non peuplé) DOIT casser le
+        # build ici — sinon rsync -d viderait data/ et on shipperait une image sans
+        # données (sync_catalog casserait au runtime, silencieusement).
+        set -euo pipefail
         if [ "${_BUILD_TARGET}" = "all" ] || [ "${_BUILD_TARGET}" = "web" ]; then
           echo "Hydrating build context from gs://${_ASSETS_BUCKET} ..."
+          if ! gsutil ls -b "gs://${_ASSETS_BUCKET}" >/dev/null 2>&1; then
+            echo "ERROR: gs://${_ASSETS_BUCKET} introuvable. Lance d'abord"
+            echo "       scripts/deploy/gcp/sync_web_assets_to_gcs.sh pour le peupler."
+            exit 1
+          fi
           mkdir -p data/processed data/artifacts frontend/public
           # -d : miroir exact (remplace les pointeurs, supprime les orphelins).
           gsutil -m rsync -r -d "gs://${_ASSETS_BUCKET}/data/processed" data/processed
