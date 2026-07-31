@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { apiClient } from '../../../utils/apiClient';
 import { isChapterDownloaded, getChapterPageBlobs } from './offlineLibrary';
 
-export type PageSource = 'loading' | 'offline' | 'network' | 'unavailable';
+export type PageSource = 'loading' | 'offline' | 'network' | 'unavailable' | 'unreachable';
 interface ReaderPage {
   url: string;
   index: number;
@@ -59,9 +59,13 @@ export function useChapterPages(mediaId: string, chapterNumber: string) {
         );
         setPages(networkPages);
         setSource('network');
-      } catch {
+      } catch (err) {
         if (!active) return;
-        setSource('unavailable');
+        // Le serveur a répondu 5xx (typiquement 503 : Suwayomi injoignable) :
+        // ce n'est pas un problème de connexion côté client, et proposer un
+        // téléchargement hors-ligne n'y changerait rien. On le distingue.
+        const status = (err as { status?: number } | null)?.status;
+        setSource(status !== undefined && status >= 500 ? 'unreachable' : 'unavailable');
       }
     })();
 

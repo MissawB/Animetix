@@ -236,37 +236,22 @@ class SuwayomiAdapter(SuwayomiPort):
         return chapters
 
     def get_pages(self, suwayomi_chapter_id: str) -> List[str]:
+        # Suwayomi v2.x : l'argument s'appelle `chapterId` (pas `id`) et les URLs
+        # sont exposées par `pages` À LA RACINE du payload — `ChapterType` n'a pas
+        # de champ `pages`. Avec l'ancienne forme, la requête était rejetée à la
+        # validation : 0 page renvoyée, donc un lecteur vide sans erreur visible.
+        # Il n'existe pas de requête de repli : la mutation est le seul moyen
+        # d'obtenir les pages (elle sert aussi le cache si déjà récupérées).
         mut = """
-        mutation FetchPages($id: Int!) {
-          fetchChapterPages(input: { id: $id }) {
-            chapter {
-              id
-              pages
-            }
+        mutation FetchPages($chapterId: Int!) {
+          fetchChapterPages(input: { chapterId: $chapterId }) {
+            pages
           }
         }
         """
-        data = self._query(mut, {"id": int(suwayomi_chapter_id)})
-        pages = (
-            data.get("fetchChapterPages", {}).get("chapter", {}).get("pages", [])
-            if data.get("fetchChapterPages")
-            else []
-        )
-        if not pages:
-            q = """
-            query GetPages($id: Int!) {
-              chapter(id: $id) {
-                pages
-              }
-            }
-            """
-            data_q = self._query(q, {"id": int(suwayomi_chapter_id)})
-            pages = (
-                data_q.get("chapter", {}).get("pages", [])
-                if data_q.get("chapter")
-                else []
-            )
-        return pages
+        data = self._query(mut, {"chapterId": int(suwayomi_chapter_id)})
+        payload = data.get("fetchChapterPages") or {}
+        return payload.get("pages") or []
 
     def get_extensions(self) -> List[Dict[str, Any]]:
         q = """

@@ -125,9 +125,18 @@ class MangaService:
                 )
                 page, _created = self.repo.upsert_page(chapter, idx + 1, proxy_url)
                 pages.append(page)
-            logger.info(
-                f"✅ Synced {len(pages)} pages from Suwayomi for chapter {chapter.number}"
-            )
+            if not pages:
+                # Un « ✅ Synced 0 pages » se lit comme un succès : le lecteur reste
+                # vide sans qu'aucune trace n'indique que la source n'a rien rendu.
+                logger.warning(
+                    f"⚠️ Suwayomi n'a renvoyé aucune page pour le chapitre "
+                    f"{chapter.number} ({chapter.manga.external_id}) — lecteur vide. "
+                    f"Vérifier les erreurs GraphQL / la source du manga."
+                )
+            else:
+                logger.info(
+                    f"✅ Synced {len(pages)} pages from Suwayomi for chapter {chapter.number}"
+                )
             return
 
         # Mock: Création de 5 pages de démo

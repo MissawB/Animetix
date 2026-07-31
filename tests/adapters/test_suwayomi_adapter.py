@@ -125,6 +125,40 @@ def test_manga_service_suwayomi_sync():
     assert "/api/v1/media/Manga/suwayomi-image/?page_url=" in pages[0].image_url
 
 
+def test_suwayomi_adapter_get_pages_reads_payload_root():
+    """Contrat GraphQL réel de Suwayomi v2.3 : ``fetchChapterPages`` prend
+    ``chapterId`` (et non ``id``) et expose ``pages`` à la RACINE du payload —
+    ``ChapterType`` n'a aucun champ ``pages``. Une requête invalide est rejetée
+    à la validation : le lecteur reçoit alors 0 page, sans erreur visible."""
+    adapter = SuwayomiAdapter()
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "data": {
+            "fetchChapterPages": {
+                "pages": [
+                    "/api/v1/manga/50/chapter/1/page/0",
+                    "/api/v1/manga/50/chapter/1/page/1",
+                ]
+            }
+        }
+    }
+
+    with patch("httpx.Client.post", return_value=mock_response) as mock_post:
+        pages = adapter.get_pages("7")
+
+        assert pages == [
+            "/api/v1/manga/50/chapter/1/page/0",
+            "/api/v1/manga/50/chapter/1/page/1",
+        ]
+        payload = mock_post.call_args.kwargs["json"]
+        assert payload["variables"] == {"chapterId": 7}
+        assert "chapterId" in payload["query"]
+        # Une seule requête : pas de repli sur un champ inexistant.
+        mock_post.assert_called_once()
+
+
 def test_suwayomi_adapter_get_extensions():
     adapter = SuwayomiAdapter()
     mock_response = MagicMock()

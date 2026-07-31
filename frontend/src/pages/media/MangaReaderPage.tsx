@@ -7,7 +7,7 @@ import { useReaderStore } from '../../features/manga-reader/stores/useReaderStor
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { apiClient } from '../../utils/apiClient';
 import { mediaService } from '../../features/media/services/mediaService';
-import { ArrowLeft, BookOpen, ChevronRight, Settings, WifiOff } from 'lucide-react';
+import { ArrowLeft, BookOpen, ChevronRight, ServerCrash, Settings, WifiOff } from 'lucide-react';
 import { useChapterPages } from '../../features/manga-reader/offline/useChapterPages';
 
 const MangaReaderPage: React.FC = () => {
@@ -96,7 +96,20 @@ const MangaReaderPage: React.FC = () => {
         </header>
 
         <main className="container mx-auto px-4 py-12">
-          {source === 'unavailable' ? (
+          {source === 'unreachable' ? (
+            <div className="flex flex-col items-center justify-center py-32 text-center gap-4">
+              <ServerCrash className="w-12 h-12 text-red-500" />
+              <p className="text-sm font-black uppercase tracking-widest opacity-60">
+                {t('media.reader.source_unreachable', 'Source manga injoignable')}
+              </p>
+              <p className="text-xs opacity-30 max-w-md">
+                {t(
+                  'media.reader.source_unreachable_hint',
+                  "Le serveur de chapitres (Suwayomi) n'a pas répondu. Vérifie qu'il est démarré, puis recharge la page.",
+                )}
+              </p>
+            </div>
+          ) : source === 'unavailable' ? (
             <div className="flex flex-col items-center justify-center py-32 text-center gap-4">
               <WifiOff className="w-12 h-12 text-red-500" />
               <p className="text-sm font-black uppercase tracking-widest opacity-60">

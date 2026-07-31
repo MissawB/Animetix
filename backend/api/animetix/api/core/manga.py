@@ -2,6 +2,7 @@
 
 import base64
 
+from adapters.persistence.suwayomi_adapter import SuwayomiUnavailableError
 from animetix_project.logging_config import get_logger
 from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
@@ -10,6 +11,7 @@ from rest_framework.views import APIView
 
 from ...containers import Container
 from ...serializers import MangaChapterSerializer
+from .suwayomi import suwayomi_unreachable_response
 
 logger = get_logger("animetix.api")
 
@@ -25,7 +27,10 @@ class MangaChapterListView(APIView):
         self.manga_service = manga_service
 
     def get(self, request, media_id):
-        chapters = self.manga_service.get_chapters(media_id)
+        try:
+            chapters = self.manga_service.get_chapters(media_id)
+        except SuwayomiUnavailableError:
+            return suwayomi_unreachable_response()
         serializer = MangaChapterSerializer(chapters, many=True)
         return Response(serializer.data)
 
@@ -41,9 +46,15 @@ class MangaChapterDetailView(APIView):
         self.manga_service = manga_service
 
     def get(self, request, media_id, chapter_number):
-        chapter = self.manga_service.get_chapter_details(
-            media_id, float(chapter_number)
-        )
+        # Suwayomi injoignable != chapitre inexistant : sans ce garde-fou la vue
+        # renvoyait une 500 opaque, que le lecteur traduisait en « chapitre
+        # indisponible hors-ligne » — message trompeur pour un serveur éteint.
+        try:
+            chapter = self.manga_service.get_chapter_details(
+                media_id, float(chapter_number)
+            )
+        except SuwayomiUnavailableError:
+            return suwayomi_unreachable_response()
 
         if chapter:
             serializer = MangaChapterSerializer(chapter)
