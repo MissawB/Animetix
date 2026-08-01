@@ -123,6 +123,38 @@ def test_push_sends_and_updates_when_ahead(svc):
     assert link.remote_progress == 165
 
 
+def test_push_creates_the_entry_when_the_work_is_absent_from_the_remote_list(svc):
+    """Progression distante à 0 = l'œuvre n'est pas encore dans la liste du
+    tracker. Pousser 40 est alors une *création*, pas un recul : c'est le cas
+    nominal d'une série commencée sur Animetix, et le confondre avec « lecture
+    impossible » (None) ne poussait jamais rien.
+    """
+    service, anilist, user, manga = svc
+    anilist.read_progress.return_value = 0
+    service.suggest(user, "suwayomi:1:809")
+    service.confirm(user, "suwayomi:1:809", "anilist", "30013")
+
+    results = service.push(user, "suwayomi:1:809", 40)
+
+    anilist.write_progress.assert_called_once_with("30013", 40, token="tok")
+    assert results["anilist"]["success"] is True
+    link = MangaTrackerLink.objects.get(user=user, manga=manga, tracker="anilist")
+    assert link.remote_progress == 40
+
+
+def test_push_still_never_lowers_a_zeroed_remote_counter(svc):
+    """Le garde-fou reste entier avec une progression distante à 0 : relire le
+    chapitre 0 (ou repousser la même valeur) n'écrit rien."""
+    service, anilist, user, _manga = svc
+    anilist.read_progress.return_value = 0
+    service.suggest(user, "suwayomi:1:809")
+    service.confirm(user, "suwayomi:1:809", "anilist", "30013")
+
+    service.push(user, "suwayomi:1:809", 0)
+
+    anilist.write_progress.assert_not_called()
+
+
 def test_push_is_skipped_when_the_remote_progress_is_unknown(svc):
     service, anilist, user, _manga = svc
     service.suggest(user, "suwayomi:1:809")

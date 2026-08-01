@@ -51,12 +51,16 @@ def test_read_progress_returns_the_remote_counter():
         assert mock_post.call_args.kwargs["headers"]["Authorization"] == "Bearer tok"
 
 
-def test_read_progress_is_none_when_the_work_is_not_in_the_list():
+def test_read_progress_is_zero_when_the_work_is_not_in_the_list():
+    """Réponse arrivée, `mediaListEntry` nulle = l'œuvre n'est pas encore dans
+    la liste de l'utilisateur. C'est 0, pas « inconnu » : `None` empêcherait le
+    service d'écrire, donc de créer l'entrée distante — le cas le plus courant.
+    `None` reste réservé aux vrais échecs (cf. les tests d'erreur plus bas)."""
     adapter = AniListAdapter()
     payload = {"data": {"Media": {"mediaListEntry": None}}}
 
     with patch("httpx.Client.post", return_value=_response(payload)):
-        assert adapter.read_progress("30013", token="tok") is None
+        assert adapter.read_progress("30013", token="tok") == 0
 
 
 def test_write_progress_posts_the_save_mutation():

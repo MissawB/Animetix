@@ -53,11 +53,19 @@ class MyAnimeListAdapter(TrackerPort):
             if res.status_code != 200:
                 logger.warning("MyAnimeList a répondu %s en lecture", res.status_code)
                 return None
-            status = res.json().get("my_list_status") or {}
+            body = res.json()
+            status = body.get("my_list_status") if isinstance(body, dict) else None
         except Exception as exc:
             logger.warning("MyAnimeList injoignable : %s", exc)
             return None
-        return status.get("num_chapters_read")
+        if not isinstance(status, dict):
+            # La réponse est arrivée sans `my_list_status` : l'œuvre n'est pas
+            # encore dans la liste de l'utilisateur. C'est 0, pas « inconnu » —
+            # `None` est réservé aux vrais échecs (non-200, transport), sans
+            # quoi une série jamais listée ne serait jamais synchronisée.
+            return 0
+        read = status.get("num_chapters_read")
+        return read if isinstance(read, int) else 0
 
     def write_progress(self, remote_id: str, progress: int, token: str) -> bool:
         try:

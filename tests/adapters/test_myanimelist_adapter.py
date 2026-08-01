@@ -40,10 +40,13 @@ def test_read_progress_reads_my_list_status():
         assert mock_get.call_args.kwargs["headers"]["Authorization"] == "Bearer tok"
 
 
-def test_read_progress_is_none_when_absent_from_the_list():
+def test_read_progress_is_zero_when_absent_from_the_list():
+    """Réponse arrivée sans `my_list_status` = l'œuvre n'est pas encore dans la
+    liste : 0, pas « inconnu ». `None` est réservé aux vrais échecs (non-200,
+    transport), sinon une série jamais listée ne serait jamais synchronisée."""
     adapter = MyAnimeListAdapter()
     with patch("httpx.Client.get", return_value=_response({})):
-        assert adapter.read_progress("44347", token="tok") is None
+        assert adapter.read_progress("44347", token="tok") == 0
 
 
 def test_write_progress_patches_num_chapters_read():

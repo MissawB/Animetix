@@ -89,8 +89,21 @@ class AniListAdapter(TrackerPort):
             logger.warning("Invalid remote_id for read_progress: %s", remote_id)
             return None
         data = self._post(PROGRESS_QUERY, {"id": media_id}, token)
-        entry = ((data or {}).get("Media") or {}).get("mediaListEntry")
-        return entry.get("progress") if entry else None
+        if not isinstance(data, dict):
+            # `_post` a déjà renvoyé None : appel en échec, progression inconnue.
+            return None
+        media = data.get("Media")
+        if not isinstance(media, dict):
+            return None
+        entry = media.get("mediaListEntry")
+        if entry is None:
+            # La réponse est arrivée et l'œuvre n'est simplement pas encore dans
+            # la liste de l'utilisateur : c'est 0, pas « inconnu ». Renvoyer None
+            # ici empêcherait toute création d'entrée distante — le cas le plus
+            # courant (nouvelle série commencée sur Animetix).
+            return 0
+        progress = entry.get("progress") if isinstance(entry, dict) else None
+        return progress if isinstance(progress, int) else 0
 
     def write_progress(self, remote_id: str, progress: int, token: str) -> bool:
         try:
