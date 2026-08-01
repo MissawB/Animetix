@@ -87,9 +87,15 @@ def _served_models() -> set[str]:
     if _served_models_cache:
         return _served_models_cache
     probe = brain_engine.health_check()
-    served = {m.get("name") for m in probe.get("models", []) if isinstance(m, dict)} - {
-        None
-    }
+    # Narrowing par isinstance plutôt qu'un `- {None}` après coup : la soustraction
+    # retire bien le None à l'exécution, mais laisse le type à set[Any | None], que
+    # mypy refuse d'assigner au cache set[str].
+    served: set[str] = set()
+    for entry in probe.get("models", []):
+        if isinstance(entry, dict):
+            name = entry.get("name")
+            if isinstance(name, str):
+                served.add(name)
     if served:
         _served_models_cache = served
     return served
