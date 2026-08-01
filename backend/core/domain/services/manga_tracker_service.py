@@ -54,16 +54,26 @@ class MangaTrackerService:
         return created
 
     def confirm(
-        self, user: Any, media_id: str, tracker: str, remote_id: str
+        self,
+        user: Any,
+        media_id: str,
+        tracker: str,
+        remote_id: str,
+        remote_title: str = "",
     ) -> Optional[Any]:
         manga = self.repo.get_manga(media_id)
         adapter = self.adapters.get(tracker)
         if manga is None or adapter is None:
             return None
 
-        title = ""
+        # Le titre fourni par l'appelant fait foi : c'est le seul disponible
+        # quand l'utilisateur *corrige* une proposition (le `remote_id` change,
+        # donc aucune liaison en base ne le porte). Sans lui, la liaison
+        # confirmée s'affichait sans nom d'œuvre — précisément là où la
+        # vérification visuelle compte le plus.
+        title = remote_title or ""
         for link in self.repo.get_links(user, manga):
-            if link.tracker == tracker and link.remote_id == remote_id:
+            if not title and link.tracker == tracker and link.remote_id == remote_id:
                 title = link.remote_title
         link = self.repo.upsert_link(
             user, manga, tracker, remote_id, title, "confirmed"

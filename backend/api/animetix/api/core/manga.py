@@ -526,14 +526,38 @@ class MangaTrackerLinkView(APIView):
         self.tracker_service = tracker_service
 
     def post(self, request, media_id):
+        from ...models import MangaTrackerLink
+
         tracker = request.data.get("tracker")
         remote_id = request.data.get("remote_id")
-        if not tracker or not remote_id:
+        if isinstance(remote_id, int):
+            remote_id = str(remote_id)
+        if not tracker or not isinstance(remote_id, str) or not remote_id.strip():
             return Response(
                 {"error": "tracker and remote_id are required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        link = self.tracker_service.confirm(request.user, media_id, tracker, remote_id)
+        remote_id = remote_id.strip()
+        # Bornes des colonnes : au-delà, l'ORM lèverait (500) au lieu de
+        # refuser proprement une entrée qui ne peut de toute façon désigner
+        # aucune œuvre chez le tracker.
+        fields = MangaTrackerLink._meta
+        if len(remote_id) > fields.get_field("remote_id").max_length:
+            return Response(
+                {"error": "remote_id is too long"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Le titre distant vient du candidat cliqué : sans lui, une correction
+        # manuelle produit une liaison sans nom d'œuvre, donc invérifiable.
+        remote_title = request.data.get("remote_title")
+        remote_title = (
+            remote_title.strip()[: fields.get_field("remote_title").max_length]
+            if isinstance(remote_title, str)
+            else ""
+        )
+        link = self.tracker_service.confirm(
+            request.user, media_id, tracker, remote_id, remote_title
+        )
         if link is None:
             return Response(
                 {"error": "Manga or tracker not found"},

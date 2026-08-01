@@ -76,11 +76,60 @@ def test_link_confirms_and_reads_remote_progress(linked):
     client.get(reverse("api_manga_trackers", kwargs={"media_id": "suwayomi:1:809"}))
 
     url = reverse("api_manga_trackers_link", kwargs={"media_id": "suwayomi:1:809"})
-    res = client.post(url, {"tracker": "anilist", "remote_id": "30013"}, format="json")
+    res = client.post(
+        url,
+        {"tracker": "anilist", "remote_id": "30013", "remote_title": "One Punch-Man"},
+        format="json",
+    )
 
     assert res.status_code == 200
     assert res.data["status"] == "confirmed"
     assert res.data["remote_progress"] == 164
+    # Le titre distant est ce qui permet de vérifier d'un coup d'œil qu'on a
+    # lié la bonne œuvre : une liaison confirmée sans nom est invérifiable.
+    assert res.data["remote_title"] == "One Punch-Man"
+
+
+@pytest.mark.django_db
+def test_link_keeps_the_title_of_a_manually_corrected_candidate(linked):
+    """« Chercher autre chose » : le `remote_id` choisi n'est pas celui de la
+    proposition, donc aucune liaison en base ne porte son titre. Sans le titre
+    transmis par le client, la liaison corrigée s'afficherait sans nom d'œuvre
+    — précisément dans le cas où l'utilisateur vient de corriger."""
+    client, user, manga, _adapter = linked
+    client.get(reverse("api_manga_trackers", kwargs={"media_id": "suwayomi:1:809"}))
+
+    url = reverse("api_manga_trackers_link", kwargs={"media_id": "suwayomi:1:809"})
+    res = client.post(
+        url,
+        {
+            "tracker": "anilist",
+            "remote_id": "99999",
+            "remote_title": "One Punch-Man (Remake)",
+        },
+        format="json",
+    )
+
+    assert res.status_code == 200
+    assert res.data["remote_id"] == "99999"
+    assert res.data["remote_title"] == "One Punch-Man (Remake)"
+    link = MangaTrackerLink.objects.get(user=user, manga=manga, tracker="anilist")
+    assert link.remote_title == "One Punch-Man (Remake)"
+
+
+@pytest.mark.django_db
+def test_link_refuses_a_remote_id_longer_than_the_column(linked):
+    """Au-delà de la borne de `remote_id`, l'ORM lèverait (500) sur une valeur
+    qui ne peut de toute façon désigner aucune œuvre chez le tracker."""
+    client, user, manga, _adapter = linked
+    url = reverse("api_manga_trackers_link", kwargs={"media_id": "suwayomi:1:809"})
+
+    res = client.post(
+        url, {"tracker": "anilist", "remote_id": "9" * 200}, format="json"
+    )
+
+    assert res.status_code == 400
+    assert MangaTrackerLink.objects.filter(user=user, manga=manga).count() == 0
 
 
 @pytest.mark.django_db
