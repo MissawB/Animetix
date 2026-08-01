@@ -18,6 +18,10 @@ on:
         description: 'Deploy brain to prod (animetix-brain) after the checks pass'
         type: boolean
         default: false # opt-in: a brain deploy must be ticked explicitly
+      run_perf:
+        description: 'Run the RAG performance benchmark (calls billed Gemini/OpenAI)'
+        type: boolean
+        default: false # opt-in: don't bill LLM APIs on a plain dispatch
 
 permissions:
   contents: read
@@ -302,6 +306,59 @@ jobs:
         LLM_MODEL_NAME: 'qwen3:0.6b'
       run: python -m pytest -m integration --durations=25
 
+  perf-test:
+    name: RAG Performance Test
+    needs: test
+    # Calls REAL Gemini/OpenAI APIs (cost + flakiness). Opt-in only: runs when
+    # `run_perf` is ticked OR a web deploy (`deploy_to_prod`) is requested — the
+    # web serves the RAG, so its deploy keeps the accuracy gate. A plain manual
+    # dispatch (checks only) or a brain-only deploy no longer bills the LLM APIs;
+    # `deploy-brain` accordingly dropped this job from its `needs`. push/PR skip.
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.run_perf || inputs.deploy_to_prod)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - name: Free Disk Space
+      uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: true
+    - name: Set up Python
+      uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+        cache-dependency-path: |
+          requirements.txt
+          requirements-dev.txt
+    - name: Install Dependencies
+      run: |
+        pip install torch --index-url https://download.pytorch.org/whl/cpu
+        pip install -r requirements.txt -r requirements-dev.txt
+    - name: Run Regression Benchmark
+      env:
+        DATABASE_URL: 'sqlite:///:memory:'
+        REDIS_URL: redis://localhost:6380
+        DJANGO_SECRET_KEY: test-secret-key
+        DJANGO_DEBUG: "True"
+        NEO4J_URI: bolt://localhost:7687
+        NEO4J_USER: neo4j
+        NEO4J_PASSWORD: password
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        BRAIN_API_KEY: ${{ secrets.BRAIN_API_KEY }}
+        ACCURACY_THRESHOLD: "0.50"
+      run: python backend/pipeline/evaluation/regression_benchmark.py --threshold 0.50
+
   frontend-checks:
     name: Frontend Lint & Types
     runs-on: ubuntu-latest
@@ -376,7 +433,7 @@ jobs:
 
   deploy-to-prod:
     name: Deploy to Production
-    needs: [lint, docker-build, test, integration-test, frontend-checks, frontend-test]
+    needs: [lint, docker-build, test, integration-test, perf-test, frontend-checks, frontend-test]
     # Manual trigger only ("Run workflow"), only from the protected main branch,
     # and only when the deploy box is explicitly ticked. Never runs on push/PR.
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy_to_prod && success()
@@ -492,6 +549,9 @@ jobs:
 
   deploy-brain-to-prod:
     name: Deploy Brain to Production
+    # No perf-test in needs: the RAG accuracy benchmark gates the web (which
+    # serves the RAG), not a brain image swap — so a brain deploy no longer runs
+    # (nor bills) it. The web deploy keeps perf-test in its own `needs`.
     needs: [lint, test, integration-test, frontend-checks, frontend-test]
     # Manual trigger only, from main, with the deploy_brain box explicitly ticked.
     # Independent of deploy_to_prod: you can deploy the brain without the web and
