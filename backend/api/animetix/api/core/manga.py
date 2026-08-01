@@ -443,6 +443,148 @@ class TrackerConnectionUnlinkView(APIView):
         return Response({"success": True, "deleted": deleted_count > 0})
 
 
+def _serialize_link(link) -> dict:
+    return {
+        "tracker": link.tracker,
+        "status": link.status,
+        "remote_id": link.remote_id,
+        "remote_title": link.remote_title,
+        "remote_progress": link.remote_progress,
+    }
+
+
+class MangaTrackerLinksView(APIView):
+    """Liaisons de l'œuvre pour l'utilisateur, en proposant celles qui manquent."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self, tracker_service=Provide[Container.core.manga_tracker_service], **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.tracker_service = tracker_service
+
+    def get(self, request, media_id):
+        from ...models import MediaItem
+
+        if not MediaItem.objects.filter(
+            external_id=media_id, media_type="Manga"
+        ).exists():
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        # Ne cherche que pour les trackers connectés encore sans liaison ; les
+        # propositions déjà en base ne sont pas re-cherchées.
+        self.tracker_service.suggest(request.user, media_id)
+        links = self.tracker_service.list_links(request.user, media_id)
+        return Response(
+            {
+                "links": [_serialize_link(link) for link in links],
+                # Indispensable pour que l'UI distingue « aucun tracker connecté »
+                # (on n'affiche rien) de « connecté mais aucune correspondance
+                # trouvée » (on affiche l'invitation à chercher manuellement).
+                # Sans ce champ, les deux cas donnent `links: []`.
+                "connected": self.tracker_service.connected_trackers(request.user),
+            }
+        )
+
+
+class MangaTrackerSearchView(APIView):
+    """Recherche manuelle d'une correspondance chez un tracker donné."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self, tracker_service=Provide[Container.core.manga_tracker_service], **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.tracker_service = tracker_service
+
+    def post(self, request, media_id):
+        tracker = request.data.get("tracker")
+        query = request.data.get("query")
+        if not tracker or not query:
+            return Response(
+                {"error": "tracker and query are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        results = self.tracker_service.search(request.user, tracker, query)
+        return Response({"results": results})
+
+
+class MangaTrackerLinkView(APIView):
+    """Confirme une liaison (proposée ou choisie manuellement)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self, tracker_service=Provide[Container.core.manga_tracker_service], **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.tracker_service = tracker_service
+
+    def post(self, request, media_id):
+        tracker = request.data.get("tracker")
+        remote_id = request.data.get("remote_id")
+        if not tracker or not remote_id:
+            return Response(
+                {"error": "tracker and remote_id are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        link = self.tracker_service.confirm(request.user, media_id, tracker, remote_id)
+        if link is None:
+            return Response(
+                {"error": "Manga or tracker not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(_serialize_link(link))
+
+
+class MangaTrackerUnlinkView(APIView):
+    """Supprime une liaison confirmée ou proposée."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self, tracker_service=Provide[Container.core.manga_tracker_service], **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.tracker_service = tracker_service
+
+    def delete(self, request, media_id, tracker):
+        success = self.tracker_service.unlink(request.user, media_id, tracker)
+        return Response({"success": success})
+
+
+class TrackerLinkListView(APIView):
+    """Toutes les liaisons de l'utilisateur, tous mangas confondus (profil)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self, tracker_service=Provide[Container.core.manga_tracker_service], **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.tracker_service = tracker_service
+
+    def get(self, request):
+        links = self.tracker_service.list_all_links(request.user)
+        return Response(
+            [
+                {
+                    **_serialize_link(link),
+                    "manga_id": link.manga.external_id,
+                    "manga_title": link.manga.title,
+                }
+                for link in links
+            ]
+        )
+
+
 class MangaChapterSyncView(APIView):
     """Synchronizes manga progress to linked third-party trackers (AniList, MyAnimeList)."""
 

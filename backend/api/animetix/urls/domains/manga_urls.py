@@ -40,6 +40,26 @@ urlpatterns = [
         name="api_manga_chapter_progress",
     ),
     path(
+        "media/Manga/<str:media_id>/trackers/",
+        api_views.MangaTrackerLinksView.as_view(),
+        name="api_manga_trackers",
+    ),
+    path(
+        "media/Manga/<str:media_id>/trackers/search/",
+        api_views.MangaTrackerSearchView.as_view(),
+        name="api_manga_trackers_search",
+    ),
+    path(
+        "media/Manga/<str:media_id>/trackers/link/",
+        api_views.MangaTrackerLinkView.as_view(),
+        name="api_manga_trackers_link",
+    ),
+    path(
+        "media/Manga/<str:media_id>/trackers/<str:tracker>/",
+        api_views.MangaTrackerUnlinkView.as_view(),
+        name="api_manga_trackers_unlink",
+    ),
+    path(
         "media/<str:media_type>/<str:item_id>/",
         api_views.MediaDetailView.as_view(),
         name="api_media_detail",

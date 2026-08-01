@@ -62,6 +62,11 @@ urlpatterns = [
         api_views.TrackerConnectionUnlinkView.as_view(),
         name="api_tracker_unlink",
     ),
+    path(
+        "profile/trackers/links/",
+        api_views.TrackerLinkListView.as_view(),
+        name="api_tracker_links",
+    ),
     path("config/", api_views.ConfigView.as_view(), name="api_config"),
     path("auth/login/", api_views.LoginView.as_view(), name="api_auth_login"),
     path("auth/logout/", api_views.LogoutView.as_view(), name="api_auth_logout"),
