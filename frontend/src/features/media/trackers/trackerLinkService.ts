@@ -44,14 +44,20 @@ export const searchTracker = (
     body: JSON.stringify({ tracker, query }),
   });
 
+/** `remoteTitle` est le nom de l'œuvre distante tel qu'il vient d'être montré
+ *  à l'utilisateur (candidat de recherche ou proposition). Le backend ne peut
+ *  pas le retrouver seul quand l'utilisateur *corrige* une proposition : le
+ *  `remote_id` change, donc aucune liaison en base ne le porte, et la liaison
+ *  confirmée s'afficherait sans nom d'œuvre. */
 export const linkTracker = (
   mediaId: string,
   tracker: TrackerName,
   remoteId: string,
+  remoteTitle: string,
 ): Promise<TrackerLink> =>
   apiClient(`${base(mediaId)}/link/`, {
     method: 'POST',
-    body: JSON.stringify({ tracker, remote_id: remoteId }),
+    body: JSON.stringify({ tracker, remote_id: remoteId, remote_title: remoteTitle }),
   });
 
 export const unlinkTracker = (

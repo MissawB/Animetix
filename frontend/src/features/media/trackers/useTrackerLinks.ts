@@ -28,8 +28,15 @@ export function useTrackerLinks(mediaId: string, enabled: boolean) {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: trackerLinksKey(mediaId) });
 
   const confirm = useMutation({
-    mutationFn: ({ tracker, remoteId }: { tracker: TrackerName; remoteId: string }) =>
-      linkTracker(mediaId, tracker, remoteId),
+    mutationFn: ({
+      tracker,
+      remoteId,
+      remoteTitle,
+    }: {
+      tracker: TrackerName;
+      remoteId: string;
+      remoteTitle: string;
+    }) => linkTracker(mediaId, tracker, remoteId, remoteTitle),
     onSuccess: invalidate,
   });
 

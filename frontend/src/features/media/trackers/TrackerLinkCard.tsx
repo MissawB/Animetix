@@ -36,7 +36,15 @@ export const TrackerLinkCard: React.FC<{ mediaId: string }> = ({ mediaId }) => {
   // et un bouton « Délier » pour un compte qui n'existe plus.
   if (connected.length === 0) return null;
 
-  const unmatched = connected.filter((tracker) => !links.some((link) => link.tracker === tracker));
+  // Même raison, tracker par tracker : avec deux comptes connectés dont un est
+  // déconnecté ensuite, ses liaisons restent en base (voulu — elles redeviennent
+  // actives à la reconnexion) mais ne doivent plus s'afficher ici, sans quoi la
+  // fiche œuvre montre une progression et un bouton « Délier » pour un compte
+  // que le panneau profil, lui, n'affiche plus.
+  const visibleLinks = links.filter((link) => connected.includes(link.tracker));
+  const unmatched = connected.filter(
+    (tracker) => !visibleLinks.some((link) => link.tracker === tracker),
+  );
 
   const openSearch = (tracker: TrackerName) => {
     setSearchTracker(tracker);
@@ -54,7 +62,13 @@ export const TrackerLinkCard: React.FC<{ mediaId: string }> = ({ mediaId }) => {
 
   const handlePick = async (candidate: TrackerCandidate) => {
     if (!searchTracker) return;
-    await confirm.mutateAsync({ tracker: searchTracker, remoteId: candidate.remote_id });
+    // Le titre du candidat part avec la confirmation : c'est le seul moment où
+    // on l'a, et sans lui la liaison corrigée s'affiche sans nom d'œuvre.
+    await confirm.mutateAsync({
+      tracker: searchTracker,
+      remoteId: candidate.remote_id,
+      remoteTitle: candidate.title,
+    });
     closeSearch();
   };
 
@@ -67,7 +81,7 @@ export const TrackerLinkCard: React.FC<{ mediaId: string }> = ({ mediaId }) => {
       </h3>
 
       <div className="space-y-2">
-        {links.map((link) => (
+        {visibleLinks.map((link) => (
           <div
             key={link.tracker}
             className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-gray-900/50 p-4 transition-colors hover:border-white/10"
@@ -86,7 +100,13 @@ export const TrackerLinkCard: React.FC<{ mediaId: string }> = ({ mediaId }) => {
             {link.status === 'suggested' ? (
               <Button
                 size="sm"
-                onClick={() => confirm.mutate({ tracker: link.tracker, remoteId: link.remote_id })}
+                onClick={() =>
+                  confirm.mutate({
+                    tracker: link.tracker,
+                    remoteId: link.remote_id,
+                    remoteTitle: link.remote_title,
+                  })
+                }
               >
                 Lier
               </Button>
@@ -103,9 +123,19 @@ export const TrackerLinkCard: React.FC<{ mediaId: string }> = ({ mediaId }) => {
             key={tracker}
             className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-gray-900/50 p-4 transition-colors hover:border-white/10"
           >
-            <span className="text-xs uppercase tracking-widest opacity-60">
-              {TRACKER_LABELS[tracker]} : aucune correspondance
-            </span>
+            {/* Un seul état pour « rien trouvé », pas trois : le port ne
+                distingue pas un tracker injoignable ni un jeton expiré d'une
+                recherche vide (les adaptateurs renvoient `[]` dans les trois
+                cas). L'indice sur la connexion donne au moins une sortie à
+                l'utilisateur dont le jeton a expiré. */}
+            <div className="min-w-0">
+              <span className="text-xs uppercase tracking-widest opacity-60">
+                {TRACKER_LABELS[tracker]} : aucune correspondance
+              </span>
+              <p className="mt-1 text-[11px] leading-snug opacity-40">
+                Si vous en attendiez une, vérifiez la connexion de ce compte dans votre profil.
+              </p>
+            </div>
             <Button size="sm" variant="outline" onClick={() => openSearch(tracker)}>
               <Search className="h-4 w-4" aria-hidden="true" />
               Chercher autre chose

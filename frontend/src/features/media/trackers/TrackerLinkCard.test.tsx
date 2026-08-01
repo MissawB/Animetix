@@ -50,7 +50,9 @@ describe('TrackerLinkCard', () => {
 
     await screen.findByText(/One Punch-Man/);
     await userEvent.click(screen.getByRole('button', { name: /lier/i }));
-    await waitFor(() => expect(link).toHaveBeenCalledWith('m1', 'anilist', '30013'));
+    await waitFor(() =>
+      expect(link).toHaveBeenCalledWith('m1', 'anilist', '30013', 'One Punch-Man'),
+    );
   });
 
   it('shows the remote progress once confirmed', async () => {
@@ -124,6 +126,63 @@ describe('TrackerLinkCard', () => {
     const candidate = await screen.findByText(/One Punch-Man \(verified\)/);
     await userEvent.click(candidate);
 
-    await waitFor(() => expect(link).toHaveBeenCalledWith('m1', 'anilist', '99999'));
+    // Le titre du candidat part avec la confirmation : c'est le seul moment où
+    // le frontend l'a, et sans lui la liaison corrigée s'affiche sans nom.
+    await waitFor(() =>
+      expect(link).toHaveBeenCalledWith('m1', 'anilist', '99999', 'One Punch-Man (verified)'),
+    );
+  });
+
+  it('hides a link whose tracker account is no longer connected', async () => {
+    // Les liaisons survivent à une déconnexion côté backend (elles redeviennent
+    // actives à la reconnexion) : c'est l'affichage qui doit les filtrer, sinon
+    // la fiche œuvre contredit le panneau profil qui, lui, n'affiche plus rien.
+    vi.spyOn(svc, 'fetchTrackerLinks').mockResolvedValue({
+      links: [
+        {
+          tracker: 'anilist',
+          status: 'confirmed',
+          remote_id: '30013',
+          remote_title: 'One Punch-Man',
+          remote_progress: 164,
+        },
+        {
+          tracker: 'myanimelist',
+          status: 'confirmed',
+          remote_id: '44347',
+          remote_title: 'Orphan MAL link',
+          remote_progress: 12,
+        },
+      ],
+      connected: ['anilist'],
+    });
+
+    wrap(<TrackerLinkCard mediaId="m1" />);
+
+    expect(await screen.findByText(/One Punch-Man/)).toBeInTheDocument();
+    expect(screen.queryByText(/Orphan MAL link/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/12 chapitres/)).not.toBeInTheDocument();
+    // Un seul « Délier » : celui du compte encore connecté.
+    expect(screen.getAllByRole('button', { name: /délier/i })).toHaveLength(1);
+    // Et MyAnimeList n'apparaît pas non plus en « aucune correspondance » :
+    // le compte n'est plus connecté du tout.
+    expect(screen.queryByText(/MyAnimeList/)).not.toBeInTheDocument();
+  });
+
+  it('points to the profile when nothing matched, expired token included', async () => {
+    // Décision produit : un seul état « aucune correspondance » plutôt que des
+    // états « injoignable » / « connexion expirée » que le port ne sait pas
+    // distinguer. L'indice donne une sortie à l'utilisateur au jeton expiré.
+    vi.spyOn(svc, 'fetchTrackerLinks').mockResolvedValue({
+      links: [],
+      connected: ['anilist'],
+    });
+
+    wrap(<TrackerLinkCard mediaId="m1" />);
+
+    expect(await screen.findByText(/aucune correspondance/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/vérifiez la connexion de ce compte dans votre profil/i),
+    ).toBeInTheDocument();
   });
 });
