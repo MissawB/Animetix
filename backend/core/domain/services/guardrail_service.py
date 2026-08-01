@@ -37,11 +37,17 @@ class GuardrailService:
         neo4j_manager=None,
         safety_engine: Optional[InferencePort] = None,
         config_port: Optional[ConfigPort] = None,
+        moderation_engine: Optional[InferencePort] = None,
     ):
         self.inference_engine = inference_engine
         self.prompt_manager = prompt_manager
         self.neo4j = neo4j_manager
         self.safety_engine = safety_engine or inference_engine
+        # Moteur qui EXÉCUTE les prompts de modération. Séparé du moteur de synthèse :
+        # une classification à sortie courte n'a pas besoin du 7B, et l'y faire tourner
+        # mettait deux appels au gros modèle sur le chemin critique du chat. Par défaut
+        # le moteur principal, donc rien ne change là où il n'est pas fourni.
+        self.moderation_engine = moderation_engine or inference_engine
         self.config = config_port or get_config()
         self.enabled_categories = [
             "SPOILER",
@@ -348,7 +354,25 @@ class GuardrailService:
                     prompt_key, text=text, categories=", ".join(categories)
                 )
 
-            inference_res = self.inference_engine.generate(prompt, system_prompt=system)
+            try:
+                inference_res = self.moderation_engine.generate(
+                    prompt, system_prompt=system
+                )
+            except Exception as moderation_error:
+                # Le petit modèle peut manquer là où le principal répond : le web se
+                # déploie sans l'image brain, donc un tag de modération pas encore
+                # baké renvoie 400. On dégrade en lenteur, jamais en absence de
+                # contrôle.
+                if self.moderation_engine is self.inference_engine:
+                    raise
+                logger.warning(
+                    "⚠️ [Guardrail] Moderation engine failed (%s); falling back to the "
+                    "main inference engine.",
+                    moderation_error,
+                )
+                inference_res = self.inference_engine.generate(
+                    prompt, system_prompt=system
+                )
             response = inference_res.text
 
             if "```json" in response:

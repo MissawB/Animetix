@@ -263,6 +263,7 @@ class AgenticContainer(containers.DeclarativeContainer):
         neo4j_manager=persistence.graph_persistence_port,
         safety_engine=inference.local_guardrail_adapter,
         config_port=infrastructure.config_port,
+        moderation_engine=inference.brain_guardrail_adapter,
     )
 
     agentic_rag = providers.Singleton(
