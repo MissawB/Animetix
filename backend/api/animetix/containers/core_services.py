@@ -551,6 +551,15 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         suwayomi_adapter=persistence.suwayomi_adapter,
     )
 
+    manga_tracker_service = providers.Singleton(
+        LazyClass("core.domain.services.manga_tracker_service", "MangaTrackerService"),
+        repository=persistence.tracker_repository_adapter,
+        adapters=providers.Dict(
+            anilist=persistence.anilist_adapter,
+            myanimelist=persistence.myanimelist_adapter,
+        ),
+    )
+
     voice_ingestion_service = providers.Singleton(
         LazyClass(
             "core.domain.services.voice_ingestion_service", "VoiceIngestionService"
