@@ -125,6 +125,76 @@ def test_manga_service_suwayomi_sync():
     assert "/api/v1/media/Manga/suwayomi-image/?page_url=" in pages[0].image_url
 
 
+def test_suwayomi_adapter_get_pages_reads_payload_root():
+    """Contrat GraphQL réel de Suwayomi v2.3 : ``fetchChapterPages`` prend
+    ``chapterId`` (et non ``id``) et expose ``pages`` à la RACINE du payload —
+    ``ChapterType`` n'a aucun champ ``pages``. Une requête invalide est rejetée
+    à la validation : le lecteur reçoit alors 0 page, sans erreur visible."""
+    adapter = SuwayomiAdapter()
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "data": {
+            "fetchChapterPages": {
+                "pages": [
+                    "/api/v1/manga/50/chapter/1/page/0",
+                    "/api/v1/manga/50/chapter/1/page/1",
+                ]
+            }
+        }
+    }
+
+    with patch("httpx.Client.post", return_value=mock_response) as mock_post:
+        pages = adapter.get_pages("7")
+
+        assert pages == [
+            "/api/v1/manga/50/chapter/1/page/0",
+            "/api/v1/manga/50/chapter/1/page/1",
+        ]
+        payload = mock_post.call_args.kwargs["json"]
+        assert payload["variables"] == {"chapterId": 7}
+        assert "chapterId" in payload["query"]
+        # Une seule requête : pas de repli sur un champ inexistant.
+        mock_post.assert_called_once()
+
+
+def test_suwayomi_adapter_update_chapters_read_state_contract():
+    """Contrat GraphQL v2.3 : updateChapters(input:{ids, patch:{isRead,lastPageRead}}).
+    Les ids sont des Int, et `lastPageRead` n'est envoyé que s'il est fourni."""
+    adapter = SuwayomiAdapter()
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "data": {"updateChapters": {"chapters": [{"id": 7, "isRead": True}]}}
+    }
+
+    with patch("httpx.Client.post", return_value=mock_response) as mock_post:
+        ok = adapter.update_chapters_read_state(["7"], is_read=True, last_page_read=11)
+
+        assert ok is True
+        payload = mock_post.call_args.kwargs["json"]
+        assert payload["variables"]["ids"] == [7]
+        assert payload["variables"]["patch"] == {"isRead": True, "lastPageRead": 11}
+        assert "updateChapters" in payload["query"]
+        mock_post.assert_called_once()
+
+
+def test_suwayomi_adapter_update_chapters_omits_page_when_absent():
+    adapter = SuwayomiAdapter()
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"data": {"updateChapters": {"chapters": []}}}
+
+    with patch("httpx.Client.post", return_value=mock_response) as mock_post:
+        adapter.update_chapters_read_state(["7", "8"], is_read=False)
+
+        payload = mock_post.call_args.kwargs["json"]
+        assert payload["variables"]["ids"] == [7, 8]
+        assert payload["variables"]["patch"] == {"isRead": False}
+
+
 def test_suwayomi_adapter_get_extensions():
     adapter = SuwayomiAdapter()
     mock_response = MagicMock()

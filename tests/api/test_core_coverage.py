@@ -13,6 +13,7 @@ import base64
 from unittest.mock import MagicMock, patch
 
 import pytest
+from adapters.persistence.suwayomi_adapter import SuwayomiUnavailableError
 from animetix.api.core import (
     ConfigView,
     CurrentUserView,
@@ -487,6 +488,42 @@ def test_manga_chapter_detail_not_found(factory):
     finally:
         real_container.core.manga_service.reset_last_overriding()
     assert response.status_code == 404
+
+
+def test_manga_chapter_detail_suwayomi_unreachable(factory):
+    """Suwayomi éteint => 503 explicite, pas une 500 opaque : le lecteur doit
+    pouvoir distinguer « serveur manga injoignable » de « chapitre absent »."""
+    request = factory.get("/media/Manga/m1/chapters/1/")
+    mock_manga_service = MagicMock()
+    mock_manga_service.get_chapter_details.side_effect = SuwayomiUnavailableError(
+        "connection refused"
+    )
+    real_container = get_container()
+    real_container.core.manga_service.override(mock_manga_service)
+    try:
+        response = _drive(
+            MangaChapterDetailView, request, media_id="m1", chapter_number="1"
+        )
+    finally:
+        real_container.core.manga_service.reset_last_overriding()
+    assert response.status_code == 503
+    assert response.data["error"] == "suwayomi_unreachable"
+
+
+def test_manga_chapter_list_suwayomi_unreachable(factory):
+    request = factory.get("/media/Manga/m1/chapters/")
+    mock_manga_service = MagicMock()
+    mock_manga_service.get_chapters.side_effect = SuwayomiUnavailableError(
+        "connection refused"
+    )
+    real_container = get_container()
+    real_container.core.manga_service.override(mock_manga_service)
+    try:
+        response = _drive(MangaChapterListView, request, media_id="m1")
+    finally:
+        real_container.core.manga_service.reset_last_overriding()
+    assert response.status_code == 503
+    assert response.data["error"] == "suwayomi_unreachable"
 
 
 # --------------------------------------------------------------------------- #

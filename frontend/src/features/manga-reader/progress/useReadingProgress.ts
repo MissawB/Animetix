@@ -1,0 +1,180 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useReaderStore } from '../stores/useReaderStore';
+import { putChapterProgress } from './progressService';
+import { mangaFavoritesKey, mangaProgressKey } from './useMangaProgress';
+
+const DEBOUNCE_MS = 1500;
+
+export type SaveState = 'idle' | 'saving' | 'saved' | 'error';
+
+interface Options {
+  mediaId: string | undefined;
+  chapterNumber: string | undefined;
+  enabled: boolean;
+}
+
+interface PendingWrite {
+  mediaId: string;
+  chapterNumber: string;
+  last_page_read: number;
+  is_read: boolean;
+}
+
+/** Écrit la progression pendant la lecture. Debouncé, avec flush garanti à la
+ *  sortie : sans ça, fermer l'onglet perdrait la dernière page lue.
+ *
+ *  `enabled` doit rester faux tant que la reprise n'est pas résolue (voir
+ *  `useResumeReadingPosition`). Sinon le simple montage du lecteur armerait une
+ *  écriture `{ last_page_read: 0 }` — `currentPageIndex` vaut 0 par défaut —
+ *  qui partirait 1,5 s plus tard sans la moindre action de l'utilisateur, ou
+ *  immédiatement si l'onglet est fermé entre-temps. */
+export function useReadingProgress({ mediaId, chapterNumber, enabled }: Options) {
+  const currentPageIndex = useReaderStore((s) => s.currentPageIndex);
+  const pageCount = useReaderStore((s) => s.pages.length);
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const queryClient = useQueryClient();
+
+  // The chapter identity travels with the pending write itself, so `flush`
+  // never needs to read props/state that could be stale by the time it runs.
+  const pending = useRef<PendingWrite | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Chapitre pour lequel la position d'ouverture a déjà été observée.
+  const observedChapter = useRef<string | null>(null);
+  // Média écrit depuis la dernière relecture, s'il y en a un. Porte deux
+  // informations à la fois — « une écriture a eu lieu » et « pour quel média »
+  // — parce que la sortie doit pouvoir relire alors que `pending` a déjà été
+  // vidé par le debounce, et que le lecteur change de chapitre sans démonter.
+  const dirtyMediaId = useRef<string | null>(null);
+
+  // Une écriture ne suffit pas : sans invalidation, les écrans qui relisent
+  // /progress/ (pastilles et bandeau « Reprendre » de la fiche œuvre et de la
+  // popup Tachidesk) et la bibliothèque (compteurs servis par la liste des
+  // favoris, autre clé) restent sur la copie persistée en IndexedDB — jusqu'à
+  // 24 h. C'est ce que la spec appelle « invalidée après chaque écriture ».
+  const revalidate = useCallback(
+    (id: string) => {
+      dirtyMediaId.current = null;
+      void queryClient.invalidateQueries({ queryKey: mangaProgressKey(id) });
+      void queryClient.invalidateQueries({ queryKey: mangaFavoritesKey });
+    },
+    [queryClient],
+  );
+
+  // Stable across renders (`revalidate` is itself stable): it only ever reads
+  // ref.current at call time, so re-defining it per render would gain nothing
+  // but would force the effects below to resubscribe/reschedule needlessly.
+  //
+  // `revalidateAfter` porte le seul arbitrage discutable de ce hook : QUAND
+  // relire. Invalider à chaque écriture émettrait un GET /progress/ tous les
+  // 1,5 s pendant toute la lecture, pour une donnée que personne ne regarde
+  // (le lecteur est une route plein écran). On relit donc uniquement aux
+  // moments où la progression redevient visible ailleurs : le chapitre passe
+  // à l'état lu, ou on quitte le chapitre / le lecteur (`flushOnExit`). Les
+  // écritures intermédiaires de tour de page ne déclenchent rien.
+  const flush = useCallback(
+    (revalidateAfter: boolean) => {
+      const payload = pending.current;
+      if (!payload) {
+        // Rien en attente ne veut pas dire rien à relire : le cas courant est
+        // justement celui où l'écriture debouncée est déjà partie pendant la
+        // lecture, et où l'on quitte le chapitre juste après.
+        if (revalidateAfter && dirtyMediaId.current) revalidate(dirtyMediaId.current);
+        return;
+      }
+      pending.current = null;
+      const { mediaId: id, chapterNumber: chapter, ...body } = payload;
+      setSaveState('saving');
+      putChapterProgress(id, chapter, body)
+        .then(() => {
+          setSaveState('saved');
+          dirtyMediaId.current = id;
+          if (revalidateAfter || body.is_read) revalidate(id);
+        })
+        .catch(() => setSaveState('error'));
+    },
+    [revalidate],
+  );
+
+  // `flush` prend un booléen, or les écouteurs d'évènement reçoivent l'objet
+  // Event en premier argument — d'où ce wrapper, qui ne doit jamais être
+  // remplacé par `flush` directement.
+  const flushOnExit = useCallback(() => flush(true), [flush]);
+
+  // Debounces the write while pages are turned: only records the *latest*
+  // page and (re)schedules the timer. Cleanup only clears the timeout — it
+  // must NOT flush here, since this effect reruns on every page change and
+  // an unconditional flush-on-cleanup would defeat the debounce entirely.
+  useEffect(() => {
+    if (!enabled || !mediaId || !chapterNumber || pageCount === 0) return;
+
+    // Ouvrir un chapitre n'est pas le lire : la première position observée
+    // pour un chapitre sert de ligne de base, elle n'est jamais écrite. Sans
+    // ça, le seul montage du lecteur émettrait `{last_page_read: 0}` — et
+    // avec lui `is_read: false` sur un chapitre pourtant terminé.
+    const key = `${mediaId}:${chapterNumber}`;
+    if (observedChapter.current !== key) {
+      observedChapter.current = key;
+      return;
+    }
+
+    pending.current = {
+      mediaId,
+      chapterNumber,
+      last_page_read: currentPageIndex,
+      is_read: currentPageIndex >= pageCount - 1,
+    };
+
+    if (timer.current) clearTimeout(timer.current);
+    // `false` : un tour de page ne relit pas /progress/ (voir `flush`).
+    timer.current = setTimeout(() => flush(false), DEBOUNCE_MS);
+
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [enabled, mediaId, chapterNumber, currentPageIndex, pageCount, flush]);
+
+  // Flushes on tab hide / real unmount. Deliberately scoped to
+  // [enabled, mediaId, chapterNumber] only (not currentPageIndex) so the
+  // listeners — and the flush-on-cleanup — persist across page turns and
+  // only fire on an actual exit or chapter change. Without this split,
+  // closing the tab would lose the last page read.
+  useEffect(() => {
+    if (!enabled || !mediaId || !chapterNumber) return;
+
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') flushOnExit();
+    };
+    window.addEventListener('pagehide', flushOnExit);
+    document.addEventListener('visibilitychange', onHide);
+
+    return () => {
+      window.removeEventListener('pagehide', flushOnExit);
+      document.removeEventListener('visibilitychange', onHide);
+      flushOnExit();
+    };
+  }, [enabled, mediaId, chapterNumber, flushOnExit]);
+
+  // Marque le chapitre courant comme terminé tout de suite, par le même
+  // chemin que la lecture normale (PUT .../progress/). C'est ce qu'utilise
+  // « Chapitre Suivant » : le serveur pousse lui-même vers AniList/MAL à la
+  // transition, donc un appel de synchronisation séparé ferait une deuxième
+  // poussée pour le même chapitre.
+  const markCurrentChapterRead = useCallback(() => {
+    if (!enabled || !mediaId || !chapterNumber) return;
+    // La page atteinte est celle du dernier write en attente s'il y en a un,
+    // sinon la position courante lue directement dans le store (lire l'état
+    // au moment de l'appel garde ce callback stable entre les tours de page).
+    const lastPage = pending.current?.last_page_read ?? useReaderStore.getState().currentPageIndex;
+    pending.current = { mediaId, chapterNumber, last_page_read: lastPage, is_read: true };
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+    // `is_read: true` déclencherait la relecture de toute façon ; explicite ici
+    // parce que c'est justement une transition de chapitre.
+    flush(true);
+  }, [enabled, mediaId, chapterNumber, flush]);
+
+  return { saveState, markCurrentChapterRead };
+}

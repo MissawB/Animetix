@@ -35,10 +35,9 @@ describe('useChapterPages', () => {
     await waitFor(() => expect(result.current.source).toBe('network'));
     expect(result.current.pages[0]).toEqual({ url: 'http://h/p0.jpg', index: 0 });
     // The hook owns error presentation, so it must suppress apiClient's global toast.
-    expect(apiMod.apiClient).toHaveBeenCalledWith(
-      '/api/v1/media/Manga/m1/chapters/3/',
-      { skipToast: true },
-    );
+    expect(apiMod.apiClient).toHaveBeenCalledWith('/api/v1/media/Manga/m1/chapters/3/', {
+      skipToast: true,
+    });
   });
 
   it('reports unavailable when offline and not downloaded', async () => {
@@ -47,5 +46,24 @@ describe('useChapterPages', () => {
     const { result } = renderHook(() => useChapterPages('m1', '3'));
     await waitFor(() => expect(result.current.source).toBe('unavailable'));
     expect(result.current.pages).toHaveLength(0);
+  });
+
+  it('reports unreachable (not "offline") when the server answers 5xx', async () => {
+    // Suwayomi éteint => 503 : suggérer un téléchargement hors-ligne n'a aucun
+    // sens, le problème est côté serveur et l'utilisateur doit le savoir.
+    vi.spyOn(lib, 'isChapterDownloaded').mockResolvedValue(false);
+    const err = Object.assign(new Error('Service Unavailable'), { status: 503 });
+    vi.spyOn(apiMod, 'apiClient').mockRejectedValue(err);
+    const { result } = renderHook(() => useChapterPages('m1', '3'));
+    await waitFor(() => expect(result.current.source).toBe('unreachable'));
+    expect(result.current.pages).toHaveLength(0);
+  });
+
+  it('keeps "unavailable" for a 404 (chapitre inexistant)', async () => {
+    vi.spyOn(lib, 'isChapterDownloaded').mockResolvedValue(false);
+    const err = Object.assign(new Error('Not Found'), { status: 404 });
+    vi.spyOn(apiMod, 'apiClient').mockRejectedValue(err);
+    const { result } = renderHook(() => useChapterPages('m1', '3'));
+    await waitFor(() => expect(result.current.source).toBe('unavailable'));
   });
 });

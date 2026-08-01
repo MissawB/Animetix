@@ -197,3 +197,77 @@ def test_favorite_manga_serializer(db):
     assert data["unread_chapters_count"] == 2  # Chapter 2 and 3 are > 1.0
     assert data["manga"]["id"] == "serializer_manga"
     assert data["manga"]["title"] == "Test Manga"
+
+
+@pytest.mark.django_db
+def test_favorite_list_exposes_read_counts(authenticated_client):
+    from animetix.models import MangaChapter, MangaReadingProgress
+
+    user = User.objects.get(username="testuser")
+    manga = MediaItem.objects.create(
+        external_id="suwayomi:1:809", media_type="Manga", title="OPM"
+    )
+    FavoriteManga.objects.create(user=user, manga=manga)
+    c1 = MangaChapter.objects.create(manga=manga, number=1.0)
+    MangaChapter.objects.create(manga=manga, number=2.0)
+    MangaReadingProgress.objects.create(user=user, chapter=c1, is_read=True)
+
+    res = authenticated_client.get(reverse("api_favorite_manga_list"))
+
+    assert res.status_code == 200
+    row = next(r for r in res.data if r["manga"]["id"] == "suwayomi:1:809")
+    assert row["read_count"] == 1
+    assert row["total_chapters"] == 2
+    assert row["has_started"] is True
+
+
+@pytest.mark.django_db
+def test_favorite_list_flags_a_manga_started_mid_first_chapter(authenticated_client):
+    """`read_count` seul ne dit pas si la lecture a commencé.
+
+    Quelqu'un au milieu du chapitre 1 n'a terminé aucun chapitre : la carte de
+    bibliothèque doit quand même proposer « Reprendre », comme le font la fiche
+    œuvre et la popup Tachidesk pour ce même état.
+    """
+    from animetix.models import MangaChapter, MangaReadingProgress
+
+    user = User.objects.get(username="testuser")
+    started = MediaItem.objects.create(
+        external_id="suwayomi:1:1", media_type="Manga", title="Started"
+    )
+    untouched = MediaItem.objects.create(
+        external_id="suwayomi:1:2", media_type="Manga", title="Untouched"
+    )
+    FavoriteManga.objects.create(user=user, manga=started)
+    FavoriteManga.objects.create(user=user, manga=untouched)
+    first = MangaChapter.objects.create(manga=started, number=1.0)
+    MangaChapter.objects.create(manga=untouched, number=1.0)
+    MangaReadingProgress.objects.create(
+        user=user, chapter=first, last_page_read=11, is_read=False
+    )
+
+    res = authenticated_client.get(reverse("api_favorite_manga_list"))
+
+    rows = {r["manga"]["id"]: r for r in res.data}
+    assert rows["suwayomi:1:1"]["read_count"] == 0
+    assert rows["suwayomi:1:1"]["has_started"] is True
+    assert rows["suwayomi:1:2"]["has_started"] is False
+
+
+@pytest.mark.django_db
+def test_favorite_serializer_has_started_without_annotation(db):
+    """Le serializer doit rendre le même verdict hors requête annotée."""
+    from animetix.models import MangaChapter, MangaReadingProgress
+    from animetix.serializers import FavoriteMangaSerializer
+
+    user = User.objects.create_user(username="solo_reader", password="pw")
+    manga = MediaItem.objects.create(
+        external_id="suwayomi:1:3", media_type="Manga", title="Solo"
+    )
+    fav = FavoriteManga.objects.create(user=user, manga=manga)
+    chapter = MangaChapter.objects.create(manga=manga, number=1.0)
+
+    assert FavoriteMangaSerializer(instance=fav).data["has_started"] is False
+
+    MangaReadingProgress.objects.create(user=user, chapter=chapter, last_page_read=3)
+    assert FavoriteMangaSerializer(instance=fav).data["has_started"] is True

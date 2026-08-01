@@ -3,7 +3,7 @@ from animetix_project.logging_config import get_logger
 from django.conf import settings
 from google.auth.transport.requests import AuthorizedSession
 
-from .containers import get_container
+from ..containers import get_container
 
 logger = get_logger("animetix." + __name__)
 

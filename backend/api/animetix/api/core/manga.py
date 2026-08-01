@@ -2,6 +2,7 @@
 
 import base64
 
+from adapters.persistence.suwayomi_adapter import SuwayomiUnavailableError
 from animetix_project.logging_config import get_logger
 from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
@@ -10,8 +11,23 @@ from rest_framework.views import APIView
 
 from ...containers import Container
 from ...serializers import MangaChapterSerializer
+from ...services.tracker_sync import push_manga_progress_to_trackers
+from .suwayomi import suwayomi_unreachable_response
 
 logger = get_logger("animetix.api")
+
+# Un corps form-encoded (ou un client qui sérialise ses booléens à la main)
+# livre des chaînes : `bool("false")` vaut True, ce qui inverse silencieusement
+# la demande — un « marquer non lu » deviendrait un « marquer lu ».
+_FALSY_STRINGS = frozenset({"false", "0", "", "none", "null", "off", "no"})
+
+
+def parse_bool(value, default: bool) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() not in _FALSY_STRINGS
+    return bool(value)
 
 
 class MangaChapterListView(APIView):
@@ -25,7 +41,10 @@ class MangaChapterListView(APIView):
         self.manga_service = manga_service
 
     def get(self, request, media_id):
-        chapters = self.manga_service.get_chapters(media_id)
+        try:
+            chapters = self.manga_service.get_chapters(media_id)
+        except SuwayomiUnavailableError:
+            return suwayomi_unreachable_response()
         serializer = MangaChapterSerializer(chapters, many=True)
         return Response(serializer.data)
 
@@ -41,9 +60,15 @@ class MangaChapterDetailView(APIView):
         self.manga_service = manga_service
 
     def get(self, request, media_id, chapter_number):
-        chapter = self.manga_service.get_chapter_details(
-            media_id, float(chapter_number)
-        )
+        # Suwayomi injoignable != chapitre inexistant : sans ce garde-fou la vue
+        # renvoyait une 500 opaque, que le lecteur traduisait en « chapitre
+        # indisponible hors-ligne » — message trompeur pour un serveur éteint.
+        try:
+            chapter = self.manga_service.get_chapter_details(
+                media_id, float(chapter_number)
+            )
+        except SuwayomiUnavailableError:
+            return suwayomi_unreachable_response()
 
         if chapter:
             serializer = MangaChapterSerializer(chapter)
@@ -51,6 +76,123 @@ class MangaChapterDetailView(APIView):
         return Response(
             {"error": "Chapter not found"}, status=status.HTTP_404_NOT_FOUND
         )
+
+
+class MangaProgressView(APIView):
+    """Progression de lecture de l'utilisateur sur tous les chapitres d'un manga."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self,
+        progress_service=Provide[Container.core.manga_progress_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.progress_service = progress_service
+
+    def get(self, request, media_id):
+        payload = self.progress_service.get_manga_progress(request.user, media_id)
+        if payload is None:
+            # Manga jamais importé dans le catalogue : rien n'a pu être lu.
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(payload)
+
+
+class MangaChapterProgressView(APIView):
+    """Enregistre la page courante / l'état lu d'un chapitre."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self,
+        progress_service=Provide[Container.core.manga_progress_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.progress_service = progress_service
+
+    def put(self, request, media_id, chapter_number):
+        try:
+            number = float(chapter_number)
+            last_page_read = int(request.data.get("last_page_read", 0))
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "Invalid chapter number or page index"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if last_page_read < 0:
+            return Response(
+                {"error": "Invalid chapter number or page index"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        is_read = parse_bool(request.data.get("is_read"), False)
+
+        result = self.progress_service.record_progress(
+            request.user, media_id, number, last_page_read, is_read
+        )
+        if result is None:
+            return Response(
+                {"error": "Chapter not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if result["chapter_completed"]:
+            self._push_to_trackers(request.user, media_id, number)
+        return Response(result)
+
+    def _push_to_trackers(self, user, media_id, number):
+        from ...models import MediaItem
+
+        try:
+            manga = MediaItem.objects.get(external_id=media_id, media_type="Manga")
+        except MediaItem.DoesNotExist:
+            return
+        try:
+            push_manga_progress_to_trackers(user, manga, media_id, int(number))
+        except Exception:
+            # La progression est déjà enregistrée : un tracker HS ne doit pas
+            # transformer une lecture réussie en erreur côté lecteur.
+            logger.warning("Push trackers échoué pour %s ch.%s", media_id, number)
+
+
+class MangaProgressMarkReadView(APIView):
+    """Marque un ou plusieurs chapitres comme lus / non lus."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self,
+        progress_service=Provide[Container.core.manga_progress_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.progress_service = progress_service
+
+    def post(self, request, media_id):
+        raw = request.data.get("chapter_numbers")
+        if not isinstance(raw, list) or not raw:
+            return Response(
+                {"error": "chapter_numbers must be a non-empty list"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            numbers = [float(value) for value in raw]
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "chapter_numbers must contain numbers"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        updated = self.progress_service.set_read(
+            request.user,
+            media_id,
+            numbers,
+            parse_bool(request.data.get("is_read"), True),
+        )
+        return Response({"updated": updated})
 
 
 class FavoriteMangaToggleView(APIView):
@@ -172,10 +314,10 @@ class FavoriteMangaListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        from django.db.models import Count, IntegerField, OuterRef, Subquery
+        from django.db.models import Count, Exists, IntegerField, OuterRef, Q, Subquery
         from django.db.models.functions import Coalesce
 
-        from ...models import FavoriteManga, MangaChapter
+        from ...models import FavoriteManga, MangaChapter, MangaReadingProgress
         from ...serializers import FavoriteMangaSerializer
 
         # Use a correlated subquery to avoid N+1 query per FavoriteManga in the list
@@ -187,6 +329,30 @@ class FavoriteMangaListView(APIView):
             .annotate(count=Count("id"))
             .values("count")
         )
+        read_chapters_subquery = (
+            MangaChapter.objects.filter(
+                manga=OuterRef("manga"),
+                progress__user=OuterRef("user"),
+                progress__is_read=True,
+            )
+            .values("manga")
+            .annotate(count=Count("id"))
+            .values("count")
+        )
+        total_chapters_subquery = (
+            MangaChapter.objects.filter(manga=OuterRef("manga"))
+            .values("manga")
+            .annotate(count=Count("id"))
+            .values("count")
+        )
+        # « Lecture commencée » : un chapitre entamé compte, pas seulement
+        # terminé — sinon la carte n'offre aucun « Reprendre » à quelqu'un au
+        # milieu du chapitre 1, là où la fiche œuvre et la popup en affichent un.
+        started_subquery = MangaReadingProgress.objects.filter(
+            Q(is_read=True) | Q(last_page_read__gt=0),
+            user=OuterRef("user"),
+            chapter__manga=OuterRef("manga"),
+        )
 
         favorites = (
             FavoriteManga.objects.filter(user=request.user)
@@ -194,7 +360,14 @@ class FavoriteMangaListView(APIView):
             .annotate(
                 unread_chapters_count_annotated=Coalesce(
                     Subquery(unread_chapters_subquery, output_field=IntegerField()), 0
-                )
+                ),
+                read_count_annotated=Coalesce(
+                    Subquery(read_chapters_subquery, output_field=IntegerField()), 0
+                ),
+                total_chapters_annotated=Coalesce(
+                    Subquery(total_chapters_subquery, output_field=IntegerField()), 0
+                ),
+                has_started_annotated=Exists(started_subquery),
             )
         )
         serializer = FavoriteMangaSerializer(favorites, many=True)
@@ -276,9 +449,7 @@ class MangaChapterSyncView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, media_id, chapter_number):
-        import httpx
-
-        from ...models import FavoriteManga, MangaChapter, MediaItem, TrackerConnection
+        from ...models import FavoriteManga, MangaChapter, MediaItem
 
         # 1. Fetch the manga
         try:
@@ -316,168 +487,11 @@ class MangaChapterSyncView(APIView):
 
         favorite.save()
 
-        # 2. Get active connections
-        connections = TrackerConnection.objects.filter(user=request.user)
-        if not connections.exists():
+        from ...services.tracker_sync import push_manga_progress_to_trackers
+
+        results = push_manga_progress_to_trackers(
+            request.user, manga, media_id, progress
+        )
+        if not results:
             return Response({"success": True, "message": "No trackers connected."})
-
-        results = {}
-
-        # 4. Loop over active connections and sync
-        for conn in connections:
-            if conn.tracker == "anilist":
-                # Resolve AniList ID
-                anilist_id = None
-                # Check if external_id itself is a pure digit (which means it represents AniList ID)
-                if media_id.isdigit():
-                    anilist_id = int(media_id)
-                elif manga.metadata and "id" in manga.metadata:
-                    try:
-                        anilist_id = int(manga.metadata["id"])
-                    except (ValueError, TypeError):
-                        logger.debug(
-                            "Non-numeric AniList id in metadata for %s; "
-                            "falling back to title search",
-                            media_id,
-                        )
-
-                # If not resolved yet, let's search AniList GraphQL API by title
-                if not anilist_id:
-                    try:
-                        search_url = "https://graphql.anilist.co"
-                        search_query = """
-                        query ($search: String) {
-                          Media (search: $search, type: MANGA) {
-                            id
-                          }
-                        }
-                        """
-                        with httpx.Client(timeout=5.0) as client:
-                            res = client.post(
-                                search_url,
-                                json={
-                                    "query": search_query,
-                                    "variables": {"search": manga.title},
-                                },
-                            )
-                            if res.status_code == 200:
-                                search_data = res.json()
-                                if search_data.get("data", {}).get("Media"):
-                                    anilist_id = search_data["data"]["Media"]["id"]
-                    except Exception as e:
-                        logger.error(
-                            f"Failed to resolve AniList ID by title search: {e}"
-                        )
-
-                if not anilist_id:
-                    results["anilist"] = {
-                        "success": False,
-                        "error": "Could not resolve AniList ID",
-                    }
-                    continue
-
-                # Perform mutation request to AniList
-                try:
-                    mutation = """
-                    mutation ($mediaId: Int, $progress: Int) {
-                      SaveMediaListEntry (mediaId: $mediaId, progress: $progress, status: CURRENT) {
-                        id
-                        progress
-                      }
-                    }
-                    """
-                    url = "https://graphql.anilist.co"
-                    headers = {
-                        "Authorization": f"Bearer {conn.token}",
-                        "Content-Type": "application/json",
-                    }
-                    if conn.token == "mock-token" or conn.token == "test-token":
-                        # Simulate success for tests/CI
-                        results["anilist"] = {"success": True, "simulated": True}
-                    else:
-                        with httpx.Client(timeout=5.0) as client:
-                            res = client.post(
-                                url,
-                                json={
-                                    "query": mutation,
-                                    "variables": {
-                                        "mediaId": anilist_id,
-                                        "progress": progress,
-                                    },
-                                },
-                                headers=headers,
-                            )
-                            if res.status_code == 200:
-                                results["anilist"] = {"success": True}
-                            else:
-                                results["anilist"] = {
-                                    "success": False,
-                                    "error": f"AniList API error: {res.text}",
-                                }
-                except Exception as e:
-                    results["anilist"] = {"success": False, "error": str(e)}
-
-            elif conn.tracker == "myanimelist":
-                # Resolve MAL ID
-                mal_id = None
-                if manga.metadata and "idMal" in manga.metadata:
-                    mal_id = manga.metadata["idMal"]
-                elif manga.metadata and "mal_id" in manga.metadata:
-                    mal_id = manga.metadata["mal_id"]
-
-                # Fallback: search MAL
-                if not mal_id:
-                    try:
-                        # Use Jikan API for searching since it doesn't require authentication
-                        jikan_url = (
-                            f"https://api.jikan.moe/v4/manga?q={manga.title}&limit=1"
-                        )
-                        with httpx.Client(timeout=5.0) as client:
-                            res = client.get(jikan_url)
-                            if res.status_code == 200:
-                                search_data = res.json()
-                                if (
-                                    search_data.get("data")
-                                    and len(search_data["data"]) > 0
-                                ):
-                                    mal_id = search_data["data"][0]["mal_id"]
-                    except Exception as e:
-                        logger.error(f"Failed to resolve MAL ID via Jikan: {e}")
-
-                if not mal_id:
-                    results["myanimelist"] = {
-                        "success": False,
-                        "error": "Could not resolve MyAnimeList ID",
-                    }
-                    continue
-
-                # Perform update request to MAL
-                try:
-                    url = (
-                        f"https://api.myanimelist.net/v2/manga/{mal_id}/my_list_status"
-                    )
-                    headers = {
-                        "Authorization": f"Bearer {conn.token}",
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    }
-                    data = {
-                        "num_chapters_read": progress,
-                        "status": "reading",
-                    }
-                    if conn.token == "mock-token" or conn.token == "test-token":
-                        # Simulate success for tests/CI
-                        results["myanimelist"] = {"success": True, "simulated": True}
-                    else:
-                        with httpx.Client(timeout=5.0) as client:
-                            res = client.patch(url, data=data, headers=headers)
-                            if res.status_code == 200:
-                                results["myanimelist"] = {"success": True}
-                            else:
-                                results["myanimelist"] = {
-                                    "success": False,
-                                    "error": f"MAL API error: {res.text}",
-                                }
-                except Exception as e:
-                    results["myanimelist"] = {"success": False, "error": str(e)}
-
         return Response({"success": True, "results": results})

@@ -23,7 +23,7 @@ SUWAYOMI_UNREACHABLE_MSG = (
 )
 
 
-def _suwayomi_unreachable_response():
+def suwayomi_unreachable_response():
     """Réponse 503 explicite : le serveur Suwayomi n'est pas joignable (au lieu
     d'une liste vide muette qui laisse croire qu'il n'y a rien à afficher)."""
     return Response(
@@ -105,7 +105,7 @@ class SuwayomiSourcesView(APIView):
         try:
             sources = self.suwayomi_adapter.get_sources()
         except SuwayomiUnavailableError:
-            return _suwayomi_unreachable_response()
+            return suwayomi_unreachable_response()
         return Response(sources)
 
 
@@ -137,7 +137,7 @@ class SuwayomiSearchView(APIView):
         try:
             results = self.suwayomi_adapter.search_manga(source_id, query, page)
         except SuwayomiUnavailableError:
-            return _suwayomi_unreachable_response()
+            return suwayomi_unreachable_response()
         # {"mangas": [...], "hasNextPage": bool} — le front pagine dessus.
         return Response(results)
 
@@ -174,7 +174,7 @@ class SuwayomiLastPageView(APIView):
         try:
             last_page = _cached_last_page(self.suwayomi_adapter, source_id, query)
         except SuwayomiUnavailableError:
-            return _suwayomi_unreachable_response()
+            return suwayomi_unreachable_response()
         return Response({"lastPage": last_page})
 
 
@@ -205,7 +205,7 @@ class SuwayomiSeekLetterView(APIView):
                 source_id, query, letter, last_page
             )
         except SuwayomiUnavailableError:
-            return _suwayomi_unreachable_response()
+            return suwayomi_unreachable_response()
         return Response({"page": page, "lastPage": last_page})
 
 
@@ -231,7 +231,7 @@ class SuwayomiMangaDetailsView(APIView):
         try:
             details = self.suwayomi_adapter.fetch_manga_details(manga_id)
         except SuwayomiUnavailableError:
-            return _suwayomi_unreachable_response()
+            return suwayomi_unreachable_response()
         return Response(details)
 
 
@@ -258,7 +258,7 @@ class SuwayomiMangaChaptersView(APIView):
         try:
             chapters = self.suwayomi_adapter.get_chapters(manga_id)
         except SuwayomiUnavailableError:
-            return _suwayomi_unreachable_response()
+            return suwayomi_unreachable_response()
         return Response(chapters)
 
 
@@ -378,7 +378,7 @@ class SuwayomiExtensionsListView(APIView):
             extensions = self.suwayomi_adapter.get_extensions()
             return Response(extensions)
         except SuwayomiUnavailableError:
-            return _suwayomi_unreachable_response()
+            return suwayomi_unreachable_response()
         except Exception:
             logger.exception("Failed to fetch Suwayomi extensions")
             return Response({"error": "Internal server error"}, status=500)

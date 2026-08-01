@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Modal } from '../../../../components/ui/Modal';
 import { Loader2, ChevronRight, ChevronDown, Heart, ArrowUp, ArrowDown } from 'lucide-react';
 import type { Manga, Chapter, MangaDetails } from '../types';
+import type { ChapterProgress } from '../../../../features/manga-reader/progress/progressService';
+import { ChapterReadBadge } from '../../../../features/manga-reader/components/ChapterReadBadge';
 
 interface MangaDetailModalProps {
   isOpen: boolean;
@@ -19,6 +21,13 @@ interface MangaDetailModalProps {
   togglingFavorite?: boolean;
   onToggleFavorite?: () => void;
   onUpdateFavoriteStatus?: (status: 'reading' | 'completed' | 'plan_to_read') => void;
+  progressByChapter?: Map<number, ChapterProgress>;
+  progressSummary?: {
+    resume: { chapter_number: number } | null;
+    read_count: number;
+    total_count: number;
+  } | null;
+  onToggleChapterRead?: (chapterNumber: number, next: boolean) => void;
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -47,7 +56,13 @@ const MangaDetailModalComponent: React.FC<MangaDetailModalProps> = ({
   togglingFavorite = false,
   onToggleFavorite,
   onUpdateFavoriteStatus,
+  progressByChapter,
+  progressSummary,
+  onToggleChapterRead,
 }) => {
+  // Le suivi de lecture n'est branché (par le hook appelant) que pour un
+  // utilisateur connecté : son absence EST le signal « visiteur anonyme ».
+  const progressTrackingEnabled = !!onToggleChapterRead;
   // Tri des chapitres : croissant (1→N) par défaut, ou décroissant.
   const [sortDesc, setSortDesc] = useState(false);
 
@@ -230,6 +245,11 @@ const MangaDetailModalComponent: React.FC<MangaDetailModalProps> = ({
               <span className="rounded-full bg-[#F4F1E8]/5 px-2 py-0.5 text-[10px] tabular-nums text-[#8F94A5]">
                 {chapters.length}
               </span>
+              {progressTrackingEnabled && progressSummary && (
+                <span className="rounded-full bg-[#FDB913]/10 px-2 py-0.5 text-[10px] tabular-nums text-[#FDB913]">
+                  {progressSummary.read_count}/{progressSummary.total_count} lus
+                </span>
+              )}
             </h4>
             <button
               type="button"
@@ -246,6 +266,30 @@ const MangaDetailModalComponent: React.FC<MangaDetailModalProps> = ({
               {sortDesc ? 'Décroissant' : 'Croissant'}
             </button>
           </div>
+
+          {!progressTrackingEnabled && (
+            <span className="mb-3 block text-[10px] font-medium normal-case text-[#8F94A5]">
+              Connecte-toi pour suivre ta lecture
+            </span>
+          )}
+
+          {progressTrackingEnabled && progressSummary?.resume && (
+            <button
+              type="button"
+              onClick={() => {
+                const target = chapters.find(
+                  (c) => c.chapterNumber === progressSummary.resume?.chapter_number,
+                );
+                if (target) onReadChapter(target);
+              }}
+              className="mb-3 flex w-full items-center justify-between rounded-2xl border border-[#FDB913]/30 bg-[#FDB913]/10 px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-[#FDB913] transition-colors hover:bg-[#FDB913]/15"
+            >
+              Reprendre au chapitre {progressSummary.resume.chapter_number}
+              <span className="opacity-60">
+                {progressSummary.read_count}/{progressSummary.total_count} lus
+              </span>
+            </button>
+          )}
 
           {loadingDetails ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-[#8F94A5]">
@@ -271,20 +315,28 @@ const MangaDetailModalComponent: React.FC<MangaDetailModalProps> = ({
                       Numéro {ch.chapterNumber}
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onReadChapter(ch)}
-                    disabled={!!importingChapter}
-                    className="flex items-center gap-1 rounded-lg border border-[#FDB913]/25 bg-[#FDB913]/10 px-3 py-1.5 text-[10px] font-black uppercase italic tracking-wider text-[#FDB913] transition-colors hover:bg-[#FDB913] hover:text-[#0B0C10] disabled:opacity-50"
-                  >
-                    {importingChapter === ch.id ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <>
-                        Lire <ChevronRight className="h-3 w-3" />
-                      </>
+                  <div className="flex flex-shrink-0 items-center gap-2">
+                    {progressTrackingEnabled && (
+                      <ChapterReadBadge
+                        progress={progressByChapter?.get(ch.chapterNumber)}
+                        onToggleRead={(next) => onToggleChapterRead?.(ch.chapterNumber, next)}
+                      />
                     )}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => onReadChapter(ch)}
+                      disabled={!!importingChapter}
+                      className="flex items-center gap-1 rounded-lg border border-[#FDB913]/25 bg-[#FDB913]/10 px-3 py-1.5 text-[10px] font-black uppercase italic tracking-wider text-[#FDB913] transition-colors hover:bg-[#FDB913] hover:text-[#0B0C10] disabled:opacity-50"
+                    >
+                      {importingChapter === ch.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <>
+                          Lire <ChevronRight className="h-3 w-3" />
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

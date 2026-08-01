@@ -25,8 +25,11 @@ const fav = {
   status: 'reading',
   last_read_chapter: 3,
   unread_chapters_count: 2,
+  read_count: 3,
+  total_chapters: 5,
+  has_started: true,
   created_at: '2026-07-01T00:00:00Z',
-  manga: { id: 'm1', title: 'Berserk', author: 'Miura', image: '' },
+  manga: { id: 'm1', title: 'Berserk', author: 'Miura', image: '', media_type: 'Manga' },
 };
 
 describe('MangaLibraryPage', () => {
@@ -62,5 +65,49 @@ describe('MangaLibraryPage', () => {
     renderPage();
 
     expect(await screen.findByText('Berserk')).toBeInTheDocument();
+  });
+
+  // Task 10: the card surfaces server-computed chapter progress and links back
+  // to the media detail page (which already renders the "Reprendre" banner),
+  // instead of calling the per-manga progress API for every card.
+  it('shows the read/total chapter progress and a resume link to the media detail page', async () => {
+    mockApiClient.mockResolvedValue([fav]);
+
+    renderPage();
+
+    expect(await screen.findByText('3/5 lus')).toBeInTheDocument();
+    const resumeLink = screen.getByRole('link', { name: /reprendre/i });
+    expect(resumeLink).toHaveAttribute('href', '/media/Manga/m1/');
+  });
+
+  it('hides the resume link when the manga was never opened, or is fully read', async () => {
+    mockApiClient.mockResolvedValue([
+      { ...fav, id: 2, read_count: 0, total_chapters: 5, has_started: false },
+      { ...fav, id: 3, read_count: 5, total_chapters: 5, has_started: true },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('0/5 lus')).toBeInTheDocument();
+    expect(screen.getByText('5/5 lus')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /reprendre/i })).not.toBeInTheDocument();
+  });
+
+  // The card used to key the link on read_count > 0, i.e. "at least one chapter
+  // finished". Someone in the middle of chapter 1 has read_count === 0 and got
+  // no button, while the media page and the Tachidesk popup were both offering
+  // "Reprendre au chapitre 1 — page 12/83" for that very same state.
+  it('shows the resume link mid-first-chapter, when no chapter is finished yet', async () => {
+    mockApiClient.mockResolvedValue([
+      { ...fav, id: 4, read_count: 0, total_chapters: 5, has_started: true },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('0/5 lus')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /reprendre/i })).toHaveAttribute(
+      'href',
+      '/media/Manga/m1/',
+    );
   });
 });

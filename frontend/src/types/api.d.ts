@@ -2666,6 +2666,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/media/Manga/{media_id}/chapters/{chapter_number}/progress/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Enregistre la page courante / l'état lu d'un chapitre. */
+        put: operations["api_v1_media_Manga_chapters_progress_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/media/Manga/{media_id}/chapters/{chapter_number}/sync/": {
         parameters: {
             query?: never;
@@ -2695,6 +2712,40 @@ export interface paths {
         put?: never;
         /** @description Permet de s'abonner / désabonner (favoris) à un manga. */
         post: operations["api_v1_media_Manga_favorite_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/Manga/{media_id}/progress/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Progression de lecture de l'utilisateur sur tous les chapitres d'un manga. */
+        get: operations["api_v1_media_Manga_progress_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/Manga/{media_id}/progress/mark-read/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Marque un ou plusieurs chapitres comme lus / non lus. */
+        post: operations["api_v1_media_Manga_progress_mark_read_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7755,6 +7806,27 @@ export interface operations {
             };
         };
     };
+    api_v1_media_Manga_chapters_progress_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_number: string;
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_media_Manga_chapters_sync_create: {
         parameters: {
             query?: never;
@@ -7797,6 +7869,46 @@ export interface operations {
         };
     };
     api_v1_media_Manga_favorite_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_media_Manga_progress_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_media_Manga_progress_mark_read_create: {
         parameters: {
             query?: never;
             header?: never;

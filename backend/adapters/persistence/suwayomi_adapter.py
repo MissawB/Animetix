@@ -236,37 +236,55 @@ class SuwayomiAdapter(SuwayomiPort):
         return chapters
 
     def get_pages(self, suwayomi_chapter_id: str) -> List[str]:
+        # Suwayomi v2.x : l'argument s'appelle `chapterId` (pas `id`) et les URLs
+        # sont exposées par `pages` À LA RACINE du payload — `ChapterType` n'a pas
+        # de champ `pages`. Avec l'ancienne forme, la requête était rejetée à la
+        # validation : 0 page renvoyée, donc un lecteur vide sans erreur visible.
+        # Il n'existe pas de requête de repli : la mutation est le seul moyen
+        # d'obtenir les pages (elle sert aussi le cache si déjà récupérées).
         mut = """
-        mutation FetchPages($id: Int!) {
-          fetchChapterPages(input: { id: $id }) {
-            chapter {
+        mutation FetchPages($chapterId: Int!) {
+          fetchChapterPages(input: { chapterId: $chapterId }) {
+            pages
+          }
+        }
+        """
+        data = self._query(mut, {"chapterId": int(suwayomi_chapter_id)})
+        payload = data.get("fetchChapterPages") or {}
+        return payload.get("pages") or []
+
+    def update_chapters_read_state(
+        self,
+        chapter_ids: List[str],
+        is_read: bool,
+        last_page_read: Optional[int] = None,
+    ) -> bool:
+        """Miroir de l'état de lecture vers Suwayomi (best-effort).
+
+        Contrat v2.x : `updateChapters(input:{ids:[Int!]!, patch:{...}})`. Le patch
+        n'accepte que `isRead`, `lastPageRead` et `isBookmarked`.
+        """
+        if not chapter_ids:
+            return False
+
+        patch: Dict[str, Any] = {"isRead": is_read}
+        if last_page_read is not None:
+            patch["lastPageRead"] = last_page_read
+
+        mut = """
+        mutation UpdateChaptersRead($ids: [Int!]!, $patch: UpdateChapterPatchInput!) {
+          updateChapters(input: { ids: $ids, patch: $patch }) {
+            chapters {
               id
-              pages
+              isRead
             }
           }
         }
         """
-        data = self._query(mut, {"id": int(suwayomi_chapter_id)})
-        pages = (
-            data.get("fetchChapterPages", {}).get("chapter", {}).get("pages", [])
-            if data.get("fetchChapterPages")
-            else []
+        data = self._query(
+            mut, {"ids": [int(cid) for cid in chapter_ids], "patch": patch}
         )
-        if not pages:
-            q = """
-            query GetPages($id: Int!) {
-              chapter(id: $id) {
-                pages
-              }
-            }
-            """
-            data_q = self._query(q, {"id": int(suwayomi_chapter_id)})
-            pages = (
-                data_q.get("chapter", {}).get("pages", [])
-                if data_q.get("chapter")
-                else []
-            )
-        return pages
+        return bool(data.get("updateChapters"))
 
     def get_extensions(self) -> List[Dict[str, Any]]:
         q = """
