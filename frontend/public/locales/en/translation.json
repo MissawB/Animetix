@@ -2505,6 +2505,8 @@
   "library": {
     "btn_continue": "Continue",
     "btn_explore": "Discover manga",
+    "btn_resume": "Resume",
+    "chapters_read": "read",
     "empty_subtitle": "Add manga to your library from the explorer to organize them and track your reading.",
     "empty_title": "Empty library",
     "last_read": "Read",

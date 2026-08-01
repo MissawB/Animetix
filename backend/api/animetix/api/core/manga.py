@@ -16,6 +16,19 @@ from .suwayomi import suwayomi_unreachable_response
 
 logger = get_logger("animetix.api")
 
+# Un corps form-encoded (ou un client qui sérialise ses booléens à la main)
+# livre des chaînes : `bool("false")` vaut True, ce qui inverse silencieusement
+# la demande — un « marquer non lu » deviendrait un « marquer lu ».
+_FALSY_STRINGS = frozenset({"false", "0", "", "none", "null", "off", "no"})
+
+
+def parse_bool(value, default: bool) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() not in _FALSY_STRINGS
+    return bool(value)
+
 
 class MangaChapterListView(APIView):
     """Liste des chapitres d'un manga."""
@@ -115,7 +128,7 @@ class MangaChapterProgressView(APIView):
                 {"error": "Invalid chapter number or page index"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        is_read = bool(request.data.get("is_read", False))
+        is_read = parse_bool(request.data.get("is_read"), False)
 
         result = self.progress_service.record_progress(
             request.user, media_id, number, last_page_read, is_read
@@ -174,7 +187,10 @@ class MangaProgressMarkReadView(APIView):
             )
 
         updated = self.progress_service.set_read(
-            request.user, media_id, numbers, bool(request.data.get("is_read", True))
+            request.user,
+            media_id,
+            numbers,
+            parse_bool(request.data.get("is_read"), True),
         )
         return Response({"updated": updated})
 

@@ -198,3 +198,45 @@ def test_mark_read_with_non_numeric_chapter_number_returns_400(reader):
         format="json",
     )
     assert res.status_code == 400
+
+
+@pytest.mark.django_db
+def test_string_false_is_not_read_as_true(reader):
+    """`bool("false")` vaut True : un corps form-encoded inversait la demande."""
+    client, _user, _manga, _chapter = reader
+    put_url = reverse(
+        "api_manga_chapter_progress",
+        kwargs={"media_id": "suwayomi:1:809", "chapter_number": "164.2"},
+    )
+
+    res = client.put(put_url, {"last_page_read": 1, "is_read": "false"}, format="json")
+    assert res.status_code == 200
+    assert res.data["is_read"] is False
+
+    res = client.put(put_url, {"last_page_read": 2, "is_read": "true"}, format="json")
+    assert res.data["is_read"] is True
+
+
+@pytest.mark.django_db
+def test_mark_read_string_false_unmarks(reader):
+    """Le seul chemin de remise à zéro ne doit pas se faire retourner par "false"."""
+    client, _user, _manga, _chapter = reader
+    put_url = reverse(
+        "api_manga_chapter_progress",
+        kwargs={"media_id": "suwayomi:1:809", "chapter_number": "164.2"},
+    )
+    client.put(put_url, {"last_page_read": 2, "is_read": True}, format="json")
+
+    mark_url = reverse(
+        "api_manga_progress_mark_read", kwargs={"media_id": "suwayomi:1:809"}
+    )
+    res = client.post(
+        mark_url, {"chapter_numbers": [164.2], "is_read": "false"}, format="json"
+    )
+    assert res.status_code == 200
+
+    payload = client.get(
+        reverse("api_manga_progress", kwargs={"media_id": "suwayomi:1:809"})
+    ).data
+    assert payload["chapters"][0]["is_read"] is False
+    assert payload["chapters"][0]["last_page_read"] == 0
