@@ -64,6 +64,116 @@ class MangaChapterDetailView(APIView):
         )
 
 
+class MangaProgressView(APIView):
+    """Progression de lecture de l'utilisateur sur tous les chapitres d'un manga."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self,
+        progress_service=Provide[Container.core.manga_progress_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.progress_service = progress_service
+
+    def get(self, request, media_id):
+        payload = self.progress_service.get_manga_progress(request.user, media_id)
+        if payload is None:
+            # Manga jamais importé dans le catalogue : rien n'a pu être lu.
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(payload)
+
+
+class MangaChapterProgressView(APIView):
+    """Enregistre la page courante / l'état lu d'un chapitre."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self,
+        progress_service=Provide[Container.core.manga_progress_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.progress_service = progress_service
+
+    def put(self, request, media_id, chapter_number):
+        try:
+            number = float(chapter_number)
+            last_page_read = int(request.data.get("last_page_read", 0))
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "Invalid chapter number or page index"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        is_read = bool(request.data.get("is_read", False))
+
+        result = self.progress_service.record_progress(
+            request.user, media_id, number, last_page_read, is_read
+        )
+        if result is None:
+            return Response(
+                {"error": "Chapter not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if result["chapter_completed"]:
+            self._push_to_trackers(request.user, media_id, number)
+        return Response(result)
+
+    def _push_to_trackers(self, user, media_id, number):
+        from ...models import MediaItem
+        from ...services.tracker_sync import push_manga_progress_to_trackers
+
+        try:
+            manga = MediaItem.objects.get(external_id=media_id, media_type="Manga")
+        except MediaItem.DoesNotExist:
+            return
+        try:
+            push_manga_progress_to_trackers(user, manga, media_id, int(number))
+        except Exception:
+            # La progression est déjà enregistrée : un tracker HS ne doit pas
+            # transformer une lecture réussie en erreur côté lecteur.
+            logger.warning("Push trackers échoué pour %s ch.%s", media_id, number)
+
+
+class MangaProgressMarkReadView(APIView):
+    """Marque un ou plusieurs chapitres comme lus / non lus."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self,
+        progress_service=Provide[Container.core.manga_progress_service],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.progress_service = progress_service
+
+    def post(self, request, media_id):
+        raw = request.data.get("chapter_numbers")
+        if not isinstance(raw, list) or not raw:
+            return Response(
+                {"error": "chapter_numbers must be a non-empty list"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            numbers = [float(value) for value in raw]
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "chapter_numbers must contain numbers"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        updated = self.progress_service.set_read(
+            request.user, media_id, numbers, bool(request.data.get("is_read", True))
+        )
+        return Response({"updated": updated})
+
+
 class FavoriteMangaToggleView(APIView):
     """Permet de s'abonner / désabonner (favoris) à un manga."""
 

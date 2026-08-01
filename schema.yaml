@@ -2438,6 +2438,26 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/media/Manga/{media_id}/chapters/{chapter_number}/progress/:
+    put:
+      operationId: api_v1_media_Manga_chapters_progress_update
+      description: Enregistre la page courante / l'état lu d'un chapitre.
+      parameters:
+      - in: path
+        name: chapter_number
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
   /api/v1/media/Manga/{media_id}/chapters/{chapter_number}/sync/:
     post:
       operationId: api_v1_media_Manga_chapters_sync_create
@@ -2477,6 +2497,37 @@ paths:
     post:
       operationId: api_v1_media_Manga_favorite_create
       description: Permet de s'abonner / désabonner (favoris) à un manga.
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/media/Manga/{media_id}/progress/:
+    get:
+      operationId: api_v1_media_Manga_progress_retrieve
+      description: Progression de lecture de l'utilisateur sur tous les chapitres
+        d'un manga.
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/media/Manga/{media_id}/progress/mark-read/:
+    post:
+      operationId: api_v1_media_Manga_progress_mark_read_create
+      description: Marque un ou plusieurs chapitres comme lus / non lus.
       parameters:
       - in: path
         name: media_id
@@ -3908,9 +3959,8 @@ components:
           maxLength: 50
         xp_reward:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         rarity:
           type: string
           maxLength: 20
@@ -4048,14 +4098,12 @@ components:
           maxLength: 500
         chaos_level:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         universe_balance:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         art_style:
           type: string
           maxLength: 100
@@ -4634,14 +4682,12 @@ components:
           maxLength: 500
         chaos_level:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         universe_balance:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         art_style:
           type: string
           maxLength: 100
@@ -4783,43 +4829,36 @@ components:
           readOnly: true
         xp:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         current_streak:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         max_streak:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         last_win_date:
           type: string
           format: date
           nullable: true
         total_wins:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         total_games:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         ranked_points:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         ranked_max_points:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         rank:
           type: string
           readOnly: true
@@ -4835,9 +4874,8 @@ components:
           $ref: '#/components/schemas/TierEnum'
         wallet_balance:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         personalization_settings: {}
         has_api_key:
           type: string
@@ -4854,43 +4892,36 @@ components:
           readOnly: true
         xp:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         current_streak:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         max_streak:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         last_win_date:
           type: string
           format: date
           nullable: true
         total_wins:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         total_games:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         ranked_points:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         ranked_max_points:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         rank:
           type: string
           readOnly: true
@@ -4906,9 +4937,8 @@ components:
           $ref: '#/components/schemas/TierEnum'
         wallet_balance:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         personalization_settings: {}
         has_api_key:
           type: string

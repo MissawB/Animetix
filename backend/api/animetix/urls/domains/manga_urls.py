@@ -25,6 +25,21 @@ urlpatterns = [
         name="api_media_characters_graph",
     ),
     path(
+        "media/Manga/<str:media_id>/progress/",
+        api_views.MangaProgressView.as_view(),
+        name="api_manga_progress",
+    ),
+    path(
+        "media/Manga/<str:media_id>/progress/mark-read/",
+        api_views.MangaProgressMarkReadView.as_view(),
+        name="api_manga_progress_mark_read",
+    ),
+    path(
+        "media/Manga/<str:media_id>/chapters/<str:chapter_number>/progress/",
+        api_views.MangaChapterProgressView.as_view(),
+        name="api_manga_chapter_progress",
+    ),
+    path(
         "media/<str:media_type>/<str:item_id>/",
         api_views.MediaDetailView.as_view(),
         name="api_media_detail",
