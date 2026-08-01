@@ -12,6 +12,20 @@ class InferenceNotImplementedError(NotImplementedError):
     pass
 
 
+# Provenance d'un verdict de modération, sous la clé "source". Les trois valeurs
+# ont la MÊME forme de dict mais pas la même valeur de preuve, et seule la
+# première est une décision :
+#   - MODERATION_SOURCE_MODEL : un modèle a lu le texte et tranché ;
+#   - MODERATION_SOURCE_KEYWORDS : l'appel modèle a échoué, il ne reste qu'une
+#     liste de gros mots (accompagné de "degraded": True) ;
+#   - aucune clé : un remplissage (`{"is_safe": True}`) ou un adaptateur d'une
+#     version antérieure — donc une preuve manquante, pas une bonne nouvelle.
+# `GuardrailService._is_model_verdict` s'en sert pour décider s'il peut faire
+# l'économie de la modération fine par prompt, ou si le contrôle reste à faire.
+MODERATION_SOURCE_MODEL = "model"
+MODERATION_SOURCE_KEYWORDS = "keyword-fallback"
+
+
 class BaseInferencePort(ABC):
     """Port de base pour la gestion de l'usage et des métriques d'inférence."""
 
@@ -193,16 +207,23 @@ class TextInferencePort(BaseInferencePort):
                 "detected_categories": detected,
                 "action": "block" if not is_safe else "allow",
                 "reason": res.get("reason", "Vérification sémantique effectuée."),
+                "source": MODERATION_SOURCE_MODEL,
             }
         except Exception as e:
             bad_words = ["hentai", "nsfw", "porn", "sex", "gore", "violence extreme"]
             found = [w for w in bad_words if w in text.lower()]
             is_safe = len(found) == 0
+            # Repli par mots-clés : un `is_safe: True` d'ici ne veut dire que
+            # « aucun mot de la liste », pas « analysé et jugé sain ». Marqué
+            # comme dégradé pour que l'appelant sache qu'il reste un contrôle
+            # sémantique à faire.
             return {
                 "is_safe": is_safe,
                 "detected_categories": found,
                 "action": "block" if not is_safe else "allow",
                 "reason": f"Vérification par mots-clés effectuée (Échec LLM: {str(e)}).",
+                "source": MODERATION_SOURCE_KEYWORDS,
+                "degraded": True,
             }
 
     def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:

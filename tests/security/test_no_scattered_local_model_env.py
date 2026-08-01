@@ -4,8 +4,8 @@ import re
 BACKEND = pathlib.Path(__file__).resolve().parents[2] / "backend"
 ALLOWED = BACKEND / "core" / "utils" / "local_models.py"
 PATTERN = re.compile(
-    r"os\.getenv\(\s*[\"'](?:LLM_MODEL_NAME|LOCAL_MODEL_ID|DRAFT_MODEL_ID"
-    r"|COMPACT_MODEL_ID|LOCAL_DIFFUSION_MODEL)[\"']"
+    r"os\.getenv\(\s*[\"'](?:LLM_MODEL_NAME|GUARDRAIL_MODEL_NAME|LOCAL_MODEL_ID"
+    r"|DRAFT_MODEL_ID|COMPACT_MODEL_ID|LOCAL_DIFFUSION_MODEL)[\"']"
 )
 
 

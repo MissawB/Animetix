@@ -65,6 +65,18 @@ def test_engine_for_an_unserved_model_is_rejected_with_400(svc):
     assert "not-baked:9b" in str(exc.value.detail)
 
 
+def test_engine_for_accepts_the_tagless_alias_ollama_resolves(svc):
+    """Ollama registre `mistral` sous `mistral:latest`. `_downgrade_if_model_unserved`
+    accepte déjà cet alias : si le brain, lui, le refusait, un modèle que le health
+    check déclare sain partirait en 400 à la première requête."""
+    with patch.object(
+        svc.brain_engine,
+        "health_check",
+        return_value=_health([{"name": "mistral:latest"}]),
+    ):
+        assert svc.engine_for("mistral").model_name == "mistral"
+
+
 def test_an_unreadable_model_list_is_not_cached(svc):
     # Ollama not up yet at first call: the empty answer must not poison the cache
     # for the life of the process.

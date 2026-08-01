@@ -15,7 +15,7 @@ import re
 from pathlib import Path
 
 import yaml
-from core.utils.local_models import LLM_OLLAMA_MODEL
+from core.utils.local_models import GUARDRAIL_OLLAMA_MODEL, LLM_OLLAMA_MODEL
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DOCKERFILE = (REPO_ROOT / "deploy" / "Dockerfile.brain").read_text(encoding="utf-8")
@@ -34,17 +34,27 @@ def test_image_installs_a_model_server():
 def test_the_model_the_code_asks_for_is_actually_in_the_image():
     """Ollama 404s on an unknown tag, and downstream that reads as "the whole brain
     is offline" -- exactly how prod broke (`qwen3.5` asked for, `qwen3.5:9b` baked).
-    The image carries two tags now (the fine-tune and its control); the code must
-    name one of them."""
+    The image carries three tags now (the fine-tune, its control, and the guardrail
+    moderator); EVERY role the code pins must name one of them -- including the
+    moderation role, whose 400 would otherwise only surface as a guardrail
+    silently falling back to the big model."""
     baked = {
         m.group(1)
-        for m in re.finditer(r"ARG (?:OLLAMA_MODEL|CONTROL_MODEL)=(\S+)", DOCKERFILE)
+        for m in re.finditer(
+            r"ARG (?:OLLAMA_MODEL|CONTROL_MODEL|GUARDRAIL_MODEL)=(\S+)", DOCKERFILE
+        )
     }
     assert baked, "the model must be baked in, not pulled at cold start"
 
     assert LLM_OLLAMA_MODEL in baked, (
         f"the code asks for {LLM_OLLAMA_MODEL!r} (core.utils.local_models."
         f"LLM_OLLAMA_MODEL) but the image only registers {sorted(baked)}"
+    )
+
+    assert GUARDRAIL_OLLAMA_MODEL in baked, (
+        f"the guardrail asks for {GUARDRAIL_OLLAMA_MODEL!r} (core.utils."
+        f"local_models.GUARDRAIL_OLLAMA_MODEL, overridable via "
+        f"GUARDRAIL_MODEL_NAME) but the image only registers {sorted(baked)}"
     )
 
 

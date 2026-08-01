@@ -66,10 +66,19 @@ de la L4, 4,7 Go + 1 Go cohabitent sans tension, et `OLLAMA_KEEP_ALIVE=24h` les
 garde résidents.
 
 Le choix du 1,5B plutôt que du 0,5B est délibéré : la détection de spoiler demande
-de comprendre ce qui est révélé, pas de repérer un mot. La forme de la sortie JSON
-est de toute façon garantie par le décodage contraint d'Ollama, donc le risque
-résiduel porte sur la qualité de la décision. Le rôle étant surchargeable par
-variable d'environnement, descendre au 0,5B après mesure ne coûtera qu'une variable.
+de comprendre ce qui est révélé, pas de repérer un mot.
+
+La forme de la sortie JSON n'est PAS garantie d'office : le décodage contraint ne
+s'active que si l'appel demande `json_mode`, et ce drapeau devait traverser trois
+maillons qui le perdaient (payload de `BrainAPIAdapter`, schéma `GenerateRequest`
+— Pydantic jette un champ non déclaré en silence —, puis l'endpoint). Il les
+traverse maintenant, et la modération le demande. Comme un décodage contraint
+reste un « très probablement » et pas un « toujours », une réponse illisible
+déclenche le MÊME repli sur le moteur principal qu'un appel en échec : dans les
+deux cas il n'y a pas de verdict, et un contrôle sauté ne doit pas prendre
+l'apparence d'un contrôle passé. Le risque résiduel porte donc sur la qualité de
+la décision, pas sur sa lisibilité. Le rôle étant surchargeable par variable
+d'environnement, descendre au 0,5B après mesure ne coûtera qu'une variable.
 
 ### Côté web
 

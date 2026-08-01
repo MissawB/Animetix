@@ -105,7 +105,12 @@ def engine_for(model: Optional[str]) -> UnifiedInferenceAdapter:
     if not model or model == model_name:
         return brain_engine
     if model not in _engines:
-        if model not in _served_models():
+        # Ollama résout un nom sans tag en ":latest" : même règle d'appartenance
+        # que `_downgrade_if_model_unserved` côté adaptateur, sinon un
+        # `mistral` parfaitement servi (registré `mistral:latest`) se ferait
+        # refuser en 400 ici alors que le health check le dit sain.
+        served = _served_models()
+        if model not in served and f"{model}:latest" not in served:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Model '{model}' is not served by this brain.",
@@ -162,6 +167,13 @@ class GenerateRequest(BaseModel):
     thinking_mode: bool = False
     include_logprobs: bool = False
     model: Optional[str] = None
+    # Décodage contraint (température basse + `response_format: json_object`).
+    # Le champ doit exister ICI ou Pydantic le jette en silence : l'appelant le
+    # met dans le payload (`BrainAPIAdapter.generate` propage ses `**kwargs`),
+    # et un champ non déclaré n'arriverait jamais jusqu'au moteur. C'est ce qui
+    # tient la forme de sortie du modérateur -- un petit modèle rend de la prose
+    # sans lui, et une modération illisible est une modération sautée.
+    json_mode: bool = False
 
 
 class SimilarityRequest(BaseModel):
@@ -321,6 +333,7 @@ def generate(req: GenerateRequest):
         thinking_budget=req.thinking_budget,
         thinking_mode=req.thinking_mode,
         include_logprobs=req.include_logprobs,
+        json_mode=req.json_mode,
     )
     return {
         "text": res.text,

@@ -4,6 +4,10 @@ from adapters.inference.local_guardrail_adapter import LocalGuardrailAdapter
 from adapters.inference.local_text_adapter import LocalTextAdapter
 from adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
 from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
+from core.ports.inference_port import (
+    MODERATION_SOURCE_KEYWORDS,
+    MODERATION_SOURCE_MODEL,
+)
 
 
 def test_local_text_adapter_moderate_content_keyword_fallback():
@@ -26,6 +30,12 @@ def test_local_text_adapter_moderate_content_keyword_fallback():
     )
     assert res_clean["is_safe"] is True
     assert res_clean["action"] == "allow"
+    # Ce `is_safe: True` ne dit que « aucun mot de la liste ». Il doit se
+    # présenter comme tel, sinon le guardrail le prendrait pour un verdict de
+    # modèle et ferait l'économie du contrôle sémantique
+    # (cf. GuardrailService._is_model_verdict).
+    assert res_clean["source"] == MODERATION_SOURCE_KEYWORDS
+    assert res_clean["degraded"] is True
 
 
 def test_qwen3_vl_adapter_moderate_content_keyword_fallback():
@@ -73,6 +83,10 @@ def test_unified_inference_adapter_moderate_content_semantic():
         assert res["detected_categories"] == []
         assert res["action"] == "allow"
         assert "Safe text" in res["reason"]
+        # Un modèle a lu le texte et tranché : le verdict fait autorité et le
+        # guardrail peut s'en contenter (une seule passe de modération).
+        assert res["source"] == MODERATION_SOURCE_MODEL
+        assert "degraded" not in res
 
 
 def test_local_guardrail_adapter_delegation():

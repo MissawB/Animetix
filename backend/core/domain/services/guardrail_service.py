@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from ...config import get_config
 from ...ports.config_port import ConfigPort
-from ...ports.inference_port import InferencePort
+from ...ports.inference_port import MODERATION_SOURCE_MODEL, InferencePort
 from ..exceptions import ContentModerationError
 from .prompt_manager import PromptManager
 
@@ -100,6 +100,31 @@ class GuardrailService:
             "degraded": True,
         }
 
+    @staticmethod
+    def _is_model_verdict(result: Any) -> bool:
+        """Le premier étage a-t-il vraiment rendu un verdict, ou juste une valeur
+        par défaut ?
+
+        Trois choses de même forme sortent de `safety_engine.moderate_content` :
+        le verdict d'un modèle qui a lu le texte, un repli par mots-clés (quand
+        l'appel modèle a échoué) et un `{"is_safe": True}` de remplissage. Seule
+        la première est une décision ; les deux autres sont un contrôle NON
+        effectué et doivent continuer vers `_llm_moderate`, sinon un contrôle
+        sauté aurait exactement l'allure d'un contrôle passé.
+
+        Le marqueur est posé par `InferencePort.moderate_content`. Un adaptateur
+        (ou une image brain) plus ancien n'en pose pas : son verdict n'est alors
+        pas cru et on repasse par la modération fine — le comportement d'avant,
+        c'est-à-dire dégrader en lenteur, jamais en absence de contrôle.
+        """
+        if not isinstance(result, dict):
+            return False
+        if result.get("stub") or result.get("degraded"):
+            return False
+        if result.get("is_safe") is None:
+            return False
+        return result.get("source") == MODERATION_SOURCE_MODEL
+
     def _check_agent_gateway(
         self, text: str, mode: str = "input"
     ) -> Optional[Dict[str, Any]]:
@@ -140,6 +165,14 @@ class GuardrailService:
             result = self.safety_engine.moderate_content(
                 text, categories=self.enabled_categories
             )
+
+            # Un verdict réellement produit par un modèle fait autorité, sain ou
+            # non : le repasser à `_llm_moderate` mettait DEUX appels de
+            # modération sur chaque tour de chat sans rien apprendre de plus.
+            # L'heuristique `is_stub` plus bas date de l'époque où ce premier
+            # étage tapait un `localhost` mort et ne pouvait rendre qu'un stub.
+            if self._is_model_verdict(result):
+                return result
 
             # Fallback sur le modérateur par prompt LLM si le moteur n'a pas renvoyé de décision claire
             # On considère comme stub si on a is_safe=True mais pas de catégories explicites (on veut une double vérif LLM pour la SOTA)
@@ -338,10 +371,84 @@ class GuardrailService:
             logger.warning(f"⚠️ [Guardrail] Factual check failed due to exception: {e}")
             return None
 
+    def _moderate_once(
+        self, engine: InferencePort, prompt: str, system: str
+    ) -> Dict[str, Any]:
+        """Un aller-retour de modération complet : génération PUIS lecture du verdict.
+
+        Les deux vont ensemble : une réponse qu'on n'arrive pas à lire vaut
+        exactement autant qu'un appel qui a planté — aucun verdict. Les garder
+        dans la même unité est ce qui permet à l'appelant de réessayer sur un
+        autre moteur dans les deux cas.
+
+        `json_mode=True` n'est pas cosmétique : sans lui `UnifiedInferenceAdapter`
+        génère à température 0.7 et sans `response_format`, et un petit modèle
+        rend alors de la prose une fois sur N. Les adaptateurs acceptent tous
+        `**kwargs`, donc ceux qui ne connaissent pas le mode l'ignorent.
+        """
+        inference_res = engine.generate(prompt, system_prompt=system, json_mode=True)
+        response = inference_res.text or ""
+
+        if "```json" in response:
+            response = response.split("```json")[1].split("```")[0].strip()
+
+        # Nettoyage supplémentaire pour éviter les erreurs de parsing
+        response = response.strip()
+        if not response.startswith("{"):
+            # Tentative d'extraction du premier JSON trouvé
+            match = re.search(r"\{.*\}", response, re.DOTALL)
+            if match:
+                response = match.group(0)
+
+        result = json.loads(response)
+        if not isinstance(result, dict):
+            raise ValueError(
+                f"Moderation verdict must be a JSON object, got {type(result).__name__}"
+            )
+
+        # Map is_safe
+        is_safe = result.get("is_safe")
+        if is_safe is None:
+            is_safe = result.get("safe")
+        if is_safe is None:
+            is_safe = True
+
+        # Map detected_categories
+        detected_categories = result.get("detected_categories")
+        if detected_categories is None:
+            detected_categories = result.get("unsafe_categories")
+        if detected_categories is None:
+            detected_categories = result.get("violations", [])
+
+        # Map action
+        action = result.get("action")
+        if action is None:
+            action = "none" if is_safe else "block"
+
+        return {
+            "is_safe": is_safe,
+            "detected_categories": detected_categories,
+            "unsafe_categories": detected_categories,
+            "action": action,
+            "reasoning": result.get("reasoning", ""),
+            "warning": result.get("warning", ""),
+        }
+
     def _llm_moderate(
         self, text: str, categories: List[str], mode: str = "output"
     ) -> Dict[str, Any]:
-        """Utilise le cerveau principal pour une modération fine par prompt."""
+        """Modération fine par prompt, exécutée sur le moteur de modération dédié.
+
+        Repli sur le moteur principal quand ce moteur-là ne rend PAS de verdict
+        exploitable — appel en échec ou réponse illisible, c'est la même chose
+        vue d'ici. Le petit modèle peut manquer là où le principal répond (le web
+        se déploie sans l'image brain, donc un tag de modération pas encore baké
+        renvoie 400) et il peut aussi répondre en prose. On dégrade en lenteur,
+        jamais en absence de contrôle.
+
+        Sans moteur dédié, rien à quoi se replier : l'échec remonte en
+        `ContentModerationError` comme avant.
+        """
         try:
             prompt_key = "input_moderator" if mode == "input" else "output_moderator"
             if self.prompt_manager is None:
@@ -355,66 +462,16 @@ class GuardrailService:
                 )
 
             try:
-                inference_res = self.moderation_engine.generate(
-                    prompt, system_prompt=system
-                )
+                return self._moderate_once(self.moderation_engine, prompt, system)
             except Exception as moderation_error:
-                # Le petit modèle peut manquer là où le principal répond : le web se
-                # déploie sans l'image brain, donc un tag de modération pas encore
-                # baké renvoie 400. On dégrade en lenteur, jamais en absence de
-                # contrôle.
                 if self.moderation_engine is self.inference_engine:
                     raise
                 logger.warning(
-                    "⚠️ [Guardrail] Moderation engine failed (%s); falling back to the "
-                    "main inference engine.",
+                    "⚠️ [Guardrail] Moderation engine returned no usable verdict (%s); "
+                    "retrying on the main inference engine.",
                     moderation_error,
                 )
-                inference_res = self.inference_engine.generate(
-                    prompt, system_prompt=system
-                )
-            response = inference_res.text
-
-            if "```json" in response:
-                response = response.split("```json")[1].split("```")[0].strip()
-
-            # Nettoyage supplémentaire pour éviter les erreurs de parsing
-            response = response.strip()
-            if not response.startswith("{"):
-                # Tentative d'extraction du premier JSON trouvé
-                match = re.search(r"\{.*\}", response, re.DOTALL)
-                if match:
-                    response = match.group(0)
-
-            result = json.loads(response)
-
-            # Map is_safe
-            is_safe = result.get("is_safe")
-            if is_safe is None:
-                is_safe = result.get("safe")
-            if is_safe is None:
-                is_safe = True
-
-            # Map detected_categories
-            detected_categories = result.get("detected_categories")
-            if detected_categories is None:
-                detected_categories = result.get("unsafe_categories")
-            if detected_categories is None:
-                detected_categories = result.get("violations", [])
-
-            # Map action
-            action = result.get("action")
-            if action is None:
-                action = "none" if is_safe else "block"
-
-            return {
-                "is_safe": is_safe,
-                "detected_categories": detected_categories,
-                "unsafe_categories": detected_categories,
-                "action": action,
-                "reasoning": result.get("reasoning", ""),
-                "warning": result.get("warning", ""),
-            }
+                return self._moderate_once(self.inference_engine, prompt, system)
         except Exception as e:
             logger.exception(
                 "❌ Guardrail verification failed due to unexpected error."
