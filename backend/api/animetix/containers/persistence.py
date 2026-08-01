@@ -70,6 +70,13 @@ class PersistenceContainer(containers.DeclarativeContainer):
         )
     )
 
+    manga_progress_repository_adapter = providers.Singleton(
+        LazyClass(
+            "adapters.persistence.django_manga_progress_repository_adapter",
+            "DjangoMangaProgressRepositoryAdapter",
+        )
+    )
+
     safety_adapter = providers.Singleton(
         LazyClass("adapters.persistence.django_safety_adapter", "DjangoSafetyAdapter")
     )
