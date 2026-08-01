@@ -1,9 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Source, Manga, Chapter, Extension, ExtensionAction, MangaDetails } from '../types';
 import { apiClient } from '../../../../utils/apiClient';
 import { useAuthStore } from '../../../../store/authStore';
 import { exploreService } from '../../../../features/explore/services/exploreService';
+import {
+  useMangaProgress,
+  mangaProgressKey,
+} from '../../../../features/manga-reader/progress/useMangaProgress';
+import { markChaptersRead } from '../../../../features/manga-reader/progress/progressService';
 
 /**
  * Message d'erreur clair pour l'explorateur Suwayomi. Quand le backend renvoie
@@ -18,6 +24,7 @@ const suwayomiErrorMessage = (err: unknown, fallback: string): string => {
 
 export const useTachideskExplorer = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'catalog' | 'extensions'>('catalog');
 
   // Catalog States
@@ -54,6 +61,28 @@ export const useTachideskExplorer = () => {
   // General States
   const [error, setError] = useState<string | null>(null);
   const [importStatus, setImportStatus] = useState<string | null>(null);
+
+  // Progression de lecture (Task 7/9) : la popup est purement présentationnelle,
+  // l'appel réseau (et son gating anonyme) vit ici. Même id que celui utilisé
+  // par le lecteur pour un manga Suwayomi non encore importé.
+  const isAuthenticated = useAuthStore.getState().isAuthenticated;
+  const progressMediaId = selectedManga
+    ? `suwayomi:${selectedSource}:${selectedManga.id}`
+    : undefined;
+  const { data: progressSummary, byChapter: progressByChapter } = useMangaProgress(
+    progressMediaId,
+    isAuthenticated,
+  );
+
+  const onToggleChapterRead = useCallback(
+    (chapterNumber: number, next: boolean) => {
+      if (!progressMediaId) return;
+      void markChaptersRead(progressMediaId, [chapterNumber], next).then(() =>
+        queryClient.invalidateQueries({ queryKey: mangaProgressKey(progressMediaId) }),
+      );
+    },
+    [progressMediaId, queryClient],
+  );
 
   const fetchSources = useCallback(async () => {
     setLoadingSources(true);
@@ -448,5 +477,11 @@ export const useTachideskExplorer = () => {
     togglingFavorite,
     toggleFavorite,
     updateFavoriteStatus,
+    // Visiteur anonyme : ces trois props restent `undefined`, c'est le signal
+    // que consomme MangaDetailModal (purement présentationnel) pour afficher
+    // l'invite « Connecte-toi » à la place du suivi de lecture.
+    progressByChapter: isAuthenticated ? progressByChapter : undefined,
+    progressSummary: isAuthenticated ? (progressSummary ?? null) : undefined,
+    onToggleChapterRead: isAuthenticated ? onToggleChapterRead : undefined,
   };
 };

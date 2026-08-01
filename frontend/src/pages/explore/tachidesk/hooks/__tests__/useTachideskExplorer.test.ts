@@ -1,7 +1,16 @@
+﻿import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useTachideskExplorer } from '../useTachideskExplorer';
 import { apiClient } from '../../../../../utils/apiClient';
+
+// useMangaProgress (Task 9) est un hook React Query : il faut un QueryClient
+// dans l'arbre, même pour ce test de hook « nu ».
+const wrapper = ({ children }: { children: React.ReactNode }) => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return React.createElement(QueryClientProvider, { client }, children);
+};
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
@@ -76,7 +85,7 @@ describe('useTachideskExplorer', () => {
 
   it('initializes with default states', async () => {
     mockApiClient.mockResolvedValue([]);
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
 
     expect(result.current.activeTab).toBe('catalog');
     expect(result.current.sources).toEqual([]);
@@ -90,7 +99,7 @@ describe('useTachideskExplorer', () => {
   });
 
   it('fetches sources on mount and selects the first one', async () => {
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.sources).toEqual(mockSources);
@@ -105,7 +114,7 @@ describe('useTachideskExplorer', () => {
   it('handles fetch sources failure', async () => {
     mockApiClient.mockRejectedValue(new Error('Fetch failed'));
 
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.error).toBe('Impossible de charger les sources Suwayomi');
@@ -113,7 +122,7 @@ describe('useTachideskExplorer', () => {
   });
 
   it('fetches extensions when switching to extensions tab', async () => {
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
 
     act(() => {
       result.current.setActiveTab('extensions');
@@ -129,7 +138,7 @@ describe('useTachideskExplorer', () => {
   });
 
   it('performs catalog search successfully', async () => {
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.sources).toEqual(mockSources);
@@ -151,7 +160,7 @@ describe('useTachideskExplorer', () => {
   });
 
   it('selects a manga and loads details/chapters successfully', async () => {
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
     await waitFor(() => expect(result.current.sources).toEqual(mockSources));
 
     mockApiClient.mockImplementation(async (url) => {
@@ -173,7 +182,7 @@ describe('useTachideskExplorer', () => {
   });
 
   it('leaves chapters empty when the Suwayomi chapters endpoint fails (no auto-import)', async () => {
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
     await waitFor(() => expect(result.current.sources).toEqual(mockSources));
 
     mockApiClient.mockImplementation(async (url) => {
@@ -199,7 +208,7 @@ describe('useTachideskExplorer', () => {
   });
 
   it('toggles favorite status successfully', async () => {
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
     await waitFor(() => expect(result.current.sources).toEqual(mockSources));
 
     await act(async () => {
@@ -224,7 +233,7 @@ describe('useTachideskExplorer', () => {
   });
 
   it('updates favorite status with specific value successfully', async () => {
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
     await waitFor(() => expect(result.current.sources).toEqual(mockSources));
 
     await act(async () => {
@@ -249,7 +258,7 @@ describe('useTachideskExplorer', () => {
   });
 
   it('triggers extension actions and refreshes extension/source list', async () => {
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
     await waitFor(() => expect(result.current.sources).toEqual(mockSources));
 
     mockApiClient.mockImplementation(async (url) => {
@@ -269,7 +278,7 @@ describe('useTachideskExplorer', () => {
 
   it('blocks extension actions when unauthenticated, without hitting the API', async () => {
     mockIsAuthenticated = false;
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
     await waitFor(() => expect(result.current.sources).toEqual(mockSources));
 
     mockApiClient.mockClear();
@@ -286,7 +295,7 @@ describe('useTachideskExplorer', () => {
   });
 
   it('computes correct proxied image URL', async () => {
-    const { result } = renderHook(() => useTachideskExplorer());
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
 
     // URL vide -> placeholder.
     expect(result.current.getProxiedImageUrl('')).toBe('https://via.placeholder.com/300x450');

@@ -56,6 +56,9 @@ const TachideskExplorerPage: React.FC = () => {
     togglingFavorite,
     toggleFavorite,
     updateFavoriteStatus,
+    progressByChapter,
+    progressSummary,
+    onToggleChapterRead,
   } = useTachideskExplorer();
 
   const handleSelectCatalogTab = useCallback(() => {
@@ -155,6 +158,9 @@ const TachideskExplorerPage: React.FC = () => {
                 togglingFavorite={togglingFavorite}
                 onToggleFavorite={toggleFavorite}
                 onUpdateFavoriteStatus={updateFavoriteStatus}
+                progressByChapter={progressByChapter}
+                progressSummary={progressSummary}
+                onToggleChapterRead={onToggleChapterRead}
               />
             </>
           ) : (

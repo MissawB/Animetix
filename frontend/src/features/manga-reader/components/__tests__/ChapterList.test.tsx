@@ -21,6 +21,7 @@ let queryResult: QueryResult = { data: undefined, isLoading: true, isError: fals
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: () => queryResult,
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }));
 
 vi.mock('../../../utils/apiClient', () => ({
