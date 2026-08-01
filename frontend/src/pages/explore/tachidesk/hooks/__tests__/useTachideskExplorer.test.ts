@@ -20,11 +20,19 @@ vi.mock('../../../../../utils/apiClient', () => ({
   apiClient: vi.fn(),
 }));
 
-// Contrôle l'état d'authentification consommé par handleExtensionAction.
+// Contrôle l'état d'authentification consommé par handleExtensionAction (via
+// `.getState()`) ET par le hook de progression (via le sélecteur réactif
+// `useAuthStore((s) => s.isAuthenticated)`) : le mock doit supporter les deux
+// formes d'appel, comme le vrai store zustand.
 let mockIsAuthenticated = true;
-vi.mock('../../../../../store/authStore', () => ({
-  useAuthStore: { getState: () => ({ isAuthenticated: mockIsAuthenticated }) },
-}));
+vi.mock('../../../../../store/authStore', () => {
+  const state = () => ({ isAuthenticated: mockIsAuthenticated });
+  const useAuthStore = Object.assign(
+    (selector: (s: { isAuthenticated: boolean }) => unknown) => selector(state()),
+    { getState: state },
+  );
+  return { useAuthStore };
+});
 
 const mockApiClient = vi.mocked(apiClient);
 
@@ -179,6 +187,71 @@ describe('useTachideskExplorer', () => {
     expect(result.current.isFavorited).toBe(true);
     expect(result.current.favoriteStatus).toBe('reading');
     expect(result.current.chapters).toEqual(mockChapters);
+  });
+
+  it('exposes reading progress for an authenticated visitor after selecting a manga', async () => {
+    const mockProgress = {
+      chapters: [{ number: 1, is_read: true, last_page_read: 5, page_count: 10 }],
+      resume: { chapter_number: 1, last_page_read: 5 },
+      read_count: 1,
+      total_count: 1,
+    };
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
+    await waitFor(() => expect(result.current.sources).toEqual(mockSources));
+
+    mockApiClient.mockImplementation(async (url) => {
+      if (url.includes('/progress/')) return mockProgress;
+      if (url.includes('/favorite/')) return { is_favorite: false, status: null };
+      if (url.includes('/manga-chapters/')) return mockChapters;
+      if (url.includes('/sources/')) return mockSources;
+      if (url.includes('/search/')) return { mangas: mockMangas, hasNextPage: false };
+      return [];
+    });
+
+    await act(async () => {
+      await result.current.selectManga(mockMangas[0]);
+    });
+
+    // extId = `suwayomi:${selectedSource}:${manga.id}` -> src-1 est sélectionnée
+    // en premier au montage (voir "fetches sources...").
+    await waitFor(() => {
+      expect(result.current.progressSummary).toEqual(mockProgress);
+    });
+    expect(mockApiClient).toHaveBeenCalledWith(
+      '/api/v1/media/Manga/suwayomi:src-1:manga-1/progress/',
+      { skipToast: true },
+    );
+    expect(result.current.progressByChapter?.get(1)).toEqual(mockProgress.chapters[0]);
+    expect(result.current.onToggleChapterRead).toBeInstanceOf(Function);
+  });
+
+  it('keeps progress fields undefined and makes no progress network call for an anonymous visitor', async () => {
+    mockIsAuthenticated = false;
+    const { result } = renderHook(() => useTachideskExplorer(), { wrapper });
+    await waitFor(() => expect(result.current.sources).toEqual(mockSources));
+
+    mockApiClient.mockImplementation(async (url) => {
+      // Si ce test échoue à cause de cet appel, c'est que le gating anonyme a
+      // régressé : un visiteur anonyme ne doit JAMAIS interroger /progress/.
+      if (url.includes('/progress/')) throw new Error('should not be called for anon visitor');
+      if (url.includes('/favorite/')) return { is_favorite: false, status: null };
+      if (url.includes('/manga-chapters/')) return mockChapters;
+      if (url.includes('/sources/')) return mockSources;
+      if (url.includes('/search/')) return { mangas: mockMangas, hasNextPage: false };
+      return [];
+    });
+
+    await act(async () => {
+      await result.current.selectManga(mockMangas[0]);
+    });
+
+    expect(result.current.progressByChapter).toBeUndefined();
+    expect(result.current.progressSummary).toBeUndefined();
+    expect(result.current.onToggleChapterRead).toBeUndefined();
+    expect(mockApiClient).not.toHaveBeenCalledWith(
+      expect.stringContaining('/progress/'),
+      expect.anything(),
+    );
   });
 
   it('leaves chapters empty when the Suwayomi chapters endpoint fails (no auto-import)', async () => {

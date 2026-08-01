@@ -65,7 +65,10 @@ export const useTachideskExplorer = () => {
   // Progression de lecture (Task 7/9) : la popup est purement présentationnelle,
   // l'appel réseau (et son gating anonyme) vit ici. Même id que celui utilisé
   // par le lecteur pour un manga Suwayomi non encore importé.
-  const isAuthenticated = useAuthStore.getState().isAuthenticated;
+  // Sélecteur réactif (pas `.getState()`) : sinon une connexion pendant que la
+  // popup est déjà montée laisse le suivi de lecture invisible jusqu'au
+  // prochain re-render sans rapport (cf. ChapterList.tsx, même pattern).
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const progressMediaId = selectedManga
     ? `suwayomi:${selectedSource}:${selectedManga.id}`
     : undefined;
