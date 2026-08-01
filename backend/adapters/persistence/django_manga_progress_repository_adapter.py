@@ -86,22 +86,38 @@ class DjangoMangaProgressRepositoryAdapter(MangaProgressRepositoryPort):
         return row
 
     def bulk_set_read(self, user: Any, chapters: List[Any], is_read: bool) -> int:
+        """Marque plusieurs chapitres lus/non lus ; renvoie le nombre traité.
+
+        Les doublons de ``chapters`` (le même chapitre présent plusieurs fois
+        dans la liste) sont dédupliqués avant traitement : un chapitre répété
+        n'est mis à jour et compté qu'une seule fois. Le retour est donc le
+        nombre de chapitres *distincts* traités, pas ``len(chapters)``.
+
+        Le classement lu/à-créer repose sur un unique ``SELECT`` amont. Si une
+        ligne concurrente (même utilisateur, même chapitre) a été insérée par
+        un autre appel entre ce ``SELECT`` et le ``bulk_create``, celui-ci lève
+        ``IntegrityError`` (contrainte ``unique_together``) : chaque chapitre
+        du lot en échec est alors repris individuellement via
+        :meth:`_recover_after_conflict`, jamais ignoré silencieusement.
+        """
         from animetix.models import MangaReadingProgress
+        from django.db import IntegrityError, transaction
         from django.utils import timezone
 
-        chapters = list(chapters)
+        # dict{pk: chapter} conserve la 1re occurrence et élimine les doublons.
+        deduped_chapters = list({chapter.pk: chapter for chapter in chapters}.values())
         now = timezone.now()
         existing_by_chapter_id = {
             row.chapter_id: row
             for row in MangaReadingProgress.objects.filter(
-                user=user, chapter__in=chapters
+                user=user, chapter__in=deduped_chapters
             )
         }
 
         to_update: List[Any] = []
         to_create: List[Any] = []
-        for chapter in chapters:
-            row = existing_by_chapter_id.get(chapter.id)
+        for chapter in deduped_chapters:
+            row = existing_by_chapter_id.get(chapter.pk)
             if row is not None:
                 # is_read=True conserve la page déjà atteinte ; is_read=False repart à 0.
                 row.last_page_read = row.last_page_read if is_read else 0
@@ -125,9 +141,39 @@ class DjangoMangaProgressRepositoryAdapter(MangaProgressRepositoryPort):
                 to_update, ["last_page_read", "is_read", "updated_at"]
             )
         if to_create:
-            MangaReadingProgress.objects.bulk_create(to_create)
+            try:
+                # atomic() ouvre un savepoint : si l'INSERT échoue, on peut
+                # continuer à utiliser la connexion pour la reprise ci-dessous
+                # (sous Postgres, une transaction en échec bloque tout le reste).
+                with transaction.atomic():
+                    MangaReadingProgress.objects.bulk_create(to_create)
+            except IntegrityError:
+                for pending in to_create:
+                    self._recover_after_conflict(user, pending.chapter, is_read)
 
-        return len(chapters)
+        return len(deduped_chapters)
+
+    def _recover_after_conflict(self, user: Any, chapter: Any, is_read: bool) -> Any:
+        """Reprise sûre après une collision ``(user, chapter)`` apparue entre
+        le ``SELECT`` de :meth:`bulk_set_read` et son ``bulk_create`` (course).
+
+        Ne perd jamais silencieusement une mise à jour (contrairement à un
+        simple ``ignore_conflicts=True``) : relit la ligne concurrente et lui
+        applique les mêmes règles que le chemin normal (page conservée si
+        ``is_read``, remise à 0 sinon).
+        """
+        from animetix.models import MangaReadingProgress
+
+        row, created = MangaReadingProgress.objects.get_or_create(
+            user=user,
+            chapter=chapter,
+            defaults={"last_page_read": 0, "is_read": is_read},
+        )
+        if not created:
+            row.last_page_read = row.last_page_read if is_read else 0
+            row.is_read = is_read
+            row.save(update_fields=["last_page_read", "is_read", "updated_at"])
+        return row
 
     def set_favorite_last_read(
         self, user: Any, manga: Any, chapter_number: float
