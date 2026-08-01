@@ -36,10 +36,16 @@ DOCKERFILE = ROOT / "deploy" / "Dockerfile.brain"
 DEPLOYMENTS = ROOT / "deploy" / "deployments.yaml"
 LOCAL_MODELS = ROOT / "backend" / "core" / "utils" / "local_models.py"
 
-# `ollama create $OLLAMA_MODEL`, `ollama pull $CONTROL_MODEL`, and
-# `ollama pull $GUARDRAIL_MODEL` are the tags the image registers; all read their
-# values from these ARG defaults.
-BAKED_ARGS = ("OLLAMA_MODEL", "CONTROL_MODEL", "GUARDRAIL_MODEL")
+# Les tags que l'image registre : `ollama create $OLLAMA_MODEL` puis un `pull`
+# pour chacun des autres. Tous lisent leur valeur de ces ARG.
+# GUARDRAIL_CANDIDATE_MODEL est baké pour être COMPARÉ, pas servi par défaut :
+# il appartient donc à l'ensemble autorisé, sans être la valeur d'aucun rôle.
+BAKED_ARGS = (
+    "OLLAMA_MODEL",
+    "CONTROL_MODEL",
+    "GUARDRAIL_MODEL",
+    "GUARDRAIL_CANDIDATE_MODEL",
+)
 
 
 def _baked_tags() -> set[str]:

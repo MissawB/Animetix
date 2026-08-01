@@ -166,6 +166,16 @@ ENV CONTROL_MODEL=${CONTROL_MODEL}
 ARG GUARDRAIL_MODEL=qwen2.5:1.5b-instruct
 ENV GUARDRAIL_MODEL=${GUARDRAIL_MODEL}
 
+# Candidat suivant, baké pour être COMPARÉ, pas pour être servi par défaut.
+# Mesuré le 2026-08-01 : le 1,5B est 2,5x plus rapide que le 7B (0,8 s contre
+# 2,1-2,5 s à chaud) mais répond `unsafe/HALLUCINATION` à tout, y compris à une
+# phrase recopiée de son propre contexte -- 2/4 sur des cas au verdict connu,
+# contre 4/4 pour le 7B. Un modérateur qui bloque toutes les bonnes réponses ne
+# vaut pas sa vitesse. Le 3B est baké pour trancher par la mesure ; le rôle
+# `GUARDRAIL_OLLAMA_MODEL` ne bascule dessus que s'il gagne.
+ARG GUARDRAIL_CANDIDATE_MODEL=qwen2.5:3b-instruct
+ENV GUARDRAIL_CANDIDATE_MODEL=${GUARDRAIL_CANDIDATE_MODEL}
+
 COPY --from=gguf /otaku-q4_k_m.gguf /opt/gguf/otaku-q4_k_m.gguf
 
 # The TEMPLATE and stop tokens are NOT optional. A bare `FROM <gguf>` Modelfile
@@ -196,6 +206,7 @@ RUN { \
     && ollama show "$OLLAMA_MODEL" --modelfile | head -5 \
     && ollama pull "$CONTROL_MODEL" \
     && ollama pull "$GUARDRAIL_MODEL" \
+    && ollama pull "$GUARDRAIL_CANDIDATE_MODEL" \
     && ollama list \
     && kill "$OLLAMA_PID" \
     && rm -rf /opt/gguf
