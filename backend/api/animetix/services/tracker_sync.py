@@ -17,10 +17,10 @@ def push_manga_progress_to_trackers(user, manga, media_id: str, progress: int) -
     Ne lève jamais — un tracker en panne ne doit pas transformer une lecture
     réussie en erreur.
     """
-    from ..containers import get_container
-
-    service = get_container().core.manga_tracker_service()
     try:
+        from ..containers import get_container
+
+        service = get_container().core.manga_tracker_service()
         return service.push(user, media_id, progress)
     except Exception:
         logger.warning("Poussée trackers échouée pour %s ch.%s", media_id, progress)

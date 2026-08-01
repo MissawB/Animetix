@@ -197,3 +197,53 @@ def test_connected_trackers_lists_only_trackers_with_a_connection(svc):
 
     other_user = User.objects.create_user(username="nolink", password="pw")
     assert service.connected_trackers(other_user) == []
+
+
+@pytest.mark.django_db
+def test_push_isolates_a_failing_tracker_from_the_others():
+    """Une panne (levée d'exception) sur un tracker ne doit ni interrompre
+    la poussée des autres, ni faire disparaître leurs résultats du dict
+    renvoyé. Les adaptateurs réels ne sont pas censés lever (ils renvoient
+    False/None), mais c'est une défense en profondeur : avant ce chantier,
+    chaque tracker avait son propre garde-fou.
+    """
+    user = User.objects.create_user(username="two-trackers", password="pw")
+    manga = MediaItem.objects.create(
+        external_id="suwayomi:1:811", media_type="Manga", title="Vagabond"
+    )
+    TrackerConnection.objects.create(user=user, tracker="anilist", token="tok-a")
+    TrackerConnection.objects.create(user=user, tracker="myanimelist", token="tok-m")
+    MangaTrackerLink.objects.create(
+        user=user,
+        manga=manga,
+        tracker="anilist",
+        remote_id="1",
+        remote_title="Vagabond",
+        remote_progress=1,
+        status="confirmed",
+    )
+    MangaTrackerLink.objects.create(
+        user=user,
+        manga=manga,
+        tracker="myanimelist",
+        remote_id="2",
+        remote_title="Vagabond",
+        remote_progress=1,
+        status="confirmed",
+    )
+
+    anilist = MagicMock()
+    anilist.write_progress.side_effect = RuntimeError("AniList timeout")
+    myanimelist = MagicMock()
+    myanimelist.write_progress.return_value = True
+
+    service = MangaTrackerService(
+        repository=DjangoTrackerRepositoryAdapter(),
+        adapters={"anilist": anilist, "myanimelist": myanimelist},
+    )
+
+    results = service.push(user, "suwayomi:1:811", 5)
+
+    myanimelist.write_progress.assert_called_once_with("2", 5, token="tok-m")
+    assert results["anilist"]["success"] is False
+    assert results["myanimelist"]["success"] is True

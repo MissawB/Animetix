@@ -91,32 +91,46 @@ class MangaTrackerService:
         for link in self.repo.get_links(user, manga):
             if link.status != "confirmed":
                 continue
-            adapter = self.adapters.get(link.tracker)
-            token = self._token(user, link.tracker)
-            if adapter is None or not token:
-                continue
-
-            remote = link.remote_progress
-            if remote is None:
-                # Inconnue : on retente la lecture, mais on n'écrit jamais à l'aveugle.
-                remote = adapter.read_progress(link.remote_id, token=token)
-                self.repo.set_remote_progress(link, remote)
-                if remote is None:
-                    results[link.tracker] = {
-                        "success": False,
-                        "error": "Remote progress unknown",
-                    }
-                    continue
-
-            if progress <= remote:
-                results[link.tracker] = {"success": True, "skipped": "not ahead"}
-                continue
-
-            ok = adapter.write_progress(link.remote_id, progress, token=token)
-            if ok:
-                self.repo.set_remote_progress(link, progress)
-            results[link.tracker] = {"success": ok}
+            try:
+                outcome = self._push_one(user, link, progress)
+            except Exception as exc:
+                # Défense en profondeur : les adaptateurs ne sont pas censés
+                # lever (ils renvoient [], None, False), mais un tracker en
+                # panne ne doit jamais empêcher les autres d'être tentés.
+                logger.warning(
+                    "Push %s a levé pour le lien %s: %s",
+                    link.tracker,
+                    link.remote_id,
+                    exc,
+                )
+                outcome = {"success": False, "error": str(exc)}
+            if outcome is not None:
+                results[link.tracker] = outcome
         return results
+
+    def _push_one(
+        self, user: Any, link: Any, progress: int
+    ) -> Optional[Dict[str, Any]]:
+        adapter = self.adapters.get(link.tracker)
+        token = self._token(user, link.tracker)
+        if adapter is None or not token:
+            return None
+
+        remote = link.remote_progress
+        if remote is None:
+            # Inconnue : on retente la lecture, mais on n'écrit jamais à l'aveugle.
+            remote = adapter.read_progress(link.remote_id, token=token)
+            self.repo.set_remote_progress(link, remote)
+            if remote is None:
+                return {"success": False, "error": "Remote progress unknown"}
+
+        if progress <= remote:
+            return {"success": True, "skipped": "not ahead"}
+
+        ok = adapter.write_progress(link.remote_id, progress, token=token)
+        if ok:
+            self.repo.set_remote_progress(link, progress)
+        return {"success": ok}
 
     def list_links(self, user: Any, media_id: str) -> List[Any]:
         manga = self.repo.get_manga(media_id)
