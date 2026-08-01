@@ -24,6 +24,11 @@ import os
 # `otaku-qwen:7b` stays in the image: a fixed adapter can be tried by flipping
 # LLM_MODEL_NAME, no rebuild. See TODO.md.
 LLM_OLLAMA_MODEL = os.getenv("LLM_MODEL_NAME", "qwen2.5:7b-instruct")
+# Modérateur du guardrail. Un rôle SÉPARÉ de LLM_OLLAMA_MODEL : la modération est
+# une classification à sortie courte, pas de la synthèse, et la faire tourner sur
+# le 7B coûtait deux appels au gros modèle par tour de chat. Doit nommer un tag que
+# l'image brain registre (cf. tests/deploy/test_brain_model_tag_is_baked.py).
+GUARDRAIL_OLLAMA_MODEL = os.getenv("GUARDRAIL_MODEL_NAME", "qwen2.5:1.5b-instruct")
 LOCAL_TEXT_MODEL = os.getenv("LOCAL_MODEL_ID", "Qwen/Qwen3.5-9B")
 DRAFT_TEXT_MODEL = os.getenv("DRAFT_MODEL_ID", "Qwen/Qwen2.5-0.5B-Instruct")
 COMPACT_REASONING_MODEL = os.getenv("COMPACT_MODEL_ID", "WeiboAI/VibeThinker-3B")

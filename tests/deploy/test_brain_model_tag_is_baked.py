@@ -9,8 +9,13 @@ revision (image ``brain:af7d7e7f``, which bakes ``otaku-qwen:7b`` and
 
 ``test_no_hardcoded_local_model.py`` could not catch it: it only scans
 ``backend/**/*.py``, and the drift lived in a YAML manifest. So this guard pins
-the two places a served tag can come from -- the deploy manifest and the role
-constant -- to the tags ``Dockerfile.brain`` actually bakes.
+the places a served tag can come from -- the deploy manifest and role constants --
+to the tags ``Dockerfile.brain`` actually bakes.
+
+Note: ``LLM_OLLAMA_MODEL`` default-tag coverage has moved to
+``test_brain_image_serves_a_model.py::test_the_model_the_code_asks_for_is_actually_in_the_image``,
+which also checks that all declared roles are in the image. The unique checks
+here are the ``deployments.yaml`` manifest and the ``GUARDRAIL_OLLAMA_MODEL`` role.
 """
 
 import pathlib
@@ -23,9 +28,10 @@ DOCKERFILE = ROOT / "deploy" / "Dockerfile.brain"
 DEPLOYMENTS = ROOT / "deploy" / "deployments.yaml"
 LOCAL_MODELS = ROOT / "backend" / "core" / "utils" / "local_models.py"
 
-# `ollama create $OLLAMA_MODEL` and `ollama pull $CONTROL_MODEL` are the only two
-# tags the image registers; both read their value from these ARG defaults.
-BAKED_ARGS = ("OLLAMA_MODEL", "CONTROL_MODEL")
+# `ollama create $OLLAMA_MODEL`, `ollama pull $CONTROL_MODEL`, and
+# `ollama pull $GUARDRAIL_MODEL` are the tags the image registers; all read their
+# values from these ARG defaults.
+BAKED_ARGS = ("OLLAMA_MODEL", "CONTROL_MODEL", "GUARDRAIL_MODEL")
 
 
 def _baked_tags() -> set[str]:
@@ -52,16 +58,14 @@ def test_brain_manifest_does_not_pin_an_unbaked_tag():
     )
 
 
-def test_local_models_default_tag_is_baked():
-    # Read the literal rather than importing: a developer's LLM_MODEL_NAME must
-    # not decide whether this guard passes.
+def test_guardrail_role_default_tag_is_baked():
     match = re.search(
-        r'LLM_OLLAMA_MODEL = os\.getenv\(\s*"LLM_MODEL_NAME",\s*"(?P<tag>[^"]+)"',
+        r'GUARDRAIL_OLLAMA_MODEL = os\.getenv\(\s*"GUARDRAIL_MODEL_NAME",\s*"(?P<tag>[^"]+)"',
         LOCAL_MODELS.read_text(encoding="utf-8"),
     )
-    assert match, "LLM_OLLAMA_MODEL default no longer matches the expected shape"
+    assert match, "GUARDRAIL_OLLAMA_MODEL is not declared in local_models.py"
     default = match.group("tag")
     assert default in _baked_tags(), (
-        f"local_models.LLM_OLLAMA_MODEL defaults to {default!r}, which "
+        f"local_models.GUARDRAIL_OLLAMA_MODEL defaults to {default!r}, which "
         f"Dockerfile.brain does not bake (baked: {sorted(_baked_tags())})."
     )

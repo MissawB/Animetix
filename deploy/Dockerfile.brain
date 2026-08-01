@@ -159,6 +159,13 @@ ENV OLLAMA_MODEL=${OLLAMA_MODEL}
 ARG CONTROL_MODEL=qwen2.5:7b-instruct
 ENV CONTROL_MODEL=${CONTROL_MODEL}
 
+# Modérateur du guardrail : une classification à sortie courte n'a pas besoin du 7B,
+# et l'y faire tourner mettait deux appels au gros modèle sur le chemin critique du
+# chat. Même famille et même registre que le contrôle, donc servable par l'Ollama
+# 0.5.13 épinglé plus haut.
+ARG GUARDRAIL_MODEL=qwen2.5:1.5b-instruct
+ENV GUARDRAIL_MODEL=${GUARDRAIL_MODEL}
+
 COPY --from=gguf /otaku-q4_k_m.gguf /opt/gguf/otaku-q4_k_m.gguf
 
 # The TEMPLATE and stop tokens are NOT optional. A bare `FROM <gguf>` Modelfile
@@ -188,6 +195,7 @@ RUN { \
     ollama create "$OLLAMA_MODEL" -f /opt/gguf/Modelfile \
     && ollama show "$OLLAMA_MODEL" --modelfile | head -5 \
     && ollama pull "$CONTROL_MODEL" \
+    && ollama pull "$GUARDRAIL_MODEL" \
     && ollama list \
     && kill "$OLLAMA_PID" \
     && rm -rf /opt/gguf
@@ -220,4 +228,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
 # 90 s. Paying that cost at startup -- before uvicorn accepts traffic -- means the
 # model is already resident when the first user arrives. OLLAMA_KEEP_ALIVE=24h
 # then keeps it there for the life of the instance.
-CMD ["sh", "-c", "ollama serve & for _ in $(seq 1 60); do curl -fs http://127.0.0.1:11434/api/tags >/dev/null 2>&1 && break; sleep 1; done; echo 'warming up $OLLAMA_MODEL...'; curl -s -X POST http://127.0.0.1:11434/api/generate -d \"{\\\"model\\\":\\\"$OLLAMA_MODEL\\\",\\\"prompt\\\":\\\"hi\\\",\\\"stream\\\":false,\\\"options\\\":{\\\"num_predict\\\":1}}\" >/dev/null; echo 'model resident'; exec uvicorn adapters.inference.brain_service:app --host 0.0.0.0 --port ${PORT:-7861}"]
+CMD ["sh", "-c", "ollama serve & for _ in $(seq 1 60); do curl -fs http://127.0.0.1:11434/api/tags >/dev/null 2>&1 && break; sleep 1; done; echo 'warming up $OLLAMA_MODEL...'; curl -s -X POST http://127.0.0.1:11434/api/generate -d \"{\\\"model\\\":\\\"$OLLAMA_MODEL\\\",\\\"prompt\\\":\\\"hi\\\",\\\"stream\\\":false,\\\"options\\\":{\\\"num_predict\\\":1}}\" >/dev/null; echo 'warming up $GUARDRAIL_MODEL...'; curl -s -X POST http://127.0.0.1:11434/api/generate -d \"{\\\"model\\\":\\\"$GUARDRAIL_MODEL\\\",\\\"prompt\\\":\\\"hi\\\",\\\"stream\\\":false,\\\"options\\\":{\\\"num_predict\\\":1}}\" >/dev/null; echo 'model resident'; exec uvicorn adapters.inference.brain_service:app --host 0.0.0.0 --port ${PORT:-7861}"]
