@@ -70,6 +70,49 @@ model_name = LLM_OLLAMA_MODEL
 # Initialisation de l'unité de calcul locale (Unified avec GPU)
 brain_engine = UnifiedInferenceAdapter(api_base=api_base, model_name=model_name)
 
+# Un engine par modèle servi, construit à la demande et conservé. Les modèles sont
+# bakés dans l'image, donc la liste ne bouge pas de la vie du process.
+_engines: dict[str, UnifiedInferenceAdapter] = {model_name: brain_engine}
+_served_models_cache: Optional[set[str]] = None
+
+
+def _served_models() -> set[str]:
+    """Tags réellement registrés auprès d'Ollama, d'après la sonde /api/tags.
+
+    Un résultat vide n'est PAS mis en cache : au tout début du démarrage Ollama
+    peut ne pas encore répondre, et figer un ensemble vide condamnerait toute
+    sélection de modèle pour la vie du process.
+    """
+    global _served_models_cache
+    if _served_models_cache:
+        return _served_models_cache
+    probe = brain_engine.health_check()
+    served = {m.get("name") for m in probe.get("models", []) if isinstance(m, dict)} - {
+        None
+    }
+    if served:
+        _served_models_cache = served
+    return served
+
+
+def engine_for(model: Optional[str]) -> UnifiedInferenceAdapter:
+    """Engine servant `model`, ou l'engine par défaut si `model` est absent.
+
+    Un client ne choisit pas un tag arbitraire : un tag inconnu part en 404 côté
+    Ollama, que rien en aval ne distingue d'une panne du service. On le refuse
+    explicitement, en 400.
+    """
+    if not model or model == model_name:
+        return brain_engine
+    if model not in _engines:
+        if model not in _served_models():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Model '{model}' is not served by this brain.",
+            )
+        _engines[model] = UnifiedInferenceAdapter(api_base=api_base, model_name=model)
+    return _engines[model]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -118,6 +161,7 @@ class GenerateRequest(BaseModel):
     thinking_budget: int = 0
     thinking_mode: bool = False
     include_logprobs: bool = False
+    model: Optional[str] = None
 
 
 class SimilarityRequest(BaseModel):
@@ -235,6 +279,7 @@ class Generate3DRequest(BaseModel):
 class ModerateRequest(BaseModel):
     text: str
     categories: Optional[List[str]] = None
+    model: Optional[str] = None
 
 
 class ImageGenerateRequest(BaseModel):
@@ -270,7 +315,7 @@ def health():
 @app.post("/generate", dependencies=[Depends(verify_api_key)])
 @handle_brain_errors
 def generate(req: GenerateRequest):
-    res = brain_engine.generate(
+    res = engine_for(req.model).generate(
         req.prompt,
         req.system_prompt,
         thinking_budget=req.thinking_budget,
@@ -504,7 +549,7 @@ def generate_3d(req: Generate3DRequest):
 @app.post("/moderate", dependencies=[Depends(verify_api_key)])
 @handle_brain_errors
 def moderate(req: ModerateRequest):
-    res = brain_engine.moderate_content(req.text, req.categories or [])
+    res = engine_for(req.model).moderate_content(req.text, req.categories or [])
     return {"moderation": res}
 
 
