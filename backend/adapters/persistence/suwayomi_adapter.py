@@ -253,6 +253,39 @@ class SuwayomiAdapter(SuwayomiPort):
         payload = data.get("fetchChapterPages") or {}
         return payload.get("pages") or []
 
+    def update_chapters_read_state(
+        self,
+        chapter_ids: List[str],
+        is_read: bool,
+        last_page_read: Optional[int] = None,
+    ) -> bool:
+        """Miroir de l'état de lecture vers Suwayomi (best-effort).
+
+        Contrat v2.x : `updateChapters(input:{ids:[Int!]!, patch:{...}})`. Le patch
+        n'accepte que `isRead`, `lastPageRead` et `isBookmarked`.
+        """
+        if not chapter_ids:
+            return False
+
+        patch: Dict[str, Any] = {"isRead": is_read}
+        if last_page_read is not None:
+            patch["lastPageRead"] = last_page_read
+
+        mut = """
+        mutation UpdateChaptersRead($ids: [Int!]!, $patch: UpdateChapterPatchInput!) {
+          updateChapters(input: { ids: $ids, patch: $patch }) {
+            chapters {
+              id
+              isRead
+            }
+          }
+        }
+        """
+        data = self._query(
+            mut, {"ids": [int(cid) for cid in chapter_ids], "patch": patch}
+        )
+        return bool(data.get("updateChapters"))
+
     def get_extensions(self) -> List[Dict[str, Any]]:
         q = """
         query {

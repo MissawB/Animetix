@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 class SuwayomiPort(ABC):
@@ -37,6 +37,16 @@ class SuwayomiPort(ABC):
     @abstractmethod
     def get_pages(self, suwayomi_chapter_id: str) -> List[str]:
         """Fetch page image URLs/paths for a given chapter ID."""
+        pass
+
+    @abstractmethod
+    def update_chapters_read_state(
+        self,
+        chapter_ids: List[str],
+        is_read: bool,
+        last_page_read: Optional[int] = None,
+    ) -> bool:
+        """Mirror reading state back to Suwayomi."""
         pass
 
     @abstractmethod
