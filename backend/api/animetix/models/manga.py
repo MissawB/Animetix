@@ -78,3 +78,40 @@ class MangaReadingProgress(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.chapter} - p{self.last_page_read}"
+
+
+class MangaTrackerLink(models.Model):
+    """Liaison entre une œuvre du catalogue et son entrée chez un tracker tiers.
+
+    Remplace la résolution par titre faite à chaque poussée, qui mettait
+    silencieusement à jour la mauvaise œuvre sur un titre ambigu. `remote_progress`
+    mémorise la dernière valeur distante connue pour ne jamais la faire reculer.
+    """
+
+    STATUS_CHOICES = [("suggested", "Suggested"), ("confirmed", "Confirmed")]
+    TRACKER_CHOICES = [("myanimelist", "MyAnimeList"), ("anilist", "AniList")]
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="tracker_links"
+    )
+    manga = models.ForeignKey(
+        MediaItem,
+        on_delete=models.CASCADE,
+        related_name="tracker_links",
+        limit_choices_to={"media_type": "Manga"},
+    )
+    tracker = models.CharField(max_length=20, choices=TRACKER_CHOICES)
+    remote_id = models.CharField(max_length=50)
+    remote_title = models.CharField(max_length=255, blank=True)
+    # None = inconnue : on ne pousse pas tant qu'on n'a pas pu la lire.
+    remote_progress = models.IntegerField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default="suggested"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("user", "manga", "tracker")
+
+    def __str__(self):
+        return f"{self.user.username} - {self.manga.title} -> {self.tracker}:{self.remote_id}"
