@@ -64,6 +64,67 @@ describe('useReadingProgress', () => {
     );
   });
 
+  // Regression: opening a chapter used to be enough to write. The mount
+  // effect armed `{last_page_read: 0, is_read: false}` — currentPageIndex is
+  // 0 until the resume lands — and the debounce fired it 1.5 s later with no
+  // user action at all, wiping a finished chapter back to unread/page 0.
+  it('writes nothing on a passive mount, with no page turn', async () => {
+    const put = vi.spyOn(svc, 'putChapterProgress').mockResolvedValue({});
+    const { unmount } = renderHook(() =>
+      useReadingProgress({ mediaId: 'm1', chapterNumber: '1', enabled: true }),
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(put).not.toHaveBeenCalled();
+
+    // Closing the tab during that window must not turn the mount into a write
+    // either: the exit flush has nothing pending to send.
+    unmount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(put).not.toHaveBeenCalled();
+  });
+
+  it('marks the current chapter read on demand, keeping the page reached', async () => {
+    const put = vi.spyOn(svc, 'putChapterProgress').mockResolvedValue({});
+    const { result } = renderHook(() =>
+      useReadingProgress({ mediaId: 'm1', chapterNumber: '1', enabled: true }),
+    );
+
+    act(() => {
+      useReaderStore.getState().setCurrentPageIndex(1);
+    });
+    act(() => {
+      result.current.markCurrentChapterRead();
+    });
+
+    // Immediate — no debounce window — and a single call: "next chapter" must
+    // not double-notify the trackers.
+    expect(put).toHaveBeenCalledTimes(1);
+    expect(put).toHaveBeenCalledWith('m1', '1', { last_page_read: 1, is_read: true });
+
+    await act(async () => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(put).toHaveBeenCalledTimes(1);
+  });
+
+  it('marks nothing when disabled (anonymous visitor)', () => {
+    const put = vi.spyOn(svc, 'putChapterProgress');
+    const { result } = renderHook(() =>
+      useReadingProgress({ mediaId: 'm1', chapterNumber: '1', enabled: false }),
+    );
+
+    act(() => {
+      result.current.markCurrentChapterRead();
+    });
+
+    expect(put).not.toHaveBeenCalled();
+  });
+
   it('writes nothing at all when disabled', async () => {
     const put = vi.spyOn(svc, 'putChapterProgress');
     renderHook(() => useReadingProgress({ mediaId: 'm1', chapterNumber: '1', enabled: false }));

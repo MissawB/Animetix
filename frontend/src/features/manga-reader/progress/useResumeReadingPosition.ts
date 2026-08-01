@@ -19,7 +19,13 @@ interface Options {
  *  reprise pour de bon — l'effet se relancerait bien quand la progression
  *  arrive, mais sortirait aussitôt au premier `if`. On distingue donc
  *  « pas encore chargé » (on attend, la garde reste ouverte) de « chargé,
- *  rien à reprendre » (on consomme la garde, sans reprise). */
+ *  rien à reprendre » (on consomme la garde, sans reprise).
+ *
+ *  Renvoie `isResolved` : la question « où reprendre ? » est tranchée pour ce
+ *  chapitre. Tant qu'elle ne l'est pas, `currentPageIndex` vaut 0 par défaut
+ *  et ne reflète PAS la position réelle du lecteur — écrire cette valeur
+ *  effacerait la progression. C'est la condition d'activation de
+ *  `useReadingProgress`. */
 export function useResumeReadingPosition({
   mediaId,
   chapterId,
@@ -30,6 +36,14 @@ export function useResumeReadingPosition({
 }: Options) {
   const { byChapter, isFetched: progressFetched } = useMangaProgress(mediaId, isAuthenticated);
   const resumedRef = useRef<string | null>(null);
+
+  // Derived at render time from the very conditions the effect below waits on,
+  // rather than tracked in state: `resumedRef` is a ref (mutating it wouldn't
+  // re-render, so a consumer would never learn the answer landed) and setting
+  // state inside the effect would just add a cascading render. Turns back to
+  // false on its own when a chapter change empties the reader.
+  const isResolved =
+    readerPagesLength > 0 && !isAuthLoading && (!isAuthenticated || progressFetched);
 
   useEffect(() => {
     const key = `${mediaId}:${chapterId}`;
@@ -61,4 +75,6 @@ export function useResumeReadingPosition({
     isAuthLoading,
     progressFetched,
   ]);
+
+  return { isResolved };
 }

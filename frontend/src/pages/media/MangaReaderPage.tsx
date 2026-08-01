@@ -6,7 +6,6 @@ import { MangaReader } from '../../features/manga-reader';
 import { useReaderStore } from '../../features/manga-reader/stores/useReaderStore';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { apiClient } from '../../utils/apiClient';
-import { mediaService } from '../../features/media/services/mediaService';
 import { ArrowLeft, BookOpen, ChevronRight, ServerCrash, Settings, WifiOff } from 'lucide-react';
 import { useChapterPages } from '../../features/manga-reader/offline/useChapterPages';
 import { useReadingProgress } from '../../features/manga-reader/progress/useReadingProgress';
@@ -34,18 +33,10 @@ const MangaReaderPage: React.FC = () => {
     setCurrentPageIndex(0);
   }, [pages, setPages, setCurrentPageIndex]);
 
-  // Writes the reading position as it changes; the server itself pushes to
-  // AniList/MyAnimeList on the read transition, so no separate sync call is
-  // needed here on reaching the last page.
-  const { saveState } = useReadingProgress({
-    mediaId,
-    chapterNumber: chapterId,
-    enabled: isAuthenticated,
-  });
   // Resumes at the saved position — once per chapter. See
   // useResumeReadingPosition for why the guard must wait on the progress
   // query settling rather than firing the moment pages are ready.
-  useResumeReadingPosition({
+  const { isResolved } = useResumeReadingPosition({
     mediaId,
     chapterId,
     isAuthenticated,
@@ -53,12 +44,23 @@ const MangaReaderPage: React.FC = () => {
     readerPagesLength: readerPages.length,
     setCurrentPageIndex,
   });
+  // Writes the reading position as it changes; the server itself pushes to
+  // AniList/MyAnimeList when a chapter flips to read, so no separate sync call
+  // is made here — neither on the last page nor on "next chapter".
+  // Gated on `isResolved` as well as auth: before the resume answer lands,
+  // currentPageIndex is a placeholder 0, and writing it would wipe the very
+  // progress we are about to restore.
+  const { saveState, markCurrentChapterRead } = useReadingProgress({
+    mediaId,
+    chapterNumber: chapterId,
+    enabled: isAuthenticated && isResolved,
+  });
 
   const handleNextChapter = () => {
     if (mediaId && chapterId) {
-      mediaService.syncMangaProgress(mediaId, chapterId).catch((err) => {
-        console.error('Failed to sync manga reading progress on next chapter:', err);
-      });
+      // Skipping ahead still counts the current chapter as finished — through
+      // the normal progress path, which is also what notifies the trackers.
+      markCurrentChapterRead();
       navigate(`/media/manga/${mediaId}/${parseFloat(chapterId) + 1}/`);
     }
   };

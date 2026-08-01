@@ -57,6 +57,49 @@ describe('useResumeReadingPosition', () => {
     await waitFor(() => expect(setCurrentPageIndex).toHaveBeenCalledWith(39));
   });
 
+  // `isResolved` is what gates the *writer* hook (useReadingProgress): while
+  // it is false, currentPageIndex is a placeholder 0 rather than the reader's
+  // real position, and writing it would erase the progress being restored.
+  it('reports isResolved only once the resume question is settled', async () => {
+    let resolveApi: (value: unknown) => void = () => {};
+    const pending = new Promise((resolve) => {
+      resolveApi = resolve;
+    });
+    vi.spyOn(apiMod, 'apiClient').mockReturnValue(pending as Promise<unknown>);
+
+    const { result, rerender } = renderHook(
+      (props: { readerPagesLength: number }) =>
+        useResumeReadingPosition({
+          mediaId: 'm1',
+          chapterId: '5',
+          isAuthenticated: true,
+          isAuthLoading: false,
+          readerPagesLength: props.readerPagesLength,
+          setCurrentPageIndex: vi.fn(),
+        }),
+      { wrapper, initialProps: { readerPagesLength: 0 } },
+    );
+
+    // No pages yet, and no progress yet.
+    expect(result.current.isResolved).toBe(false);
+
+    rerender({ readerPagesLength: 50 });
+    // Pages ready but /progress/ still in flight: still unresolved.
+    expect(result.current.isResolved).toBe(false);
+
+    await act(async () => {
+      resolveApi({
+        chapters: [{ number: 5, is_read: true, last_page_read: 82, page_count: 83 }],
+        resume: null,
+        read_count: 1,
+        total_count: 1,
+      });
+      await pending;
+    });
+
+    await waitFor(() => expect(result.current.isResolved).toBe(true));
+  });
+
   // Guards the new "wait for isFetched" branch: for an anonymous visitor
   // useMangaProgress never runs its query (enabled=false), so isFetched
   // would never become true — the hook must not wait on it forever.
