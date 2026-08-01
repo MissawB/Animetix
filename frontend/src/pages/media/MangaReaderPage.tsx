@@ -9,13 +9,16 @@ import { apiClient } from '../../utils/apiClient';
 import { mediaService } from '../../features/media/services/mediaService';
 import { ArrowLeft, BookOpen, ChevronRight, ServerCrash, Settings, WifiOff } from 'lucide-react';
 import { useChapterPages } from '../../features/manga-reader/offline/useChapterPages';
+import { useReadingProgress } from '../../features/manga-reader/progress/useReadingProgress';
+import { useMangaProgress } from '../../features/manga-reader/progress/useMangaProgress';
+import { useAuthStore } from '../../store/authStore';
 
 const MangaReaderPage: React.FC = () => {
   const { t } = useTranslation();
   const { mediaId, chapterId } = useParams<{ mediaId: string; chapterId: string }>();
   const navigate = useNavigate();
   const { setPages, setCurrentPageIndex, currentPageIndex, pages: readerPages } = useReaderStore();
-  const syncedRef = useRef<string | null>(null);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   // Fetch Manga Metadata
   const { data: manga } = useQuery({
@@ -30,23 +33,29 @@ const MangaReaderPage: React.FC = () => {
     setCurrentPageIndex(0);
   }, [pages, setPages, setCurrentPageIndex]);
 
-  // Synchronize progress on reaching the last page of the chapter
+  // Writes the reading position as it changes; the server itself pushes to
+  // AniList/MyAnimeList on the read transition, so no separate sync call is
+  // needed here on reaching the last page.
+  const { saveState } = useReadingProgress({
+    mediaId,
+    chapterNumber: chapterId,
+    enabled: isAuthenticated,
+  });
+  const { byChapter } = useMangaProgress(mediaId, isAuthenticated);
+  const resumedRef = useRef<string | null>(null);
+
+  // Resumes at the saved position — once per chapter (guarded by
+  // resumedRef), otherwise every re-render would rewind the reader and the
+  // user could never advance past the saved page.
   useEffect(() => {
-    if (
-      mediaId &&
-      chapterId &&
-      readerPages.length > 0 &&
-      currentPageIndex === readerPages.length - 1
-    ) {
-      const syncKey = `${mediaId}-${chapterId}`;
-      if (syncedRef.current !== syncKey) {
-        syncedRef.current = syncKey;
-        mediaService.syncMangaProgress(mediaId, chapterId).catch((err) => {
-          console.error('Failed to sync manga reading progress:', err);
-        });
-      }
+    const key = `${mediaId}:${chapterId}`;
+    if (resumedRef.current === key || readerPages.length === 0) return;
+    const saved = byChapter.get(Number(chapterId));
+    resumedRef.current = key;
+    if (saved && !saved.is_read && saved.last_page_read > 0) {
+      setCurrentPageIndex(Math.min(saved.last_page_read, readerPages.length - 1));
     }
-  }, [currentPageIndex, readerPages.length, mediaId, chapterId]);
+  }, [mediaId, chapterId, byChapter, readerPages.length, setCurrentPageIndex]);
 
   const handleNextChapter = () => {
     if (mediaId && chapterId) {
@@ -84,6 +93,12 @@ const MangaReaderPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            {readerPages.length > 0 && (
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                Page {currentPageIndex + 1}/{readerPages.length}
+                {saveState === 'error' && <span className="ml-2 text-red-400">Non enregistré</span>}
+              </span>
+            )}
             {source === 'offline' && (
               <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 text-[10px] font-black uppercase tracking-widest">
                 <WifiOff className="w-3 h-3" /> {t('common.offline', 'Hors-ligne')}
