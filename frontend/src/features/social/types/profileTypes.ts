@@ -12,7 +12,7 @@ export interface TrackerLinkSummary {
   tracker: 'myanimelist' | 'anilist';
   manga_id: string;
   manga_title: string;
-  remote_id?: string;
+  remote_id: string;
   remote_title: string;
   remote_progress: number | null;
   status: 'suggested' | 'confirmed';

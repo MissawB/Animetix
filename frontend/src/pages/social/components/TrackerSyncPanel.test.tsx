@@ -19,6 +19,7 @@ describe('TrackerSyncPanel', () => {
         tracker: 'anilist',
         manga_id: 'suwayomi:1:809',
         manga_title: 'One Punch-Man',
+        remote_id: '809',
         remote_title: 'One Punch-Man',
         remote_progress: 164,
         status: 'confirmed',

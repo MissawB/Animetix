@@ -100,6 +100,10 @@ export const TrackerSyncPanel: React.FC<TrackerSyncPanelProps> = ({ connections 
   const { data: trackerLinks } = useQuery({
     queryKey: ['trackerLinks'],
     queryFn: () => socialService.getTrackerLinks(),
+    // Aucun compte tracker connecté = rien à lister ; ne pas émettre l'appel
+    // pour la majorité des visiteurs de cette page qui n'ont lié ni MAL ni
+    // AniList (le `connections?.some(...)` plus bas ne masque que le rendu).
+    enabled: (connections?.length ?? 0) > 0,
   });
 
   const unlinkLinkMutation = useMutation({
