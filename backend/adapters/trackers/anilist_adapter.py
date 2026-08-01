@@ -67,24 +67,38 @@ class AniListAdapter(TrackerPort):
     def search(self, query: str, token: Optional[str]) -> List[Dict[str, Any]]:
         data = self._post(SEARCH_QUERY, {"search": query}, token)
         media = ((data or {}).get("Page") or {}).get("media") or []
-        return [
-            {
-                "remote_id": str(item["id"]),
-                "title": (item.get("title") or {}).get("romaji")
-                or (item.get("title") or {}).get("english")
-                or "",
-                "chapters": item.get("chapters"),
-            }
-            for item in media
-        ]
+        results = []
+        for item in media:
+            if "id" not in item:
+                continue
+            results.append(
+                {
+                    "remote_id": str(item["id"]),
+                    "title": (item.get("title") or {}).get("romaji")
+                    or (item.get("title") or {}).get("english")
+                    or "",
+                    "chapters": item.get("chapters"),
+                }
+            )
+        return results
 
     def read_progress(self, remote_id: str, token: str) -> Optional[int]:
-        data = self._post(PROGRESS_QUERY, {"id": int(remote_id)}, token)
+        try:
+            media_id = int(remote_id)
+        except ValueError:
+            logger.warning("Invalid remote_id for read_progress: %s", remote_id)
+            return None
+        data = self._post(PROGRESS_QUERY, {"id": media_id}, token)
         entry = ((data or {}).get("Media") or {}).get("mediaListEntry")
         return entry.get("progress") if entry else None
 
     def write_progress(self, remote_id: str, progress: int, token: str) -> bool:
+        try:
+            media_id = int(remote_id)
+        except ValueError:
+            logger.warning("Invalid remote_id for write_progress: %s", remote_id)
+            return False
         data = self._post(
-            SAVE_MUTATION, {"mediaId": int(remote_id), "progress": progress}, token
+            SAVE_MUTATION, {"mediaId": media_id, "progress": progress}, token
         )
         return bool((data or {}).get("SaveMediaListEntry"))

@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+import httpx
 from adapters.trackers.anilist_adapter import AniListAdapter
 
 
@@ -79,3 +80,163 @@ def test_no_mock_token_shortcut():
     source = inspect.getsource(anilist_adapter)
     assert "mock-token" not in source
     assert "test-token" not in source
+
+
+# Error path tests: degradation silencieuse sans exception
+
+
+def test_search_returns_empty_on_non_200_response():
+    """Non-200 HTTP response → search returns empty list."""
+    adapter = AniListAdapter()
+    mock_response = MagicMock()
+    mock_response.status_code = 500
+
+    with patch("httpx.Client.post", return_value=mock_response):
+        results = adapter.search("test", token=None)
+        assert results == []
+
+
+def test_search_returns_empty_on_graphql_error():
+    """GraphQL errors in response → search returns empty list."""
+    adapter = AniListAdapter()
+    payload = {"errors": [{"message": "Invalid query"}]}
+
+    with patch("httpx.Client.post", return_value=_response(payload)):
+        results = adapter.search("test", token=None)
+        assert results == []
+
+
+def test_search_returns_empty_on_transport_error():
+    """Transport error (httpx.RequestError) → search returns empty list, no exception."""
+    adapter = AniListAdapter()
+
+    with patch(
+        "httpx.Client.post", side_effect=httpx.RequestError("Connection refused")
+    ):
+        results = adapter.search("test", token=None)
+        assert results == []
+
+
+def test_search_ignores_items_without_id():
+    """Search result with missing 'id' field → item is ignored, others preserved."""
+    adapter = AniListAdapter()
+    payload = {
+        "data": {
+            "Page": {
+                "media": [
+                    {
+                        "id": 30013,
+                        "title": {"romaji": "One Punch-Man"},
+                        "chapters": 200,
+                    },
+                    {
+                        "title": {"romaji": "No ID Manga"},
+                        "chapters": 100,
+                    },
+                    {
+                        "id": 40001,
+                        "title": {"romaji": "Another Manga"},
+                        "chapters": 150,
+                    },
+                ]
+            }
+        }
+    }
+
+    with patch("httpx.Client.post", return_value=_response(payload)):
+        results = adapter.search("test", token=None)
+        assert len(results) == 2
+        assert results[0]["remote_id"] == "30013"
+        assert results[1]["remote_id"] == "40001"
+
+
+def test_read_progress_returns_none_on_non_200_response():
+    """Non-200 HTTP response → read_progress returns None."""
+    adapter = AniListAdapter()
+    mock_response = MagicMock()
+    mock_response.status_code = 500
+
+    with patch("httpx.Client.post", return_value=mock_response):
+        result = adapter.read_progress("30013", token="tok")
+        assert result is None
+
+
+def test_read_progress_returns_none_on_graphql_error():
+    """GraphQL errors in response → read_progress returns None."""
+    adapter = AniListAdapter()
+    payload = {"errors": [{"message": "Invalid query"}]}
+
+    with patch("httpx.Client.post", return_value=_response(payload)):
+        result = adapter.read_progress("30013", token="tok")
+        assert result is None
+
+
+def test_read_progress_returns_none_on_transport_error():
+    """Transport error (httpx.RequestError) → read_progress returns None, no exception."""
+    adapter = AniListAdapter()
+
+    with patch(
+        "httpx.Client.post", side_effect=httpx.RequestError("Connection refused")
+    ):
+        result = adapter.read_progress("30013", token="tok")
+        assert result is None
+
+
+def test_read_progress_returns_none_on_invalid_remote_id():
+    """Non-numeric remote_id → read_progress returns None, no exception."""
+    adapter = AniListAdapter()
+
+    with patch("httpx.Client.post"):
+        result = adapter.read_progress("not-a-number", token="tok")
+        assert result is None
+
+
+def test_write_progress_returns_false_on_non_200_response():
+    """Non-200 HTTP response → write_progress returns False."""
+    adapter = AniListAdapter()
+    mock_response = MagicMock()
+    mock_response.status_code = 500
+
+    with patch("httpx.Client.post", return_value=mock_response):
+        result = adapter.write_progress("30013", 165, token="tok")
+        assert result is False
+
+
+def test_write_progress_returns_false_on_graphql_error():
+    """GraphQL errors in response → write_progress returns False."""
+    adapter = AniListAdapter()
+    payload = {"errors": [{"message": "Mutation failed"}]}
+
+    with patch("httpx.Client.post", return_value=_response(payload)):
+        result = adapter.write_progress("30013", 165, token="tok")
+        assert result is False
+
+
+def test_write_progress_returns_false_on_transport_error():
+    """Transport error (httpx.RequestError) → write_progress returns False, no exception."""
+    adapter = AniListAdapter()
+
+    with patch(
+        "httpx.Client.post", side_effect=httpx.RequestError("Connection refused")
+    ):
+        result = adapter.write_progress("30013", 165, token="tok")
+        assert result is False
+
+
+def test_write_progress_returns_false_on_invalid_remote_id():
+    """Non-numeric remote_id → write_progress returns False, no exception."""
+    adapter = AniListAdapter()
+
+    with patch("httpx.Client.post"):
+        result = adapter.write_progress("not-a-number", 165, token="tok")
+        assert result is False
+
+
+def test_write_progress_returns_false_on_missing_mutation_response():
+    """Mutation response missing SaveMediaListEntry → write_progress returns False."""
+    adapter = AniListAdapter()
+    payload = {"data": {"SaveMediaListEntry": None}}
+
+    with patch("httpx.Client.post", return_value=_response(payload)):
+        result = adapter.write_progress("30013", 165, token="tok")
+        assert result is False
