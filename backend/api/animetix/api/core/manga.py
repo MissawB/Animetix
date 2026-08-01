@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from ...containers import Container
 from ...serializers import MangaChapterSerializer
+from ...services.tracker_sync import push_manga_progress_to_trackers
 from .suwayomi import suwayomi_unreachable_response
 
 logger = get_logger("animetix.api")
@@ -109,6 +110,11 @@ class MangaChapterProgressView(APIView):
                 {"error": "Invalid chapter number or page index"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if last_page_read < 0:
+            return Response(
+                {"error": "Invalid chapter number or page index"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         is_read = bool(request.data.get("is_read", False))
 
         result = self.progress_service.record_progress(
@@ -125,7 +131,6 @@ class MangaChapterProgressView(APIView):
 
     def _push_to_trackers(self, user, media_id, number):
         from ...models import MediaItem
-        from ...services.tracker_sync import push_manga_progress_to_trackers
 
         try:
             manga = MediaItem.objects.get(external_id=media_id, media_type="Manga")
