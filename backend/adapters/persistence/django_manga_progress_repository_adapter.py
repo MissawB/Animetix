@@ -86,18 +86,48 @@ class DjangoMangaProgressRepositoryAdapter(MangaProgressRepositoryPort):
         return row
 
     def bulk_set_read(self, user: Any, chapters: List[Any], is_read: bool) -> int:
-        for chapter in chapters:
-            self.upsert_progress(
-                user,
-                chapter,
-                last_page_read=0 if not is_read else self._current_page(user, chapter),
-                is_read=is_read,
-            )
-        return len(chapters)
+        from animetix.models import MangaReadingProgress
+        from django.utils import timezone
 
-    def _current_page(self, user: Any, chapter: Any) -> int:
-        row = self.get_progress(user, chapter)
-        return row.last_page_read if row else 0
+        chapters = list(chapters)
+        now = timezone.now()
+        existing_by_chapter_id = {
+            row.chapter_id: row
+            for row in MangaReadingProgress.objects.filter(
+                user=user, chapter__in=chapters
+            )
+        }
+
+        to_update: List[Any] = []
+        to_create: List[Any] = []
+        for chapter in chapters:
+            row = existing_by_chapter_id.get(chapter.id)
+            if row is not None:
+                # is_read=True conserve la page déjà atteinte ; is_read=False repart à 0.
+                row.last_page_read = row.last_page_read if is_read else 0
+                row.is_read = is_read
+                row.updated_at = now
+                to_update.append(row)
+            else:
+                to_create.append(
+                    MangaReadingProgress(
+                        user=user,
+                        chapter=chapter,
+                        last_page_read=0,
+                        is_read=is_read,
+                        updated_at=now,
+                    )
+                )
+
+        if to_update:
+            # bulk_update contourne auto_now : il faut lister updated_at explicitement.
+            MangaReadingProgress.objects.bulk_update(
+                to_update, ["last_page_read", "is_read", "updated_at"]
+            )
+        if to_create:
+            MangaReadingProgress.objects.bulk_create(to_create)
+
+        return len(chapters)
 
     def set_favorite_last_read(
         self, user: Any, manga: Any, chapter_number: float

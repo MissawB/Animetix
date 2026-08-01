@@ -81,3 +81,40 @@ def test_bulk_set_read_and_favorite_update(fixtures):
 
     repo.set_favorite_last_read(user, manga, 164.2)
     assert FavoriteManga.objects.get(user=user, manga=manga).last_read_chapter == 164.2
+
+
+def test_bulk_set_read_preserves_started_progress_with_constant_queries(
+    fixtures, django_assert_num_queries
+):
+    """Un chapitre déjà entamé garde sa page ; un chapitre vierge repart à 0.
+
+    Le nombre de requêtes doit rester constant quel que soit le nombre de
+    chapitres traités (pas de N+1) : 1 lecture groupée + 1 bulk_update
+    (chapitre déjà suivi) + 1 bulk_create (chapitre encore inconnu).
+    """
+    user, _manga, c1, c2 = fixtures
+    MangaReadingProgress.objects.create(
+        user=user, chapter=c1, last_page_read=2, is_read=False
+    )
+    repo = DjangoMangaProgressRepositoryAdapter()
+
+    with django_assert_num_queries(3):
+        processed = repo.bulk_set_read(user, [c1, c2], is_read=True)
+
+    assert processed == 2
+    c1_row = MangaReadingProgress.objects.get(user=user, chapter=c1)
+    c2_row = MangaReadingProgress.objects.get(user=user, chapter=c2)
+    # c1 était déjà à la page 2 : is_read=True conserve cette position.
+    assert (c1_row.last_page_read, c1_row.is_read) == (2, True)
+    # c2 n'avait jamais été ouvert : pas de page connue à conserver.
+    assert (c2_row.last_page_read, c2_row.is_read) == (0, True)
+
+
+def test_set_favorite_last_read_never_decreases(fixtures):
+    user, manga, _c1, _c2 = fixtures
+    repo = DjangoMangaProgressRepositoryAdapter()
+
+    repo.set_favorite_last_read(user, manga, 164.2)
+    repo.set_favorite_last_read(user, manga, 1.0)
+
+    assert FavoriteManga.objects.get(user=user, manga=manga).last_read_chapter == 164.2
