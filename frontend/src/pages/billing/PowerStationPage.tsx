@@ -5,6 +5,10 @@ import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../utils/apiClient';
 import { billingService } from '../../features/billing/services/billingService';
+import {
+  getRewardedAdProvider,
+  type RewardedAdResult,
+} from '../../features/billing/rewarded/rewardedAdProvider';
 import { useToastStore } from '../../store/toastStore';
 import { usePassiveMiningStore } from '../../store/passiveMiningStore';
 import { PassiveAdMiner } from '../../features/billing/components/PassiveAdMiner';
@@ -79,30 +83,35 @@ const PowerStationPage: React.FC = () => {
     };
   }, [user, currentPage, filterType, filterDirection, reloadToken]);
 
+  // La récompense est déclenchée par un fournisseur de pub REWARDED (agnostique
+  // au réseau), jamais par une pub AdSense. En dev/sans réseau, un stub joue un
+  // minuteur d'engagement. Cf. features/billing/rewarded/rewardedAdProvider.ts.
   const handleRecharge = () => {
     setIsWatching(true);
     setWatchProgress(0);
-
-    const duration = 15000;
-    const interval = 100;
-    const steps = duration / interval;
-
-    let currentStep = 0;
-    const timer = setInterval(() => {
-      currentStep++;
-      setWatchProgress((currentStep / steps) * 100);
-
-      if (currentStep >= steps) {
-        clearInterval(timer);
-        completeAd();
-      }
-    }, interval);
+    getRewardedAdProvider()
+      .showRewarded((pct) => setWatchProgress(pct))
+      .then((result) => {
+        if (result.rewarded) {
+          void completeRecharge(result);
+        } else {
+          setIsWatching(false);
+          setWatchProgress(0);
+        }
+      })
+      .catch(() => {
+        addToast(t('billing.power_station.recharge_error', 'Erreur lors de la recharge.'), 'error');
+        setIsWatching(false);
+        setWatchProgress(0);
+      });
   };
 
-  const completeAd = async () => {
+  const completeRecharge = async (result: RewardedAdResult) => {
     setIsCrediting(true);
     try {
-      const res = await billingService.activeRecharge();
+      // Le jeton signé du réseau (SSV) est transmis au backend, qui le vérifie
+      // avant de créditer. En stub il est null → accepté uniquement en mode stub.
+      const res = await billingService.activeRecharge(result.rewardToken ?? undefined);
       addToast(
         t('billing.power_station.energy_injected', {
           defaultValue: 'Énergie injectée : +{{earned}} Bx !',

@@ -19,7 +19,12 @@ export const logAdEvent = (eventType: AdEventType, adType: AdType): void => {
 export const billingService = {
   getFinancialSummary: async () =>
     apiClient('/api/v1/billing/admin/financial-summary/', { skipToast: true }),
-  // Recharge active d'énergie (crédite des Bx). Le mécanisme est un engagement,
-  // pas une récompense pour visionnage de pub (voir TransactionLedgerTable).
-  activeRecharge: async () => apiClient('/api/v1/billing/wallet/watch-ad/', { method: 'POST' }),
+  // Recharge active d'énergie (crédite des Bx). La récompense provient d'un
+  // réseau REWARDED dédié (jamais d'AdSense) : `rewardToken` est le jeton signé
+  // du réseau, vérifié côté serveur (SSV) avant crédit. null en stub dev.
+  activeRecharge: async (rewardToken?: string) =>
+    apiClient('/api/v1/billing/wallet/watch-ad/', {
+      method: 'POST',
+      body: JSON.stringify({ reward_token: rewardToken ?? null }),
+    }),
 };

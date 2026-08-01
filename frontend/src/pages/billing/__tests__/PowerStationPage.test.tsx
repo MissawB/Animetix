@@ -167,8 +167,11 @@ describe('PowerStationPage', () => {
     vi.useRealTimers();
 
     await waitFor(() => {
+      // La récompense passe par le provider rewarded ; en stub le jeton est null
+      // (le backend ne l'accepte qu'en mode stub, sinon SSV obligatoire).
       expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/billing/wallet/watch-ad/', {
         method: 'POST',
+        body: JSON.stringify({ reward_token: null }),
       });
     });
   });

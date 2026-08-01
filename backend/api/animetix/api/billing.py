@@ -1,5 +1,6 @@
 from animetix_project.logging_config import get_logger
 from core.domain.services.berrix_economy import MINING_REWARD_BX, ad_reward_bx
+from core.domain.services.rewarded_ad_verifier import verify_rewarded_ad
 from django.core.cache import cache
 from django.db import transaction
 from rest_framework import permissions, status
@@ -115,6 +116,18 @@ class WalletWatchAdView(APIView):
 
     def post(self, request):
         user = request.user
+
+        # SSV : la récompense doit venir d'un réseau rewarded dédié (jamais
+        # AdSense) et être vérifiée avant crédit. En mode stub (aucun réseau
+        # configuré), le jeton est absent et le crédit est autorisé (dev) ;
+        # dès qu'un vrai réseau est configuré, un jeton signé valide est requis.
+        reward_token = request.data.get("reward_token")
+        if not verify_rewarded_ad(reward_token):
+            return Response(
+                {"error": "Rewarded ad verification failed"},
+                status=status.HTTP_402_PAYMENT_REQUIRED,
+            )
+
         # Récompense calibrée pour garder la marge sur les Bx financés par pub
         amount = ad_reward_bx()
 

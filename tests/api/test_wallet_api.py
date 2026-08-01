@@ -84,6 +84,20 @@ class TestWalletAPI:
         assert resp.data["earned"] == ad_reward_bx()  # 41 at defaults, not 250
         assert test_user.profile.wallet_balance == start + ad_reward_bx()
 
+    def test_watch_ad_requires_ssv_token_when_provider_configured(
+        self, api_client, test_user, monkeypatch
+    ):
+        # Dès qu'un vrai réseau rewarded est configuré, un jeton SSV valide est
+        # OBLIGATOIRE : sans jeton -> 402 (fail-closed), aucun crédit. Empêche de
+        # se créditer des Bx en appelant l'endpoint sans avoir vu de pub.
+        monkeypatch.setenv("REWARDED_ADS_PROVIDER", "gam")
+        api_client.force_authenticate(user=test_user)
+        start = test_user.profile.wallet_balance
+        resp = api_client.post(reverse("api_wallet_watch_ad"))
+        assert resp.status_code == 402
+        test_user.profile.refresh_from_db()
+        assert test_user.profile.wallet_balance == start
+
     def test_mine_credits_capped_loss_leader(self, api_client, test_user):
         from core.domain.services.berrix_economy import MINING_REWARD_BX
 
