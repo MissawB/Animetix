@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -10,7 +10,7 @@ import { mediaService } from '../../features/media/services/mediaService';
 import { ArrowLeft, BookOpen, ChevronRight, ServerCrash, Settings, WifiOff } from 'lucide-react';
 import { useChapterPages } from '../../features/manga-reader/offline/useChapterPages';
 import { useReadingProgress } from '../../features/manga-reader/progress/useReadingProgress';
-import { useMangaProgress } from '../../features/manga-reader/progress/useMangaProgress';
+import { useResumeReadingPosition } from '../../features/manga-reader/progress/useResumeReadingPosition';
 import { useAuthStore } from '../../store/authStore';
 
 const MangaReaderPage: React.FC = () => {
@@ -41,21 +41,16 @@ const MangaReaderPage: React.FC = () => {
     chapterNumber: chapterId,
     enabled: isAuthenticated,
   });
-  const { byChapter } = useMangaProgress(mediaId, isAuthenticated);
-  const resumedRef = useRef<string | null>(null);
-
-  // Resumes at the saved position — once per chapter (guarded by
-  // resumedRef), otherwise every re-render would rewind the reader and the
-  // user could never advance past the saved page.
-  useEffect(() => {
-    const key = `${mediaId}:${chapterId}`;
-    if (resumedRef.current === key || readerPages.length === 0) return;
-    const saved = byChapter.get(Number(chapterId));
-    resumedRef.current = key;
-    if (saved && !saved.is_read && saved.last_page_read > 0) {
-      setCurrentPageIndex(Math.min(saved.last_page_read, readerPages.length - 1));
-    }
-  }, [mediaId, chapterId, byChapter, readerPages.length, setCurrentPageIndex]);
+  // Resumes at the saved position — once per chapter. See
+  // useResumeReadingPosition for why the guard must wait on the progress
+  // query settling rather than firing the moment pages are ready.
+  useResumeReadingPosition({
+    mediaId,
+    chapterId,
+    isAuthenticated,
+    readerPagesLength: readerPages.length,
+    setCurrentPageIndex,
+  });
 
   const handleNextChapter = () => {
     if (mediaId && chapterId) {
