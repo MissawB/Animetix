@@ -92,6 +92,8 @@ export interface FavoriteManga {
   unread_chapters_count: number;
   read_count: number;
   total_chapters: number;
+  /** Au moins un chapitre entamé (pas forcément terminé). */
+  has_started: boolean;
   created_at: string;
   updated_at: string;
 }

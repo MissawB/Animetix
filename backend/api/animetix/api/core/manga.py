@@ -298,10 +298,10 @@ class FavoriteMangaListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        from django.db.models import Count, IntegerField, OuterRef, Subquery
+        from django.db.models import Count, Exists, IntegerField, OuterRef, Q, Subquery
         from django.db.models.functions import Coalesce
 
-        from ...models import FavoriteManga, MangaChapter
+        from ...models import FavoriteManga, MangaChapter, MangaReadingProgress
         from ...serializers import FavoriteMangaSerializer
 
         # Use a correlated subquery to avoid N+1 query per FavoriteManga in the list
@@ -329,6 +329,14 @@ class FavoriteMangaListView(APIView):
             .annotate(count=Count("id"))
             .values("count")
         )
+        # « Lecture commencée » : un chapitre entamé compte, pas seulement
+        # terminé — sinon la carte n'offre aucun « Reprendre » à quelqu'un au
+        # milieu du chapitre 1, là où la fiche œuvre et la popup en affichent un.
+        started_subquery = MangaReadingProgress.objects.filter(
+            Q(is_read=True) | Q(last_page_read__gt=0),
+            user=OuterRef("user"),
+            chapter__manga=OuterRef("manga"),
+        )
 
         favorites = (
             FavoriteManga.objects.filter(user=request.user)
@@ -343,6 +351,7 @@ class FavoriteMangaListView(APIView):
                 total_chapters_annotated=Coalesce(
                     Subquery(total_chapters_subquery, output_field=IntegerField()), 0
                 ),
+                has_started_annotated=Exists(started_subquery),
             )
         )
         serializer = FavoriteMangaSerializer(favorites, many=True)

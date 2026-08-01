@@ -295,7 +295,11 @@ export const MangaLibraryPage: React.FC = () => {
                             {fav.read_count}/{fav.total_chapters}{' '}
                             {t('library.chapters_read', 'lus')}
                           </span>
-                          {fav.read_count > 0 && fav.read_count < fav.total_chapters && (
+                          {/* « Lecture commencée mais pas finie » — et non « au
+                              moins un chapitre terminé » : quelqu'un au milieu du
+                              chapitre 1 a read_count === 0, et la fiche œuvre
+                              comme la popup lui proposent bien de reprendre. */}
+                          {fav.has_started && fav.read_count < fav.total_chapters && (
                             <Link
                               to={`/media/${fav.manga.media_type}/${fav.manga.id}/`}
                               className="font-black uppercase tracking-wider text-yellow-400 hover:text-yellow-300 no-underline"
