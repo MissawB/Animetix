@@ -657,13 +657,35 @@ class BrainAPIAdapter(ReachabilityHealthCheckMixin, InferencePort):
     def health_check(self) -> dict:
         # Single HTTP-ping reachability probe; httpx.get is resolved here so the
         # module-level patch in the tests still applies (see the mixin docstring).
-        return self._http_ping_health(
+        probe = self._http_ping_health(
             httpx.get,
             f"{self.api_url}/health",
             timeout=5.0,
             engine="BrainAPI",
             with_latency=True,
+            ok_extra=lambda res: {"remote_status": res.json().get("status", "online")},
         )
+        # A 200 only proves the brain's FastAPI answered. The brain grades ITS
+        # OWN engine in the body (e.g. "degraded" when Ollama does not serve the
+        # configured model), and that verdict is the one that matters: trusting
+        # the status code alone is what kept a brain that 404ed on every
+        # generation in the FallbackAdapter rotation.
+        # Only an explicit, well-formed negative verdict demotes the adapter: a
+        # body that could not be parsed is missing evidence, not bad news.
+        remote = probe.get("remote_status")
+        if (
+            probe["status"] == "online"
+            and isinstance(remote, str)
+            and remote != "online"
+        ):
+            logger.warning(
+                "BrainAPI reachable but reports %s -- taking it out of rotation.",
+                remote,
+            )
+            return self._health_status(
+                remote, **{k: v for k, v in probe.items() if k != "status"}
+            )
+        return probe
 
     def generate_structured(
         self,

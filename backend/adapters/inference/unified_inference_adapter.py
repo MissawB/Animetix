@@ -625,7 +625,7 @@ class UnifiedInferenceAdapter(
             ok_extra=lambda res: {"models": res.json().get("models", [])},
         )
         if ollama["status"] == "online":
-            return ollama
+            return self._downgrade_if_model_unserved(ollama)
 
         openai = self._http_ping_health(
             safe_http_request,
@@ -637,9 +637,47 @@ class UnifiedInferenceAdapter(
             engine="OpenAI-Compatible/Unified",
         )
         if openai["status"] == "online":
+            # No downgrade here: the OpenAI-compatible /models probe is not
+            # enriched with a model list, so there is nothing to compare against.
             return openai
 
         return self._health_status("offline", engine="Unified")
+
+    def _downgrade_if_model_unserved(self, probe: dict) -> dict:
+        """Reachability is not readiness: a server that answers can still 404.
+
+        ``/api/tags`` returning 200 only proves Ollama is up. If it does not
+        serve ``self.model_name``, every generation 404s -- which is exactly how
+        prod ran unnoticed for two weeks (`qwen3.5:9b` pinned on an image that
+        only baked `qwen2.5:7b-instruct`), because this probe reported "online"
+        throughout. FallbackAdapter routes only to adapters whose status is
+        "online", so degrading here takes the engine out of rotation instead of
+        sending it traffic it cannot serve.
+        """
+        served = {m.get("name") for m in probe.get("models", []) if isinstance(m, dict)}
+        # An empty list means the enrichment could not parse the body (it is
+        # best-effort upstream), not that Ollama serves nothing -- do not
+        # downgrade on missing evidence.
+        if not served:
+            return probe
+        # Ollama resolves a tagless name to ":latest"; treat that as a match so
+        # a legitimate `LLM_MODEL_NAME=mistral` is not reported as unserved.
+        if self.model_name in served or f"{self.model_name}:latest" in served:
+            return probe
+
+        logger.error(
+            "Model %s is not served by %s (available: %s) -- every generation "
+            "would 404. Reporting degraded.",
+            self.model_name,
+            self.api_base,
+            sorted(n for n in served if n),
+        )
+        fields = {k: v for k, v in probe.items() if k != "status"}
+        fields["error"] = (
+            f"model '{self.model_name}' is not registered on this server; "
+            f"available: {sorted(n for n in served if n)}"
+        )
+        return self._health_status("degraded", **fields)
 
     def set_model_name(self, model_name: str):
         """Change dynamiquement le modèle cible."""

@@ -397,13 +397,44 @@ def test_stream_generate_wraps_http_status_error(adapter):
 
 def test_health_check_online_via_ollama_tags(adapter):
     with patch(REQ) as req:
-        req.return_value = _resp({"models": [{"name": "qwen"}]})
+        req.return_value = _resp({"models": [{"name": "my-model"}]})
         out = adapter.health_check()
     assert out["status"] == "online"
     assert out["engine"] == "Ollama/Unified"
-    assert out["models"] == [{"name": "qwen"}]
+    assert out["models"] == [{"name": "my-model"}]
     # First probe hits the /api/tags endpoint with /v1 stripped.
     assert req.call_args.args[1] == "http://llm:8000/api/tags"
+
+
+def test_health_check_degraded_when_configured_model_is_not_served(adapter):
+    # Reachable Ollama that does not serve `my-model`: every generation would
+    # 404, so the engine must not be advertised as online (FallbackAdapter only
+    # routes to "online"). This is the prod failure the probe used to hide.
+    with patch(REQ) as req:
+        req.return_value = _resp({"models": [{"name": "qwen2.5:7b-instruct"}]})
+        out = adapter.health_check()
+    assert out["status"] == "degraded"
+    assert out["engine"] == "Ollama/Unified"
+    assert "my-model" in out["error"]
+    assert "qwen2.5:7b-instruct" in out["error"]
+
+
+def test_health_check_online_when_tagless_model_resolves_to_latest():
+    # Ollama reports `mistral:latest` for a model configured as `mistral`.
+    a = UnifiedInferenceAdapter(api_base="http://llm:8000/v1", model_name="mistral")
+    with patch(REQ) as req:
+        req.return_value = _resp({"models": [{"name": "mistral:latest"}]})
+        out = a.health_check()
+    assert out["status"] == "online"
+
+
+def test_health_check_stays_online_when_model_list_is_unusable(adapter):
+    # Missing evidence is not bad news: a 200 with no parsable model list must
+    # not take a working engine out of rotation.
+    with patch(REQ) as req:
+        req.return_value = _resp({})
+        out = adapter.health_check()
+    assert out["status"] == "online"
 
 
 def test_health_check_falls_back_to_openai_models(adapter):

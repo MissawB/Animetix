@@ -657,6 +657,30 @@ def test_health_check_online(adapter):
     assert get.call_args.args[0] == "http://brain:5000/health"
 
 
+def test_health_check_honors_the_remote_verdict_over_the_status_code(adapter):
+    # The brain answers 200 while grading its own engine as degraded (e.g. Ollama
+    # does not serve the configured model). Trusting the status code alone kept
+    # exactly that brain in the FallbackAdapter rotation, 404-ing every call.
+    with patch("adapters.inference.brain_api_adapter.httpx.get") as get:
+        get.return_value = MagicMock(
+            status_code=200,
+            json=MagicMock(return_value={"status": "degraded", "engine": "Ollama"}),
+        )
+        out = adapter.health_check()
+    assert out["status"] == "degraded"
+    assert out["engine"] == "BrainAPI"
+
+
+def test_health_check_online_when_remote_body_reports_online(adapter):
+    with patch("adapters.inference.brain_api_adapter.httpx.get") as get:
+        get.return_value = MagicMock(
+            status_code=200,
+            json=MagicMock(return_value={"status": "online", "engine": "Ollama"}),
+        )
+        out = adapter.health_check()
+    assert out["status"] == "online"
+
+
 def test_health_check_degraded_on_non_200(adapter):
     with patch("adapters.inference.brain_api_adapter.httpx.get") as get:
         get.return_value = MagicMock(status_code=503)
