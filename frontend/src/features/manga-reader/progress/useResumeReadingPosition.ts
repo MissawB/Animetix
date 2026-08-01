@@ -34,7 +34,12 @@ export function useResumeReadingPosition({
   readerPagesLength,
   setCurrentPageIndex,
 }: Options) {
-  const { byChapter, isFetched: progressFetched } = useMangaProgress(mediaId, isAuthenticated);
+  // `isFresh`, pas `isFetched` : le cache est persisté 24 h en IndexedDB, donc
+  // `isFetched` est déjà vrai au premier rendu avec la position d'une session
+  // précédente. Consommer la garde là-dessus rouvrait le lecteur page 1 (ou
+  // pire, à une position périmée) alors que la vraie réponse arrivait 200 ms
+  // plus tard — et l'effet ressortait aussitôt au premier `if`.
+  const { byChapter, isFresh: progressFetched } = useMangaProgress(mediaId, isAuthenticated);
   const resumedRef = useRef<string | null>(null);
 
   // Derived at render time from the very conditions the effect below waits on,

@@ -19,6 +19,7 @@ import {
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { FavoriteManga } from '../../types';
 import { apiClient } from '../../utils/apiClient';
+import { mangaFavoritesKey } from '../../features/manga-reader/progress/useMangaProgress';
 
 export const MangaLibraryPage: React.FC = () => {
   const { t } = useTranslation();
@@ -39,7 +40,9 @@ export const MangaLibraryPage: React.FC = () => {
     isError,
     refetch,
   } = useQuery<FavoriteManga[]>({
-    queryKey: ['manga-favorites'],
+    // Clé partagée : c'est cette liste qui porte read_count/total_chapters/
+    // has_started, donc le lecteur l'invalide après une écriture terminale.
+    queryKey: mangaFavoritesKey,
     queryFn: () => apiClient('/api/v1/media/favorites/', { skipToast: true }),
   });
 
