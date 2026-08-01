@@ -919,42 +919,78 @@ def test_chapter_sync_no_trackers(factory):
     assert "No trackers" in response.data["message"]
 
 
-@pytest.mark.django_db
-def test_chapter_sync_anilist_simulated(factory):
-    from animetix.models import MediaItem, TrackerConnection
+def _confirmed_link(username, media_id, tracker, remote_id, remote_progress=1):
+    """Utilisateur + manga + connexion + liaison CONFIRMÉE.
 
-    user = User.objects.create_user(username="cs3", password="pw")
-    MediaItem.objects.create(
-        external_id="123", media_type="Manga", title="Numeric", metadata={}
+    C'est le seul montage qui fait pousser la vue : une connexion seule ne
+    suffit plus depuis que la poussée passe par une liaison explicite.
+    """
+    from animetix.models import MangaTrackerLink, MediaItem, TrackerConnection
+
+    user = User.objects.create_user(username=username, password="pw")
+    manga = MediaItem.objects.create(
+        external_id=media_id, media_type="Manga", title=media_id, metadata={}
     )
     TrackerConnection.objects.create(
-        user=user, tracker="anilist", token="mock-token", username="u"
+        user=user, tracker=tracker, token="tok", username="u"
     )
-    request = factory.post("/sync/", {}, content_type="application/json")
-    response = _drive(
-        MangaChapterSyncView, request, user=user, media_id="123", chapter_number="5"
+    MangaTrackerLink.objects.create(
+        user=user,
+        manga=manga,
+        tracker=tracker,
+        remote_id=remote_id,
+        remote_title="Remote title",
+        remote_progress=remote_progress,
+        status="confirmed",
     )
-    assert response.status_code == 200
-    assert response.data["results"]["anilist"]["simulated"] is True
+    return user
+
+
+def _sync_with_adapter(factory, user, tracker, adapter, media_id, chapter_number):
+    """Pilote la vue avec un faux adaptateur injecté pour ``tracker``."""
+    provider = getattr(get_container().persistence, f"{tracker}_adapter")
+    provider.override(adapter)
+    try:
+        request = factory.post("/sync/", {}, content_type="application/json")
+        return _drive(
+            MangaChapterSyncView,
+            request,
+            user=user,
+            media_id=media_id,
+            chapter_number=chapter_number,
+        )
+    finally:
+        provider.reset_last_overriding()
 
 
 @pytest.mark.django_db
-def test_chapter_sync_mal_simulated(factory):
-    from animetix.models import MediaItem, TrackerConnection
+def test_chapter_sync_anilist_pushes_through_a_confirmed_link(factory):
+    """La réponse porte bien un résultat par tracker.
 
-    user = User.objects.create_user(username="cs4", password="pw")
-    MediaItem.objects.create(
-        external_id="man-3",
-        media_type="Manga",
-        title="MalManga",
-        metadata={"idMal": 42},
-    )
-    TrackerConnection.objects.create(
-        user=user, tracker="myanimelist", token="test-token", username="u"
-    )
-    request = factory.post("/sync/", {}, content_type="application/json")
-    response = _drive(
-        MangaChapterSyncView, request, user=user, media_id="man-3", chapter_number="7"
-    )
+    Remplace le test du raccourci ``token == "mock-token"``, qui simulait un
+    succès en production : l'adaptateur est désormais faux côté test, et le
+    vrai contrat (``write_progress(remote_id, progress, token=...)``) est
+    vérifié.
+    """
+    user = _confirmed_link("cs3", "123", "anilist", "30013")
+    adapter = MagicMock()
+    adapter.write_progress.return_value = True
+
+    response = _sync_with_adapter(factory, user, "anilist", adapter, "123", "5")
+
     assert response.status_code == 200
-    assert response.data["results"]["myanimelist"]["simulated"] is True
+    assert response.data["results"]["anilist"]["success"] is True
+    adapter.write_progress.assert_called_once_with("30013", 5, token="tok")
+
+
+@pytest.mark.django_db
+def test_chapter_sync_mal_pushes_through_a_confirmed_link(factory):
+    user = _confirmed_link("cs4", "man-3", "myanimelist", "42")
+    adapter = MagicMock()
+    adapter.write_progress.return_value = True
+
+    response = _sync_with_adapter(factory, user, "myanimelist", adapter, "man-3", "7")
+
+    assert response.status_code == 200
+    assert response.data["results"]["myanimelist"]["success"] is True
+    adapter.write_progress.assert_called_once_with("42", 7, token="tok")

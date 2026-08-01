@@ -2539,6 +2539,72 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/media/Manga/{media_id}/trackers/:
+    get:
+      operationId: api_v1_media_Manga_trackers_retrieve
+      description: Liaisons de l'œuvre pour l'utilisateur, en proposant celles qui
+        manquent.
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/media/Manga/{media_id}/trackers/{tracker}/:
+    delete:
+      operationId: api_v1_media_Manga_trackers_destroy
+      description: Supprime une liaison confirmée ou proposée.
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: tracker
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '204':
+          description: No response body
+  /api/v1/media/Manga/{media_id}/trackers/link/:
+    post:
+      operationId: api_v1_media_Manga_trackers_link_create
+      description: Confirme une liaison (proposée ou choisie manuellement).
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/media/Manga/{media_id}/trackers/search/:
+    post:
+      operationId: api_v1_media_Manga_trackers_search_create
+      description: Recherche manuelle d'une correspondance chez un tracker donné.
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
   /api/v1/media/favorites/:
     get:
       operationId: api_v1_media_favorites_retrieve
@@ -3008,6 +3074,15 @@ paths:
     post:
       operationId: api_v1_profile_trackers_link_create
       description: Links or updates a tracker connection.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/profile/trackers/links/:
+    get:
+      operationId: api_v1_profile_trackers_links_retrieve
+      description: Toutes les liaisons de l'utilisateur, tous mangas confondus (profil).
       tags:
       - api
       responses:

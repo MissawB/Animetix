@@ -56,6 +56,21 @@ class PersistenceContainer(containers.DeclarativeContainer):
         LazyClass("adapters.persistence.suwayomi_adapter", "SuwayomiAdapter")
     )
 
+    anilist_adapter = providers.Singleton(
+        LazyClass("adapters.trackers.anilist_adapter", "AniListAdapter")
+    )
+
+    myanimelist_adapter = providers.Singleton(
+        LazyClass("adapters.trackers.myanimelist_adapter", "MyAnimeListAdapter")
+    )
+
+    tracker_repository_adapter = providers.Singleton(
+        LazyClass(
+            "adapters.persistence.django_tracker_repository_adapter",
+            "DjangoTrackerRepositoryAdapter",
+        )
+    )
+
     voice_profile_adapter = providers.Singleton(
         LazyClass(
             "adapters.persistence.django_voice_profile_adapter",

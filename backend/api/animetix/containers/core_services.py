@@ -551,6 +551,23 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         suwayomi_adapter=persistence.suwayomi_adapter,
     )
 
+    # Factory (pas Singleton) : ``adapters`` est un Dict résolu à la construction.
+    # Un Singleton figerait les adaptateurs à leur première résolution, ce qui
+    # rendrait `persistence.anilist_adapter.override(...)` inopérant pour tout
+    # appel ultérieur (piège vu en test : le premier accès — même via une vue
+    # qui échoue ensuite sur la permission — gèle des adaptateurs réels pour
+    # le reste du process). ``repository`` et les adaptateurs restent des
+    # Singletons en amont, donc reconstruire ce service à chaque appel est
+    # sans coût.
+    manga_tracker_service = providers.Factory(
+        LazyClass("core.domain.services.manga_tracker_service", "MangaTrackerService"),
+        repository=persistence.tracker_repository_adapter,
+        adapters=providers.Dict(
+            anilist=persistence.anilist_adapter,
+            myanimelist=persistence.myanimelist_adapter,
+        ),
+    )
+
     voice_ingestion_service = providers.Singleton(
         LazyClass(
             "core.domain.services.voice_ingestion_service", "VoiceIngestionService"

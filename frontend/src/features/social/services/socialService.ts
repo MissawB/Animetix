@@ -8,6 +8,7 @@ import {
   AIUsageData,
 } from '../../../types';
 import { apiClient } from '../../../utils/apiClient';
+import { TrackerLinkSummary } from '../types/profileTypes';
 
 const API_BASE = '/api/v1/social';
 
@@ -117,6 +118,16 @@ export const socialService = {
     return apiClient('/api/v1/profile/trackers/unlink/', {
       method: 'POST',
       body: JSON.stringify({ tracker }),
+    });
+  },
+
+  getTrackerLinks: async (): Promise<TrackerLinkSummary[]> => {
+    return apiClient('/api/v1/profile/trackers/links/');
+  },
+
+  unlinkTrackerLink: async (mangaId: string, tracker: string): Promise<{ success: boolean }> => {
+    return apiClient(`/api/v1/media/Manga/${mangaId}/trackers/${tracker}/`, {
+      method: 'DELETE',
     });
   },
 

@@ -15,7 +15,8 @@ Targets the previously-missing line ranges in core.py:
   504-510 (suwayomi_image_proxy non-200 / exception)
   552/583/652/696/703-705 (Suwayomi views: not-configured / exception)
   732-775 (FavoriteMangaToggleView auto-import path)
-  910-1069 (MangaChapterSyncView: invalid chapter, anilist/MAL resolution+sync)
+  MangaChapterSyncView : chapitre invalide, et poussée vers une liaison
+  confirmée (écriture distante en échec, adaptateur qui lève)
 """
 
 import base64
@@ -770,365 +771,111 @@ def test_chapter_sync_invalid_chapter_number(factory):
     assert "Invalid chapter" in response.data["error"]
 
 
-@pytest.mark.django_db
-def test_chapter_sync_anilist_resolve_by_title(factory):
-    """Non-numeric id, no metadata id -> resolves AniList id via GraphQL search,
-    then performs a real (mocked) mutation request."""
-    from animetix.models import MediaItem, TrackerConnection
+# --------------------------------------------------------------------------- #
+# MangaChapterSyncView : poussée via une liaison confirmée
+#
+# Les tests de résolution par titre (recherche GraphQL AniList / Jikan à chaque
+# poussée, identifiant repêché dans `metadata`) ont disparu avec le code qu'ils
+# couvraient : la vue ne devine plus l'œuvre distante, elle pousse à travers une
+# liaison confirmée. Ne subsistent ici que les chemins d'erreur qui existent
+# encore — l'écriture distante qui échoue, et l'adaptateur qui lève.
+# --------------------------------------------------------------------------- #
 
-    user = User.objects.create_user(username="sv2", password="pw")
-    MediaItem.objects.create(
-        external_id="man-al", media_type="Manga", title="AniManga", metadata={}
+
+def _confirmed_link(username, media_id, tracker, remote_id, remote_progress=1):
+    """Utilisateur + manga + connexion + liaison CONFIRMÉE : le seul montage
+    qui fait effectivement pousser la vue."""
+    from animetix.models import MangaTrackerLink, MediaItem, TrackerConnection
+
+    user = User.objects.create_user(username=username, password="pw")
+    manga = MediaItem.objects.create(
+        external_id=media_id, media_type="Manga", title=media_id, metadata={}
     )
     TrackerConnection.objects.create(
-        user=user, tracker="anilist", token="real-token", username="u"
+        user=user, tracker=tracker, token="tok", username="u"
     )
-    request = factory.post("/sync/", {}, content_type="application/json")
+    MangaTrackerLink.objects.create(
+        user=user,
+        manga=manga,
+        tracker=tracker,
+        remote_id=remote_id,
+        remote_title="Remote title",
+        remote_progress=remote_progress,
+        status="confirmed",
+    )
+    return user
 
-    search_resp = MagicMock(status_code=200)
-    search_resp.json.return_value = {"data": {"Media": {"id": 555}}}
-    mutation_resp = MagicMock(status_code=200)
-    mutation_resp.json.return_value = {"data": {}}
 
-    client = MagicMock()
-    client.post.side_effect = [search_resp, mutation_resp]
-    client_cm = MagicMock()
-    client_cm.__enter__.return_value = client
-
-    with patch("httpx.Client", return_value=client_cm):
-        response = _drive(
+def _sync_with_adapter(factory, user, tracker, adapter, media_id, chapter_number):
+    """Pilote la vue avec un faux adaptateur pour ``tracker``."""
+    provider = getattr(get_container().persistence, f"{tracker}_adapter")
+    provider.override(adapter)
+    try:
+        request = factory.post("/sync/", {}, content_type="application/json")
+        return _drive(
             MangaChapterSyncView,
             request,
             user=user,
-            media_id="man-al",
-            chapter_number="4",
+            media_id=media_id,
+            chapter_number=chapter_number,
         )
-    assert response.status_code == 200
-    assert response.data["results"]["anilist"] == {"success": True}
+    finally:
+        provider.reset_last_overriding()
 
 
 @pytest.mark.django_db
-def test_chapter_sync_anilist_unresolvable(factory):
-    """Title search returns no Media -> anilist id unresolved -> error result."""
-    from animetix.models import MediaItem, TrackerConnection
+def test_chapter_sync_anilist_write_failure(factory):
+    """L'écriture distante échoue (l'adaptateur renvoie False) -> résultat en
+    échec pour ce tracker, sans erreur de page."""
+    user = _confirmed_link("sv4", "man-meta", "anilist", "999")
+    adapter = MagicMock()
+    adapter.write_progress.return_value = False
 
-    user = User.objects.create_user(username="sv3", password="pw")
-    MediaItem.objects.create(
-        external_id="man-no", media_type="Manga", title="Unknown", metadata={}
-    )
-    TrackerConnection.objects.create(
-        user=user, tracker="anilist", token="real-token", username="u"
-    )
-    request = factory.post("/sync/", {}, content_type="application/json")
+    response = _sync_with_adapter(factory, user, "anilist", adapter, "man-meta", "6")
 
-    search_resp = MagicMock(status_code=200)
-    search_resp.json.return_value = {"data": {"Media": None}}
-    client = MagicMock()
-    client.post.return_value = search_resp
-    client_cm = MagicMock()
-    client_cm.__enter__.return_value = client
-
-    with patch("httpx.Client", return_value=client_cm):
-        response = _drive(
-            MangaChapterSyncView,
-            request,
-            user=user,
-            media_id="man-no",
-            chapter_number="2",
-        )
     assert response.status_code == 200
-    assert response.data["results"]["anilist"]["success"] is False
-    assert "resolve" in response.data["results"]["anilist"]["error"].lower()
+    assert response.data["results"]["anilist"] == {"success": False}
+    adapter.write_progress.assert_called_once_with("999", 6, token="tok")
 
 
 @pytest.mark.django_db
-def test_chapter_sync_anilist_real_mutation_error(factory):
-    """metadata id resolves anilist id; mutation returns non-200 -> error result."""
-    from animetix.models import MediaItem, TrackerConnection
+def test_chapter_sync_anilist_adapter_raises(factory):
+    """Un adaptateur qui lève (il n'est pas censé le faire) est rattrapé : la
+    lecture de chapitre reste un succès, le tracker seul est en échec."""
+    user = _confirmed_link("sv10", "man-mx", "anilist", "42")
+    adapter = MagicMock()
+    adapter.write_progress.side_effect = RuntimeError("mutation boom")
 
-    user = User.objects.create_user(username="sv4", password="pw")
-    MediaItem.objects.create(
-        external_id="man-meta",
-        media_type="Manga",
-        title="Meta",
-        metadata={"id": "999"},
-    )
-    TrackerConnection.objects.create(
-        user=user, tracker="anilist", token="real-token", username="u"
-    )
-    request = factory.post("/sync/", {}, content_type="application/json")
+    response = _sync_with_adapter(factory, user, "anilist", adapter, "man-mx", "2")
 
-    mutation_resp = MagicMock(status_code=400, text="bad request")
-    client = MagicMock()
-    client.post.return_value = mutation_resp
-    client_cm = MagicMock()
-    client_cm.__enter__.return_value = client
-
-    with patch("httpx.Client", return_value=client_cm):
-        response = _drive(
-            MangaChapterSyncView,
-            request,
-            user=user,
-            media_id="man-meta",
-            chapter_number="6",
-        )
     assert response.status_code == 200
-    assert response.data["results"]["anilist"]["success"] is False
-    assert "AniList API error" in response.data["results"]["anilist"]["error"]
-
-
-@pytest.mark.django_db
-def test_chapter_sync_mal_resolve_via_jikan_and_real_update(factory):
-    """No mal id in metadata -> resolve via Jikan, then real (mocked) PATCH."""
-    from animetix.models import MediaItem, TrackerConnection
-
-    user = User.objects.create_user(username="sv5", password="pw")
-    MediaItem.objects.create(
-        external_id="man-mal", media_type="Manga", title="MalT", metadata={}
-    )
-    TrackerConnection.objects.create(
-        user=user, tracker="myanimelist", token="real-token", username="u"
-    )
-    request = factory.post("/sync/", {}, content_type="application/json")
-
-    jikan_resp = MagicMock(status_code=200)
-    jikan_resp.json.return_value = {"data": [{"mal_id": 321}]}
-    patch_resp = MagicMock(status_code=200)
-
-    client = MagicMock()
-    client.get.return_value = jikan_resp
-    client.patch.return_value = patch_resp
-    client_cm = MagicMock()
-    client_cm.__enter__.return_value = client
-
-    with patch("httpx.Client", return_value=client_cm):
-        response = _drive(
-            MangaChapterSyncView,
-            request,
-            user=user,
-            media_id="man-mal",
-            chapter_number="8",
-        )
-    assert response.status_code == 200
-    assert response.data["results"]["myanimelist"] == {"success": True}
-
-
-@pytest.mark.django_db
-def test_chapter_sync_mal_unresolvable(factory):
-    """Jikan returns empty -> mal id unresolved -> error result."""
-    from animetix.models import MediaItem, TrackerConnection
-
-    user = User.objects.create_user(username="sv6", password="pw")
-    MediaItem.objects.create(
-        external_id="man-mn", media_type="Manga", title="NoMal", metadata={}
-    )
-    TrackerConnection.objects.create(
-        user=user, tracker="myanimelist", token="real-token", username="u"
-    )
-    request = factory.post("/sync/", {}, content_type="application/json")
-
-    jikan_resp = MagicMock(status_code=200)
-    jikan_resp.json.return_value = {"data": []}
-    client = MagicMock()
-    client.get.return_value = jikan_resp
-    client_cm = MagicMock()
-    client_cm.__enter__.return_value = client
-
-    with patch("httpx.Client", return_value=client_cm):
-        response = _drive(
-            MangaChapterSyncView,
-            request,
-            user=user,
-            media_id="man-mn",
-            chapter_number="3",
-        )
-    assert response.status_code == 200
-    assert response.data["results"]["myanimelist"]["success"] is False
-    assert "resolve" in response.data["results"]["myanimelist"]["error"].lower()
-
-
-@pytest.mark.django_db
-def test_chapter_sync_anilist_metadata_id_non_int(factory):
-    """metadata['id'] is non-numeric -> int() raises -> swallowed (929-930);
-    falls back to title search which also yields nothing -> unresolved."""
-    from animetix.models import MediaItem, TrackerConnection
-
-    user = User.objects.create_user(username="sv8", password="pw")
-    MediaItem.objects.create(
-        external_id="man-bad",
-        media_type="Manga",
-        title="BadMeta",
-        metadata={"id": "not-a-number"},
-    )
-    TrackerConnection.objects.create(
-        user=user, tracker="anilist", token="real-token", username="u"
-    )
-    request = factory.post("/sync/", {}, content_type="application/json")
-
-    search_resp = MagicMock(status_code=200)
-    search_resp.json.return_value = {"data": {"Media": None}}
-    client = MagicMock()
-    client.post.return_value = search_resp
-    client_cm = MagicMock()
-    client_cm.__enter__.return_value = client
-
-    with patch("httpx.Client", return_value=client_cm):
-        response = _drive(
-            MangaChapterSyncView,
-            request,
-            user=user,
-            media_id="man-bad",
-            chapter_number="1",
-        )
-    assert response.status_code == 200
-    assert response.data["results"]["anilist"]["success"] is False
-
-
-@pytest.mark.django_db
-def test_chapter_sync_anilist_search_raises(factory):
-    """httpx.Client raising during AniList title search -> except logged (955-956),
-    id stays unresolved -> error result."""
-    from animetix.models import MediaItem, TrackerConnection
-
-    user = User.objects.create_user(username="sv9", password="pw")
-    MediaItem.objects.create(
-        external_id="man-sx", media_type="Manga", title="SearchX", metadata={}
-    )
-    TrackerConnection.objects.create(
-        user=user, tracker="anilist", token="real-token", username="u"
-    )
-    request = factory.post("/sync/", {}, content_type="application/json")
-
-    with patch("httpx.Client", side_effect=RuntimeError("net down")):
-        response = _drive(
-            MangaChapterSyncView,
-            request,
-            user=user,
-            media_id="man-sx",
-            chapter_number="1",
-        )
-    assert response.status_code == 200
-    assert response.data["results"]["anilist"]["success"] is False
-
-
-@pytest.mark.django_db
-def test_chapter_sync_anilist_mutation_raises(factory):
-    """metadata id resolves anilist id; mutation client raises -> except (1005-1006)."""
-    from animetix.models import MediaItem, TrackerConnection
-
-    user = User.objects.create_user(username="sv10", password="pw")
-    MediaItem.objects.create(
-        external_id="man-mx",
-        media_type="Manga",
-        title="MutX",
-        metadata={"id": "42"},
-    )
-    TrackerConnection.objects.create(
-        user=user, tracker="anilist", token="real-token", username="u"
-    )
-    request = factory.post("/sync/", {}, content_type="application/json")
-
-    with patch("httpx.Client", side_effect=RuntimeError("mutation boom")):
-        response = _drive(
-            MangaChapterSyncView,
-            request,
-            user=user,
-            media_id="man-mx",
-            chapter_number="2",
-        )
-    assert response.status_code == 200
+    assert response.data["success"] is True
     assert response.data["results"]["anilist"]["success"] is False
     assert "mutation boom" in response.data["results"]["anilist"]["error"]
 
 
 @pytest.mark.django_db
-def test_chapter_sync_mal_jikan_raises(factory):
-    """Jikan client raises -> except logged (1032-1033), mal id unresolved -> error."""
-    from animetix.models import MediaItem, TrackerConnection
+def test_chapter_sync_mal_write_failure(factory):
+    user = _confirmed_link("sv7", "man-me", "myanimelist", "77")
+    adapter = MagicMock()
+    adapter.write_progress.return_value = False
 
-    user = User.objects.create_user(username="sv11", password="pw")
-    MediaItem.objects.create(
-        external_id="man-jx", media_type="Manga", title="JikanX", metadata={}
-    )
-    TrackerConnection.objects.create(
-        user=user, tracker="myanimelist", token="real-token", username="u"
-    )
-    request = factory.post("/sync/", {}, content_type="application/json")
+    response = _sync_with_adapter(factory, user, "myanimelist", adapter, "man-me", "9")
 
-    with patch("httpx.Client", side_effect=RuntimeError("jikan down")):
-        response = _drive(
-            MangaChapterSyncView,
-            request,
-            user=user,
-            media_id="man-jx",
-            chapter_number="2",
-        )
     assert response.status_code == 200
-    assert response.data["results"]["myanimelist"]["success"] is False
-    assert "resolve" in response.data["results"]["myanimelist"]["error"].lower()
+    assert response.data["results"]["myanimelist"] == {"success": False}
+    adapter.write_progress.assert_called_once_with("77", 9, token="tok")
 
 
 @pytest.mark.django_db
-def test_chapter_sync_mal_update_raises(factory):
-    """mal id from metadata; PATCH client raises -> except (1068-1069)."""
-    from animetix.models import MediaItem, TrackerConnection
+def test_chapter_sync_mal_adapter_raises(factory):
+    user = _confirmed_link("sv12", "man-ux", "myanimelist", "55")
+    adapter = MagicMock()
+    adapter.write_progress.side_effect = RuntimeError("patch boom")
 
-    user = User.objects.create_user(username="sv12", password="pw")
-    MediaItem.objects.create(
-        external_id="man-ux",
-        media_type="Manga",
-        title="UpdX",
-        metadata={"idMal": 55},
-    )
-    TrackerConnection.objects.create(
-        user=user, tracker="myanimelist", token="real-token", username="u"
-    )
-    request = factory.post("/sync/", {}, content_type="application/json")
+    response = _sync_with_adapter(factory, user, "myanimelist", adapter, "man-ux", "3")
 
-    with patch("httpx.Client", side_effect=RuntimeError("patch boom")):
-        response = _drive(
-            MangaChapterSyncView,
-            request,
-            user=user,
-            media_id="man-ux",
-            chapter_number="3",
-        )
     assert response.status_code == 200
+    assert response.data["success"] is True
     assert response.data["results"]["myanimelist"]["success"] is False
     assert "patch boom" in response.data["results"]["myanimelist"]["error"]
-
-
-@pytest.mark.django_db
-def test_chapter_sync_mal_real_update_error(factory):
-    """mal_id present in metadata; PATCH returns non-200 -> error result."""
-    from animetix.models import MediaItem, TrackerConnection
-
-    user = User.objects.create_user(username="sv7", password="pw")
-    MediaItem.objects.create(
-        external_id="man-me",
-        media_type="Manga",
-        title="MalErr",
-        metadata={"mal_id": 77},
-    )
-    TrackerConnection.objects.create(
-        user=user, tracker="myanimelist", token="real-token", username="u"
-    )
-    request = factory.post("/sync/", {}, content_type="application/json")
-
-    patch_resp = MagicMock(status_code=403, text="forbidden")
-    client = MagicMock()
-    client.patch.return_value = patch_resp
-    client_cm = MagicMock()
-    client_cm.__enter__.return_value = client
-
-    with patch("httpx.Client", return_value=client_cm):
-        response = _drive(
-            MangaChapterSyncView,
-            request,
-            user=user,
-            media_id="man-me",
-            chapter_number="9",
-        )
-    assert response.status_code == 200
-    assert response.data["results"]["myanimelist"]["success"] is False
-    assert "MAL API error" in response.data["results"]["myanimelist"]["error"]
