@@ -1,15 +1,63 @@
 import React, { useState } from 'react';
 import { Link2, Link2Off, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card } from '../../../components/ui/Card';
 import { Modal } from '../../../components/ui/Modal';
 import { socialService } from '../../../features/social/services/socialService';
-import { TrackerConnection } from '../../../features/social/types/profileTypes';
+import { TrackerConnection, TrackerLinkSummary } from '../../../features/social/types/profileTypes';
 
 interface TrackerSyncPanelProps {
   connections: TrackerConnection[] | undefined;
 }
+
+/** Œuvres liées pour un tracker donné, affichées sous sa connexion. À ne pas
+ *  confondre avec le bouton « Dissocier » du compte au-dessus : celui-ci
+ *  délie une œuvre précise de son entrée distante (`unlinkTrackerLink`),
+ *  l'autre coupe la connexion au compte tracker tout entier (`unlinkTracker`). */
+const TrackerLinkedWorks: React.FC<{
+  tracker: 'myanimelist' | 'anilist';
+  links: TrackerLinkSummary[] | undefined;
+  onUnlink: (mangaId: string, tracker: string) => void;
+  isUnlinking: boolean;
+}> = ({ tracker, links, onUnlink, isUnlinking }) => {
+  const { t } = useTranslation();
+  const filtered = links?.filter((link) => link.tracker === tracker) ?? [];
+
+  if (filtered.length === 0) return null;
+
+  return (
+    <ul className="mt-4 space-y-1.5 border-t border-black/5 dark:border-white/5 pt-3">
+      {filtered.map((link) => (
+        <li
+          key={link.manga_id}
+          className="flex items-center justify-between gap-2 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-1.5"
+        >
+          <div className="text-[11px] leading-snug min-w-0">
+            <span className="font-bold truncate">{link.manga_title}</span>
+            {link.remote_title && link.remote_title !== link.manga_title && (
+              <span className="opacity-60"> ({link.remote_title})</span>
+            )}
+            {link.remote_progress != null && (
+              <span className="ml-1.5 opacity-60">{link.remote_progress} ch.</span>
+            )}
+          </div>
+          <button
+            type="button"
+            aria-label={t('social.profile.unlink_work_aria', 'Délier {{title}}', {
+              title: link.manga_title,
+            })}
+            onClick={() => onUnlink(link.manga_id, link.tracker)}
+            disabled={isUnlinking}
+            className="shrink-0 px-2 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-md text-[9px] font-black uppercase tracking-wider transition-all border-none cursor-pointer disabled:opacity-50"
+          >
+            {t('social.profile.unlink_work', 'Délier cette œuvre')}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+};
 
 export const TrackerSyncPanel: React.FC<TrackerSyncPanelProps> = ({ connections }) => {
   const { t } = useTranslation();
@@ -46,6 +94,19 @@ export const TrackerSyncPanel: React.FC<TrackerSyncPanelProps> = ({ connections 
     mutationFn: (tracker: string) => socialService.unlinkTracker(tracker),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trackerConnections'] });
+    },
+  });
+
+  const { data: trackerLinks } = useQuery({
+    queryKey: ['trackerLinks'],
+    queryFn: () => socialService.getTrackerLinks(),
+  });
+
+  const unlinkLinkMutation = useMutation({
+    mutationFn: ({ mangaId, tracker }: { mangaId: string; tracker: string }) =>
+      socialService.unlinkTrackerLink(mangaId, tracker),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trackerLinks'] });
     },
   });
 
@@ -124,6 +185,14 @@ export const TrackerSyncPanel: React.FC<TrackerSyncPanelProps> = ({ connections 
               </button>
             )}
           </div>
+          {connections?.some((c) => c.tracker === 'myanimelist') && (
+            <TrackerLinkedWorks
+              tracker="myanimelist"
+              links={trackerLinks}
+              onUnlink={(mangaId, tracker) => unlinkLinkMutation.mutate({ mangaId, tracker })}
+              isUnlinking={unlinkLinkMutation.isPending}
+            />
+          )}
         </div>
 
         {/* AniList */}
@@ -175,6 +244,14 @@ export const TrackerSyncPanel: React.FC<TrackerSyncPanelProps> = ({ connections 
               </button>
             )}
           </div>
+          {connections?.some((c) => c.tracker === 'anilist') && (
+            <TrackerLinkedWorks
+              tracker="anilist"
+              links={trackerLinks}
+              onUnlink={(mangaId, tracker) => unlinkLinkMutation.mutate({ mangaId, tracker })}
+              isUnlinking={unlinkLinkMutation.isPending}
+            />
+          )}
         </div>
       </div>
 
