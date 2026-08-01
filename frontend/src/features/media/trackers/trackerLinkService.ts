@@ -20,12 +20,14 @@ const base = (mediaId: string) => `/api/v1/media/Manga/${mediaId}/trackers`;
 
 export interface TrackerLinksResponse {
   links: TrackerLink[];
-  /** Trackers dont l'utilisateur a une connexion. `links: []` avec `connected: []`
-   *  = rien à afficher ; `links: []` avec `connected: ['anilist']` = aucune
-   *  correspondance trouvée, on propose la recherche manuelle. Le backend le
-   *  sert toujours ; optionnel côté type uniquement pour tolérer un appelant
-   *  qui l'omettrait — le composant le traite alors comme `[]`. */
-  connected?: TrackerName[];
+  /** Trackers dont l'utilisateur a une connexion. Toujours servi par le
+   *  backend (api/core/manga.py) — indispensable pour distinguer les deux cas
+   *  qui donnent tous deux `links: []` : `connected: []` = l'utilisateur n'a
+   *  lié aucun compte (rien à afficher) ; `connected: ['anilist']` = un
+   *  compte est lié mais aucune correspondance trouvée (recherche manuelle).
+   *  Un `links` non vide ne dispense jamais de le lire : c'est aussi ce champ
+   *  qui dit si la connexion source d'une liaison confirmée existe encore. */
+  connected: TrackerName[];
 }
 
 /** `null` quand le manga n'est pas au catalogue (204). */

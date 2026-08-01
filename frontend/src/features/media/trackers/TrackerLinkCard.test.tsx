@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
@@ -42,6 +42,7 @@ describe('TrackerLinkCard', () => {
           remote_progress: null,
         },
       ],
+      connected: ['anilist'],
     });
     const link = vi.spyOn(svc, 'linkTracker').mockResolvedValue({} as never);
 
@@ -63,6 +64,7 @@ describe('TrackerLinkCard', () => {
           remote_progress: 164,
         },
       ],
+      connected: ['anilist'],
     });
 
     wrap(<TrackerLinkCard mediaId="m1" />);
@@ -97,5 +99,31 @@ describe('TrackerLinkCard', () => {
     mockIsAuthenticated = false;
     wrap(<TrackerLinkCard mediaId="m1" />);
     await waitFor(() => expect(fetchLinks).not.toHaveBeenCalled());
+  });
+
+  it('links a manually-picked candidate end to end', async () => {
+    vi.spyOn(svc, 'fetchTrackerLinks').mockResolvedValue({
+      links: [],
+      connected: ['anilist'],
+    });
+    const search = vi.spyOn(svc, 'searchTracker').mockResolvedValue({
+      results: [{ remote_id: '99999', title: 'One Punch-Man (verified)', chapters: 200 }],
+    });
+    const link = vi.spyOn(svc, 'linkTracker').mockResolvedValue({} as never);
+
+    wrap(<TrackerLinkCard mediaId="m1" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /chercher autre chose/i }));
+
+    const input = await screen.findByLabelText(/titre à rechercher/i);
+    fireEvent.change(input, { target: { value: 'One Punch' } });
+    await userEvent.click(screen.getByRole('button', { name: 'Rechercher' }));
+
+    await waitFor(() => expect(search).toHaveBeenCalledWith('m1', 'anilist', 'One Punch'));
+
+    const candidate = await screen.findByText(/One Punch-Man \(verified\)/);
+    await userEvent.click(candidate);
+
+    await waitFor(() => expect(link).toHaveBeenCalledWith('m1', 'anilist', '99999'));
   });
 });

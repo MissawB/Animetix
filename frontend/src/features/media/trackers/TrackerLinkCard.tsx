@@ -28,12 +28,13 @@ export const TrackerLinkCard: React.FC<{ mediaId: string }> = ({ mediaId }) => {
 
   if (!isAuthenticated) return null;
   if (isLoading) return null;
-  // Rien à afficher seulement si aucune liaison ET aucun tracker connecté :
-  // `connected` vide seul (pas de liaison ET aucun compte connecté) signifie
-  // que l'utilisateur n'a lié aucun compte — inciter à le faire n'est pas le
-  // rôle de cette fiche. Mais un `links` non vide suffit à justifier l'encart
-  // même si `connected` n'est pas renseigné par la réponse.
-  if (links.length === 0 && connected.length === 0) return null;
+  // `connected` vide = l'utilisateur n'a lié aucun compte tracker. Un `links`
+  // non vide ne suffit PAS à afficher l'encart dans ce cas : le backend peut
+  // renvoyer une liaison confirmée dont la connexion source a depuis été
+  // supprimée (déconnexion du compte AniList/MAL sans purge de la liaison
+  // côté serveur) — sans ce garde-fou, l'encart afficherait une progression
+  // et un bouton « Délier » pour un compte qui n'existe plus.
+  if (connected.length === 0) return null;
 
   const unmatched = connected.filter((tracker) => !links.some((link) => link.tracker === tracker));
 
