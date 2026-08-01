@@ -154,6 +154,31 @@ def test_search_ignores_items_without_id():
         assert results[1]["remote_id"] == "40001"
 
 
+def test_search_never_raises_on_a_malformed_item():
+    """Un élément non-dict dans la réponse ne doit pas lever : `TrackerPort`
+    promet qu'un adaptateur ne lève jamais, et la boucle de normalisation vit
+    hors du `try` de la requête — une exception ici faisait un 500 sur
+    l'endpoint des liaisons."""
+    adapter = AniListAdapter()
+    payload = {
+        "data": {
+            "Page": {
+                "media": [
+                    "not-a-dict",
+                    {"id": 30013, "title": {"romaji": "One Punch-Man"}},
+                    {"id": 40001, "title": "un titre plat, pas un objet"},
+                ]
+            }
+        }
+    }
+
+    with patch("httpx.Client.post", return_value=_response(payload)):
+        results = adapter.search("test", token=None)
+
+    assert [r["remote_id"] for r in results] == ["30013", "40001"]
+    assert results[1]["title"] == ""
+
+
 def test_read_progress_returns_none_on_non_200_response():
     """Non-200 HTTP response → read_progress returns None."""
     adapter = AniListAdapter()

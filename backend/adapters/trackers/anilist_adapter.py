@@ -66,20 +66,27 @@ class AniListAdapter(TrackerPort):
 
     def search(self, query: str, token: Optional[str]) -> List[Dict[str, Any]]:
         data = self._post(SEARCH_QUERY, {"search": query}, token)
-        media = ((data or {}).get("Page") or {}).get("media") or []
-        results = []
-        for item in media:
-            if "id" not in item:
-                continue
-            results.append(
-                {
-                    "remote_id": str(item["id"]),
-                    "title": (item.get("title") or {}).get("romaji")
-                    or (item.get("title") or {}).get("english")
-                    or "",
-                    "chapters": item.get("chapters"),
-                }
-            )
+        results: List[Dict[str, Any]] = []
+        # La normalisation est DANS le try : un élément inattendu (non-dict)
+        # lèverait sinon hors de l'adaptateur, ce que `TrackerPort` interdit —
+        # et ferait un 500 sur l'endpoint des liaisons.
+        try:
+            media = ((data or {}).get("Page") or {}).get("media") or []
+            for item in media:
+                if not isinstance(item, dict) or "id" not in item:
+                    continue
+                title = item.get("title")
+                title = title if isinstance(title, dict) else {}
+                results.append(
+                    {
+                        "remote_id": str(item["id"]),
+                        "title": title.get("romaji") or title.get("english") or "",
+                        "chapters": item.get("chapters"),
+                    }
+                )
+        except Exception as exc:
+            logger.warning("Réponse AniList inexploitable : %s", exc)
+            return []
         return results
 
     def read_progress(self, remote_id: str, token: str) -> Optional[int]:

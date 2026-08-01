@@ -30,24 +30,49 @@ class MyAnimeListAdapter(TrackerPort):
         except Exception as exc:
             logger.warning("Jikan injoignable : %s", exc)
             return []
-        results = []
-        for entry in entries:
-            if "mal_id" not in entry:
-                continue
-            results.append(
-                {
-                    "remote_id": str(entry["mal_id"]),
-                    "title": entry.get("title") or "",
-                    "chapters": entry.get("chapters"),
-                }
-            )
+        results: List[Dict[str, Any]] = []
+        # La normalisation est DANS un try : un élément inattendu (non-dict)
+        # lèverait sinon hors de l'adaptateur, ce que `TrackerPort` interdit —
+        # et ferait un 500 sur l'endpoint des liaisons.
+        try:
+            for entry in entries:
+                if not isinstance(entry, dict) or "mal_id" not in entry:
+                    continue
+                results.append(
+                    {
+                        "remote_id": str(entry["mal_id"]),
+                        "title": entry.get("title") or "",
+                        "chapters": entry.get("chapters"),
+                    }
+                )
+        except Exception as exc:
+            logger.warning("Réponse Jikan inexploitable : %s", exc)
+            return []
         return results
 
+    @staticmethod
+    def _media_id(remote_id: Any) -> Optional[int]:
+        """Les identifiants MAL sont numériques (``mal_id``).
+
+        Interpoler la valeur brute dans le chemin d'URL laisserait un
+        ``remote_id`` contenant ``/`` viser un tout autre point de l'API MAL
+        avec le jeton de l'utilisateur. AniList caste déjà en ``int`` ; on
+        s'aligne plutôt que de garder l'asymétrie.
+        """
+        try:
+            return int(remote_id)
+        except (TypeError, ValueError):
+            logger.warning("Invalid remote_id for MyAnimeList: %s", remote_id)
+            return None
+
     def read_progress(self, remote_id: str, token: str) -> Optional[int]:
+        media_id = self._media_id(remote_id)
+        if media_id is None:
+            return None
         try:
             with httpx.Client(timeout=10.0) as client:
                 res = client.get(
-                    MAL_MANGA.format(remote_id=remote_id) + "?fields=my_list_status",
+                    MAL_MANGA.format(remote_id=media_id) + "?fields=my_list_status",
                     headers={"Authorization": f"Bearer {token}"},
                 )
             if res.status_code != 200:
@@ -68,10 +93,13 @@ class MyAnimeListAdapter(TrackerPort):
         return read if isinstance(read, int) else 0
 
     def write_progress(self, remote_id: str, progress: int, token: str) -> bool:
+        media_id = self._media_id(remote_id)
+        if media_id is None:
+            return False
         try:
             with httpx.Client(timeout=10.0) as client:
                 res = client.patch(
-                    MAL_MANGA.format(remote_id=remote_id) + "/my_list_status",
+                    MAL_MANGA.format(remote_id=media_id) + "/my_list_status",
                     headers={
                         "Authorization": f"Bearer {token}",
                         "Content-Type": "application/x-www-form-urlencoded",

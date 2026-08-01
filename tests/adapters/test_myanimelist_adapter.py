@@ -115,6 +115,38 @@ def test_search_ignores_items_without_mal_id():
         assert results[1]["remote_id"] == "1"
 
 
+def test_search_never_raises_on_a_malformed_item():
+    """Un élément non-dict ne doit pas lever : la boucle de normalisation vit
+    hors du `try` de la requête, et `TrackerPort` promet qu'un adaptateur ne
+    lève jamais (sinon 500 sur l'endpoint des liaisons)."""
+    adapter = MyAnimeListAdapter()
+    payload = {"data": ["not-a-dict", {"mal_id": 44347, "title": "One Punch-Man"}]}
+
+    with patch("httpx.Client.get", return_value=_response(payload)):
+        results = adapter.search("test", token=None)
+
+    assert [r["remote_id"] for r in results] == ["44347"]
+
+
+def test_read_progress_refuses_a_non_numeric_remote_id():
+    """Les identifiants MAL sont numériques. Interpoler la valeur brute dans le
+    chemin d'URL enverrait le jeton de l'utilisateur sur un tout autre point de
+    l'API MAL — AniList caste déjà en `int`, l'asymétrie était le défaut."""
+    adapter = MyAnimeListAdapter()
+
+    with patch("httpx.Client.get") as mock_get:
+        assert adapter.read_progress("44347/../../users/@me", token="tok") is None
+        mock_get.assert_not_called()
+
+
+def test_write_progress_refuses_a_non_numeric_remote_id():
+    adapter = MyAnimeListAdapter()
+
+    with patch("httpx.Client.patch") as mock_patch:
+        assert adapter.write_progress("../../x", 165, token="tok") is False
+        mock_patch.assert_not_called()
+
+
 def test_read_progress_returns_none_on_non_200_response():
     """Non-200 HTTP response → read_progress returns None."""
     adapter = MyAnimeListAdapter()
