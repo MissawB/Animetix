@@ -8,6 +8,7 @@ from core.utils.inference_config import (
 )
 from core.utils.local_models import (
     COMPACT_REASONING_MODEL,
+    GUARDRAIL_OLLAMA_MODEL,
     LLM_OLLAMA_MODEL,
     LOCAL_DIFFUSION_MODEL_ID,
     LOCAL_TEXT_MODEL,
@@ -94,11 +95,20 @@ class InferenceContainer(containers.DeclarativeContainer):
         usage_port=infrastructure.usage_port,
     )
 
+    # Le même adaptateur brain que celui de la chaîne, épinglé sur le modérateur.
+    # Séparé de `brain_api_adapter` pour que la modération n'occupe pas le 7B.
+    brain_guardrail_adapter = providers.Singleton(
+        LazyClass("adapters.inference.brain_api_adapter", "BrainAPIAdapter"),
+        api_url=os.getenv("BRAIN_API_URL", ""),
+        api_key=settings.BRAIN_API_KEY,
+        model=GUARDRAIL_OLLAMA_MODEL,
+    )
+
     local_guardrail_adapter = providers.Singleton(
         LazyClass(
             "adapters.inference.local_guardrail_adapter", "LocalGuardrailAdapter"
         ),
-        inference_engine=unified_inference_adapter,
+        inference_engine=brain_guardrail_adapter,
     )
 
     brain_api_adapter = providers.Singleton(
