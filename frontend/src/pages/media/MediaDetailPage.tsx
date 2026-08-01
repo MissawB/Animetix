@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { ChapterList } from '../../features/manga-reader/components/ChapterList';
+import { TrackerLinkCard } from '../../features/media/trackers/TrackerLinkCard';
 import { useTranslation } from 'react-i18next';
 import { DetailHero } from './components/DetailHero';
 import { SectionHeader } from './components/SectionHeader';
@@ -269,7 +270,10 @@ const MediaDetailPage: React.FC = () => {
         <CharactersSection key={`${mediaType}-${itemId}`} mediaType={mediaType} itemId={itemId} />
 
         {mediaType?.toLowerCase() === 'manga' && itemId && (
-          <ChapterList mediaId={itemId} mediaTitle={item.title} />
+          <>
+            <ChapterList mediaId={itemId} mediaTitle={item.title} />
+            <TrackerLinkCard mediaId={itemId} />
+          </>
         )}
 
         {item.seiyuu && item.seiyuu.length > 0 && (
