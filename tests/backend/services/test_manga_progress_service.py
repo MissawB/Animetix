@@ -77,7 +77,13 @@ def test_last_page_read_never_regresses(service_fixtures):
     assert result["last_page_read"] == 4
 
 
-def test_marking_unread_resets_the_cursor(service_fixtures):
+def test_record_progress_never_resets_a_finished_chapter(service_fixtures):
+    """Rouvrir un chapitre lu ne l'efface pas.
+
+    Le lecteur arme une écriture tout seul au montage ; si ce chemin acceptait
+    `{last_page_read: 0, is_read: false}` comme une remise à zéro, ouvrir un
+    chapitre terminé pour relire une page le repasserait en non-lu à la page 0.
+    """
     service, _suwayomi, user, _manga, _c1, _c2 = service_fixtures
 
     service.record_progress(user, "suwayomi:1:809", 1.0, last_page_read=4, is_read=True)
@@ -85,8 +91,26 @@ def test_marking_unread_resets_the_cursor(service_fixtures):
         user, "suwayomi:1:809", 1.0, last_page_read=0, is_read=False
     )
 
-    assert result["last_page_read"] == 0
-    assert result["is_read"] is False
+    assert result["last_page_read"] == 4
+    assert result["is_read"] is True
+    # Et l'état persisté suit la réponse.
+    payload = service.get_manga_progress(user, "suwayomi:1:809")
+    chapter_one = next(row for row in payload["chapters"] if row["number"] == 1.0)
+    assert chapter_one["is_read"] is True
+    assert chapter_one["last_page_read"] == 4
+
+
+def test_set_read_false_resets_the_cursor(service_fixtures):
+    """La remise à zéro reste possible — par son endpoint dédié."""
+    service, _suwayomi, user, _manga, _c1, _c2 = service_fixtures
+
+    service.record_progress(user, "suwayomi:1:809", 1.0, last_page_read=4, is_read=True)
+    service.set_read(user, "suwayomi:1:809", [1.0], is_read=False)
+
+    payload = service.get_manga_progress(user, "suwayomi:1:809")
+    chapter_one = next(row for row in payload["chapters"] if row["number"] == 1.0)
+    assert chapter_one["is_read"] is False
+    assert chapter_one["last_page_read"] == 0
 
 
 def test_completion_updates_favorite_and_flags_it_once(service_fixtures):
@@ -152,6 +176,31 @@ def test_suwayomi_mirror_is_called_with_the_chapter_external_id(service_fixtures
     suwayomi.update_chapters_read_state.assert_called_once_with(
         ["1"], is_read=True, last_page_read=4
     )
+
+
+def test_mirror_is_skipped_for_a_non_suwayomi_manga(db):
+    """Pas de connexion HTTP vers Suwayomi pour une œuvre d'une autre source.
+
+    `SUWAYOMI_URL` pointe sur 127.0.0.1 et n'est jamais surchargé en
+    production : sans ce garde-fou, chaque tour de page d'un manga MangaDex
+    déclencherait un POST voué à échouer, plus un WARNING.
+    """
+    user = User.objects.create_user(username="mangadex_reader", password="pw")
+    manga = MediaItem.objects.create(
+        external_id="mangadex:abc", media_type="Manga", title="Elsewhere"
+    )
+    chapter = MangaChapter.objects.create(manga=manga, number=1.0, external_id="99")
+    suwayomi = MagicMock()
+    service = MangaProgressService(
+        progress_repository=DjangoMangaProgressRepositoryAdapter(),
+        suwayomi_adapter=suwayomi,
+    )
+
+    service.record_progress(user, "mangadex:abc", 1.0, last_page_read=3, is_read=False)
+    service.set_read(user, "mangadex:abc", [1.0], is_read=True)
+
+    assert chapter.external_id == "99"  # le chapitre a bien un external_id
+    suwayomi.update_chapters_read_state.assert_not_called()
 
 
 def test_mirror_failure_does_not_break_the_write(service_fixtures):

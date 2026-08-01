@@ -5,6 +5,9 @@ from core.ports.manga_progress_repository_port import MangaProgressRepositoryPor
 
 logger = logging.getLogger("animetix.manga")
 
+# Les identifiants d'œuvres importées depuis Suwayomi valent "suwayomi:<source>:<id>".
+SUWAYOMI_PREFIX = "suwayomi:"
+
 
 class MangaProgressService:
     """Progression de lecture par utilisateur.
@@ -56,27 +59,26 @@ class MangaProgressService:
 
         previous = self._existing_row(self.repo.get_progress(user, chapter))
 
-        # Monotone : la position ne recule jamais, sauf remise à zéro explicite
-        # (repasser le chapitre en non-lu avec last_page_read=0).
-        explicit_reset = not is_read and last_page_read == 0
-        cursor = (
-            last_page_read
-            if explicit_reset
-            else max(previous["last_page_read"], last_page_read)
-        )
+        # Strictement monotone : ce chemin est celui du lecteur, qui écrit tout
+        # seul (debounce, flush au démontage). Lui laisser le pouvoir de
+        # remettre à zéro ferait effacer un chapitre terminé par sa simple
+        # réouverture. La remise à zéro est une action utilisateur explicite :
+        # elle passe par `set_read(..., is_read=False)` (POST .../mark-read/).
+        cursor = max(previous["last_page_read"], last_page_read)
+        effective_is_read = is_read or previous["is_read"]
 
-        self.repo.upsert_progress(user, chapter, cursor, is_read)
+        self.repo.upsert_progress(user, chapter, cursor, effective_is_read)
 
-        completed = is_read and not previous["is_read"]
+        completed = effective_is_read and not previous["is_read"]
         if completed:
             manga = self.repo.get_manga(manga_id)
             if manga is not None:
                 self.repo.set_favorite_last_read(user, manga, chapter_number)
 
-        self._mirror([chapter], is_read, cursor)
+        self._mirror(manga_id, [chapter], effective_is_read, cursor)
         return {
             "number": chapter_number,
-            "is_read": is_read,
+            "is_read": effective_is_read,
             "last_page_read": cursor,
             "chapter_completed": completed,
         }
@@ -105,7 +107,7 @@ class MangaProgressService:
                 self.repo.set_favorite_last_read(
                     user, manga, max(chapter.number for chapter in chapters)
                 )
-        self._mirror(chapters, is_read, None)
+        self._mirror(manga_id, chapters, is_read, None)
         return count
 
     def _existing_row(self, row: Any) -> Dict:
@@ -142,10 +144,21 @@ class MangaProgressService:
         return None
 
     def _mirror(
-        self, chapters: List[Any], is_read: bool, last_page_read: Optional[int]
+        self,
+        manga_id: str,
+        chapters: List[Any],
+        is_read: bool,
+        last_page_read: Optional[int],
     ) -> None:
-        """Répercute l'état vers Suwayomi. Best-effort : un échec ne remonte pas."""
+        """Répercute l'état vers Suwayomi. Best-effort : un échec ne remonte pas.
+
+        Uniquement pour une œuvre qui vient bien de Suwayomi : sans ce garde-fou,
+        chaque tour de page d'un manga d'une autre source ouvrirait une connexion
+        HTTP vers un serveur qui n'existe pas en production.
+        """
         if not self.suwayomi_adapter:
+            return
+        if not str(manga_id).startswith(SUWAYOMI_PREFIX):
             return
         ids = [c.external_id for c in chapters if c.external_id]
         if not ids:
