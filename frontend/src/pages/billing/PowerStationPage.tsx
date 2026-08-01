@@ -79,7 +79,7 @@ const PowerStationPage: React.FC = () => {
     };
   }, [user, currentPage, filterType, filterDirection, reloadToken]);
 
-  const handleWatchAd = () => {
+  const handleRecharge = () => {
     setIsWatching(true);
     setWatchProgress(0);
 
@@ -102,7 +102,7 @@ const PowerStationPage: React.FC = () => {
   const completeAd = async () => {
     setIsCrediting(true);
     try {
-      const res = await billingService.watchAd();
+      const res = await billingService.activeRecharge();
       addToast(
         t('billing.power_station.energy_injected', {
           defaultValue: 'Énergie injectée : +{{earned}} Bx !',
@@ -163,7 +163,7 @@ const PowerStationPage: React.FC = () => {
                   isCrediting={isCrediting}
                   isMuted={isMuted}
                   setIsMuted={setIsMuted}
-                  onStartWatchAd={handleWatchAd}
+                  onStartRecharge={handleRecharge}
                 />
 
                 {/* Passive Mining Node */}

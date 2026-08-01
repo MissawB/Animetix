@@ -19,5 +19,7 @@ export const logAdEvent = (eventType: AdEventType, adType: AdType): void => {
 export const billingService = {
   getFinancialSummary: async () =>
     apiClient('/api/v1/billing/admin/financial-summary/', { skipToast: true }),
-  watchAd: async () => apiClient('/api/v1/billing/wallet/watch-ad/', { method: 'POST' }),
+  // Recharge active d'énergie (crédite des Bx). Le mécanisme est un engagement,
+  // pas une récompense pour visionnage de pub (voir TransactionLedgerTable).
+  activeRecharge: async () => apiClient('/api/v1/billing/wallet/watch-ad/', { method: 'POST' }),
 };

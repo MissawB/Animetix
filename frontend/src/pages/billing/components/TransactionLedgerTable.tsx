@@ -10,6 +10,21 @@ import {
 import { Button } from '../../../components/ui/Button';
 import { WalletTransaction } from '../../../features/billing/types/walletTypes';
 
+// Libellés lisibles des types de transaction. IMPORTANT : ne JAMAIS afficher le
+// type brut (ex. `ad_active`) — le vocabulaire « ad » sur un site AdSense évoque
+// une récompense pour visionnage de pub (interdit). L'énergie/minage est un
+// mécanisme d'engagement, pas une récompense publicitaire.
+const TRANSACTION_TYPE_LABELS: Record<string, string> = {
+  ad_passive: 'Passive Mining',
+  ad_active: 'Active Recharge',
+  purchase: 'Direct Purchase',
+  ai_usage: 'AI Consumption',
+  daily_grant: 'Daily Grant',
+};
+
+const transactionTypeLabel = (type: string): string =>
+  TRANSACTION_TYPE_LABELS[type] ?? type.replace(/_/g, ' ');
+
 interface TransactionLedgerTableProps {
   walletHistory: WalletTransaction[];
   isLoadingLedger: boolean;
@@ -115,7 +130,7 @@ export const TransactionLedgerTable: React.FC<TransactionLedgerTableProps> = ({
                             : 'border-purple-500/30 text-purple-400'
                         }`}
                       >
-                        {t.type.replace('_', ' ')}
+                        {transactionTypeLabel(t.type)}
                       </span>
                     </td>
                     <td className="p-6 text-xs text-gray-500 font-bold">

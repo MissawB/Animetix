@@ -10,7 +10,7 @@ interface ActiveMiningCardProps {
   isCrediting: boolean;
   isMuted: boolean;
   setIsMuted: (val: boolean) => void;
-  onStartWatchAd: () => void;
+  onStartRecharge: () => void;
 }
 
 export const ActiveMiningCard: React.FC<ActiveMiningCardProps> = ({
@@ -19,7 +19,7 @@ export const ActiveMiningCard: React.FC<ActiveMiningCardProps> = ({
   isCrediting,
   isMuted,
   setIsMuted,
-  onStartWatchAd,
+  onStartRecharge,
 }) => {
   const { t } = useTranslation();
 
@@ -70,7 +70,7 @@ export const ActiveMiningCard: React.FC<ActiveMiningCardProps> = ({
             <Button
               aria-label="Lancer la recharge"
               className="rounded-full w-16 h-16 bg-cyan-500 hover:bg-cyan-400 text-black flex items-center justify-center shadow-[0_0_30px_rgba(6,182,212,0.3)] transition-all hover:scale-105"
-              onClick={onStartWatchAd}
+              onClick={onStartRecharge}
               disabled={isCrediting}
             >
               <Play className="w-6 h-6 fill-current ml-0.5" />

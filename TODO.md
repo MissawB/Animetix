@@ -15,6 +15,11 @@ _Aucun item ouvert._
   - Facturation GCP **rétablie le 2026-07-22**, mais le run GPU est **différé volontairement** : période de réduction des frais pendant la validation AdSense (sensors en pause, Redis migré Upstash, connecteur VPC retiré — cf. HISTORY 2026-07-22). Les ~3,5 h de vecteurs déjà écrits sont préservés (job reprenable).
   - **Reste (quand le mode économie sera levé)** : 1) vérifier/relever le plafond de budget (50 € conseillé) ; 2) Brain `/health` = 200 ; 3) re-exécuter **par chunks** (`--limit N`) jusqu'aux ~35 000 ; 4) recherche perso ne renvoie plus 503.
 
+- [ ] **Monétisation « regarde une pub → Bx » : archi conforme AdSense (option A)** _(2026-08-01)_
+  - **Contexte** : la mécanique « Active Mining / recharge » est le cœur du site, mais récompenser un utilisateur pour visionner une pub est **interdit par AdSense** (pas de format rewarded côté web ; incentivé = refus). En attendant, l'**option B est en place** (2026-08-01) : le vocabulaire « pub / watch ad » a été retiré de l'UI (ledger relabellé, identifiants renommés), la récompense est présentée comme un **engagement/énergie** non lié à une pub, et le flux est un simple minuteur (aucune pub AdSense n'est incentivée). Les `AdSlot` restent du **display passif** (games/pricing) — conforme.
+  - **Reste (option A, pour vraiment financer la récompense par de la pub)** : brancher un **réseau rewarded dédié**, séparé d'AdSense — p.ex. **Google Ad Manager** (rewarded ad units web, éligibilité requise) ou un SSP tiers rewarded. Règle absolue : **une pub AdSense n'est JAMAIS le déclencheur d'une récompense** ; AdSense = display passif uniquement. Afficher une vraie pub rewarded (du réseau dédié) à la place du minuteur, et re-caler `ad_reward_bx()` sur le revenu réel de ce réseau.
+  - **Ne jamais** : câbler une pub AdSense derrière le bouton de recharge, ni ré-introduire le libellé « pub / watch ad » près des `AdSlot` (cf. HISTORY 2026-07-24, retrait des rewarded-ads).
+
 ## 🟡 Moyens
 
 ### Manga / Suwayomi _(analyse 2026-07-27)_
