@@ -25,8 +25,10 @@ const fav = {
   status: 'reading',
   last_read_chapter: 3,
   unread_chapters_count: 2,
+  read_count: 3,
+  total_chapters: 5,
   created_at: '2026-07-01T00:00:00Z',
-  manga: { id: 'm1', title: 'Berserk', author: 'Miura', image: '' },
+  manga: { id: 'm1', title: 'Berserk', author: 'Miura', image: '', media_type: 'Manga' },
 };
 
 describe('MangaLibraryPage', () => {
@@ -62,5 +64,27 @@ describe('MangaLibraryPage', () => {
     renderPage();
 
     expect(await screen.findByText('Berserk')).toBeInTheDocument();
+  });
+
+  // Task 10: the card surfaces server-computed chapter progress and links back
+  // to the media detail page (which already renders the "Reprendre" banner),
+  // instead of calling the per-manga progress API for every card.
+  it('shows the read/total chapter progress and a resume link to the media detail page', async () => {
+    mockApiClient.mockResolvedValue([fav]);
+
+    renderPage();
+
+    expect(await screen.findByText('3/5 lus')).toBeInTheDocument();
+    const resumeLink = screen.getByRole('link', { name: /reprendre/i });
+    expect(resumeLink).toHaveAttribute('href', '/media/Manga/m1/');
+  });
+
+  it('hides the resume link when nothing has been read yet or the manga is fully read', async () => {
+    mockApiClient.mockResolvedValue([{ ...fav, id: 2, read_count: 0, total_chapters: 5 }]);
+
+    renderPage();
+
+    expect(await screen.findByText('0/5 lus')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /reprendre/i })).not.toBeInTheDocument();
   });
 });

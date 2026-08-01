@@ -90,6 +90,8 @@ export interface FavoriteManga {
   status: 'reading' | 'completed' | 'plan_to_read';
   last_read_chapter: number;
   unread_chapters_count: number;
+  read_count: number;
+  total_chapters: number;
   created_at: string;
   updated_at: string;
 }

@@ -290,6 +290,20 @@ export const MangaLibraryPage: React.FC = () => {
                           <span>{t('library.last_read', 'Lu')}</span>
                           <span className="text-white font-black">Ch. {fav.last_read_chapter}</span>
                         </div>
+                        <div className="mt-2 flex items-center justify-between gap-2 pt-2 border-t border-white/5">
+                          <span className="tabular-nums text-white/40">
+                            {fav.read_count}/{fav.total_chapters}{' '}
+                            {t('library.chapters_read', 'lus')}
+                          </span>
+                          {fav.read_count > 0 && fav.read_count < fav.total_chapters && (
+                            <Link
+                              to={`/media/${fav.manga.media_type}/${fav.manga.id}/`}
+                              className="font-black uppercase tracking-wider text-yellow-400 hover:text-yellow-300 no-underline"
+                            >
+                              {t('library.btn_resume', 'Reprendre')}
+                            </Link>
+                          )}
+                        </div>
                       </div>
                     </div>
 

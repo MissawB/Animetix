@@ -30,6 +30,8 @@ class MangaChapterSerializer(serializers.ModelSerializer):
 class FavoriteMangaSerializer(serializers.ModelSerializer):
     manga = MediaItemSerializer(read_only=True)
     unread_chapters_count = serializers.SerializerMethodField()
+    read_count = serializers.SerializerMethodField()
+    total_chapters = serializers.SerializerMethodField()
 
     class Meta:
         model = FavoriteManga
@@ -39,6 +41,8 @@ class FavoriteMangaSerializer(serializers.ModelSerializer):
             "status",
             "last_read_chapter",
             "unread_chapters_count",
+            "read_count",
+            "total_chapters",
             "created_at",
             "updated_at",
         ]
@@ -49,3 +53,15 @@ class FavoriteMangaSerializer(serializers.ModelSerializer):
         return MangaChapter.objects.filter(
             manga=obj.manga, number__gt=obj.last_read_chapter
         ).count()
+
+    def get_read_count(self, obj) -> int:
+        if hasattr(obj, "read_count_annotated"):
+            return obj.read_count_annotated
+        return MangaChapter.objects.filter(
+            manga=obj.manga, progress__user=obj.user, progress__is_read=True
+        ).count()
+
+    def get_total_chapters(self, obj) -> int:
+        if hasattr(obj, "total_chapters_annotated"):
+            return obj.total_chapters_annotated
+        return MangaChapter.objects.filter(manga=obj.manga).count()

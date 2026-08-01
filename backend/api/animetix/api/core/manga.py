@@ -313,6 +313,22 @@ class FavoriteMangaListView(APIView):
             .annotate(count=Count("id"))
             .values("count")
         )
+        read_chapters_subquery = (
+            MangaChapter.objects.filter(
+                manga=OuterRef("manga"),
+                progress__user=OuterRef("user"),
+                progress__is_read=True,
+            )
+            .values("manga")
+            .annotate(count=Count("id"))
+            .values("count")
+        )
+        total_chapters_subquery = (
+            MangaChapter.objects.filter(manga=OuterRef("manga"))
+            .values("manga")
+            .annotate(count=Count("id"))
+            .values("count")
+        )
 
         favorites = (
             FavoriteManga.objects.filter(user=request.user)
@@ -320,7 +336,13 @@ class FavoriteMangaListView(APIView):
             .annotate(
                 unread_chapters_count_annotated=Coalesce(
                     Subquery(unread_chapters_subquery, output_field=IntegerField()), 0
-                )
+                ),
+                read_count_annotated=Coalesce(
+                    Subquery(read_chapters_subquery, output_field=IntegerField()), 0
+                ),
+                total_chapters_annotated=Coalesce(
+                    Subquery(total_chapters_subquery, output_field=IntegerField()), 0
+                ),
             )
         )
         serializer = FavoriteMangaSerializer(favorites, many=True)

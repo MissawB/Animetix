@@ -197,3 +197,24 @@ def test_favorite_manga_serializer(db):
     assert data["unread_chapters_count"] == 2  # Chapter 2 and 3 are > 1.0
     assert data["manga"]["id"] == "serializer_manga"
     assert data["manga"]["title"] == "Test Manga"
+
+
+@pytest.mark.django_db
+def test_favorite_list_exposes_read_counts(authenticated_client):
+    from animetix.models import MangaChapter, MangaReadingProgress
+
+    user = User.objects.get(username="testuser")
+    manga = MediaItem.objects.create(
+        external_id="suwayomi:1:809", media_type="Manga", title="OPM"
+    )
+    FavoriteManga.objects.create(user=user, manga=manga)
+    c1 = MangaChapter.objects.create(manga=manga, number=1.0)
+    MangaChapter.objects.create(manga=manga, number=2.0)
+    MangaReadingProgress.objects.create(user=user, chapter=c1, is_read=True)
+
+    res = authenticated_client.get(reverse("api_favorite_manga_list"))
+
+    assert res.status_code == 200
+    row = next(r for r in res.data if r["manga"]["id"] == "suwayomi:1:809")
+    assert row["read_count"] == 1
+    assert row["total_chapters"] == 2
