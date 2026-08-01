@@ -1,4 +1,7 @@
+from unittest.mock import MagicMock
+
 import pytest
+from animetix.containers import get_container
 from animetix.models import MediaItem, TrackerConnection
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -11,6 +14,21 @@ def authenticated_client(db):
     user = User.objects.create_user(username="testuser", password="password")
     client.force_authenticate(user=user)
     return client
+
+
+@pytest.fixture
+def mock_tracker_adapters():
+    anilist_mock = MagicMock()
+    anilist_mock.write_progress.return_value = True
+    mal_mock = MagicMock()
+    mal_mock.write_progress.return_value = True
+
+    container = get_container()
+    container.persistence.anilist_adapter.override(anilist_mock)
+    container.persistence.myanimelist_adapter.override(mal_mock)
+    yield {"anilist": anilist_mock, "myanimelist": mal_mock}
+    container.persistence.anilist_adapter.reset_last_overriding()
+    container.persistence.myanimelist_adapter.reset_last_overriding()
 
 
 @pytest.mark.django_db
@@ -79,23 +97,44 @@ def test_tracker_unlink(authenticated_client):
 
 
 @pytest.mark.django_db
-def test_manga_chapter_sync(authenticated_client):
+def test_manga_chapter_sync(authenticated_client, mock_tracker_adapters):
+    from animetix.models import MangaTrackerLink
+
     # Created so the sync endpoint can resolve media_id "12345"; the row itself
     # is looked up by id, not via a local variable.
-    MediaItem.objects.create(
+    manga = MediaItem.objects.create(
         external_id="12345",
         media_type="Manga",
         title="Monster",
         metadata={"id": "12345", "idMal": 12345},
     )
 
-    # Set up active connections with mock tokens that trigger simulated successes
+    # Set up active connections plus CONFIRMED links so the service actually
+    # pushes: an unconfirmed link (or none at all) pushes nothing by design.
     user = User.objects.get(username="testuser")
     TrackerConnection.objects.create(
-        user=user, tracker="anilist", username="anilist_user", token="mock-token"
+        user=user, tracker="anilist", username="anilist_user", token="anilist-token"
     )
     TrackerConnection.objects.create(
-        user=user, tracker="myanimelist", username="mal_user", token="mock-token"
+        user=user, tracker="myanimelist", username="mal_user", token="mal-token"
+    )
+    MangaTrackerLink.objects.create(
+        user=user,
+        manga=manga,
+        tracker="anilist",
+        remote_id="12345",
+        remote_title="Monster",
+        remote_progress=1,
+        status="confirmed",
+    )
+    MangaTrackerLink.objects.create(
+        user=user,
+        manga=manga,
+        tracker="myanimelist",
+        remote_id="12345",
+        remote_title="Monster",
+        remote_progress=1,
+        status="confirmed",
     )
 
     url = reverse(
@@ -106,6 +145,8 @@ def test_manga_chapter_sync(authenticated_client):
     assert res.data["success"] is True
     assert res.data["results"]["anilist"]["success"] is True
     assert res.data["results"]["myanimelist"]["success"] is True
+    mock_tracker_adapters["anilist"].write_progress.assert_called_once()
+    mock_tracker_adapters["myanimelist"].write_progress.assert_called_once()
 
 
 @pytest.mark.django_db
@@ -153,3 +194,24 @@ def test_manga_chapter_sync_auto_transitions(authenticated_client):
     fav.refresh_from_db()
     assert fav.last_read_chapter == 3.0
     assert fav.status == "completed"
+
+
+@pytest.mark.django_db
+def test_sync_pushes_nothing_without_a_confirmed_link(authenticated_client):
+    from animetix.models import MediaItem, TrackerConnection
+
+    user = User.objects.get(username="testuser")
+    MediaItem.objects.create(
+        external_id="no_link_manga", media_type="Manga", title="Sans liaison"
+    )
+    TrackerConnection.objects.create(user=user, tracker="anilist", token="tok")
+
+    url = reverse(
+        "api_manga_chapter_sync",
+        kwargs={"media_id": "no_link_manga", "chapter_number": "5"},
+    )
+    res = authenticated_client.post(url)
+
+    assert res.status_code == 200
+    assert res.data["success"] is True
+    assert res.data.get("results", {}) == {}
