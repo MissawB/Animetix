@@ -34,6 +34,7 @@ describe('useResumeReadingPosition', () => {
           mediaId: 'm1',
           chapterId: '5',
           isAuthenticated: true,
+          isAuthLoading: false,
           readerPagesLength: 50, // pages already loaded
           setCurrentPageIndex,
         }),
@@ -69,6 +70,7 @@ describe('useResumeReadingPosition', () => {
           mediaId: 'm1',
           chapterId: '5',
           isAuthenticated: false,
+          isAuthLoading: false,
           readerPagesLength: 50,
           setCurrentPageIndex,
         }),
@@ -81,5 +83,47 @@ describe('useResumeReadingPosition', () => {
 
     expect(api).not.toHaveBeenCalled();
     expect(setCurrentPageIndex).not.toHaveBeenCalled();
+  });
+
+  // Regression: a deep-link render (favorite, F5, shared link) mounts before
+  // Firebase's onAuthStateChanged/getRedirectResult has resolved. authStore
+  // starts as { isAuthenticated: false, isLoading: true } on every app load
+  // (see store/authStore.ts), so a naive `isAuthenticated && !progressFetched`
+  // gate reads "anonymous, nothing to wait for" and consumes the guard on
+  // the spot — then the effect exits on resumedRef alone once auth actually
+  // resolves to logged-in, and the real saved position never gets applied.
+  it('still resumes once auth resolves to logged-in, even if it read as anonymous at first render', async () => {
+    vi.spyOn(apiMod, 'apiClient').mockResolvedValue({
+      chapters: [{ number: 5, is_read: false, last_page_read: 39, page_count: 50 }],
+      resume: { chapter_number: 5, last_page_read: 39 },
+      read_count: 0,
+      total_count: 1,
+    });
+
+    const setCurrentPageIndex = vi.fn();
+
+    const { rerender } = renderHook(
+      (props: { isAuthenticated: boolean; isAuthLoading: boolean }) =>
+        useResumeReadingPosition({
+          mediaId: 'm1',
+          chapterId: '5',
+          isAuthenticated: props.isAuthenticated,
+          isAuthLoading: props.isAuthLoading,
+          readerPagesLength: 50, // pages already loaded
+          setCurrentPageIndex,
+        }),
+      { wrapper, initialProps: { isAuthenticated: false, isAuthLoading: true } },
+    );
+
+    // Auth not resolved yet: must not treat this as "anonymous, nothing to
+    // resume" and burn the guard.
+    expect(setCurrentPageIndex).not.toHaveBeenCalled();
+
+    await act(async () => {
+      rerender({ isAuthenticated: true, isAuthLoading: false });
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(setCurrentPageIndex).toHaveBeenCalledWith(39));
   });
 });

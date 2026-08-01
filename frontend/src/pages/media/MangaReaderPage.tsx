@@ -19,6 +19,7 @@ const MangaReaderPage: React.FC = () => {
   const navigate = useNavigate();
   const { setPages, setCurrentPageIndex, currentPageIndex, pages: readerPages } = useReaderStore();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isAuthLoading = useAuthStore((s) => s.isLoading);
 
   // Fetch Manga Metadata
   const { data: manga } = useQuery({
@@ -48,6 +49,7 @@ const MangaReaderPage: React.FC = () => {
     mediaId,
     chapterId,
     isAuthenticated,
+    isAuthLoading,
     readerPagesLength: readerPages.length,
     setCurrentPageIndex,
   });
