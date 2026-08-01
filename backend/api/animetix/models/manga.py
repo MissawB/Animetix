@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from .catalog import MediaItem
+from .catalog import MangaChapter, MediaItem
 
 
 class FavoriteManga(models.Model):
@@ -51,3 +51,30 @@ class MangaCover(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class MangaReadingProgress(models.Model):
+    """Progression de lecture d'un chapitre, par utilisateur.
+
+    La vérité vit ici et non dans Suwayomi : l'état de Suwayomi est global au
+    serveur (mono-utilisateur) et injoignable en production. Suwayomi n'en
+    reçoit qu'un miroir best-effort.
+    """
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="manga_progress"
+    )
+    chapter = models.ForeignKey(
+        MangaChapter, on_delete=models.CASCADE, related_name="progress"
+    )
+    # Index 0-based, comme `lastPageRead` de Suwayomi et `currentPageIndex` du lecteur.
+    last_page_read = models.IntegerField(default=0)
+    is_read = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        # Couvre aussi la recherche « progression de cet utilisateur sur ce chapitre ».
+        unique_together = ("user", "chapter")
+
+    def __str__(self):
+        return f"{self.user.username} - {self.chapter} - p{self.last_page_read}"

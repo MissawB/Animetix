@@ -26,7 +26,7 @@ from .games import (
     UserAchievement,
     VsBattle,
 )
-from .manga import FavoriteManga, MangaCover
+from .manga import FavoriteManga, MangaCover, MangaReadingProgress
 from .social import (
     ArchetypeDriftSnapshot,
     ClubEvent,
@@ -46,6 +46,7 @@ __all__ = [
     "UserRecommendation",
     "FavoriteManga",
     "MangaCover",
+    "MangaReadingProgress",
     "Profile",
     "Friendship",
     "Notification",
