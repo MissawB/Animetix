@@ -32,7 +32,15 @@ gcp_services:
     env_vars:
       DJANGO_ENV: "production"
       LLM_API_BASE: "http://localhost:11434/v1"
-      LLM_MODEL_NAME: "qwen3.5:9b"
+      # No LLM_MODEL_NAME here, deliberately. The served tag has exactly one
+      # source of truth: LLM_OLLAMA_MODEL in backend/core/utils/local_models.py,
+      # which defaults to the `qwen2.5:7b-instruct` that Dockerfile.brain bakes.
+      # This key used to pin `qwen3.5:9b`, a tag no brain image registers with
+      # Ollama -- Ollama 404s on an unknown tag, so every generation failed while
+      # /health (a reachability probe) still said online. Overriding here is what
+      # let the manifest drift away from the image. To flip to the other baked
+      # tag (`otaku-qwen:7b`) without a rebuild, use --update-env-vars on the
+      # service rather than reintroducing the drift.
       GCP_MODELS_MOUNT_PATH: "/mnt/models"
 
   jobs:
