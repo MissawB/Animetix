@@ -12,9 +12,10 @@ modération sautée peut se déguiser en modération passée.
 """
 
 import json
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
+from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
 from core.domain.exceptions import ContentModerationError
 from core.domain.services.guardrail_service import GuardrailService
 from core.ports.inference_port import (
@@ -260,6 +261,35 @@ def test_a_missing_first_stage_result_is_not_trusted():
     svc, moderator = _input_svc(None, moderator_text=SPOILER)
 
     result = svc.validate_input("une question")
+
+    moderator.generate.assert_called_once()
+    assert result["is_safe"] is False
+
+
+def test_a_first_stage_verdict_missing_the_is_safe_key_is_not_trusted():
+    """Reproduit le vrai bug, pas une version rejouée à la main : le
+    `safety_engine` est un véritable `InferencePort` dont `moderate_content`
+    construit lui-même le verdict, à partir d'un JSON bien formé qui omet
+    `is_safe` (plausible venant d'un modèle 1.5B). `res.get("is_safe", True)`
+    ne doit pas se voir marqué `source: model` -- sinon un contrôle sauté a
+    l'allure d'un contrôle passé et la seconde passe (`_llm_moderate`) est
+    sautée à tort."""
+    safety = UnifiedInferenceAdapter(
+        api_base="http://fake-url", model_name="fake-model"
+    )
+    moderator = _engine(SPOILER)
+    svc = GuardrailService(
+        inference_engine=_engine(SAFE),
+        moderation_engine=moderator,
+        safety_engine=safety,
+    )
+
+    with patch.object(
+        safety,
+        "generate",
+        return_value='{"detected_categories": [], "reason": "pas de verdict"}',
+    ):
+        result = svc.validate_input("une question")
 
     moderator.generate.assert_called_once()
     assert result["is_safe"] is False

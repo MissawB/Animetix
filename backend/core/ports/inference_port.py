@@ -202,13 +202,19 @@ class TextInferencePort(BaseInferencePort):
             if not isinstance(detected, list):
                 detected = []
 
-            return {
+            verdict = {
                 "is_safe": is_safe,
                 "detected_categories": detected,
                 "action": "block" if not is_safe else "allow",
                 "reason": res.get("reason", "Vérification sémantique effectuée."),
-                "source": MODERATION_SOURCE_MODEL,
             }
+            # Ne poser le marqueur de provenance que si le modèle a vraiment
+            # rendu une clé `is_safe` : sans elle, le `True` par défaut
+            # ci-dessus ne reflète aucune décision et ne doit pas être cru
+            # comme un verdict modèle par `_is_model_verdict`.
+            if "is_safe" in res:
+                verdict["source"] = MODERATION_SOURCE_MODEL
+            return verdict
         except Exception as e:
             bad_words = ["hentai", "nsfw", "porn", "sex", "gore", "violence extreme"]
             found = [w for w in bad_words if w in text.lower()]
