@@ -134,6 +134,21 @@ def test_generate_without_api_key_sends_empty_headers(adapter_no_key):
     assert req.call_args.kwargs["headers"] == {}
 
 
+def test_generate_pins_the_configured_model_in_the_payload():
+    a = BrainAPIAdapter(api_url="http://brain:5000", api_key="k", model="small:1.5b")
+    with patch("adapters.inference.brain_api_adapter.safe_http_request") as req:
+        req.return_value = MagicMock(json=MagicMock(return_value={"text": "ok"}))
+        a.generate("Q")
+    assert req.call_args.kwargs["json"]["model"] == "small:1.5b"
+
+
+def test_generate_omits_the_model_when_none_is_pinned(adapter):
+    with patch("adapters.inference.brain_api_adapter.safe_http_request") as req:
+        req.return_value = MagicMock(json=MagicMock(return_value={"text": "ok"}))
+        adapter.generate("Q")
+    assert "model" not in req.call_args.kwargs["json"]
+
+
 # --- stream_generate ---------------------------------------------------------
 
 
@@ -625,6 +640,17 @@ def test_moderate_content_falls_back_to_super_on_error(adapter):
     assert out["is_safe"] is False
     assert "nsfw" in out["detected_categories"]
     assert out["action"] == "block"
+
+
+def test_moderate_content_pins_the_configured_model():
+    a = BrainAPIAdapter(api_url="http://brain:5000", api_key="k", model="small:1.5b")
+    with patch("adapters.inference.brain_api_adapter.safe_http_request") as req:
+        req.return_value = MagicMock(
+            json=MagicMock(return_value={"moderation": {"is_safe": True}})
+        )
+        out = a.moderate_content("texte", ["HATE_SPEECH"])
+    assert req.call_args.kwargs["json"]["model"] == "small:1.5b"
+    assert out == {"is_safe": True}
 
 
 # --- generate_structured delegates to base implementation --------------------

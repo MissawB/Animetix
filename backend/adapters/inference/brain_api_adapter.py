@@ -29,6 +29,7 @@ class BrainAPIAdapter(ReachabilityHealthCheckMixin, InferencePort):
         api_url: Optional[str] = None,
         api_key: Optional[str] = None,
         usage_port: Optional[UsagePort] = None,
+        model: Optional[str] = None,
     ):
         super().__init__(usage_port=usage_port)
         self.api_url = api_url or os.getenv("BRAIN_API_URL")
@@ -36,6 +37,10 @@ class BrainAPIAdapter(ReachabilityHealthCheckMixin, InferencePort):
         if config_error:
             raise ConfigurationError(config_error)
         self.api_key = api_key or os.getenv("BRAIN_API_KEY")
+        # Tag servi par le brain pour CET adaptateur. None = le modèle par défaut du
+        # brain. Permet d'épingler un rôle (modération) sur un modèle plus petit sans
+        # dupliquer l'adaptateur ni router côté serveur.
+        self.model = model
 
     def _get_headers(self) -> Dict[str, str]:
         return {"X-API-Key": self.api_key} if self.api_key else {}
@@ -61,6 +66,9 @@ class BrainAPIAdapter(ReachabilityHealthCheckMixin, InferencePort):
             "include_logprobs": include_logprobs,
             **kwargs,
         }
+
+        if self.model and "model" not in payload:
+            payload["model"] = self.model
 
         try:
             response = safe_http_request(
@@ -643,10 +651,13 @@ class BrainAPIAdapter(ReachabilityHealthCheckMixin, InferencePort):
 
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
         try:
+            body: Dict[str, Any] = {"text": text, "categories": categories}
+            if self.model:
+                body["model"] = self.model
             response = safe_http_request(
                 "POST",
                 f"{self.api_url}/moderate",
-                json={"text": text, "categories": categories},
+                json=body,
                 headers=self._get_headers(),
             )
             return response.json()["moderation"]
