@@ -8,7 +8,12 @@ export const mangaProgressKey = (mediaId: string) => ['manga', mediaId, 'progres
 export function useMangaProgress(mediaId: string | undefined, enabled: boolean) {
   const query = useQuery({
     queryKey: mangaProgressKey(mediaId ?? ''),
-    queryFn: () => fetchMangaProgress(mediaId as string),
+    queryFn: () => {
+      // Guard: if mediaId is absent, return empty progress without network call
+      // (protects explicit refetch() calls even when enabled is true)
+      if (!mediaId) return null;
+      return fetchMangaProgress(mediaId);
+    },
     enabled: Boolean(mediaId) && enabled,
   });
 

@@ -42,4 +42,17 @@ describe('useMangaProgress', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.byChapter.size).toBe(0);
   });
+
+  it('refetch() with undefined mediaId makes no API call', async () => {
+    const api = vi.spyOn(apiMod, 'apiClient');
+    const { result } = renderHook(() => useMangaProgress(undefined, true), { wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Explicit refetch() should not emit a network call when mediaId is undefined
+    await result.current.refetch();
+
+    expect(api).not.toHaveBeenCalled();
+    expect(result.current.data).toBeUndefined();
+  });
 });
