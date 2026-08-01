@@ -79,16 +79,27 @@ class MyAnimeListAdapter(TrackerPort):
                 logger.warning("MyAnimeList a répondu %s en lecture", res.status_code)
                 return None
             body = res.json()
-            status = body.get("my_list_status") if isinstance(body, dict) else None
         except Exception as exc:
             logger.warning("MyAnimeList injoignable : %s", exc)
             return None
-        if not isinstance(status, dict):
+        if not isinstance(body, dict):
+            # Corps JSON mal formé (liste, scalaire...) : réponse illisible,
+            # pas une absence légitime. `None` pour retenter plus tard, sans
+            # quoi une progression distante réelle risquerait d'être écrasée
+            # par un 0 fabriqué à partir d'une réponse inexploitable.
+            logger.warning("MyAnimeList : corps de réponse inattendu (non-dict)")
+            return None
+        status = body.get("my_list_status")
+        if status is None:
             # La réponse est arrivée sans `my_list_status` : l'œuvre n'est pas
             # encore dans la liste de l'utilisateur. C'est 0, pas « inconnu » —
-            # `None` est réservé aux vrais échecs (non-200, transport), sans
-            # quoi une série jamais listée ne serait jamais synchronisée.
+            # `None` est réservé aux vrais échecs (non-200, transport, réponse
+            # illisible), sans quoi une série jamais listée ne serait jamais
+            # synchronisée.
             return 0
+        if not isinstance(status, dict):
+            logger.warning("MyAnimeList : `my_list_status` inattendu (non-dict)")
+            return None
         read = status.get("num_chapters_read")
         return read if isinstance(read, int) else 0
 

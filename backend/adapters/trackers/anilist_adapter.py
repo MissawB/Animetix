@@ -109,7 +109,14 @@ class AniListAdapter(TrackerPort):
             # ici empêcherait toute création d'entrée distante — le cas le plus
             # courant (nouvelle série commencée sur Animetix).
             return 0
-        progress = entry.get("progress") if isinstance(entry, dict) else None
+        if not isinstance(entry, dict):
+            # `mediaListEntry` est présent mais mal formé (liste, scalaire...) :
+            # réponse illisible, pas une absence légitime. `None` pour retenter
+            # plus tard plutôt que d'écraser une progression distante réelle
+            # avec un 0 fabriqué.
+            logger.warning("AniList : `mediaListEntry` inattendu (non-dict)")
+            return None
+        progress = entry.get("progress")
         return progress if isinstance(progress, int) else 0
 
     def write_progress(self, remote_id: str, progress: int, token: str) -> bool:

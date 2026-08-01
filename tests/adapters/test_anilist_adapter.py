@@ -63,6 +63,18 @@ def test_read_progress_is_zero_when_the_work_is_not_in_the_list():
         assert adapter.read_progress("30013", token="tok") == 0
 
 
+def test_read_progress_is_none_when_media_list_entry_is_malformed():
+    """`mediaListEntry` présent mais pas un objet (liste ici) = réponse
+    illisible, pas une absence légitime. Confondre ce cas avec le `0` de
+    « l'œuvre n'est pas encore dans la liste » écraserait une progression
+    distante réelle avec une valeur fabriquée."""
+    adapter = AniListAdapter()
+    payload = {"data": {"Media": {"mediaListEntry": ["not-a-dict"]}}}
+
+    with patch("httpx.Client.post", return_value=_response(payload)):
+        assert adapter.read_progress("30013", token="tok") is None
+
+
 def test_write_progress_posts_the_save_mutation():
     adapter = AniListAdapter()
     payload = {"data": {"SaveMediaListEntry": {"id": 1, "progress": 165}}}

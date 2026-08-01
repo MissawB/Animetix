@@ -49,6 +49,16 @@ def test_read_progress_is_zero_when_absent_from_the_list():
         assert adapter.read_progress("44347", token="tok") == 0
 
 
+def test_read_progress_is_none_when_the_response_body_is_malformed():
+    """Corps JSON 200 mais pas un objet (liste ici) = réponse illisible, pas
+    une absence légitime. Confondre ce cas avec le `0` de « l'œuvre n'est pas
+    encore dans la liste » écraserait une progression distante réelle avec
+    une valeur fabriquée."""
+    adapter = MyAnimeListAdapter()
+    with patch("httpx.Client.get", return_value=_response(["not-a-dict"])):
+        assert adapter.read_progress("44347", token="tok") is None
+
+
 def test_write_progress_patches_num_chapters_read():
     adapter = MyAnimeListAdapter()
     with patch(
