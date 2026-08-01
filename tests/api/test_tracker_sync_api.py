@@ -197,7 +197,19 @@ def test_manga_chapter_sync_auto_transitions(authenticated_client):
 
 
 @pytest.mark.django_db
-def test_sync_pushes_nothing_without_a_confirmed_link(authenticated_client):
+def test_sync_pushes_nothing_without_a_confirmed_link(
+    authenticated_client, mock_tracker_adapters
+):
+    """Un compte tracker connecté mais aucune liaison confirmée : la lecture
+    reste un succès et rien n'est poussé.
+
+    L'assertion porte sur la charge utile entière, pas sur `results` — cette
+    clé est simplement absente de la réponse, et un `res.data.get("results",
+    {}) == {}` serait vrai quoi que renvoie la vue. La forme est contractuelle
+    (cf. spec, section API) : `message` vaut « No trackers connected. » alors
+    qu'un tracker *est* connecté ; c'est le libellé historique, conservé tel
+    quel pour ne pas casser le contrat.
+    """
     from animetix.models import MediaItem, TrackerConnection
 
     user = User.objects.get(username="testuser")
@@ -213,5 +225,5 @@ def test_sync_pushes_nothing_without_a_confirmed_link(authenticated_client):
     res = authenticated_client.post(url)
 
     assert res.status_code == 200
-    assert res.data["success"] is True
-    assert res.data.get("results", {}) == {}
+    assert res.data == {"success": True, "message": "No trackers connected."}
+    mock_tracker_adapters["anilist"].write_progress.assert_not_called()
