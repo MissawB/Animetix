@@ -3854,6 +3854,7 @@ export interface components {
             name: string;
             description: string;
             icon: string;
+            /** Format: int64 */
             xp_reward?: number;
             rarity?: string;
         };
@@ -3906,7 +3907,9 @@ export interface components {
             scenario_text: string;
             /** Format: uri */
             image_url?: string | null;
+            /** Format: int64 */
             chaos_level?: number;
+            /** Format: int64 */
             universe_balance?: number;
             art_style?: string;
             creator?: number | null;
@@ -4203,7 +4206,9 @@ export interface components {
             scenario_text?: string;
             /** Format: uri */
             image_url?: string | null;
+            /** Format: int64 */
             chaos_level?: number;
+            /** Format: int64 */
             universe_balance?: number;
             art_style?: string;
             creator?: number | null;
@@ -4272,20 +4277,28 @@ export interface components {
         PatchedProfile: {
             readonly id?: number;
             readonly user?: components["schemas"]["User"];
+            /** Format: int64 */
             xp?: number;
+            /** Format: int64 */
             current_streak?: number;
+            /** Format: int64 */
             max_streak?: number;
             /** Format: date */
             last_win_date?: string | null;
+            /** Format: int64 */
             total_wins?: number;
+            /** Format: int64 */
             total_games?: number;
+            /** Format: int64 */
             ranked_points?: number;
+            /** Format: int64 */
             ranked_max_points?: number;
             readonly rank?: string;
             unlocked_badges?: unknown;
             custom_username_color?: string | null;
             readonly avatar?: string;
             tier?: components["schemas"]["TierEnum"];
+            /** Format: int64 */
             wallet_balance?: number;
             personalization_settings?: unknown;
             readonly has_api_key?: string;
@@ -4293,20 +4306,28 @@ export interface components {
         Profile: {
             readonly id: number;
             readonly user: components["schemas"]["User"];
+            /** Format: int64 */
             xp?: number;
+            /** Format: int64 */
             current_streak?: number;
+            /** Format: int64 */
             max_streak?: number;
             /** Format: date */
             last_win_date?: string | null;
+            /** Format: int64 */
             total_wins?: number;
+            /** Format: int64 */
             total_games?: number;
+            /** Format: int64 */
             ranked_points?: number;
+            /** Format: int64 */
             ranked_max_points?: number;
             readonly rank: string;
             unlocked_badges?: unknown;
             custom_username_color?: string | null;
             readonly avatar: string;
             tier?: components["schemas"]["TierEnum"];
+            /** Format: int64 */
             wallet_balance?: number;
             personalization_settings?: unknown;
             readonly has_api_key: string;
