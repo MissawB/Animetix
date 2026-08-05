@@ -254,7 +254,7 @@ jobs:
     # re-downloaded on every run. With a warm cache the pull below is a fast
     # manifest check. Static key: model blobs are content-addressed.
     - name: Cache Ollama models
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.ollama
         key: ollama-models-qwen3-0.6b
