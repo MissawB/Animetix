@@ -32,7 +32,7 @@ jobs:
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: Setup k6
-      uses: grafana/setup-k6-action@320376bc26206ad5fbe897de5e104ea7c99eefa2 # v1.0.0
+      uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065 # v1.2.1
     - name: Run load test
       # k6 sort en code non-zéro si un seuil (thresholds par endpoint) est franchi,
       # ce qui fait échouer le run → la baseline est réellement appliquée.
